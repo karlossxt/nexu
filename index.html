@@ -112,9 +112,66 @@ button.btn-outline:hover{ background:var(--card-hover); }
 .leaflet-control-attribution a{ color:#888; }
 body.dark-mode .leaflet-control-attribution{ background:rgba(0,0,0,.4); color:#999; }
 body.dark-mode .leaflet-control-attribution a{ color:#bbb; }
+
+/* MODAL DETALLE DE ALERTA */
+@keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+#alert-modal{ display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,.55); align-items:center; justify-content:center; padding:16px; }
+#alert-modal-card{ width:100%; max-width:420px; max-height:90vh; overflow-y:auto; background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:18px; box-shadow:0 20px 60px rgba(0,0,0,.4); animation:fadeIn .25s; }
+.am-head{ display:flex; gap:8px; align-items:center; }
+.am-chip{ font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; }
+.am-x{ margin-left:auto; width:30px; height:30px; border:none; border-radius:50%; background:var(--card-hover); color:var(--text); padding:0; cursor:pointer; }
+#am-title{ margin:12px 0 4px; font-size:17px; }
+.am-loc{ font-size:13px; color:var(--text-muted); margin-bottom:8px; }
+.am-desc{ font-size:13px; background:var(--log-bg); border:1px solid var(--border); border-radius:8px; padding:10px; margin:8px 0; line-height:1.5; white-space:pre-wrap; }
+.am-meta{ font-size:12px; color:var(--text-muted); margin:8px 0 14px; display:flex; flex-direction:column; gap:5px; }
+.am-actions{ display:flex; gap:10px; }
+.am-actions button{ flex:1; }
+.btn-heart{ background:transparent; border:none; color:#999; padding:0; width:26px; height:26px; border-radius:50%; cursor:pointer; font-size:15px; transition:transform .15s; }
+.btn-heart:hover{ transform:scale(1.2); }
+.btn-heart.liked{ color:#e91e63; }
+.traffic-chip{ display:inline-block; font-size:10px; font-weight:700; padding:2px 8px; border-radius:12px; margin-top:6px; }
+
+/* LANDING / ENTRADA */
+#landing{ position:fixed; inset:0; z-index:20000; display:flex; align-items:center; justify-content:center; padding:20px; background:linear-gradient(135deg,#0b0f19 0%,#12203a 55%,#1a2f52 100%); }
+#landing-card{ width:100%; max-width:420px; text-align:center; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); border-radius:20px; padding:40px 28px; box-shadow:0 30px 80px rgba(0,0,0,.5); }
+.landing-logo{ font-size:52px; margin-bottom:6px; }
+.landing-brand{ color:#fff; font-size:34px; letter-spacing:2px; margin:4px 0; }
+.landing-brand span{ color:#f9ab00; }
+.landing-sub{ color:#aeb9cc; margin:6px 0 22px; font-size:15px; }
+.landing-feats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:26px; }
+.landing-feat{ background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:12px 8px; color:#e8edf5; font-size:13px; font-weight:600; }
+.landing-feat i{ color:#f9ab00; margin-right:6px; }
+#btn-enter{ width:100%; padding:14px; border:none; border-radius:12px; background:linear-gradient(90deg,#f9ab00,#ff6d00); color:#1a1a1a; font-size:16px; font-weight:800; cursor:pointer; transition:transform .15s; }
+#btn-enter:hover{ transform:scale(1.02); }
+.landing-foot{ margin-top:18px; font-size:11px; color:#8b96a8; }
+
+/* ALERTAS CERCANAS A LA RUTA */
+#routeAlerts{ margin-top:12px; }
+.route-alert-item{ display:flex; gap:8px; align-items:center; padding:8px 10px; border:1px solid var(--border); border-radius:8px; background:var(--log-bg); margin-bottom:6px; cursor:pointer; transition:background .15s; }
+.route-alert-item:hover{ background:var(--card-hover); }
+.route-alert-item .ra-dot{ width:10px; height:10px; border-radius:50%; flex:0 0 10px; }
+.route-alert-item .ra-info{ flex:1; font-size:12px; min-width:0; }
+.route-alert-item .ra-info b{ display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.route-alert-item .ra-info span{ color:var(--text-muted); font-size:11px; }
 </style>
 </head>
 <body>
+
+<div id="landing">
+  <div id="landing-card">
+    <div class="landing-logo">🚦</div>
+    <h1 class="landing-brand">CENTRAL <span>STEELE</span></h1>
+    <p class="landing-sub">Riesgos al viajar en México, en tiempo real.</p>
+    <div class="landing-feats">
+      <div class="landing-feat"><i class="fa-solid fa-triangle-exclamation"></i> Alertas en vivo</div>
+      <div class="landing-feat"><i class="fa-solid fa-cloud-sun"></i> Clima por punto</div>
+      <div class="landing-feat"><i class="fa-solid fa-route"></i> Rutas con riesgo</div>
+      <div class="landing-feat"><i class="fa-solid fa-shield-halved"></i> Seguridad vial</div>
+    </div>
+    <button id="btn-enter" onclick="enterPlatform()"><i class="fa-solid fa-arrow-right-to-bracket"></i> Entrar a la plataforma</button>
+    <div class="landing-foot">Monitoreo vial · Acceso libre</div>
+  </div>
+</div>
 
 <nav id="sidebar">
   <div class="brand">
@@ -219,6 +276,8 @@ body.dark-mode .leaflet-control-attribution a{ color:#bbb; }
       <button onclick="calculateRoute()">Trazar Ruta</button>
       <button onclick="clearMapRoute()" class="btn-outline" style="margin-top:10px">Limpiar</button>
       <div id="routeStats" style="margin-top:15px; font-weight:bold; color:var(--accent); text-align:center;"></div>
+      <div style="font-size:11px; font-weight:bold; color:var(--text-muted); margin:18px 0 8px 0;">⚠ ALERTAS CERCA DE TU RUTA</div>
+      <div id="routeAlerts"><div style="font-size:12px; color:var(--text-muted);">Traza una ruta para analizar el entorno.</div></div>
     </div>
   </div>
   <div id="panel-analysis" class="panel-container"><div class="panel-header"><div class="panel-title" style="color:#b388ff">IA Supervisor</div></div><div class="panel-body"><button onclick="generateRiskReport()" style="background:#6200ea; color:#fff;">Analizar Riesgos</button><div id="aiReport" class="ai-box" style="margin-top:15px;">Esperando ruta...</div></div></div>
@@ -235,6 +294,27 @@ body.dark-mode .leaflet-control-attribution a{ color:#bbb; }
   </div>
 </div>
 
+<div id="alert-modal">
+  <div id="alert-modal-card">
+    <div class="am-head">
+      <span id="am-cat" class="am-chip">Vial</span>
+      <span id="am-traffic" class="am-chip" style="display:none;">—</span>
+      <button class="am-x" onclick="closeAlertModal()" title="Cerrar">✕</button>
+    </div>
+    <h3 id="am-title"></h3>
+    <div class="am-loc" id="am-loc"></div>
+    <div class="am-desc" id="am-desc"></div>
+    <div class="am-meta">
+      <div>🕐 <span id="am-time"></span></div>
+      <div>🌤 <span id="am-weather">Cargando clima...</span></div>
+    </div>
+    <div class="am-actions">
+      <button id="am-center" onclick="centerAlert()"><i class="fa-solid fa-location-crosshairs"></i> Centrar en el mapa</button>
+      <button id="am-share" onclick="shareAlert(currentAlertId)"><i class="fa-brands fa-whatsapp"></i> Compartir</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* =========================================
    SISTEMA CENTRAL STEELE v20.0
@@ -244,6 +324,7 @@ let alerts = [];
 let criticalPoints = [];
 let risPoints = []; 
 let activeRoute = null; 
+let routeNearAlerts = []; 
 let markers = L.markerClusterGroup({ disableClusteringAtZoom: 16 });
 let staticLayer = L.layerGroup(); 
 let risLayer = L.layerGroup(); 
@@ -288,6 +369,7 @@ window.onload = function() {
   renderDirectory(directoryData);
   renderStateFilters();
   log("Sistema V20.0 Listo.");
+  if(sessionStorage.getItem('steele_entered')) enterPlatform();
 };
 
 function saveConfig() {
@@ -477,7 +559,7 @@ async function geocodeBest(place) {
 }
 
 async function processAlert(text) {
-  const prompt = `Eres un analista de seguridad vial en Mexico. REGLAS: 1) Solo importa si la noticia es un incidente EN MEXICO (si es de otro pais o no hay ubicacion clara, valido=false). 2) Solo categorias: road (accidentes, cierres, congestion) o security (asaltos, bloqueos, balaceras, manifestaciones, operativos). 3) Indica ubicacion LO MAS ESPECIFICA posible (calle, carretera, cruce) y ademas municipio y estado separados si se mencionan. 4) importante=true si es de alto riesgo (bloqueos, balaceras, asaltos, accidentes graves). Responde SOLO JSON ESTRICTO sin texto extra. Texto: "${text}". JSON: {"valido": boolean, "ubicacion": "lugar especifico si se menciona", "municipio": "municipio o ciudad si se menciona", "estado": "estado de la republica", "categoria": "road" o "security", "resumen": "titulo corto", "importante": boolean}`;
+  const prompt = `Eres un analista de seguridad vial en Mexico. REGLAS: 1) Solo importa si la noticia es un incidente EN MEXICO (si es de otro pais o no hay ubicacion clara, valido=false). 2) Solo categorias: road (accidentes, cierres, congestion) o security (asaltos, bloqueos, balaceras, manifestaciones, operativos). 3) Indica ubicacion LO MAS ESPECIFICA posible (calle, carretera, cruce) y ademas municipio y estado separados si se mencionan. 4) importante=true si es de alto riesgo (bloqueos, balaceras, asaltos, accidentes graves). 5) trafico: clasifica el flujo VIAL para incidentes road (fluido=mínimo efecto, moderado=reducción de carriles/reactivo, detenido=bloqueo total/accidente grave); para security usa null. 6) detail: extrae una descripcion breve y fiel de los hechos (max 280 caracteres, omitiendo datos del medio de origen). Responde SOLO JSON ESTRICTO sin texto extra. Texto: "${text}". JSON: {"valido": boolean, "ubicacion": "lugar especifico si se menciona", "municipio": "municipio o ciudad si se menciona", "estado": "estado de la republica", "categoria": "road" o "security", "resumen": "titulo corto", "trafico": "fluido"|"moderado"|"detenido"|null, "detail": "descripcion breve", "importante": boolean}`;
   const rawResponse = await consultGroq(prompt);
   if(!rawResponse) return;
   try {
@@ -503,7 +585,7 @@ async function processAlert(text) {
     }
     if(!isInMexico(loc.lat, loc.lon)) { log(`🚫 Fuera de México: ${data.resumen}`, 'warn'); return; }
     const isDup = alerts.some(a => Math.abs(a.lat - loc.lat) < 0.0001 && Math.abs(a.lon - loc.lon) < 0.0001); if(isDup) return;
-    const alertObj = { id: Date.now(), lat: loc.lat, lon: loc.lon, category: data.categoria, title: data.resumen, location: data.ubicacion || data.municipio || estado, state: estado, precision: loc.prec, time: new Date() };
+    const alertObj = { id: Date.now(), lat: loc.lat, lon: loc.lon, category: data.categoria, title: data.resumen, location: data.ubicacion || data.municipio || estado, state: estado, precision: loc.prec, time: new Date(), trafico: data.trafico || null, detail: (data.detail || '').slice(0, 280), liked: false };
     alerts.push(alertObj); addMarkerToMap(alertObj); updateLists(); log(`✅ ALERTA [${data.categoria}]${loc.prec !== 'punto' ? ' (aprox: ' + loc.prec + ')' : ''}: ${data.resumen} @ ${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}`, 'success');
     if(processingQueue.length === 0 && !document.getElementById('panel-ris').classList.contains('active')) map.panTo([loc.lat, loc.lon]);
   } catch(e) {}
@@ -511,11 +593,19 @@ async function processAlert(text) {
 
 function removeAlert(id) { alerts = alerts.filter(a => a.id !== id); markers.clearLayers(); alerts.forEach(a => addMarkerToMap(a)); updateLists(); }
 function addMarkerToMap(alert) {
-  const isSec = alert.category === 'security'; const color = isSec ? '#f44336' : '#ffb74d'; const iconClass = isSec ? 'fa-user-shield' : 'fa-car-burst';
+  const isSec = alert.category === 'security';
+  const color = isSec ? '#d93025' : trafficStyle(alert.trafico || 'moderado').color;
+  const iconClass = isSec ? 'fa-user-shield' : 'fa-car-burst';
   const icon = L.divIcon({ className: 'custom-pin', html: `<div style="background:${color}; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; border:2px solid white; box-shadow:0 3px 6px rgba(0,0,0,0.5); font-size:16px;"><i class="fa-solid ${iconClass}"></i></div>`, iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32] });
   const m = L.marker([alert.lat, alert.lon], {icon});
   const nota = alert.precision && alert.precision !== 'punto' ? `<br><small style="color:#5f6368;">📍 aprox: ${alert.precision}</small>` : '';
-  m.bindPopup(`<b>${alert.title}</b><br>${alert.location}${nota}`);
+  const chip = (!isSec && alert.trafico) ? `<div style="margin-top:5px;"><span class="traffic-chip" style="background:${trafficStyle(alert.trafico).bg}; color:${trafficStyle(alert.trafico).color};">${trafficStyle(alert.trafico).label}</span></div>` : '';
+  m.bindPopup(`
+    <div style="max-width:240px;">
+      <b>${alert.title}</b><br>
+      <span style="color:#5f6368;font-size:12px;">${alert.location}</span>${nota}${chip}
+      <br><button onclick="openAlertDetail(${alert.id})" style="margin-top:8px;width:100%;padding:6px 10px;border:none;border-radius:6px;background:#1976d2;color:#fff;cursor:pointer;font-size:12px;font-weight:600;">Ver detalle</button>
+    </div>`);
   m.category = alert.category; markers.addLayer(m);
 }
 function updateLists() {
@@ -523,12 +613,14 @@ function updateLists() {
   if(roadList) roadList.innerHTML = ''; if(secList) secList.innerHTML = '';
   [...alerts].sort((a,b) => b.time - a.time).forEach(a => {
     const div = document.createElement('div'); div.className = `alert-card type-${a.category}`;
+    const t = trafficStyle(a.trafico || 'moderado');
+    const trafficChip = a.category === 'road' && a.trafico ? `<div><span class="traffic-chip" style="background:${t.bg}; color:${t.color};">${t.label}</span></div>` : '';
     div.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:start;"><b>${a.title}</b>
-        <div class="card-actions"><button onclick="event.stopPropagation(); shareAlert(${a.id})" class="btn-whatsapp-alert"><i class="fa-brands fa-whatsapp"></i></button><button onclick="event.stopPropagation(); removeAlert(${a.id})" class="btn-delete-alert">X</button></div></div>
-        <div style="font-size:11px;color:var(--text-muted)">${a.location}</div>
+        <div class="card-actions"><button onclick="event.stopPropagation(); toggleLike(${a.id})" id="btn-heart-${a.id}" class="btn-heart${a.liked ? ' liked' : ''}" title="Me gusta / Detalle"><i class="fa-solid fa-heart"></i></button><button onclick="event.stopPropagation(); shareAlert(${a.id})" class="btn-whatsapp-alert" title="Compartir"><i class="fa-brands fa-whatsapp"></i></button><button onclick="event.stopPropagation(); removeAlert(${a.id})" class="btn-delete-alert" title="Eliminar">X</button></div></div>
+        <div style="font-size:11px;color:var(--text-muted)">${a.location}</div>${trafficChip}
     `;
-    div.onclick = () => map.setView([a.lat, a.lon], 16);
+    div.onclick = () => openAlertDetail(a.id);
     if(a.category === 'road') { roadList.appendChild(div); } else { secList.appendChild(div); }
   });
   document.getElementById('count-road').innerText = document.getElementById('list-road').childElementCount;
@@ -538,9 +630,67 @@ function filterMapMarkers(context) { markers.clearLayers(); alerts.forEach(a => 
 function shareAlert(id) {
     const alert = alerts.find(a => a.id === id); if(!alert) return;
     const mapLink = `https://www.google.com/maps/search/?api=1&query=${alert.lat},${alert.lon}`;
-    const text = `🚨 *CENTRAL STEELE - ALERTA* 🚨\n\n📌 *Evento:* ${alert.title}\n📍 *Ubicación:* ${alert.location}\n🔗 *Ver:* ${mapLink}`;
+    const trafico = alert.category === 'road' && alert.trafico ? `\n🚦 *Tráfico:* ${trafficStyle(alert.trafico).label}` : '';
+    const text = `🚨 *CENTRAL STEELE - ALERTA* 🚨\n\n📌 *Evento:* ${alert.title}\n📍 *Ubicación:* ${alert.location}${trafico}\n🔗 *Ver:* ${mapLink}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 }
+
+// === DETALLE DE ALERTA + CLIMA ===
+let currentAlertId = null;
+const weatherCache = {};
+const WMO = { 0:['Despejado','☀️'],1:['Mayormente despejado','🌤️'],2:['Parcialmente nublado','⛅'],3:['Nublado','☁️'],45:['Niebla','🌫️'],48:['Niebla helada','🌫️'],51:['Llovizna ligera','🌦️'],53:['Llovizna','🌦️'],55:['Llovizna intensa','🌧️'],56:['Llovizna helada','🌧️'],57:['Llovizna helada intensa','🌧️'],61:['Lluvia ligera','🌧️'],63:['Lluvia','🌧️'],65:['Lluvia intensa','⛈️'],66:['Lluvia helada','🌧️'],67:['Lluvia helada intensa','🌧️'],71:['Nieve ligera','❄️'],73:['Nieve','❄️'],75:['Nieve intensa','❄️'],77:['Células de nieve','❄️'],80:['Chubascos ligeros','🌦️'],81:['Chubascos','🌧️'],82:['Chubascos violentos','⛈️'],85:['Chubascos de nieve','❄️'],86:['Chubascos de nieve','❄️'],95:['Tormenta','⛈️'],96:['Tormenta con granizo','⛈️'],99:['Tormenta con granizo intenso','⛈️'] };
+function trafficStyle(t) {
+  return t === 'fluido' ? { color:'#1e8e3e', bg:'rgba(30,142,62,.12)', label:'Flujo normal' }
+       : t === 'detenido' ? { color:'#d93025', bg:'rgba(217,48,37,.12)', label:'Tráfico detenido' }
+       : { color:'#b06000', bg:'rgba(249,171,0,.15)', label:'Tráfico moderado' };
+}
+async function fetchWeather(lat, lon) {
+  const key = lat.toFixed(2) + ',' + lon.toFixed(2);
+  if(weatherCache[key]) return weatherCache[key];
+  try {
+    const u = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto`;
+    const r = await fetch(u); const d = await r.json(); const c = d.current || {};
+    const def = WMO[c.weather_code] || ['Sin dato', '🌡️'];
+    const w = { temp: Math.round(c.temperature_2m), desc: def[0], emoji: def[1], wind: Math.round(c.wind_speed_10m) };
+    weatherCache[key] = w; return w;
+  } catch(e) { return null; }
+}
+function formatAlertTime(t) { return new Date(t).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }); }
+function toggleLike(id) {
+  const a = alerts.find(x => x.id === id); if(!a) return;
+  a.liked = !a.liked;
+  openAlertDetail(id);
+  const h = document.getElementById('btn-heart-' + id); if(h) h.classList.toggle('liked', a.liked);
+}
+function openAlertDetail(id) {
+  const a = alerts.find(x => x.id === id); if(!a) return;
+  currentAlertId = id;
+  document.getElementById('am-title').textContent = a.title;
+  document.getElementById('am-loc').textContent = (a.precision && a.precision !== 'punto' ? '📍 aprox ' + a.precision + ' · ' : '') + a.location;
+  document.getElementById('am-desc').textContent = a.detail || 'Sin descripción detallada.';
+  document.getElementById('am-desc').textContent += (a.state ? '\n📍 Estado: ' + a.state : '');
+  document.getElementById('am-time').textContent = formatAlertTime(a.time);
+  const cat = document.getElementById('am-cat');
+  cat.textContent = a.category === 'security' ? 'Seguridad' : 'Vial';
+  cat.style.background = a.category === 'security' ? 'rgba(217,48,37,.12)' : 'rgba(30,142,62,.12)';
+  cat.style.color = a.category === 'security' ? '#d93025' : '#1e8e3e';
+  const tr = document.getElementById('am-traffic');
+  if(a.category === 'road' && a.trafico) { const t = trafficStyle(a.trafico); tr.textContent = t.label; tr.style.display = 'inline-block'; tr.style.background = t.bg; tr.style.color = t.color; }
+  else { tr.style.display = 'none'; }
+  const w = document.getElementById('am-weather');
+  w.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Cargando clima...';
+  fetchWeather(a.lat, a.lon).then(res => {
+    if(res) w.innerHTML = `${res.emoji} ${res.desc}, <b>${res.temp}°C</b> · viento ${res.wind} km/h`;
+    else w.textContent = 'Clima no disponible';
+  });
+  document.getElementById('alert-modal').style.display = 'flex';
+}
+function closeAlertModal() { document.getElementById('alert-modal').style.display = 'none'; }
+function centerAlert() {
+  const a = alerts.find(x => x.id === currentAlertId); if(!a) return;
+  map.setView([a.lat, a.lon], 15); closeAlertModal();
+}
+document.getElementById('alert-modal') && document.getElementById('alert-modal').addEventListener('click', e => { if(e.target === e.currentTarget) closeAlertModal(); });
 
 // === DIRECTORIO ===
 function renderDirectory(data) { const container = document.getElementById('directory-list'); container.innerHTML = ''; data.forEach(group => { const groupDiv = document.createElement('div'); groupDiv.className = 'contact-group'; const title = document.createElement('div'); title.className = 'contact-group-title'; title.innerText = group.category; groupDiv.appendChild(title); group.contacts.forEach(contact => { const card = document.createElement('div'); card.className = 'contact-card'; card.dataset.name = contact.name.toLowerCase(); card.innerHTML = `<div class="contact-info"><b>${contact.name}</b><span>${contact.phone}</span></div><div class="contact-actions"><button class="btn-copy" onclick="navigator.clipboard.writeText('${contact.phone}');alert('Copiado')" title="Copiar"><i class="fa-solid fa-copy"></i></button></div>`; groupDiv.appendChild(card); }); container.appendChild(groupDiv); }); }
@@ -572,9 +722,28 @@ function applyFilter(keyword) {
   document.querySelectorAll('#state-grid button').forEach(btn => btn.style.color = btn.textContent === keyword ? '#fff' : '');
   staticLayer.clearLayers(); const filteredPoints = keyword ? criticalPoints.filter(p => p.title.toLowerCase().includes(keyword.toLowerCase())) : criticalPoints; filteredPoints.forEach(p => { const icon = L.divIcon({ className: 'custom-pin', html: `<div style="background:rgba(156, 39, 176, 0.08); width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#9c27b0; border:2px solid #9c27b0;"><i class="fa-solid fa-skull"></i></div>`, iconSize: [24, 24], iconAnchor: [12, 24] }); const marker = L.marker([p.lat, p.lon], {icon}); marker.bindPopup(`<b>⛔ ${p.title}</b><br>${p.desc}`); staticLayer.addLayer(marker); staticLayer.addLayer(L.circle([p.lat, p.lon], { color: '#9c27b0', weight: 1, fillColor: '#9c27b0', fillOpacity: 0.08, radius: 3000 })); }); }
 async function detectModels() { try { const res = await fetch('/api/groq?action=models'); const data = await res.json(); const select = document.getElementById('modelSelect'); select.innerHTML = ''; const preferred = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'gemma2-9b-it']; const models = (data.data || []).map(m => m.id); preferred.forEach(p => { if(models.includes(p)) { const o = document.createElement('option'); o.value = p; o.text = p; select.appendChild(o); } }); models.forEach(id => { if(!preferred.includes(id)) { const o = document.createElement('option'); o.value = id; o.text = id; select.appendChild(o); } }); if(select.options.length === 0) log("Sin modelos disponibles", 'warn'); else { log(`✅ Modelos cargados (${select.options.length}).`, 'success'); saveConfig(); } } catch(e) { log(`Error detección (necesitas servidor)`,'err'); } }
-function calculateRoute() { const o = document.getElementById('routeOrigin').value; const d = document.getElementById('routeDest').value; if(!o || !d) return; if(routeControl) { map.removeControl(routeControl); routeControl = null; } Promise.all([ fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(o + ', Mexico')}&limit=1`).then(r=>r.json()), fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(d + ', Mexico')}&limit=1`).then(r=>r.json()) ]).then(res => { if(!res[0][0] || !res[1][0]) return; routeControl = L.Routing.control({ waypoints: [L.latLng(res[0][0].lat, res[0][0].lon), L.latLng(res[1][0].lat, res[1][0].lon)], router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }), lineOptions: { styles: [{color: '#b388ff', opacity: 0.8, weight: 6}] }, createMarker: ()=>null, addWaypoints: false, fitSelectedRoutes: true }).addTo(map); routeControl.on('routesfound', e => { activeRoute = e.routes[0]; document.getElementById('routeStats').innerText = `${(activeRoute.summary.totalDistance/1000).toFixed(1)} km | ${(activeRoute.summary.totalTime/60).toFixed(0)} min`; }); }); }
-function clearMapRoute() { if(routeControl) { map.removeControl(routeControl); routeControl = null; activeRoute = null; } document.getElementById('routeStats').innerText = ""; document.getElementById('aiReport').innerText = "Esperando ruta..."; }
-async function generateRiskReport() { const box = document.getElementById('aiReport'); if(!activeRoute) { box.innerText = "Traza ruta."; return; } box.innerText = "Analizando..."; box.classList.add('typing'); const incidents = alerts.map(a => `- ${a.category}: ${a.title} (${a.location})`).join('\n') || "Sin incidentes recientes."; const riskPoints = criticalPoints.map(p => `- ZONA ROJA: ${p.title} (${p.desc})`).join('\n'); const prompt = `Analiza ruta ${document.getElementById('routeOrigin').value} a ${document.getElementById('routeDest').value}. Alertas Vivas: ${incidents}. Puntos Criticos: ${riskPoints}. Da veredicto seguridad.`; const report = await consultGroq(prompt); box.classList.remove('typing'); box.innerText = report || "Error."; }
+function calculateRoute() { const o = document.getElementById('routeOrigin').value; const d = document.getElementById('routeDest').value; if(!o || !d) return; if(routeControl) { map.removeControl(routeControl); routeControl = null; } Promise.all([ fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(o + ', Mexico')}&limit=1`).then(r=>r.json()), fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(d + ', Mexico')}&limit=1`).then(r=>r.json()) ]).then(res => { if(!res[0][0] || !res[1][0]) return; routeControl = L.Routing.control({ waypoints: [L.latLng(res[0][0].lat, res[0][0].lon), L.latLng(res[1][0].lat, res[1][0].lon)], router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }), lineOptions: { styles: [{color: '#b388ff', opacity: 0.8, weight: 6}] }, createMarker: ()=>null, addWaypoints: false, fitSelectedRoutes: true }).addTo(map); routeControl.on('routesfound', e => { activeRoute = e.routes[0]; document.getElementById('routeStats').innerText = `${(activeRoute.summary.totalDistance/1000).toFixed(1)} km | ${(activeRoute.summary.totalTime/60).toFixed(0)} min`; updateRouteAlerts(activeRoute.coordinates); }); }); }
+
+const ROUTE_BUFFER_KM = 8;
+function haversineKm(lat1, lon1, lat2, lon2) { const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180, a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2; return 2*R*Math.asin(Math.sqrt(a)); }
+function pointToSegmentKm(lat, lon, aLat, aLon, bLat, bLon) { const R=6371, toRad=v=>v*Math.PI/180, lat0=(lat+aLat+bLat)/3; const x=toRad(lon)*Math.cos(toRad(lat0))*R, y=toRad(lat)*R; const ax=toRad(aLon)*Math.cos(toRad(lat0))*R, ay=toRad(aLat)*R; const bx=toRad(bLon)*Math.cos(toRad(lat0))*R, by=toRad(bLat)*R; const dx=bx-ax, dy=by-ay; const t=(dx===0&&dy===0)?0:Math.max(0, Math.min(1, ((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy))); return Math.hypot(x-(ax+t*dx), y-(ay+t*dy)); }
+function distToPolylineKm(lat, lon, coords) { let best=Infinity; for(let i=0;i<coords.length-1;i++){ const d=pointToSegmentKm(lat, lon, coords[i].lat, coords[i].lng, coords[i+1].lat, coords[i+1].lng); if(d<best) best=d; } return best===Infinity? null : best; }
+function updateRouteAlerts(coords) {
+  const box = document.getElementById('routeAlerts'); if(!box) return;
+  routeNearAlerts = [];
+  box.innerHTML = '<div style="font-size:12px;color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Analizando entorno...</div>';
+  if(!coords || !coords.length) { box.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Sin datos de ruta.</div>'; return; }
+  alerts.forEach(a => { const d = distToPolylineKm(a.lat, a.lon, coords); if(d !== null && d <= ROUTE_BUFFER_KM) routeNearAlerts.push(Object.assign({}, a, { distKm: d })); });
+  routeNearAlerts.sort((x,y) => x.distKm - y.distKm);
+  if(!routeNearAlerts.length) { box.innerHTML = `<div style="font-size:12px;color:var(--success);">✅ Sin alertas en un radio de ${ROUTE_BUFFER_KM} km de la ruta.</div>`; return; }
+  box.innerHTML = routeNearAlerts.map(a => {
+    const color = a.category === 'security' ? '#d93025' : trafficStyle(a.trafico || 'moderado').color;
+    return `<div class="route-alert-item" onclick="openAlertDetail(${a.id})"><div class="ra-dot" style="background:${color}"></div><div class="ra-info"><b>${a.title}</b><span>${a.location} · a ${a.distKm.toFixed(1)} km</span></div></div>`;
+  }).join('');
+}
+function enterPlatform() { const l=document.getElementById('landing'); if(l) l.style.display='none'; sessionStorage.setItem('steele_entered','1'); }
+function clearMapRoute() { if(routeControl) { map.removeControl(routeControl); routeControl = null; activeRoute = null; } routeNearAlerts = []; document.getElementById('routeStats').innerText = ""; const b=document.getElementById('routeAlerts'); if(b) b.innerHTML='<div style="font-size:12px;color:var(--text-muted);">Traza una ruta para analizar el entorno.</div>'; document.getElementById('aiReport').innerText = "Esperando ruta..."; }
+async function generateRiskReport() { const box = document.getElementById('aiReport'); if(!activeRoute) { box.innerText = "Traza ruta."; return; } box.innerText = "Analizando..."; box.classList.add('typing'); const nearInfo = routeNearAlerts.map(a => `- [a ${a.distKm.toFixed(1)} km de la ruta] ${a.category}: ${a.title} (${a.location})`).join('\n'); const incidents = nearInfo || (alerts.map(a => `- ${a.category}: ${a.title} (${a.location})`).join('\n')) || "Sin incidentes recientes."; const riskPoints = criticalPoints.map(p => `- ZONA ROJA: ${p.title} (${p.desc})`).join('\n'); const prompt = `Analiza ruta ${document.getElementById('routeOrigin').value} a ${document.getElementById('routeDest').value}. Alertas Vivas: ${incidents}. Puntos Criticos: ${riskPoints}. Da veredicto seguridad.`; const report = await consultGroq(prompt); box.classList.remove('typing'); box.innerText = report || "Error."; }
 </script>
 </body>
 </html>
