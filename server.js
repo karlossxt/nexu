@@ -133,6 +133,48 @@ const server = http.createServer(async (req, res) => {
     }));
   }
 
+  if (url.pathname === '/api/feed') {
+    const feedUrl = url.searchParams.get('url') || '';
+    if (!/^https?:\/\//i.test(feedUrl) || feedUrl.length > 800) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: 'url inválida' }));
+    }
+    if (rateLimited(remoteIp(req))) {
+      res.writeHead(429, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: 'demasiadas peticiones, espera un minuto' }));
+    }
+    try {
+      const r = await fetch(feedUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (NEXUS VIAL; monitoreo vial)' } });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const raw = await r.text();
+      const trimmed = raw.trim();
+      const items = [];
+      if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        const data = JSON.parse(trimmed);
+        let list = [];
+        if (Array.isArray(data)) list = data;
+        else if (Array.isArray(data.items)) list = data.items;
+        else if (data.data && Array.isArray(data.data) && data.data.length && Array.isArray(data.data[0].items)) list = data.data.flatMap(f => f.items || []);
+        else if (Array.isArray(data.channel)) list = data.channel;
+        list.slice(0, 30).forEach(it => { const t = it.title || it.description_text || ''; if (t) items.push({ title: String(t).trim(), content_text: String(it.description_text || it.description_html || it.description || it.content || '').trim() }); });
+      } else {
+        const re = /<item[\s>][\s\S]*?<\/item>/gi;
+        let m;
+        while ((m = re.exec(trimmed))) {
+          const b = m[0];
+          const strip = s => s.replace(/<!\[CDATA\[|\]\]>/g, '').replace(/<[^>]*>/g, '').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"').replace(/&#0?39;|&apos;/gi, "'").trim();
+          const title = strip((b.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || '');
+          if (title) items.push({ title, content_text: strip((b.match(/<description[^>]*>([\s\S]*?)<\/description>/i) || [])[1] || '') });
+        }
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ items: items.slice(0, 30) }));
+    } catch (e) {
+      res.writeHead(502, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: String((e && e.message) || e) }));
+    }
+  }
+
   const filePath = path.normalize(path.join(ROOT, url.pathname === '/' ? 'index.html' : url.pathname));
   if (!filePath.startsWith(ROOT)) {
     res.writeHead(403);

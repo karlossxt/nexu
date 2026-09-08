@@ -623,9 +623,14 @@ async function startHybridSystem() {
     togglePanel();
 }
 
-// PARSEA UN FEED (JSON o XML) CON PROXY CORS DE RESPALDO
+// PARSEA UN FEED (JSON o XML). Primero vía /api/feed (servidor, sin CORS);
+// si falla, respaldo directo + proxies.
 async function parseFeedItems(url) {
     let raw = null;
+    try {
+        const apiRes = await fetch('/api/feed?url=' + encodeURIComponent(url));
+        if(apiRes.ok) { const d = await apiRes.json(); if(d.items) return d.items; }
+    } catch(e) {}
     try {
         const res = await fetch(url);
         if(!res.ok) throw new Error('HTTP ' + res.status);
