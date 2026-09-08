@@ -762,7 +762,24 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
           <button class="w-pill" id="w-pill-dry" onclick="setWFilter('dry', this)">Vía seca</button>
           <button class="w-pill" id="w-pill-wet" onclick="setWFilter('wet', this)">Pavimento mojado</button>
           <button class="w-pill" id="w-pill-alert" onclick="setWFilter('alert', this)">Alerta</button>
+          <button class="w-pill" id="w-pill-risk" onclick="openRiskPanel()" style="border-color:var(--ris); color:var(--ris);"><i class="fa-solid fa-chart-line"></i> Predicción de riesgo</button>
         </div>
+      </div>
+
+      <div id="risk-panel" style="display:none; margin-bottom:16px;">
+        <div class="risk-head">
+          <div>
+            <h3 style="margin:0 0 4px; font-size:14px;"><i class="fa-solid fa-chart-line" style="color:var(--ris);"></i> Índice de riesgo por tramo</h3>
+            <p style="margin:0; font-size:11px; color:var(--text-muted);">Cruza clima en vivo + alertas recientes + día/hora de salida. 0 = bajo · 100 = crítico.</p>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button class="w-pill" id="risk-ai-btn" onclick="riskAI()" title="Resumen por IA (Groq)"><i class="fa-solid fa-wand-magic-sparkles"></i> Resumen IA</button>
+            <button class="w-pill" onclick="closeRiskPanel()">← Tramo por tramo</button>
+          </div>
+        </div>
+        <div id="risk-loading" class="wm-loading" style="display:none;"><i class="fa-solid fa-spinner fa-spin"></i> Analizando corredores...</div>
+        <div id="risk-grid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:10px;"></div>
+        <div id="risk-ai-out" style="margin-top:10px;"></div>
       </div>
 
       <div id="w-grid">
@@ -2143,6 +2160,117 @@ function weatherGoMap(i) {
   if(weatherMarker) map.removeLayer(weatherMarker);
   weatherMarker = L.marker([t.lat, t.lon]).bindPopup(html).addTo(map).openPopup();
 }
+
+// === PREDICCIÓN DE RIESGO POR TRAMO (clima + alertas + día/hora) ===
+const RISK_RADIUS_KM = 45;
+let riskCache = null;
+function riskLevelFromScore(s) { return s >= 70 ? { lvl:'CRÍTICO', color:'#d93025' } : s >= 45 ? { lvl:'ALTO', color:'#f97316' } : s >= 20 ? { lvl:'MEDIO', color:'#fbbf24' } : { lvl:'BAJO', color:'#22c55e' }; }
+function alertsNearTramo(t) {
+  const bound = RISK_RADIUS_KM * 1.25;
+  return alerts.filter(a => {
+    const d = haversineKm(a.lat, a.lon, t.lat, t.lon);
+    if(d > bound) return false;
+    if(d <= 12) return 3;
+    if(d <= 30) return 1.5;
+    return 1;
+  }).map(a => ({ a, w: a.category === 'security' ? (a.importante ? 3 : 2) : (a.trafico === 'detenido' ? 3 : a.trafico === 'moderado' ? 2 : 1) }));
+}
+function riskWeatherWeight(w) {
+  if(!w) return 15;
+  const st = weatherStateOf(w);
+  if(st.key === 'sev') return 45;
+  if(st.key === 'alert') return 30;
+  if(st.key === 'wet') return 15;
+  return 0;
+}
+function riskDateTimePenalty() {
+  const d = new Date(); const day = d.getDay(); const h = d.getHours();
+  let p = 0;
+  if(day === 5 && h >= 14) p += 15;          // viernes regreso
+  if(day === 0 && h >= 14) p += 15;          // domingo regreso
+  if([6, 5].includes(day)) p += 5;
+  // Puentes/fechas altas de circulación 2026
+  const s = d.toISOString().slice(5, 10);
+  const hotDates = ['03-20','03-21','04-01','04-05','05-01','08-15','09-14','09-15','09-16','11-01','11-19','11-20','12-11','12-12','12-25'];
+  if(hotDates.includes(s)) p += 10;
+  p += (h >= 6 && h <= 9) ? 8 : (h >= 18 && h <= 21) ? 8 : 0; // horas pico
+  return Math.min(p, 25);
+}
+function computeTramoRisk(t) {
+  const wKey = t.lat.toFixed(2) + ',' + t.lon.toFixed(2);
+  const w = weatherCache[wKey];
+  let score = riskWeatherWeight(w) + riskDateTimePenalty();
+  const nears = alertsNearTramo(t);
+  let alertScore = 0;
+  nears.forEach(n => { alertScore += n.w * 8; });
+  score += Math.min(alertScore, 30);
+  score = Math.round(Math.min(score, 100));
+  const lvl = riskLevelFromScore(score);
+  const reasons = [];
+  if(w) { const st = weatherStateOf(w); if(st.key !== 'dry') reasons.push(st.label.toLowerCase()); }
+  if(nears.length) reasons.push(nears.length + (nears.length === 1 ? ' alerta' : ' alertas') + ' cerca (≤' + RISK_RADIUS_KM + ' km)');
+  const dp = riskDateTimePenalty(); if(dp >= 13) reasons.push('horario de alta circulación');
+  if(!reasons.length) reasons.push('condiciones estables');
+  return { t, score, lvl, reasons: reasons.slice(0, 3), nears };
+}
+function openRiskPanel() {
+  clearTimeout(riskTimer);
+  const g = document.getElementById('w-grid'); if(g) g.style.display = 'none';
+  const panel = document.getElementById('risk-panel'); if(panel) panel.style.display = 'block';
+  const btn = document.getElementById('w-pill-risk'); if(btn) btn.classList.add('active');
+  renderRiskPanel();
+  document.getElementById('wm-card').scrollTop = 0;
+}
+function closeRiskPanel() {
+  const g = document.getElementById('w-grid'); if(g) g.style.display = '';
+  const panel = document.getElementById('risk-panel'); if(panel) panel.style.display = 'none';
+  const btn = document.getElementById('w-pill-risk'); if(btn) btn.classList.remove('active');
+  applyWeatherFilters();
+}
+let riskTimer = null;
+async function renderRiskPanel() {
+  const grid = document.getElementById('risk-grid'); if(!grid) return;
+  const load = document.getElementById('risk-loading'); if(load) load.style.display = 'block';
+  grid.innerHTML = '';
+  document.getElementById('risk-ai-out').innerHTML = '';
+  const rows = await Promise.all(WEATHER_TRAMOS.map(t => fetchWeather(t.lat, t.lon).then(w => { if(w) weatherCache[t.lat.toFixed(2) + ',' + t.lon.toFixed(2)] = w; return t; })));
+  const ranked = rows.map(t => computeTramoRisk(t)).sort((a, b) => b.score - a.score);
+  riskCache = ranked;
+  if(load) load.style.display = 'none';
+  const frag = document.createDocumentFragment();
+  ranked.slice(0, 6).forEach(r => {
+    const barColor = r.lvl.color;
+    const c = document.createElement('div');
+    c.className = 'risk-card';
+    c.style.cssText = 'background:#0d1320; border:1px solid #1f2937; border-radius:10px; padding:12px;';
+    const nearBadge = r.nears.length ? `<div style="font-size:10px; color:${barColor}; margin-top:4px;">⚠ ${r.nears.length} alerta(s) cerca</div>` : '';
+    c.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+        <div><div class="w-badge" style="font-size:10px;">${r.t.badge} · ${r.t.state}</div>
+        <div style="font-size:13px; font-weight:700; color:#fff; margin-top:2px;">${r.t.name}</div></div>
+        <div style="text-align:right;"><div style="font-size:20px; font-weight:800; color:${barColor};">${r.score}</div><div style="font-size:9px; color:${barColor}; font-weight:700;">${r.lvl.lvl}</div></div>
+      </div>
+      <div style="height:6px; background:#1f2937; border-radius:99px; margin:10px 0 6px;"><div style="height:100%; width:${r.score}%; background:${barColor}; border-radius:99px;"></div></div>
+      <div style="font-size:11px; color:var(--text-muted); display:flex; gap:4px; flex-wrap:wrap;">${r.reasons.map(x => `<span style="background:#1f2937; padding:2px 6px; border-radius:99px;">${x}</span>`).join('')}</div>
+      ${nearBadge}`;
+    frag.appendChild(c);
+  });
+  grid.appendChild(frag);
+  clearTimeout(riskTimer);
+  riskTimer = setTimeout(() => { if (document.getElementById('risk-panel').style.display === 'block' && !document.getElementById('risk-ai-out').childElementCount) renderRiskPanel(); }, 10 * 60 * 1000);
+}
+async function riskAI() {
+  const out = document.getElementById('risk-ai-out'); if(!out) return;
+  const ranked = riskCache || WEATHER_TRAMOS.slice(0, 3).map(t => { const w = weatherCache[t.lat.toFixed(2)+','+t.lon.toFixed(2)]; return computeTramoRisk(t); });
+  out.innerHTML = '<div class="wm-loading" style="display:block;"><i class="fa-solid fa-spinner fa-spin"></i> IA analizando riesgos...</div>';
+  const top = ranked.slice(0, 3);
+  const ctx = top.map(r => `${r.t.name}: riesgo ${r.score}/100 (${r.lvl.lvl}) - ${r.reasons.join(', ')}`).join(' | ');
+  const prompt = `Eres analista vial en México. Según estos tramos con su índice de riesgo calculado (0-100), explica en español SECO (máx 3 líneas, tono de alerta responsable) cuál es el tramo de mayor riesgo, por qué, y una recomendación concreta de manejo. Datos: ${ctx}`;
+  const r = await consultGroq(prompt);
+  if(!r) { out.innerHTML = '<div style="font-size:12px; color:#f87171;">⚠ No se pudo obtener el resumen IA. Intenta de nuevo.</div>'; return; }
+  out.innerHTML = `<div style="background:#0d1320; border:1px solid #1f2937; border-left:3px solid var(--ris); border-radius:8px; padding:12px; font-size:12px; color:#d1d5db; line-height:1.5;">${r.replace(/\n/g, '<br>')}</div>`;
+}
+function riskGo(i) { weatherGoMap(i); }
 
 // === GENERADOR DE RUTAS (alternativas reales OSRM) ===
 const QUICK_ROUTES = [['Ciudad de México', 'Querétaro'], ['Ciudad de México', 'Puebla'], ['Ciudad de México', 'Guadalajara'], ['Monterrey', 'Ciudad de México']];
