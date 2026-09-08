@@ -4,12 +4,11 @@
 // modelo de allowlist, rate limit por IP y token de acceso opcional (APP_TOKEN).
 
 const MODELS_ALLOWED = [
-  'llama-3.1-8b-instant',
-  'llama-3.3-70b-versatile',
-  'llama-3.2-3b-preview',
-  'llama-3.2-1b-preview',
-  'mixtral-8x7b-32768',
-  'gemma2-9b-it',
+  'openai/gpt-oss-20b',
+  'openai/gpt-oss-120b',
+  'qwen/qwen3.8-27b',
+  'allam-2-7b',
+  'meta-llama/llama-prompt-guard-2-86m',
 ];
 const MAX_BODY = 64 * 1024;
 const MAX_PER_MIN = 40;
