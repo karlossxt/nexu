@@ -6,6 +6,28 @@ const MAX_OUT = 30;
 const MAX_PER_MIN = 60;
 const rate = new Map();
 
+// === FILTRO: solo incidentes viales/seguridad en México ===
+const ARR = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const MX_STATES = ['aguascalientes','baja california','baja california sur','campeche','chiapas','chihuahua','coahuila','colima','durango','guanajuato','guerrero','hidalgo','jalisco','michoaca','morelos','nayarit','nuevo leon','oaxaca','puebla','queretaro','quintana roo','san luis potosi','sinaloa','sonora','tabasco','tamaulipas','tlaxcala','veracruz','yucatan','zacatecas','cdmx','ciudad de mexico','estado de mexico','edomex'];
+const MX_CITIES = ['guadalajara','monterrey','tijuana','ciudad juarez','juarez','leon','merida','toluca','mexicali','acapulco','cuernavaca','mazatlan','culiacan','laredo','tampico','xalapa','pachuca','morelia','saltillo','torreon','hermosillo','durango','oaxaca','villahermosa','cancun','chihuahua','puebla','utestaca','quintana roo','veracruz','colima','texcoco','zapopan','pescador','tultitlan','ecatepec','tlalnepantla','naucalpan','tixtla','zihuatanejo','taxco','iguala','chilpancingo'];
+const VIAL_WORDS = ['carretera','autopista','vial','tramo','choque','accidente','volcadura','incendio','derrumbe','deslave','bloqueo','cierre','caseta','puente','pavimento','lluvia','niebla','neblina','inundaci','carril','circul','camion','trailer','derrape','mirador','km ','kilometro','obra','derribo','circulacion','reduccion'];
+const FOREIGN = ['cuba','venezuela','ecuador','espana','chile','argentina','colombia','peru','bolivia','honduras','guatemala','belice','estados unidos','ee.uu','china','rusia','ucrania','irak','iran','israel','palestina','marro','ceuta','marruecos','arabia','hutie','yemen','africa','tiktok','spotify','youtube','netflix','futbol','fpc','barquisimeto','sismo detector'];
+function mexVialScore(text) {
+  const t = ARR(text);
+  let mex = 0, vial = 0, fori = 0;
+  MX_STATES.forEach(s => { if (t.includes(s)) mex += 3; });
+  MX_CITIES.forEach(c => { if (t.includes(c)) mex += 2; });
+  if (t.includes('alcaldia')) mex += 1;
+  VIAL_WORDS.forEach(w => { if (t.includes(w)) vial += 1; });
+  if (/\bkm\s*\d/i.test(t)) vial += 2;
+  FOREIGN.forEach(f => { if (t.includes(f)) fori += 1; });
+  if (fori >= 2) return { keep: false, score: -99 };
+  if (fori >= 1 && vial === 0) return { keep: false, score: -50 };
+  if (vial >= 1 && mex >= 1) return { keep: true, score: vial + mex - fori };
+  if (vial >= 2 && fori === 0) return { keep: true, score: vial + mex };
+  return { keep: false, score: vial + mex - fori };
+}
+
 function remoteIp(req) {
   const fwd = (req.headers['x-forwarded-for'] || '').split(',')[0].trim();
   return fwd || (req.socket && req.socket.remoteAddress) || 'anon';
@@ -75,7 +97,8 @@ module.exports = async (req, res) => {
     const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (NEXUS VIAL; monitoreo vial)' } });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const items = parseRssItems(await r.text());
-    return res.status(200).json({ items });
+    const kept = items.filter(it => mexVialScore(it.title + ' ' + (it.content_text || '')).keep);
+    return res.status(200).json({ items: kept, total: items.length, kept: kept.length });
   } catch (e) {
     const msg = String((e && e.message) || e);
     return res.status(502).json({ error: msg });
