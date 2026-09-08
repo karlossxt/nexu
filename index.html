@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>CENTRAL-STEELE — V20.0 (Demo Master)</title>
+<title>Nexus Vial — Riesgos al viajar en México</title>
 
 <!-- Leaflet & Plugins -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -153,6 +153,58 @@ body.dark-mode .leaflet-control-attribution a{ color:#bbb; }
 .route-alert-item .ra-info{ flex:1; font-size:12px; min-width:0; }
 .route-alert-item .ra-info b{ display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .route-alert-item .ra-info span{ color:var(--text-muted); font-size:11px; }
+
+/* VISTA USUARIO (mapa limpio) */
+body.user-mode #sidebar{ display:none; }
+body.user-mode .panel-container, body.user-mode #panel-launcher{ display:none !important; }
+body.operator-mode #userbar, body.operator-mode #userfilter, body.operator-mode #userdrawer, body.operator-mode #routebox{ display:none !important; }
+#userbar{ display:none; position:absolute; top:14px; left:14px; right:14px; z-index:5000; align-items:center; justify-content:space-between; gap:10px; background:var(--glass); border:1px solid var(--border); border-radius:12px; padding:8px 12px; box-shadow:0 6px 20px rgba(0,0,0,.18); backdrop-filter:blur(10px); }
+body.user-mode #userbar{ display:flex; }
+.ub-left{ display:flex; align-items:center; gap:12px; min-width:0; }
+.ub-brand{ font-weight:800; letter-spacing:1px; color:var(--accent); font-size:15px; white-space:nowrap; }
+#ub-status{ font-size:12px; color:var(--success); font-weight:700; white-space:nowrap; display:flex; align-items:center; gap:5px; }
+#ub-status.off{ color:var(--text-muted); }
+.dot-live{ width:9px; height:9px; border-radius:50%; background:var(--success); animation:blink 1.2s infinite; }
+.ub-right{ display:flex; align-items:center; gap:8px; }
+.ub-count{ font-size:12px; font-weight:700; padding:4px 10px; border-radius:20px; background:rgba(128,128,128,.12); white-space:nowrap; }
+body.user-mode #userbar button, body.user-mode button.uf-btn{ width:auto; }
+#ub-alerts, #ub-route, #ub-gear{ padding:8px 12px; font-size:12px; border-radius:20px; }
+#userfilter{ display:none; position:absolute; left:14px; bottom:34px; z-index:5000; gap:6px; background:var(--glass); border:1px solid var(--border); border-radius:12px; padding:6px; box-shadow:0 6px 20px rgba(0,0,0,.18); backdrop-filter:blur(10px); }
+body.user-mode #userfilter{ display:flex; }
+.uf-btn{ padding:8px 16px; border-radius:20px; font-size:12px; background:transparent; color:var(--text); border:1px solid var(--border); }
+.uf-btn.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
+#userdrawer{ display:none; position:absolute; top:66px; right:14px; bottom:14px; width:340px; max-width:92vw; z-index:5000; background:var(--glass); border:1px solid var(--border); border-radius:12px; flex-direction:column; box-shadow:0 10px 30px rgba(0,0,0,.2); backdrop-filter:blur(10px); overflow:hidden; }
+#userdrawer.open{ display:flex; }
+.ud-head{ padding:12px 14px; border-bottom:1px solid var(--border); font-weight:700; display:flex; justify-content:space-between; align-items:center; }
+.ud-title{ font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; padding:12px 14px 4px; }
+#drawer-road, #drawer-security{ padding:0 14px 8px; max-height:32vh; overflow-y:auto; }
+#routebox{ display:none; position:absolute; left:50%; bottom:34px; transform:translateX(-50%); width:360px; max-width:92vw; z-index:5000; background:var(--glass); border:1px solid var(--border); border-radius:14px; padding:16px; box-shadow:0 12px 30px rgba(0,0,0,.25); flex-direction:column; backdrop-filter:blur(10px); }
+#routebox.open{ display:flex; }
+.rb-head{ font-weight:700; margin-bottom:12px; }
+#routeBoxStats{ font-weight:700; color:var(--accent); text-align:center; margin:8px 0; }
+#routeBoxAlerts{ max-height:26vh; overflow-y:auto; margin-bottom:8px; }
+
+/* HOY NO CIRCULA + REPORTE */
+#circula{ display:none; position:absolute; top:68px; left:14px; z-index:5000; padding:8px 16px; border-radius:12px; font-size:13px; font-weight:800; box-shadow:0 6px 20px rgba(0,0,0,.18); backdrop-filter:blur(6px); }
+body.user-mode #circula{ display:flex; }
+#circula.ok{ background:rgba(30,142,62,.15); color:var(--success); border:1px solid rgba(30,142,62,.45); }
+#circula.no{ background:rgba(217,48,37,.15); color:var(--danger); border:1px solid rgba(217,48,37,.45); }
+#report-modal{ display:none; position:fixed; inset:0; z-index:10001; background:rgba(0,0,0,.55); align-items:center; justify-content:center; padding:16px; }
+#report-modal-card{ width:100%; max-width:520px; max-height:90vh; overflow-y:auto; background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:18px; box-shadow:0 20px 60px rgba(0,0,0,.4); }
+#report-body{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:14px 0; }
+.rep-stat{ background:var(--log-bg); border:1px solid var(--border); border-radius:10px; padding:12px; text-align:center; }
+.rep-stat-title{ font-size:11px; color:var(--text-muted); font-weight:700; text-transform:uppercase; }
+.rep-stat-value{ font-size:22px; font-weight:800; color:var(--accent); }
+#rep-list{ grid-column:1 / -1; max-height:26vh; overflow-y:auto; }
+.ub-right{ flex-wrap:wrap; justify-content:flex-end; }
+#ub-report{ padding:8px 12px; font-size:12px; border-radius:20px; }
+#soundToggle{ width:auto; margin:0; }
+
+/* ALERTAS EXPIRADAS + NOTIFICACIÓN */
+.alert-card.expired{ opacity:.5; filter:grayscale(.6); }
+.toast-important{ position:fixed; bottom:20px; right:20px; z-index:20000; max-width:320px; background:var(--panel); border:1px solid var(--danger); border-left:5px solid var(--danger); border-radius:10px; padding:12px 14px; box-shadow:0 10px 30px rgba(0,0,0,.3); cursor:pointer; animation:fadeIn .25s; }
+.toast-important b{ color:var(--danger); font-size:13px; }
+.toast-important div{ font-size:12px; margin-top:4px; color:var(--text); }
 </style>
 </head>
 <body>
@@ -160,7 +212,7 @@ body.dark-mode .leaflet-control-attribution a{ color:#bbb; }
 <div id="landing">
   <div id="landing-card">
     <div class="landing-logo">🚦</div>
-    <h1 class="landing-brand">CENTRAL <span>STEELE</span></h1>
+    <h1 class="landing-brand">Nexus <span>Vial</span></h1>
     <p class="landing-sub">Riesgos al viajar en México, en tiempo real.</p>
     <div class="landing-feats">
       <div class="landing-feat"><i class="fa-solid fa-triangle-exclamation"></i> Alertas en vivo</div>
@@ -176,7 +228,7 @@ body.dark-mode .leaflet-control-attribution a{ color:#bbb; }
 <nav id="sidebar">
   <div class="brand">
     <img src="logo.png" class="brand-logo" alt="Logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1042/1042312.png'">
-    <span class="brand-text">CENTRAL</span>
+    <span class="brand-text">NEXUS VIAL</span>
   </div>
   
   <div class="nav-item active" onclick="switchPanel('config')"><div class="nav-icon"><i class="fa-solid fa-sliders"></i></div><span class="nav-label">Configuración</span></div>
@@ -218,17 +270,26 @@ body.dark-mode .leaflet-control-attribution a{ color:#bbb; }
     <div class="panel-body">
       <label style="color:var(--success);"><i class="fa-solid fa-key"></i> Key en el servidor</label>
       <div style="font-size:11px; color:var(--text-muted); margin:-8px 0 15px 0;">La key de Groq se lee del servidor (.env local / Variables de Vercel). No se guarda en el navegador.</div>
-      <label>Modelo IA</label>
+      <label>Modelo IA (alertas)</label>
       <div style="display:flex; gap:5px; margin-bottom:12px;">
         <select id="modelSelect" onchange="saveConfig()" style="margin-bottom:0; flex:1;"><option value="">(Pulsa Detectar)</option></select>
         <button onclick="detectModels()" style="width:auto; background:var(--text-muted); color:#fff;"><i class="fa-solid fa-rotate"></i></button>
       </div>
+      <label>Modelo IA (reportes)</label>
+      <div style="display:flex; gap:5px; margin-bottom:12px;">
+        <select id="reportModelSelect" onchange="saveConfig()" style="margin-bottom:0; flex:1;"><option value="">(igual que alertas)</option></select>
+      </div>
+      <label>Token de acceso (opcional)</label><input id="tokenInput" placeholder="Solo si el servidor lo exige" onchange="saveToken()" />
       <label>Fuente 1: RSS.app</label><input id="rssInputPrimary" placeholder="https://rss.app/feeds/..." onchange="saveConfig()" />
       <label>Fuente 2: Google News</label><input id="rssInputSecondary" placeholder="https://news.google.com/rss/..." onchange="saveConfig()" value="https://news.google.com/rss/search?q=accidente+OR+bloqueo+OR+asalto+carretera+mexico&hl=es-419&gl=MX&ceid=MX:es-419" />
       
       <div style="display:flex; gap:10px; margin-bottom:20px;">
         <button id="btnConnect" onclick="startHybridSystem()" style="background:var(--success)"><i class="fa-solid fa-play"></i> Iniciar</button>
         <button onclick="stopSystem()" class="btn-danger">Detener</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:20px;">
+        <input type="checkbox" id="soundToggle" onchange="saveSound()" style="width:auto; margin:0;" checked />
+        <label style="margin:0;">🔔 Sonido para alertas importantes</label>
       </div>
 
       <hr style="border-color:var(--border);">
@@ -282,7 +343,7 @@ body.dark-mode .leaflet-control-attribution a{ color:#bbb; }
   </div>
   <div id="panel-analysis" class="panel-container"><div class="panel-header"><div class="panel-title" style="color:#b388ff">IA Supervisor</div></div><div class="panel-body"><button onclick="generateRiskReport()" style="background:#6200ea; color:#fff;">Analizar Riesgos</button><div id="aiReport" class="ai-box" style="margin-top:15px;">Esperando ruta...</div></div></div>
   <div id="panel-admin" class="panel-container"><div class="panel-header"><div class="panel-title">Gestión Personal</div></div><div class="panel-body"><label>Nuevo Empleado</label><input placeholder="Nombre"><button class="btn-outline" style="width:100%;">Registrar</button></div></div>
-  <div id="panel-reports" class="panel-container"><div class="panel-header"><div class="panel-title">Reportes</div></div><div class="panel-body"><button class="btn-outline" style="width:100%;">Descargar PDF</button></div></div>
+  <div id="panel-reports" class="panel-container"><div class="panel-header"><div class="panel-title">Reportes</div></div><div class="panel-body"><button onclick="reportCard()" style="margin-bottom:10px;"><i class="fa-solid fa-download"></i> Generar reporte del día</button><button onclick="downloadReportCSV()" class="btn-outline" style="margin-bottom:10px;"><i class="fa-solid fa-file-csv"></i> Descargar CSV</button><button onclick="downloadReportHTML()" class="btn-outline"><i class="fa-solid fa-file-lines"></i> Descargar HTML</button></div></div>
   
   <div id="panel-monitor" class="panel-container">
     <div class="panel-header"><div class="panel-title" style="color:var(--accent)">Personal Activo</div><div class="badge" style="background:var(--success); color:white; padding:2px 8px; border-radius:4px; font-size:12px;">Activos</div></div>
@@ -290,6 +351,76 @@ body.dark-mode .leaflet-control-attribution a{ color:#bbb; }
       <div id="requests-area"></div>
       <div style="font-size:11px; font-weight:bold; color:var(--text-muted); margin:10px 0 5px 0;">PERSONAL ACTIVO</div>
       <div class="unit-card"><div class="unit-header"><span class="unit-title">🚗 Juan Pérez</span><span class="unit-status status-ok"></span></div><div class="unit-actions"><button class="btn-mini" onclick="map.setView([19.43, -99.19], 14)">Ver</button></div></div>
+    </div>
+  </div>
+
+  <!-- VISTA USUARIO -->
+  <div id="userbar">
+    <div class="ub-left"><span class="ub-brand">🚦 NEXUS VIAL</span><span id="ub-status"><i class="fa-solid fa-circle-notch fa-spin"></i> Arrancando...</span></div>
+    <div class="ub-right">
+      <span class="ub-count"><span id="ub-time">--:--</span> · <span id="ub-date">—</span></span>
+      <span class="ub-count" id="ub-road">🚗 0</span>
+      <span class="ub-count" id="ub-security">🛡 0</span>
+      <button id="ub-report" onclick="reportCard()" title="Reporte de hoy"><i class="fa-solid fa-download"></i> Reporte</button>
+      <button id="ub-alerts" onclick="toggleDrawer()"><i class="fa-solid fa-list"></i> Alertas</button>
+      <button id="ub-route" onclick="openRouteBox()"><i class="fa-solid fa-route"></i> Ruta</button>
+      <button id="ub-gear" onclick="toggleOperator()" title="Modo operador"><i class="fa-solid fa-user-gear"></i></button>
+    </div>
+  </div>
+
+  <!-- HOY NO CIRCULA -->
+  <div id="circula"><span id="circula-msg"></span></div>
+
+  <div id="userfilter">
+    <button class="uf-btn active" onclick="userFilter('all', this)">Todas</button>
+    <button class="uf-btn" onclick="userFilter('road', this)">Vial</button>
+    <button class="uf-btn" onclick="userFilter('security', this)">Seguridad</button>
+  </div>
+
+  <div id="userdrawer">
+    <div class="ud-head">Alertas recientes<button class="am-x" onclick="toggleDrawer()" title="Cerrar">✕</button></div>
+    <div class="ud-title">🚗 Monitor Vial</div>
+    <div id="drawer-road" class="alert-list"></div>
+    <div class="ud-title">🛡 Monitor Seguridad</div>
+    <div id="drawer-security" class="alert-list"></div>
+  </div>
+
+  <div id="routebox">
+    <div class="rb-head">Planifica tu ruta</div>
+    <label>Origen</label><input id="routeBoxOrigin" placeholder="Ej. Celaya" />
+    <label>Destino</label><input id="routeBoxDest" placeholder="Ej. Querétaro" />
+    <button onclick="goUserRoute()"><i class="fa-solid fa-route"></i> Ver riesgos en la ruta</button>
+    <div id="routeBoxStats"></div>
+    <div id="routeBoxAlerts"></div>
+    <button onclick="closeRouteBox()" class="btn-outline">Cerrar</button>
+  </div>
+
+  <!-- REPORTE DEL DÍA -->
+  <div id="report-modal">
+    <div id="report-modal-card">
+      <div class="am-head">
+        <span class="am-chip">📄 Reporte del día</span>
+        <button class="am-x" onclick="closeReport()" title="Cerrar">✕</button>
+      </div>
+      <div id="report-body">
+        <div class="rep-stat">
+          <div class="rep-stat-title">🚗 Viales</div><div class="rep-stat-value" id="rep-road">0</div>
+        </div>
+        <div class="rep-stat">
+          <div class="rep-stat-title">🛡 Seguridad</div><div class="rep-stat-value" id="rep-sec">0</div>
+        </div>
+        <div class="rep-stat">
+          <div class="rep-stat-title">⚠ Importantes</div><div class="rep-stat-value" id="rep-imp">0</div>
+        </div>
+        <div class="rep-stat">
+          <div class="rep-stat-title">🚦 Tráfico detenido</div><div class="rep-stat-value" id="rep-stop">0</div>
+        </div>
+        <div id="rep-list" class="alert-list"></div>
+      </div>
+      <div class="am-actions">
+        <button onclick="downloadReportCSV()"><i class="fa-solid fa-file-csv"></i> Descargar CSV</button>
+        <button onclick="downloadReportHTML()"><i class="fa-solid fa-file-lines"></i> Descargar HTML</button>
+      </div>
     </div>
   </div>
 </div>
@@ -317,7 +448,7 @@ body.dark-mode .leaflet-control-attribution a{ color:#bbb; }
 
 <script>
 /* =========================================
-   SISTEMA CENTRAL STEELE v20.0
+   SISTEMA NEXUS VIAL v21.0
    ========================================= */
 
 let alerts = []; 
@@ -330,6 +461,7 @@ let staticLayer = L.layerGroup();
 let risLayer = L.layerGroup(); 
 let routeControl = null;
 let feedInterval = null;
+let ageInterval = null;
 let processingQueue = []; 
 let isProcessing = false;
 let chartStatesInstance = null;
@@ -359,22 +491,47 @@ function log(msg, type='info') {
 }
 
 window.onload = function() {
+  // Restaurar alertas de la sesión (máx 24h)
+  try {
+    const savedAlerts = localStorage.getItem('nv_alerts');
+    if(savedAlerts) {
+      alerts = (JSON.parse(savedAlerts) || []).filter(a => a && typeof a.lat === 'number' && a.time && (Date.now() - new Date(a.time).getTime()) < 24*3600*1000);
+      alerts.forEach(a => addMarkerToMap(a));
+      if(alerts.length) { updateLists(); persistAlerts(); }
+    }
+  } catch(e) {}
+
   if(localStorage.getItem('steele_critical')) { document.getElementById('criticalPointsInput').value = localStorage.getItem('steele_critical'); loadCriticalPoints(); }
   const savedModel = localStorage.getItem('steele_model');
   if(savedModel) { const s=document.getElementById('modelSelect'); const o=document.createElement('option'); o.value=savedModel; o.text=savedModel; s.add(o); s.value=savedModel; }
+  const savedRModel = localStorage.getItem('steele_rmodel');
+  if(savedRModel) { const s=document.getElementById('reportModelSelect'); const o=document.createElement('option'); o.value=savedRModel; o.text=savedRModel; s.add(o); s.value=savedRModel; }
+  const savedToken = localStorage.getItem('nv_token');
+  if(savedToken) document.getElementById('tokenInput').value = savedToken;
+  const soundOn = localStorage.getItem('nv_sound');
+  if(soundOn === 'off') document.getElementById('soundToggle').checked = false;
   const savedTheme = localStorage.getItem('steele_theme');
   if(savedTheme === 'dark') applyTheme(true);
-  
+  const rss1 = localStorage.getItem('steele_rss1'); if(rss1) document.getElementById('rssInputPrimary').value = rss1;
+  const rss2 = localStorage.getItem('steele_rss2'); if(rss2) document.getElementById('rssInputSecondary').value = rss2;
+
   // Renderizar Directorio y Estados al inicio
   renderDirectory(directoryData);
   renderStateFilters();
-  log("Sistema V20.0 Listo.");
+  log("Sistema NEXUS VIAL listo.");
   if(sessionStorage.getItem('steele_entered')) enterPlatform();
 };
 
 function saveConfig() {
   localStorage.setItem('steele_model', document.getElementById('modelSelect').value);
+  localStorage.setItem('steele_rmodel', document.getElementById('reportModelSelect').value);
+  localStorage.setItem('steele_rss1', document.getElementById('rssInputPrimary').value.trim());
+  localStorage.setItem('steele_rss2', document.getElementById('rssInputSecondary').value.trim());
 }
+function saveToken() {
+  localStorage.setItem('nv_token', document.getElementById('tokenInput').value.trim());
+}
+function persistAlerts() { try { localStorage.setItem('nv_alerts', JSON.stringify(alerts)); } catch(e) {} }
 
 function toggleTheme() { const isDark = document.body.classList.contains('dark-mode'); applyTheme(!isDark); }
 function applyTheme(toDark) {
@@ -414,6 +571,7 @@ function switchPanel(id) {
    SISTEMA HÍBRIDO + RESPALDO (V20)
    ========================================= */
 async function startHybridSystem() {
+    if(feedInterval) return;
     const urlPri = document.getElementById('rssInputPrimary').value.trim();
     const urlSec = document.getElementById('rssInputSecondary').value.trim();
 
@@ -421,10 +579,12 @@ async function startHybridSystem() {
     log(`📡 Iniciando escaneo...`, 'info');
     document.getElementById('btnConnect').disabled = true;
     document.getElementById('btnConnect').innerText = "Monitoreando\u2026";
+    setLiveStatus(true);
 
     await fetchCycles(urlPri, urlSec);
     if(feedInterval) clearInterval(feedInterval);
     feedInterval = setInterval(() => fetchCycles(urlPri, urlSec), 180000);
+    if(!ageInterval) ageInterval = setInterval(refreshAlertAges, 300000);
     togglePanel();
 }
 
@@ -470,6 +630,21 @@ async function parseFeedItems(url) {
     return items;
 }
 
+const SEEN_TTL = 6 * 3600 * 1000; // no reprocesar el mismo título dentro de 6h
+const ALERT_EXPIRE_MS = 8 * 3600 * 1000;
+function isAlertExpired(a) { try { return Date.now() - new Date(a.time).getTime() > ALERT_EXPIRE_MS; } catch(e) { return false; } }
+function isSeen(key) {
+  try {
+    const list = JSON.parse(localStorage.getItem('nv_seen') || '[]');
+    const now = Date.now();
+    const keep = list.filter(x => now - x.t < 24 * 3600 * 1000);
+    const hit = keep.some(x => x.k === key && now - x.t < SEEN_TTL);
+    keep.push({ k: key, t: now });
+    localStorage.setItem('nv_seen', JSON.stringify(keep.slice(-400)));
+    return hit;
+  } catch(e) { return false; }
+}
+
 async function fetchCycles(pri, sec) {
     let combinedItems = [];
     const bust = (u) => u + (u.includes('?') ? '&' : '?') + 't=' + Date.now();
@@ -483,13 +658,19 @@ async function fetchCycles(pri, sec) {
     }
 
     const uniqueItems = new Set();
-    combinedItems.forEach(item => {
-        const text = `${item.title}. ${item.content_text || item.description || ''}`.replace(/<[^>]*>?/gm, '');
-        if(!uniqueItems.has(item.title)) { uniqueItems.add(item.title); processingQueue.push(text); }
-    });
+    let added = 0;
+    for(const item of combinedItems) {
+        if(added >= 10) break; // máx. 10 análisis de Groq por ciclo
+        const text = `${item.title}. ${item.content_text || item.description || ''}`.replace(/<[^>]*>?/gm, '').slice(0, 450);
+        if(!uniqueItems.has(item.title) && !isSeen(item.title)) {
+            uniqueItems.add(item.title);
+            processingQueue.push(text);
+            added++;
+        }
+    }
+    if(added) log(`📦 Cola: ${added} noticias nuevas para analizar.`, 'info');
     
     if(processingQueue.length > 0) {
-        log(`📦 Cola: ${processingQueue.length} noticias.`, 'info');
         if(!isProcessing) processQueue();
     } else {
         log("ℹ️ Sin noticias nuevas.", 'warn');
@@ -505,26 +686,36 @@ async function processQueue() {
 
 function stopSystem() {
   if(feedInterval) clearInterval(feedInterval);
-  processingQueue = []; isProcessing = false; document.getElementById('btnConnect').disabled = false; log("🛑 Detenido.", 'info');
+  if(ageInterval) clearInterval(ageInterval);
+  feedInterval = null; ageInterval = null; processingQueue = []; isProcessing = false; document.getElementById('btnConnect').disabled = false; setLiveStatus(false); log("🛑 Detenido.", 'info');
 }
 
 // === IA & GEOCODING ===
-async function consultGroq(prompt, retries = 0) {
-  const model = document.getElementById('modelSelect').value || 'llama-3.3-70b-versatile';
-  if(retries > 3) return null;
-  try {
-    const response = await fetch('/api/groq', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: 'Eres un analista de seguridad vial y logística en México. Respondes en español.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.2
-    }) });
-    const data = await response.json();
-    if(data.error) { if(data.error.status === 429) { await new Promise(r => setTimeout(r, 10000)); return consultGroq(prompt, retries + 1); } return null; }
-    return data.choices?.[0]?.message?.content;
-  } catch(e) { return null; }
+async function consultGroq(prompt, model) {
+  const sel = document.getElementById('modelSelect');
+  const m = model || (sel && sel.value) || 'llama-3.1-8b-instant';
+  const token = localStorage.getItem('nv_token') || '';
+  const headers = { 'Content-Type': 'application/json' };
+  if(token) headers['x-app-token'] = token;
+  let retries = 0, attempts = 0;
+  while(attempts <= 3) {
+    attempts++;
+    try {
+      const response = await fetch('/api/groq', { method: 'POST', headers, body: JSON.stringify({
+        model: m,
+        messages: [
+          { role: 'system', content: 'Eres un analista de seguridad vial y logística en México. Respondes en español.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.2,
+        max_tokens: 512
+      }) });
+      const data = await response.json();
+      if(data.error) { if(data.error.status === 429 && retries < 3) { await new Promise(r => setTimeout(r, 10000)); retries++; continue; } return null; }
+      return data.choices?.[0]?.message?.content;
+    } catch(e) { return null; }
+  }
+  return null;
 }
 
 function extractJSON(str) { const first = str.indexOf('{'); const last = str.lastIndexOf('}'); if (first !== -1 && last !== -1) return str.substring(first, last + 1); return null; }
@@ -586,52 +777,74 @@ async function processAlert(text) {
     if(!isInMexico(loc.lat, loc.lon)) { log(`🚫 Fuera de México: ${data.resumen}`, 'warn'); return; }
     const isDup = alerts.some(a => Math.abs(a.lat - loc.lat) < 0.0001 && Math.abs(a.lon - loc.lon) < 0.0001); if(isDup) return;
     const alertObj = { id: Date.now(), lat: loc.lat, lon: loc.lon, category: data.categoria, title: data.resumen, location: data.ubicacion || data.municipio || estado, state: estado, precision: loc.prec, time: new Date(), trafico: data.trafico || null, detail: (data.detail || '').slice(0, 280), liked: false };
-    alerts.push(alertObj); addMarkerToMap(alertObj); updateLists(); log(`✅ ALERTA [${data.categoria}]${loc.prec !== 'punto' ? ' (aprox: ' + loc.prec + ')' : ''}: ${data.resumen} @ ${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}`, 'success');
+    alerts.push(alertObj); addMarkerToMap(alertObj); updateLists(); persistAlerts(); log(`✅ ALERTA [${data.categoria}]${loc.prec !== 'punto' ? ' (aprox: ' + loc.prec + ')' : ''}: ${data.resumen} @ ${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}`, 'success');
+    if(data.importante) notifyImportant(alertObj);
     if(processingQueue.length === 0 && !document.getElementById('panel-ris').classList.contains('active')) map.panTo([loc.lat, loc.lon]);
   } catch(e) {}
 }
 
-function removeAlert(id) { alerts = alerts.filter(a => a.id !== id); markers.clearLayers(); alerts.forEach(a => addMarkerToMap(a)); updateLists(); }
+function removeAlert(id) { alerts = alerts.filter(a => a.id !== id); markers.clearLayers(); alerts.forEach(a => addMarkerToMap(a)); updateLists(); persistAlerts(); }
 function addMarkerToMap(alert) {
   const isSec = alert.category === 'security';
-  const color = isSec ? '#d93025' : trafficStyle(alert.trafico || 'moderado').color;
-  const iconClass = isSec ? 'fa-user-shield' : 'fa-car-burst';
+  const expired = isAlertExpired(alert);
+  const color = expired ? '#9aa0a6' : (isSec ? '#d93025' : trafficStyle(alert.trafico || 'moderado').color);
+  const iconClass = expired ? 'fa-clock-rotate-left' : (isSec ? 'fa-user-shield' : 'fa-car-burst');
   const icon = L.divIcon({ className: 'custom-pin', html: `<div style="background:${color}; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; border:2px solid white; box-shadow:0 3px 6px rgba(0,0,0,0.5); font-size:16px;"><i class="fa-solid ${iconClass}"></i></div>`, iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32] });
   const m = L.marker([alert.lat, alert.lon], {icon});
   const nota = alert.precision && alert.precision !== 'punto' ? `<br><small style="color:#5f6368;">📍 aprox: ${alert.precision}</small>` : '';
   const chip = (!isSec && alert.trafico) ? `<div style="margin-top:5px;"><span class="traffic-chip" style="background:${trafficStyle(alert.trafico).bg}; color:${trafficStyle(alert.trafico).color};">${trafficStyle(alert.trafico).label}</span></div>` : '';
+  const stale = expired ? `<div style="margin-top:5px;"><span class="traffic-chip" style="background:rgba(154,160,166,.2); color:#80868b;">🕓 Hace más de 8h</span></div>` : '';
   m.bindPopup(`
     <div style="max-width:240px;">
       <b>${alert.title}</b><br>
-      <span style="color:#5f6368;font-size:12px;">${alert.location}</span>${nota}${chip}
+      <span style="color:#5f6368;font-size:12px;">${alert.location}</span>${nota}${chip}${stale}
       <br><button onclick="openAlertDetail(${alert.id})" style="margin-top:8px;width:100%;padding:6px 10px;border:none;border-radius:6px;background:#1976d2;color:#fff;cursor:pointer;font-size:12px;font-weight:600;">Ver detalle</button>
     </div>`);
   m.category = alert.category; markers.addLayer(m);
+}
+function alertCardHTML(a) {
+  const t = trafficStyle(a.trafico || 'moderado');
+  const trafficChip = a.category === 'road' && a.trafico ? `<div><span class="traffic-chip" style="background:${t.bg}; color:${t.color};">${t.label}</span></div>` : '';
+  const stale = isAlertExpired(a) ? `<div><span class="traffic-chip" style="background:rgba(154,160,166,.2); color:#80868b;">🕓 Hace más de 8h</span></div>` : '';
+  return `
+    <div style="display:flex; justify-content:space-between; align-items:start;"><b>${a.title}</b>
+    <div class="card-actions"><button onclick="event.stopPropagation(); toggleLike(${a.id})" id="btn-heart-${a.id}" class="btn-heart${a.liked ? ' liked' : ''}" title="Me gusta / Detalle"><i class="fa-solid fa-heart"></i></button><button onclick="event.stopPropagation(); shareAlert(${a.id})" class="btn-whatsapp-alert" title="Compartir"><i class="fa-brands fa-whatsapp"></i></button><button onclick="event.stopPropagation(); removeAlert(${a.id})" class="btn-delete-alert" title="Eliminar">X</button></div></div>
+    <div style="font-size:11px;color:var(--text-muted)">${a.location}</div>${trafficChip}${stale}
+  `;
+}
+function makeAlertCard(a) {
+  const div = document.createElement('div'); div.className = `alert-card type-${a.category}${isAlertExpired(a) ? ' expired' : ''}`;
+  div.innerHTML = alertCardHTML(a);
+  div.onclick = () => openAlertDetail(a.id);
+  return div;
 }
 function updateLists() {
   const roadList = document.getElementById('list-road'); const secList = document.getElementById('list-security');
   if(roadList) roadList.innerHTML = ''; if(secList) secList.innerHTML = '';
   [...alerts].sort((a,b) => b.time - a.time).forEach(a => {
-    const div = document.createElement('div'); div.className = `alert-card type-${a.category}`;
-    const t = trafficStyle(a.trafico || 'moderado');
-    const trafficChip = a.category === 'road' && a.trafico ? `<div><span class="traffic-chip" style="background:${t.bg}; color:${t.color};">${t.label}</span></div>` : '';
-    div.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:start;"><b>${a.title}</b>
-        <div class="card-actions"><button onclick="event.stopPropagation(); toggleLike(${a.id})" id="btn-heart-${a.id}" class="btn-heart${a.liked ? ' liked' : ''}" title="Me gusta / Detalle"><i class="fa-solid fa-heart"></i></button><button onclick="event.stopPropagation(); shareAlert(${a.id})" class="btn-whatsapp-alert" title="Compartir"><i class="fa-brands fa-whatsapp"></i></button><button onclick="event.stopPropagation(); removeAlert(${a.id})" class="btn-delete-alert" title="Eliminar">X</button></div></div>
-        <div style="font-size:11px;color:var(--text-muted)">${a.location}</div>${trafficChip}
-    `;
-    div.onclick = () => openAlertDetail(a.id);
-    if(a.category === 'road') { roadList.appendChild(div); } else { secList.appendChild(div); }
+    (a.category === 'road' ? roadList : secList).appendChild(makeAlertCard(a));
   });
-  document.getElementById('count-road').innerText = document.getElementById('list-road').childElementCount;
-  document.getElementById('count-security').innerText = document.getElementById('list-security').childElementCount;
+  document.getElementById('count-road').innerText = roadList.childElementCount;
+  document.getElementById('count-security').innerText = secList.childElementCount;
+  renderDrawer();
+}
+function renderDrawer() {
+  const dr = document.getElementById('drawer-road'); const ds = document.getElementById('drawer-security');
+  if(!dr || !ds) return;
+  dr.innerHTML = ''; ds.innerHTML = '';
+  [...alerts].sort((a,b) => b.time - a.time).forEach(a => {
+    (a.category === 'road' ? dr : ds).appendChild(makeAlertCard(a));
+  });
+  const ur = document.getElementById('ub-road'), us = document.getElementById('ub-security');
+  if(ur) ur.textContent = '🚗 ' + dr.childElementCount;
+  if(us) us.textContent = '🛡 ' + ds.childElementCount;
 }
 function filterMapMarkers(context) { markers.clearLayers(); alerts.forEach(a => { if(context === 'all' || a.category === context) addMarkerToMap(a); }); }
 function shareAlert(id) {
     const alert = alerts.find(a => a.id === id); if(!alert) return;
     const mapLink = `https://www.google.com/maps/search/?api=1&query=${alert.lat},${alert.lon}`;
     const trafico = alert.category === 'road' && alert.trafico ? `\n🚦 *Tráfico:* ${trafficStyle(alert.trafico).label}` : '';
-    const text = `🚨 *CENTRAL STEELE - ALERTA* 🚨\n\n📌 *Evento:* ${alert.title}\n📍 *Ubicación:* ${alert.location}${trafico}\n🔗 *Ver:* ${mapLink}`;
+    const text = `🚨 *NEXUS VIAL - ALERTA* 🚨\n\n📌 *Evento:* ${alert.title}\n📍 *Ubicación:* ${alert.location}${trafico}\n🔗 *Ver:* ${mapLink}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 }
 
@@ -659,8 +872,9 @@ function formatAlertTime(t) { return new Date(t).toLocaleString('es-MX', { dateS
 function toggleLike(id) {
   const a = alerts.find(x => x.id === id); if(!a) return;
   a.liked = !a.liked;
+  document.querySelectorAll('#btn-heart-' + id).forEach(h => h.classList.toggle('liked', a.liked));
+  persistAlerts();
   openAlertDetail(id);
-  const h = document.getElementById('btn-heart-' + id); if(h) h.classList.toggle('liked', a.liked);
 }
 function openAlertDetail(id) {
   const a = alerts.find(x => x.id === id); if(!a) return;
@@ -721,29 +935,187 @@ function applyFilter(keyword) {
   document.querySelectorAll('#state-grid button').forEach(btn => btn.style.background = btn.textContent === keyword ? 'var(--accent)' : '');
   document.querySelectorAll('#state-grid button').forEach(btn => btn.style.color = btn.textContent === keyword ? '#fff' : '');
   staticLayer.clearLayers(); const filteredPoints = keyword ? criticalPoints.filter(p => p.title.toLowerCase().includes(keyword.toLowerCase())) : criticalPoints; filteredPoints.forEach(p => { const icon = L.divIcon({ className: 'custom-pin', html: `<div style="background:rgba(156, 39, 176, 0.08); width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#9c27b0; border:2px solid #9c27b0;"><i class="fa-solid fa-skull"></i></div>`, iconSize: [24, 24], iconAnchor: [12, 24] }); const marker = L.marker([p.lat, p.lon], {icon}); marker.bindPopup(`<b>⛔ ${p.title}</b><br>${p.desc}`); staticLayer.addLayer(marker); staticLayer.addLayer(L.circle([p.lat, p.lon], { color: '#9c27b0', weight: 1, fillColor: '#9c27b0', fillOpacity: 0.08, radius: 3000 })); }); }
-async function detectModels() { try { const res = await fetch('/api/groq?action=models'); const data = await res.json(); const select = document.getElementById('modelSelect'); select.innerHTML = ''; const preferred = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'gemma2-9b-it']; const models = (data.data || []).map(m => m.id); preferred.forEach(p => { if(models.includes(p)) { const o = document.createElement('option'); o.value = p; o.text = p; select.appendChild(o); } }); models.forEach(id => { if(!preferred.includes(id)) { const o = document.createElement('option'); o.value = id; o.text = id; select.appendChild(o); } }); if(select.options.length === 0) log("Sin modelos disponibles", 'warn'); else { log(`✅ Modelos cargados (${select.options.length}).`, 'success'); saveConfig(); } } catch(e) { log(`Error detección (necesitas servidor)`,'err'); } }
-function calculateRoute() { const o = document.getElementById('routeOrigin').value; const d = document.getElementById('routeDest').value; if(!o || !d) return; if(routeControl) { map.removeControl(routeControl); routeControl = null; } Promise.all([ fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(o + ', Mexico')}&limit=1`).then(r=>r.json()), fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(d + ', Mexico')}&limit=1`).then(r=>r.json()) ]).then(res => { if(!res[0][0] || !res[1][0]) return; routeControl = L.Routing.control({ waypoints: [L.latLng(res[0][0].lat, res[0][0].lon), L.latLng(res[1][0].lat, res[1][0].lon)], router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }), lineOptions: { styles: [{color: '#b388ff', opacity: 0.8, weight: 6}] }, createMarker: ()=>null, addWaypoints: false, fitSelectedRoutes: true }).addTo(map); routeControl.on('routesfound', e => { activeRoute = e.routes[0]; document.getElementById('routeStats').innerText = `${(activeRoute.summary.totalDistance/1000).toFixed(1)} km | ${(activeRoute.summary.totalTime/60).toFixed(0)} min`; updateRouteAlerts(activeRoute.coordinates); }); }); }
+async function detectModels() { try { const res = await fetch('/api/groq?action=models'); const data = await res.json(); const select = document.getElementById('modelSelect'); const rsel = document.getElementById('reportModelSelect'); const saved = rsel ? rsel.value : ''; select.innerHTML = ''; if(rsel){ rsel.innerHTML=''; const o0=document.createElement('option'); o0.value=''; o0.text='(igual que alertas)'; rsel.appendChild(o0); } const preferred = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'mixtral-8x7b-32768', 'gemma2-9b-it']; const models = (data.data || []).map(m => m.id); const addOpt = (id, target) => { const o = document.createElement('option'); o.value = id; o.text = id; target.appendChild(o); }; preferred.forEach(p => { if(models.includes(p)) { addOpt(p, select); if(rsel) addOpt(p, rsel); } }); models.forEach(id => { if(!preferred.includes(id)) { addOpt(id, select); if(rsel) addOpt(id, rsel); } }); if(rsel && saved) rsel.value = saved; if(select.options.length === 0) log("Sin modelos disponibles", 'warn'); else { log(`✅ Modelos cargados (${select.options.length}).`, 'success'); saveConfig(); } } catch(e) { log(`Error detección (necesitas servidor)`,'err'); } }
+function calculateRoute() { const o = document.getElementById('routeOrigin').value; const d = document.getElementById('routeDest').value; if(!o || !d) return; if(routeControl) { map.removeControl(routeControl); routeControl = null; } Promise.all([ fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(o + ', Mexico')}&limit=1`).then(r=>r.json()), fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(d + ', Mexico')}&limit=1`).then(r=>r.json()) ]).then(res => { if(!res[0][0] || !res[1][0]) return; routeControl = L.Routing.control({ waypoints: [L.latLng(res[0][0].lat, res[0][0].lon), L.latLng(res[1][0].lat, res[1][0].lon)], router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }), lineOptions: { styles: [{color: '#b388ff', opacity: 0.8, weight: 6}] }, createMarker: ()=>null, addWaypoints: false, fitSelectedRoutes: true }).addTo(map); routeControl.on('routesfound', e => { activeRoute = e.routes[0]; const stats = `${(activeRoute.summary.totalDistance/1000).toFixed(1)} km | ${(activeRoute.summary.totalTime/60).toFixed(0)} min`; document.getElementById('routeStats').innerText = stats; const rb = document.getElementById('routeBoxStats'); if(rb) rb.innerText = stats; updateRouteAlerts(activeRoute.coordinates); }); }); }
 
 const ROUTE_BUFFER_KM = 8;
 function haversineKm(lat1, lon1, lat2, lon2) { const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180, a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2; return 2*R*Math.asin(Math.sqrt(a)); }
 function pointToSegmentKm(lat, lon, aLat, aLon, bLat, bLon) { const R=6371, toRad=v=>v*Math.PI/180, lat0=(lat+aLat+bLat)/3; const x=toRad(lon)*Math.cos(toRad(lat0))*R, y=toRad(lat)*R; const ax=toRad(aLon)*Math.cos(toRad(lat0))*R, ay=toRad(aLat)*R; const bx=toRad(bLon)*Math.cos(toRad(lat0))*R, by=toRad(bLat)*R; const dx=bx-ax, dy=by-ay; const t=(dx===0&&dy===0)?0:Math.max(0, Math.min(1, ((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy))); return Math.hypot(x-(ax+t*dx), y-(ay+t*dy)); }
 function distToPolylineKm(lat, lon, coords) { let best=Infinity; for(let i=0;i<coords.length-1;i++){ const d=pointToSegmentKm(lat, lon, coords[i].lat, coords[i].lng, coords[i+1].lat, coords[i+1].lng); if(d<best) best=d; } return best===Infinity? null : best; }
 function updateRouteAlerts(coords) {
-  const box = document.getElementById('routeAlerts'); if(!box) return;
+  const box = document.getElementById('routeAlerts'); const rbox = document.getElementById('routeBoxAlerts');
+  if(!box && !rbox) return;
   routeNearAlerts = [];
-  box.innerHTML = '<div style="font-size:12px;color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Analizando entorno...</div>';
-  if(!coords || !coords.length) { box.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Sin datos de ruta.</div>'; return; }
+  const defMsg = '<div style="font-size:12px;color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Analizando entorno...</div>';
+  if(box) box.innerHTML = defMsg; if(rbox) rbox.innerHTML = defMsg;
+  if(!coords || !coords.length) { if(box) box.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Sin datos de ruta.</div>'; if(rbox) rbox.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Sin datos de ruta.</div>'; return; }
   alerts.forEach(a => { const d = distToPolylineKm(a.lat, a.lon, coords); if(d !== null && d <= ROUTE_BUFFER_KM) routeNearAlerts.push(Object.assign({}, a, { distKm: d })); });
   routeNearAlerts.sort((x,y) => x.distKm - y.distKm);
-  if(!routeNearAlerts.length) { box.innerHTML = `<div style="font-size:12px;color:var(--success);">✅ Sin alertas en un radio de ${ROUTE_BUFFER_KM} km de la ruta.</div>`; return; }
-  box.innerHTML = routeNearAlerts.map(a => {
-    const color = a.category === 'security' ? '#d93025' : trafficStyle(a.trafico || 'moderado').color;
-    return `<div class="route-alert-item" onclick="openAlertDetail(${a.id})"><div class="ra-dot" style="background:${color}"></div><div class="ra-info"><b>${a.title}</b><span>${a.location} · a ${a.distKm.toFixed(1)} km</span></div></div>`;
-  }).join('');
+  const html = routeNearAlerts.length
+    ? routeNearAlerts.map(a => {
+        const color = a.category === 'security' ? '#d93025' : trafficStyle(a.trafico || 'moderado').color;
+        return `<div class="route-alert-item" onclick="openAlertDetail(${a.id})"><div class="ra-dot" style="background:${color}"></div><div class="ra-info"><b>${a.title}</b><span>${a.location} · a ${a.distKm.toFixed(1)} km</span></div></div>`;
+      }).join('')
+    : `<div style="font-size:12px;color:var(--success);">✅ Sin alertas en un radio de ${ROUTE_BUFFER_KM} km de la ruta.</div>`;
+  if(box) box.innerHTML = html; if(rbox) rbox.innerHTML = html;
 }
-function enterPlatform() { const l=document.getElementById('landing'); if(l) l.style.display='none'; sessionStorage.setItem('steele_entered','1'); }
-function clearMapRoute() { if(routeControl) { map.removeControl(routeControl); routeControl = null; activeRoute = null; } routeNearAlerts = []; document.getElementById('routeStats').innerText = ""; const b=document.getElementById('routeAlerts'); if(b) b.innerHTML='<div style="font-size:12px;color:var(--text-muted);">Traza una ruta para analizar el entorno.</div>'; document.getElementById('aiReport').innerText = "Esperando ruta..."; }
-async function generateRiskReport() { const box = document.getElementById('aiReport'); if(!activeRoute) { box.innerText = "Traza ruta."; return; } box.innerText = "Analizando..."; box.classList.add('typing'); const nearInfo = routeNearAlerts.map(a => `- [a ${a.distKm.toFixed(1)} km de la ruta] ${a.category}: ${a.title} (${a.location})`).join('\n'); const incidents = nearInfo || (alerts.map(a => `- ${a.category}: ${a.title} (${a.location})`).join('\n')) || "Sin incidentes recientes."; const riskPoints = criticalPoints.map(p => `- ZONA ROJA: ${p.title} (${p.desc})`).join('\n'); const prompt = `Analiza ruta ${document.getElementById('routeOrigin').value} a ${document.getElementById('routeDest').value}. Alertas Vivas: ${incidents}. Puntos Criticos: ${riskPoints}. Da veredicto seguridad.`; const report = await consultGroq(prompt); box.classList.remove('typing'); box.innerText = report || "Error."; }
+function enterPlatform() { const l=document.getElementById('landing'); if(l) l.style.display='none'; sessionStorage.setItem('steele_entered','1'); document.body.classList.add('user-mode'); document.body.classList.remove('operator-mode'); map.invalidateSize(); requestNotifPerm(); if(!feedInterval) { if(!document.getElementById('modelSelect').value) detectModels(); startHybridSystem(); } }
+function setLiveStatus(on) { const el=document.getElementById('ub-status'); if(!el) return; el.innerHTML = on ? '<span class="dot-live"></span> Monitoreando' : '<i class="fa-solid fa-pause"></i> Detenido'; el.classList.toggle('off', !on); }
+function toggleDrawer() { const d=document.getElementById('userdrawer'); if(d) d.classList.toggle('open'); }
+function openRouteBox() { const b=document.getElementById('routebox'); if(b) b.classList.toggle('open'); }
+function closeRouteBox() { const b=document.getElementById('routebox'); if(b) b.classList.remove('open'); }
+function goUserRoute() { document.getElementById('routeOrigin').value = document.getElementById('routeBoxOrigin').value; document.getElementById('routeDest').value = document.getElementById('routeBoxDest').value; calculateRoute(); closeRouteBox(); }
+function toggleOperator() {
+  const isUser = document.body.classList.toggle('user-mode');
+  document.body.classList.toggle('operator-mode', !isUser);
+  closeRouteBox(); document.getElementById('userdrawer') && document.getElementById('userdrawer').classList.remove('open');
+  map.invalidateSize();
+}
+function userFilter(sel, btn) {
+  document.querySelectorAll('.uf-btn').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  map.removeLayer(markers); map.addLayer(markers);
+  markers.clearLayers(); alerts.forEach(a => { if(sel === 'all' || a.category === sel) addMarkerToMap(a); });
+}
+
+// === RELOJ + HOY NO CIRCULA ===
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+let lastHncDay = -1;
+function renderHoyNoCircula() {
+  const el = document.getElementById('circula'), msg = document.getElementById('circula-msg');
+  if(!el || !msg) return;
+  const hoy = new Date().getDay();
+  const reglas = {
+    0: ['Sin restricción hoy', 'ok'],
+    1: ['Hoy no circula: placas 5 y 6', 'no'],
+    2: ['Hoy no circula: placas 7 y 8', 'no'],
+    3: ['Hoy no circula: placas 9 y 0', 'no'],
+    4: ['Hoy no circula: placas 1 y 2', 'no'],
+    5: ['Hoy no circula: placas 3 y 4', 'no'],
+    6: ['Sábado: verifica tu dígito', 'no']
+  };
+  const [txt, cls] = reglas[hoy];
+  msg.textContent = '🚫 CDMX · ' + txt;
+  el.className = cls;
+}
+function tickClock() {
+  const t = new Date();
+  const hh = document.getElementById('ub-time'), dd = document.getElementById('ub-date');
+  if(hh) hh.textContent = pad2(t.getHours()) + ':' + pad2(t.getMinutes()) + ':' + pad2(t.getSeconds());
+  if(dd) dd.textContent = t.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' });
+  const day = t.getDay();
+  if(day !== lastHncDay) { lastHncDay = day; renderHoyNoCircula(); }
+}
+setInterval(tickClock, 1000); tickClock();
+
+// === REPORTE DEL DÍA ===
+function reportCard() {
+  document.getElementById('rep-road').textContent = alerts.filter(a => a.category === 'road').length;
+  document.getElementById('rep-sec').textContent = alerts.filter(a => a.category === 'security').length;
+  document.getElementById('rep-imp').textContent = alerts.filter(a => a.importante).length;
+  document.getElementById('rep-stop').textContent = alerts.filter(a => a.category === 'road' && a.trafico === 'detenido').length;
+  const list = document.getElementById('rep-list');
+  list.innerHTML = '';
+  [...alerts].sort((a,b) => b.time - a.time).slice(0, 15).forEach(a => list.appendChild(makeAlertCard(a)));
+  document.getElementById('report-modal').style.display = 'flex';
+}
+function closeReport() { document.getElementById('report-modal').style.display = 'none'; }
+document.getElementById('report-modal') && document.getElementById('report-modal').addEventListener('click', e => { if(e.target === e.currentTarget) closeReport(); });
+function csvCell(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
+function downloadReportCSV() {
+  const rows = [['hora','categoria','trafico','importante','titulo','ubicacion','estado','lat','lon']];
+  [...alerts].sort((a,b) => b.time - a.time).forEach(a => rows.push([
+    csvCell(formatAlertTime(a.time)), a.category, a.trafico || '', a.importante ? 'Si' : 'No',
+    csvCell(a.title), csvCell(a.location), csvCell(a.state || ''), a.lat, a.lon
+  ]));
+  const csv = '\ufeff' + rows.map(r => r.join(',')).join('\n');
+  saveBlob(csv, 'text/csv', 'nexus-vial-reporte-' + new Date().toISOString().slice(0,10) + '.csv');
+}
+function downloadReportHTML() {
+  const hoy = new Date().toLocaleString('es-MX', { dateStyle: 'full' });
+  const roads = alerts.filter(a => a.category === 'road').length;
+  const secs = alerts.filter(a => a.category === 'security').length;
+  const imps = alerts.filter(a => a.importante).length;
+  const stops = alerts.filter(a => a.category === 'road' && a.trafico === 'detenido').length;
+  const rows = [...alerts].sort((a,b) => b.time - a.time).map(a =>
+    `<tr><td>${formatAlertTime(a.time)}</td><td>${a.category === 'security' ? 'Seguridad' : 'Vial'}</td><td>${a.trafico || '-'}</td><td>${a.importante ? '⚠' : '—'}</td><td>${a.title || ''}</td><td>${a.location || ''}</td><td>${a.state || ''}</td></tr>`
+  ).join('');
+  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Nexus Vial · Reporte</title><style>
+    body{font-family:Segoe UI,Arial,sans-serif;margin:28px;color:#222}
+    h1{font-size:20px;margin:0 0 4px}h2{font-size:14px;font-weight:400;color:#666;margin:0 0 18px}
+    .stats{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+    .card{background:#f5f7fa;border:1px solid #dde3ea;border-radius:10px;padding:10px 16px}
+    .card b{display:block;font-size:20px}
+    .card span{font-size:11px;color:#777;text-transform:uppercase}
+    table{border-collapse:collapse;width:100%;font-size:12px}
+    th,td{border:1px solid #d5dbe3;padding:6px 8px;text-align:left}
+    th{background:#eef1f5}@media print{body{margin:8mm}}
+    </style></head><body>
+    <h1>🚦 NEXUS VIAL</h1><h2>Reporte generado: ${hoy}</h2>
+    <div class="stats">
+      <div class="card"><b>${roads}</b><span>Viales</span></div>
+      <div class="card"><b>${secs}</b><span>Seguridad</span></div>
+      <div class="card"><b>${imps}</b><span>Importantes</span></div>
+      <div class="card"><b>${stops}</b><span>Tráfico detenido</span></div>
+    </div>
+    <table><tr><th>Hora</th><th>Categoría</th><th>Tráfico</th><th>Imp.</th><th>Título</th><th>Ubicación</th><th>Estado</th></tr>${rows}
+    </table></body></html>`;
+  saveBlob(html, 'text/html', 'nexus-vial-reporte-' + new Date().toISOString().slice(0,10) + '.html');
+}
+function saveBlob(content, type, filename) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type }));
+  a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 100);
+}
+
+// === NOTIFICACIÓN DE ALERTAS IMPORTANTES ===
+function saveSound() { localStorage.setItem('nv_sound', document.getElementById('soundToggle').checked ? 'on' : 'off'); }
+function requestNotifPerm() { try { if('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch(e) {} }
+function playAlertTone() {
+  if(localStorage.getItem('nv_sound') === 'off') return;
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return;
+    const ctx = new Ctx();
+    [880, 880, 1174].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine'; o.frequency.value = f;
+      const t = ctx.currentTime + i * 0.3;
+      g.gain.setValueAtTime(0.001, t);
+      g.gain.exponentialRampToValueAtTime(0.4, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.26);
+      o.start(t); o.stop(t + 0.28);
+    });
+  } catch(e) {}
+}
+function showImportantToast(a) {
+  const t = document.createElement('div');
+  t.className = 'toast-important';
+  t.innerHTML = `<b>🚨 Alerta importante</b><div>${a.title}</div><div style="font-size:11px;opacity:.8">${a.location}</div>`;
+  t.onclick = () => { t.remove(); openAlertDetail(a.id); };
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 9000);
+}
+function notifyImportant(a) {
+  playAlertTone();
+  showImportantToast(a);
+  try {
+    if('Notification' in window && Notification.permission === 'granted') {
+      new Notification('🚨 NEXUS VIAL — Alerta importante', { body: (a.title || '') + ' · ' + (a.location || '') });
+    }
+  } catch(e) {}
+  const prev = document.title;
+  document.title = '🚨 ' + (a.title || 'Alerta');
+  setTimeout(() => { document.title = prev; }, 8000);
+}
+function refreshAlertAges() {
+  markers.clearLayers(); alerts.forEach(a => addMarkerToMap(a)); updateLists();
+}
+function clearMapRoute() { if(routeControl) { map.removeControl(routeControl); routeControl = null; activeRoute = null; } routeNearAlerts = []; document.getElementById('routeStats').innerText = ""; const b=document.getElementById('routeAlerts'); if(b) b.innerHTML='<div style="font-size:12px;color:var(--text-muted);">Traza una ruta para analizar el entorno.</div>'; const rb2=document.getElementById('routeBoxStats'); if(rb2) rb2.innerText=''; const rbt=document.getElementById('routeBoxAlerts'); if(rbt) rbt.innerHTML=''; document.getElementById('aiReport').innerText = "Esperando ruta..."; }
+async function generateRiskReport() { const box = document.getElementById('aiReport'); if(!activeRoute) { box.innerText = "Traza ruta."; return; } box.innerText = "Analizando..."; box.classList.add('typing'); const nearInfo = routeNearAlerts.map(a => `- [a ${a.distKm.toFixed(1)} km de la ruta] ${a.category}: ${a.title} (${a.location})`).join('\n'); const incidents = nearInfo || (alerts.map(a => `- ${a.category}: ${a.title} (${a.location})`).join('\n')) || "Sin incidentes recientes."; const riskPoints = criticalPoints.map(p => `- ZONA ROJA: ${p.title} (${p.desc})`).join('\n'); const prompt = `Analiza ruta ${document.getElementById('routeOrigin').value} a ${document.getElementById('routeDest').value}. Alertas Vivas: ${incidents}. Puntos Criticos: ${riskPoints}. Da veredicto seguridad.`; const report = await consultGroq(prompt, (document.getElementById('reportModelSelect') || {}).value || 'llama-3.3-70b-versatile'); box.classList.remove('typing'); box.innerText = report || "Error."; }
 </script>
 </body>
 </html>
