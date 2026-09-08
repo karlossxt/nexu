@@ -122,6 +122,17 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  if (url.pathname === '/api/config') {
+    const rssPri = String(ENV.RSS_PRI || '').trim();
+    const rssSec = String(ENV.RSS_SEC || '').trim();
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({
+      rss: [rssPri, rssSec || 'https://news.google.com/rss/search?q=accidente+OR+bloqueo+OR+asalto+carretera+mexico&hl=es-419&gl=MX&ceid=MX:es-419'],
+      model: ENV.GROQ_MODEL || 'openai/gpt-oss-20b',
+      reportModel: ENV.REPORT_MODEL || 'openai/gpt-oss-120b'
+    }));
+  }
+
   const filePath = path.normalize(path.join(ROOT, url.pathname === '/' ? 'index.html' : url.pathname));
   if (!filePath.startsWith(ROOT)) {
     res.writeHead(403);

@@ -448,8 +448,41 @@ body.user-mode #circula{ display:flex; }
 
 <script>
 /* =========================================
-   SISTEMA NEXUS VIAL v21.0
+   SISTEMA NEXUS VIAL v21.1
    ========================================= */
+
+/* =========================================
+   CONFIGURACIÓN CENTRAL DE LINKS
+   Todos los servidores/endpoints de la app.
+   Los feeds se pueden sobrescribir desde las
+   Variables de Vercel (RSS_PRI, RSS_SEC) y la
+   app los toma vía /api/config.
+   ========================================= */
+const LINKS = {
+  tilesLight: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+  tilesDark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  nominatim: 'https://nominatim.openstreetmap.org/search?format=json&q={q}&limit=1&countrycodes=mx',
+  photon: 'https://photon.komoot.io/api/?q={q}&limit=1&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village',
+  rssProxyJson: 'https://api.rss2json.com/v1/api.json?rss_url={u}',
+  rssProxyRaw: 'https://api.allorigins.win/get?url={u}',
+  weather: 'https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto',
+  osrm: 'https://router.project-osrm.org/route/v1',
+  waShare: 'https://wa.me/?text={t}',
+  gmapsLink: 'https://www.google.com/maps/search/?api=1&query={lat},{lon}',
+  logoFallback: 'https://cdn-icons-png.flaticon.com/512/1042/1042312.png',
+  feeds: {
+    pri: {
+      label: 'RSS.app',
+      placeholder: 'https://rss.app/feeds/v1.1/...',
+      url: ''
+    },
+    sec: {
+      label: 'Google News México',
+      placeholder: 'https://news.google.com/rss/...',
+      url: 'https://news.google.com/rss/search?q=accidente+OR+bloqueo+OR+asalto+carretera+mexico&hl=es-419&gl=MX&ceid=MX:es-419'
+    }
+  }
+};
 
 let alerts = []; 
 let criticalPoints = [];
@@ -468,8 +501,8 @@ let chartStatesInstance = null;
 let chartTypesInstance = null;
 
 // MAPA
-const lightLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO', maxZoom: 20 });
-const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO', maxZoom: 20 });
+const lightLayer = L.tileLayer(LINKS.tilesLight, { attribution: '&copy; CARTO', maxZoom: 20 });
+const darkLayer = L.tileLayer(LINKS.tilesDark, { attribution: '&copy; CARTO', maxZoom: 20 });
 const map = L.map('map', { zoomControl: false }).setView([19.4326, -99.1332], 5);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 lightLayer.addTo(map);
@@ -514,12 +547,14 @@ window.onload = function() {
   if(savedTheme === 'dark') applyTheme(true);
   const rss1 = localStorage.getItem('steele_rss1'); if(rss1) document.getElementById('rssInputPrimary').value = rss1;
   const rss2 = localStorage.getItem('steele_rss2'); if(rss2) document.getElementById('rssInputSecondary').value = rss2;
+  if(!document.getElementById('rssInputPrimary').value) document.getElementById('rssInputPrimary').value = LINKS.feeds.pri.url;
+  if(!document.getElementById('rssInputSecondary').value) document.getElementById('rssInputSecondary').value = LINKS.feeds.sec.url;
 
   // Renderizar Directorio y Estados al inicio
   renderDirectory(directoryData);
   renderStateFilters();
   log("Sistema NEXUS VIAL listo.");
-  if(sessionStorage.getItem('steele_entered')) enterPlatform();
+  setTimeout(autoBoot, 400);
 };
 
 function saveConfig() {
@@ -596,13 +631,21 @@ async function parseFeedItems(url) {
         if(!res.ok) throw new Error('HTTP ' + res.status);
         raw = await res.text();
     } catch(e) {
-        try {
-            const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-            const pRes = await fetch(proxy);
+        raw = null;
+        const proxies = [
+          u => LINKS.rssProxyJson.replace('{u}', encodeURIComponent(u)),
+          u => LINKS.rssProxyRaw.replace('{u}', encodeURIComponent(u))
+        ];
+        for(const make of proxies) {
+          try {
+            const pRes = await fetch(make(url));
+            if(!pRes.ok) continue;
             const pData = await pRes.json();
-            raw = pData.contents || null;
-        } catch(e2) { throw new Error('CORS/fetch: ' + url); }
-        if(!raw) return [];
+            if(pData.contents) { raw = pData.contents; break; }
+            if(Array.isArray(pData) || (pData && pData.items)) { raw = JSON.stringify(pData); break; }
+          } catch(e2) {}
+        }
+        if(!raw) throw new Error('CORS/fetch: ' + url);
     }
     const items = [];
     const trimmed = raw.trim();
@@ -736,13 +779,13 @@ async function geocodeBest(place) {
     const candidates = [place, cleaned].filter((v, i, a) => a.indexOf(v) === i);
     for(const c of candidates) {
         try {
-            const geoUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(c + ', Mexico')}&limit=1&countrycodes=mx`;
+            const geoUrl = LINKS.nominatim.replace('{q}', encodeURIComponent(c + ', Mexico'));
             const res = await fetch(geoUrl); const geoData = await res.json();
             if(geoData && geoData.length > 0) return { lat: parseFloat(geoData[0].lat), lon: parseFloat(geoData[0].lon) };
         } catch(e) {}
     }
     try {
-        const backupUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(place + ', Mexico')}&limit=1&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village`;
+        const backupUrl = LINKS.photon.replace('{q}', encodeURIComponent(place + ', Mexico'));
         const res2 = await fetch(backupUrl); const data2 = await res2.json();
         if(data2.features?.length > 0) { const c = data2.features[0].geometry.coordinates; return { lat: c[1], lon: c[0] }; }
     } catch(e2) {}
@@ -842,10 +885,10 @@ function renderDrawer() {
 function filterMapMarkers(context) { markers.clearLayers(); alerts.forEach(a => { if(context === 'all' || a.category === context) addMarkerToMap(a); }); }
 function shareAlert(id) {
     const alert = alerts.find(a => a.id === id); if(!alert) return;
-    const mapLink = `https://www.google.com/maps/search/?api=1&query=${alert.lat},${alert.lon}`;
+    const mapLink = LINKS.gmapsLink.replace('{lat}', alert.lat).replace('{lon}', alert.lon);
     const trafico = alert.category === 'road' && alert.trafico ? `\n🚦 *Tráfico:* ${trafficStyle(alert.trafico).label}` : '';
     const text = `🚨 *NEXUS VIAL - ALERTA* 🚨\n\n📌 *Evento:* ${alert.title}\n📍 *Ubicación:* ${alert.location}${trafico}\n🔗 *Ver:* ${mapLink}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    window.open(LINKS.waShare.replace('{t}', encodeURIComponent(text)), '_blank');
 }
 
 // === DETALLE DE ALERTA + CLIMA ===
@@ -861,7 +904,7 @@ async function fetchWeather(lat, lon) {
   const key = lat.toFixed(2) + ',' + lon.toFixed(2);
   if(weatherCache[key]) return weatherCache[key];
   try {
-    const u = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto`;
+    const u = LINKS.weather.replace('{lat}', lat).replace('{lon}', lon);
     const r = await fetch(u); const d = await r.json(); const c = d.current || {};
     const def = WMO[c.weather_code] || ['Sin dato', '🌡️'];
     const w = { temp: Math.round(c.temperature_2m), desc: def[0], emoji: def[1], wind: Math.round(c.wind_speed_10m) };
@@ -936,7 +979,7 @@ function applyFilter(keyword) {
   document.querySelectorAll('#state-grid button').forEach(btn => btn.style.color = btn.textContent === keyword ? '#fff' : '');
   staticLayer.clearLayers(); const filteredPoints = keyword ? criticalPoints.filter(p => p.title.toLowerCase().includes(keyword.toLowerCase())) : criticalPoints; filteredPoints.forEach(p => { const icon = L.divIcon({ className: 'custom-pin', html: `<div style="background:rgba(156, 39, 176, 0.08); width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#9c27b0; border:2px solid #9c27b0;"><i class="fa-solid fa-skull"></i></div>`, iconSize: [24, 24], iconAnchor: [12, 24] }); const marker = L.marker([p.lat, p.lon], {icon}); marker.bindPopup(`<b>⛔ ${p.title}</b><br>${p.desc}`); staticLayer.addLayer(marker); staticLayer.addLayer(L.circle([p.lat, p.lon], { color: '#9c27b0', weight: 1, fillColor: '#9c27b0', fillOpacity: 0.08, radius: 3000 })); }); }
 async function detectModels() { try { const res = await fetch('/api/groq?action=models'); const data = await res.json(); const select = document.getElementById('modelSelect'); const rsel = document.getElementById('reportModelSelect'); const saved = rsel ? rsel.value : ''; select.innerHTML = ''; if(rsel){ rsel.innerHTML=''; const o0=document.createElement('option'); o0.value=''; o0.text='(igual que alertas)'; rsel.appendChild(o0); } const preferred = ['openai/gpt-oss-20b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'allam-2-7b']; const models = (data.data || []).map(m => m.id); const addOpt = (id, target) => { const o = document.createElement('option'); o.value = id; o.text = id; target.appendChild(o); }; preferred.forEach(p => { if(models.includes(p)) { addOpt(p, select); if(rsel) addOpt(p, rsel); } }); models.forEach(id => { if(!preferred.includes(id)) { addOpt(id, select); if(rsel) addOpt(id, rsel); } }); if(rsel && saved) rsel.value = saved; if(select.options.length === 0) log("Sin modelos disponibles", 'warn'); else { log(`✅ Modelos cargados (${select.options.length}).`, 'success'); saveConfig(); } } catch(e) { log(`Error detección (necesitas servidor)`,'err'); } }
-function calculateRoute() { const o = document.getElementById('routeOrigin').value; const d = document.getElementById('routeDest').value; if(!o || !d) return; if(routeControl) { map.removeControl(routeControl); routeControl = null; } Promise.all([ fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(o + ', Mexico')}&limit=1`).then(r=>r.json()), fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(d + ', Mexico')}&limit=1`).then(r=>r.json()) ]).then(res => { if(!res[0][0] || !res[1][0]) return; routeControl = L.Routing.control({ waypoints: [L.latLng(res[0][0].lat, res[0][0].lon), L.latLng(res[1][0].lat, res[1][0].lon)], router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }), lineOptions: { styles: [{color: '#b388ff', opacity: 0.8, weight: 6}] }, createMarker: ()=>null, addWaypoints: false, fitSelectedRoutes: true }).addTo(map); routeControl.on('routesfound', e => { activeRoute = e.routes[0]; const stats = `${(activeRoute.summary.totalDistance/1000).toFixed(1)} km | ${(activeRoute.summary.totalTime/60).toFixed(0)} min`; document.getElementById('routeStats').innerText = stats; const rb = document.getElementById('routeBoxStats'); if(rb) rb.innerText = stats; updateRouteAlerts(activeRoute.coordinates); }); }); }
+function calculateRoute() { const o = document.getElementById('routeOrigin').value; const d = document.getElementById('routeDest').value; if(!o || !d) return; if(routeControl) { map.removeControl(routeControl); routeControl = null; } Promise.all([ fetch(LINKS.nominatim.replace('{q}', encodeURIComponent(o + ', Mexico'))).then(r=>r.json()), fetch(LINKS.nominatim.replace('{q}', encodeURIComponent(d + ', Mexico'))).then(r=>r.json()) ]).then(res => { if(!res[0][0] || !res[1][0]) return; routeControl = L.Routing.control({ waypoints: [L.latLng(res[0][0].lat, res[0][0].lon), L.latLng(res[1][0].lat, res[1][0].lon)], router: L.Routing.osrmv1({ serviceUrl: LINKS.osrm }), lineOptions: { styles: [{color: '#b388ff', opacity: 0.8, weight: 6}] }, createMarker: ()=>null, addWaypoints: false, fitSelectedRoutes: true }).addTo(map); routeControl.on('routesfound', e => { activeRoute = e.routes[0]; const stats = `${(activeRoute.summary.totalDistance/1000).toFixed(1)} km | ${(activeRoute.summary.totalTime/60).toFixed(0)} min`; document.getElementById('routeStats').innerText = stats; const rb = document.getElementById('routeBoxStats'); if(rb) rb.innerText = stats; updateRouteAlerts(activeRoute.coordinates); }); }); }
 
 const ROUTE_BUFFER_KM = 8;
 function haversineKm(lat1, lon1, lat2, lon2) { const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180, a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2; return 2*R*Math.asin(Math.sqrt(a)); }
@@ -958,6 +1001,21 @@ function updateRouteAlerts(coords) {
       }).join('')
     : `<div style="font-size:12px;color:var(--success);">✅ Sin alertas en un radio de ${ROUTE_BUFFER_KM} km de la ruta.</div>`;
   if(box) box.innerHTML = html; if(rbox) rbox.innerHTML = html;
+}
+async function applyServerConfig() {
+  try {
+    const res = await fetch('/api/config');
+    if(!res.ok) return;
+    const cfg = await res.json();
+    if(cfg.rss) {
+      if(cfg.rss[0]) { const i1 = document.getElementById('rssInputPrimary'); if(!localStorage.getItem('steele_rss1')) i1.value = cfg.rss[0]; }
+      if(cfg.rss[1]) { const i2 = document.getElementById('rssInputSecondary'); if(!localStorage.getItem('steele_rss2')) i2.value = cfg.rss[1]; }
+    }
+  } catch(e) {}
+}
+async function autoBoot() {
+  await applyServerConfig();
+  enterPlatform();
 }
 function enterPlatform() { const l=document.getElementById('landing'); if(l) l.style.display='none'; sessionStorage.setItem('steele_entered','1'); document.body.classList.add('user-mode'); document.body.classList.remove('operator-mode'); map.invalidateSize(); requestNotifPerm(); if(!feedInterval) { if(!document.getElementById('modelSelect').value) detectModels(); startHybridSystem(); } }
 function setLiveStatus(on) { const el=document.getElementById('ub-status'); if(!el) return; el.innerHTML = on ? '<span class="dot-live"></span> Monitoreando' : '<i class="fa-solid fa-pause"></i> Detenido'; el.classList.toggle('off', !on); }
