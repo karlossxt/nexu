@@ -145,8 +145,12 @@ body.dark-mode .leaflet-control-attribution a{ color:#bbb; }
 .landing-feats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:26px; }
 .landing-feat{ background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:12px 8px; color:#e8edf5; font-size:13px; font-weight:600; }
 .landing-feat i{ color:#f9ab00; margin-right:6px; }
-#btn-enter{ width:100%; padding:14px; border:none; border-radius:12px; background:linear-gradient(90deg,#f9ab00,#ff6d00); color:#1a1a1a; font-size:16px; font-weight:800; cursor:pointer; transition:transform .15s; }
-#btn-enter:hover{ transform:scale(1.02); }
+.landing-modes{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.landing-mode{ width:100%; min-height:58px; padding:11px 8px; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; transition:transform .15s,filter .15s; }
+.landing-mode:hover{ transform:translateY(-2px); filter:brightness(1.08); }
+.landing-mode.user{ border:none; background:linear-gradient(90deg,#f9ab00,#ff6d00); color:#1a1a1a; }
+.landing-mode.full{ border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.08); color:#fff; }
+.landing-mode small{ display:block; margin-top:3px; font-size:10px; font-weight:500; opacity:.75; }
 .landing-foot{ margin-top:18px; font-size:11px; color:#8b96a8; }
 
 /* ALERTAS CERCANAS A LA RUTA */
@@ -488,8 +492,11 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
       <div class="landing-feat"><i class="fa-solid fa-route"></i> Rutas con riesgo</div>
       <div class="landing-feat"><i class="fa-solid fa-shield-halved"></i> Seguridad vial</div>
     </div>
-    <button id="btn-enter" onclick="enterPlatform()"><i class="fa-solid fa-arrow-right-to-bracket"></i> Entrar a la plataforma</button>
-    <div class="landing-foot">Monitoreo vial · Acceso libre</div>
+    <div class="landing-modes">
+      <button class="landing-mode user" onclick="enterPlatform('user')"><i class="fa-solid fa-user"></i> Modo usuario<small>Solo lo que necesitas</small></button>
+      <button class="landing-mode full" onclick="enterPlatform('operator')"><i class="fa-solid fa-table-columns"></i> Modo completo<small>Panel y herramientas</small></button>
+    </div>
+    <div class="landing-foot">Puedes cambiar de modo en cualquier momento</div>
   </div>
 </div>
 
@@ -699,7 +706,6 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
         <div class="pr-tab active" data-tab="feed" onclick="switchPR('feed')"><i class="fa-solid fa-bolt"></i> Live</div>
         <div class="pr-tab" data-tab="ris" onclick="switchPR('ris')"><i class="fa-solid fa-chart-pie"></i> RIS</div>
         <div class="pr-tab" data-tab="reportes" onclick="switchPR('reportes')"><i class="fa-solid fa-file-contract"></i> Reportes</div>
-        <div class="pr-tab" data-tab="directorio" onclick="switchPR('directorio')"><i class="fa-solid fa-address-book"></i> Directorio</div>
       </div>
     </div>
     <div class="pr-body">
@@ -719,11 +725,6 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
         <button onclick="reportCard()" style="border-radius:8px; margin-bottom:10px;"><i class="fa-solid fa-download"></i> Resumen del día</button>
         <button onclick="downloadReportCSV()" class="btn-outline" style="border-radius:8px; margin-bottom:10px;"><i class="fa-solid fa-file-csv"></i> Descargar CSV</button>
         <button onclick="downloadReportHTML()" class="btn-outline" style="border-radius:8px;"><i class="fa-solid fa-file-lines"></i> Descargar HTML</button>
-      </div>
-      <div class="pr-sec" data-sec="directorio">
-        <div class="pr-search"><i class="fa-solid fa-magnifying-glass"></i><input id="udirSearch" placeholder="Buscar contacto..." onkeyup="filterUDirectory()"></div>
-        <button class="ph-btn blue" style="width:100%; border-radius:8px; margin-bottom:12px;" onclick="openDirModal()"><i class="fa-solid fa-tower-broadcast"></i> Directorio completo de emergencias</button>
-        <div id="udir-list"></div>
       </div>
     </div>
     <div class="pr-foot">
@@ -1078,7 +1079,6 @@ window.onload = function() {
   renderDirectory();
   renderStateFilters();
   buildStateFilter();
-  renderUDirectory();
   buildEntryStates();
   rebuildU();
   refreshRisAuto();
@@ -1304,7 +1304,7 @@ function stopSystem() {
 }
 
 // === IA & GEOCODING ===
-async function consultGroq(prompt, model) {
+async function consultGroq(prompt, model, maxTokens=700) {
   const sel = document.getElementById('modelSelect');
   const GOOD = ['openai/gpt-oss-20b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'allam-2-7b'];
   const m = model || (sel && GOOD.includes(sel.value) ? sel.value : 'openai/gpt-oss-20b');
@@ -1322,7 +1322,7 @@ async function consultGroq(prompt, model) {
           { role: 'user', content: prompt }
         ],
         temperature: 0.2,
-        max_tokens: 2048
+        max_tokens: Math.max(80, Math.min(1200, maxTokens))
       }) });
       const data = await response.json();
       if(data.error) { if(data.error.status === 429 && retries < 3) { await new Promise(r => setTimeout(r, 10000)); retries++; continue; } return null; }
@@ -1422,8 +1422,8 @@ function geocodeCorridor(text) {
   return { lat: p.lat, lon: p.lon, km: km, prec: 'tramo', corridor: c.name };
 }
 async function processAlert(key, text) {
-  const prompt = `Eres un analista de seguridad vial en Mexico. REGLAS: 1) Solo importa si la noticia es un incidente EN MEXICO (si es de otro pais o no hay ubicacion clara, valido=false). 2) Solo categorias: road (accidentes, cierres, congestion) o security (asaltos, bloqueos, balaceras, manifestaciones, operativos). 3) Indica ubicacion LO MAS ESPECIFICA posible (calle, carretera, cruce) y ademas municipio y estado separados si se mencionan. 4) importante=true si es de alto riesgo (bloqueos, balaceras, asaltos, accidentes graves). 5) trafico: clasifica el flujo VIAL para incidentes road (fluido=mínimo efecto, moderado=reducción de carriles/reactivo, detenido=bloqueo total/accidente grave); para security usa null. 6) detail: extrae una descripcion breve y fiel de los hechos (max 280 caracteres, omitiendo datos del medio de origen). Responde SOLO JSON ESTRICTO sin texto extra. Texto: "${text}". JSON: {"valido": boolean, "ubicacion": "lugar especifico si se menciona", "municipio": "municipio o ciudad si se menciona", "estado": "estado de la republica", "categoria": "road" o "security", "resumen": "titulo corto", "trafico": "fluido"|"moderado"|"detenido"|null, "detail": "descripcion breve", "importante": boolean}`;
-  const rawResponse = await consultGroq(prompt);
+  const prompt = `Clasifica este texto. Rechaza si no es un incidente en México o no tiene ubicación clara. Categoría: road=accidente/cierre/congestión; security=asalto/bloqueo/balacera/manifestación/operativo. importante=true solo con riesgo alto. trafico: fluido, moderado o detenido para road; null para security. No inventes datos. Devuelve únicamente JSON válido con este formato: {"valido":false,"ubicacion":"","municipio":"","estado":"","categoria":"road","resumen":"","trafico":null,"detail":"","importante":false}. resumen corto; detail fiel, máximo 280 caracteres. TEXTO: ${text}`;
+  const rawResponse = await consultGroq(prompt, null, 320);
   if(!rawResponse) { log(`❌ La IA no respondió para: ${text.slice(0, 70)}... Reintentaré el próximo ciclo.`, 'warn'); unsee(key); return; }
   try {
     const cleanJson = extractJSON(rawResponse); if (!cleanJson) { log(`⚠️ La IA no devolvió JSON válido: ${text.slice(0, 70)}... Reintentaré el próximo ciclo.`, 'warn'); unsee(key); return; }
@@ -1580,10 +1580,8 @@ document.getElementById('alert-modal') && document.getElementById('alert-modal')
 // === DIRECTORIO ===
 function renderDirectoryInto(containerId) { const container = document.getElementById(containerId); if(!container) return; container.innerHTML = ''; directoryData.forEach(group => { const groupDiv = document.createElement('div'); groupDiv.className = 'contact-group'; const title = document.createElement('div'); title.className = 'contact-group-title'; title.innerText = group.category; groupDiv.appendChild(title); group.contacts.forEach(contact => { const card = document.createElement('div'); card.className = 'contact-card'; card.dataset.name = contact.name.toLowerCase(); card.innerHTML = `<div class="contact-info"><b>${contact.name}</b><span>${contact.phone}</span></div><div class="contact-actions"><button class="btn-copy" onclick="navigator.clipboard.writeText('${contact.phone}');alert('Copiado')" title="Copiar"><i class="fa-solid fa-copy"></i></button></div>`; groupDiv.appendChild(card); }); container.appendChild(groupDiv); }); }
 function renderDirectory() { renderDirectoryInto('directory-list'); }
-function renderUDirectory() { renderDirectoryInto('udir-list'); }
 function filterDirectoryIn(containerId, queryElId) { const query = document.getElementById(queryElId).value.toLowerCase(); document.getElementById(containerId).querySelectorAll('.contact-card').forEach(card => { card.style.display = card.dataset.name.includes(query) ? 'flex' : 'none'; }); }
 function filterDirectory() { filterDirectoryIn('directory-list', 'dirSearch'); }
-function filterUDirectory() { filterDirectoryIn('udir-list', 'udirSearch'); }
 function buildStateFilter() { const sel = document.getElementById('lp-state'); if(!sel) return; sel.innerHTML = '<option value="">📍 Todos los estados</option>'; MEXICO_STATES.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); }); }
 function processRis(data, canvasSId, canvasTId, fit) { risPoints = data; risLayer.clearLayers(); data.forEach(p => { const icon = L.divIcon({ className: 'custom-pin', html: `<div style="background:#00bcd4; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; border:2px solid white;"><i class="fa-solid fa-clock-rotate-left"></i></div>`, iconSize: [26, 26], iconAnchor: [13, 26] }); const m = L.marker([p.lat, p.lon], {icon}); m.bindPopup(`<div style='color:#00838f'><b>RIS: ${p.type}</b><br>${p.desc}</div>`); risLayer.addLayer(m); }); const statsState = {}, statsType = {}; data.forEach(p => { statsState[p.state] = (statsState[p.state] || 0) + 1; statsType[p.type] = (statsType[p.type] || 0) + 1; }); renderChartsInto(canvasSId, canvasTId, statsState, statsType); log(`📊 RIS Procesado.`, 'success'); map.addLayer(risLayer); if(fit && risLayer.getLayers().length) map.fitBounds(risLayer.getBounds(), { padding: [50, 50] }); return { statsState, statsType }; }
 function processRisData() { try { return processRis(JSON.parse(document.getElementById('risDataInput').value), 'chartStates', 'chartTypes', true); } catch(e) { log("Error JSON RIS", 'err'); } }
@@ -1659,13 +1657,25 @@ async function applyServerConfig() {
 }
 async function autoBoot() {
   await applyServerConfig();
-  enterPlatform();
 }
-function enterPlatform() { const l=document.getElementById('landing'); if(l) l.style.display='none'; sessionStorage.setItem('steele_entered','1'); document.body.classList.add('user-mode'); document.body.classList.remove('operator-mode'); if(!document.body.classList.contains('dark-mode')) applyTheme(true); map.invalidateSize(); uxResponsive(); rebuildU(); requestNotifPerm(); if(!feedInterval) { if(!document.getElementById('modelSelect').value) detectModels(); startHybridSystem(); } }
+function enterPlatform(mode='user') {
+  const operator = mode === 'operator';
+  const l = document.getElementById('landing'); if(l) l.style.display = 'none';
+  sessionStorage.setItem('steele_entered', '1');
+  localStorage.setItem('nv_mode', operator ? 'operator' : 'user');
+  document.body.classList.toggle('user-mode', !operator);
+  document.body.classList.toggle('operator-mode', operator);
+  if(!document.body.classList.contains('dark-mode')) applyTheme(true);
+  map.invalidateSize();
+  if(!operator) { uxResponsive(); rebuildU(); }
+  requestNotifPerm();
+  if(!feedInterval) { if(!document.getElementById('modelSelect').value) detectModels(); startHybridSystem(); }
+}
 function setLiveStatus(on) { const el=document.getElementById('ub-status'); if(!el) return; el.innerHTML = on ? '<span class="dot-live"></span> Monitoreando' : '<i class="fa-solid fa-pause"></i> Detenido'; el.classList.toggle('off', !on); }
 function toggleOperator() {
   const isUser = document.body.classList.toggle('user-mode');
   document.body.classList.toggle('operator-mode', !isUser);
+  localStorage.setItem('nv_mode', isUser ? 'user' : 'operator');
   map.invalidateSize();
   if(!isUser) { applyTheme(true); } else { settings.load(); }
 }
