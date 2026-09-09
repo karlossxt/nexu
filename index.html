@@ -154,6 +154,9 @@ body.dark-mode .leaflet-control-attribution a{ color:#bbb; }
 .rm-search-actions{ display:grid; grid-template-columns:1fr auto; gap:8px; margin:10px 0 12px; }
 .rm-search-actions button{ margin:0; border-radius:8px; }
 .rm-search-actions .rm-clear{ background:transparent; color:#EF4444; border:1px solid rgba(239,68,68,.55); width:auto; padding:10px 14px; }
+.rm-location-actions{ display:flex; gap:8px; margin-top:8px; }
+.rm-location-actions button{ width:auto; margin:0; padding:7px 10px; border-radius:8px; background:rgba(37,99,235,.12); color:#60A5FA; border:1px solid rgba(37,99,235,.4); font-size:11px; }
+.alert-source{ margin-top:7px; font-size:10px; color:var(--text-muted); display:flex; align-items:center; gap:5px; }
 .landing-foot{ margin-top:18px; font-size:11px; color:#8b96a8; }
 
 /* ALERTAS CERCANAS A LA RUTA */
@@ -670,8 +673,8 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
       <div class="pl-filters">
         <div class="uf-row"><span class="dot" style="background:#F97316;color:#F97316;"></span><span>Viales</span><span class="uf-count" id="nc-road">0</span><label class="switch"><input type="checkbox" checked onchange="setNF('road', this.checked)"><span class="slider" style="--sw:#F97316"></span></label></div>
         <div class="uf-row"><span class="dot" style="background:#EF4444;color:#EF4444;"></span><span>Seguridad</span><span class="uf-count" id="nc-sec">0</span><label class="switch"><input type="checkbox" checked onchange="setNF('security', this.checked)"><span class="slider" style="--sw:#EF4444"></span></label></div>
-        <div class="uf-row"><span class="dot" style="background:#D946EF;color:#D946EF;"></span><span>Importantes</span><span class="uf-count" id="nc-imp">0</span><label class="switch"><input type="checkbox" checked onchange="setNF('imp', this.checked)"><span class="slider" style="--sw:#D946EF"></span></label></div>
-        <div class="uf-row"><span class="dot" style="background:#10B981;color:#10B981;"></span><span>Puntos de riesgo</span><span class="uf-count" id="nc-risk">0</span><label class="switch"><input type="checkbox" checked onchange="setNF('risk', this.checked)"><span class="slider" style="--sw:#10B981"></span></label></div>
+        <div class="uf-row"><span class="dot" style="background:#DC2626;color:#DC2626;"></span><span>Zonas rojas</span><span class="uf-count" id="nc-imp">0</span><label class="switch"><input type="checkbox" checked onchange="setNF('redZone', this.checked)"><span class="slider" style="--sw:#DC2626"></span></label></div>
+        <div class="uf-row"><span class="dot" style="background:#F59E0B;color:#F59E0B;"></span><span>Riesgos viales</span><span class="uf-count" id="nc-risk">0</span><label class="switch"><input type="checkbox" checked onchange="setNF('roadRisk', this.checked)"><span class="slider" style="--sw:#F59E0B"></span></label></div>
       </div>
       <div class="pl-section">JURISDICCIÓN</div>
       <div class="pl-dropdowns">
@@ -883,6 +886,10 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
             <input id="rm-dest" placeholder="Querétaro" />
           </div>
         </div>
+        <div class="rm-location-actions">
+          <button id="rm-use-location" onclick="useCurrentLocationForRoute()"><i class="fa-solid fa-location-crosshairs"></i> Usar mi ubicación</button>
+          <button onclick="swapRouteEndpoints()"><i class="fa-solid fa-right-left"></i> Intercambiar</button>
+        </div>
         <div class="rm-search-actions">
           <button onclick="calcUserRoute()"><i class="fa-solid fa-magnifying-glass"></i> Buscar rutas</button>
           <button class="rm-clear" onclick="clearUserRoute()" title="Borrar ruta y resultados"><i class="fa-solid fa-trash-can"></i> Limpiar</button>
@@ -949,6 +956,7 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
     <div class="am-desc" id="am-desc"></div>
     <div class="am-meta">
       <div>🕐 <span id="am-time"></span></div>
+      <div>📰 <span id="am-source"></span></div>
       <div>🌤 <span id="am-weather">Cargando clima...</span></div>
     </div>
     <div class="am-actions">
@@ -1063,7 +1071,7 @@ window.onload = function() {
   try {
     const savedAlerts = localStorage.getItem('nv_alerts');
     if(savedAlerts) {
-      alerts = (JSON.parse(savedAlerts) || []).filter(a => a && typeof a.lat === 'number' && a.time && (Date.now() - new Date(a.time).getTime()) < 24*3600*1000);
+      alerts = (JSON.parse(savedAlerts) || []).filter(a => a && typeof a.lat === 'number' && a.time && String(a.title || '').trim().length >= 8 && String(a.detail || '').trim().length >= 15 && (Date.now() - new Date(a.time).getTime()) < 24*3600*1000).map(a => ({ ...a, source_type: a.source_type || 'system', source_name: a.source_name || 'Nexus Vial', verification_status: a.verification_status || 'verified', importante: !!a.importante }));
       alerts.forEach(a => addMarkerToMap(a));
       if(alerts.length) { updateLists(); persistAlerts(); }
     }
@@ -1189,6 +1197,14 @@ function feedIsRelevant(text) {
   if (vial >= 2 && fori === 0) return true;
   return false;
 }
+function inferSourceName(item, feedUrl='') {
+  const supplied = String(item?.source_name || item?.source || item?.author || '').trim();
+  if(supplied && supplied !== '[object Object]' && supplied !== 'Fuente RSS') return supplied.slice(0, 80);
+  const hay = ((item?.title || '') + ' ' + feedUrl).toLowerCase();
+  if(hay.includes('capufe')) return 'CAPUFE';
+  if(hay.includes('guardia nacional')) return 'Guardia Nacional';
+  try { return new URL(feedUrl).hostname.replace(/^www\./, '').slice(0, 80); } catch(e) { return 'Fuente RSS'; }
+}
 async function parseFeedItems(url) {
     let raw = null;
     try {
@@ -1228,7 +1244,8 @@ async function parseFeedItems(url) {
         else if(Array.isArray(data.channel)) list = data.channel;
         list.forEach(it => {
             const title = it.title || it.description_text || '';
-            if(title) items.push({ title, content_text: it.description_text || it.description_html || it.description || it.content || '' });
+            const content = it.description_text || it.description_html || it.description || it.content || '';
+            if(title && String(content).trim().length >= 15) items.push({ title, content_text: content, source_name: inferSourceName(it, url) });
         });
     } else {
         const doc = new DOMParser().parseFromString(trimmed, 'text/xml');
@@ -1236,7 +1253,8 @@ async function parseFeedItems(url) {
         doc.querySelectorAll('item').forEach(node => {
             const title = (node.querySelector('title')?.textContent || '').trim();
             const desc = node.querySelector('description')?.textContent || '';
-            if(title) items.push({ title, content_text: desc });
+            const source = node.querySelector('source, author')?.textContent || '';
+            if(title && desc.trim().length >= 15) items.push({ title, content_text: desc, source_name: inferSourceName({ title, source_name: source }, url) });
         });
     }
     return items;
@@ -1281,11 +1299,14 @@ async function fetchCycles(pri, sec) {
     let skippedNoise = 0;
     for(const item of combinedItems) {
         if(added >= 10) break; // máx. 10 análisis de Groq por ciclo
-        const text = `${item.title}. ${item.content_text || item.description || ''}`.replace(/<[^>]*>?/gm, '').slice(0, 450);
+        const body = String(item.content_text || item.description || '').replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim();
+        const title = String(item.title || '').replace(/\s+/g, ' ').trim();
+        if(title.length < 8 || body.length < 15) { skippedNoise++; continue; }
+        const text = `${title}. ${body}`.slice(0, 450);
         if(!feedIsRelevant(text)) { skippedNoise++; continue; }
         if(!uniqueItems.has(item.title) && !isSeen(item.title)) {
             uniqueItems.add(item.title);
-            processingQueue.push({ key: item.title, text });
+            processingQueue.push({ key: item.title, text, sourceName: inferSourceName(item) });
             added++;
         }
     }
@@ -1303,7 +1324,7 @@ async function fetchCycles(pri, sec) {
 async function processQueue() {
     if(processingQueue.length === 0) { isProcessing = false; return; }
     isProcessing = true; const job = processingQueue.shift();
-    try { await processAlert(job.key, job.text); } catch(e) { log(`❌ Cola: ${String((e && e.message) || e)}`, 'warn'); unsee(job.key); }
+    try { await processAlert(job.key, job.text, job.sourceName); } catch(e) { log(`❌ Cola: ${String((e && e.message) || e)}`, 'warn'); unsee(job.key); }
     setTimeout(processQueue, 4500); 
 }
 
@@ -1431,7 +1452,7 @@ function geocodeCorridor(text) {
   if(!p) return null;
   return { lat: p.lat, lon: p.lon, km: km, prec: 'tramo', corridor: c.name };
 }
-async function processAlert(key, text) {
+async function processAlert(key, text, sourceName='Fuente RSS') {
   const prompt = `Clasifica este texto. Rechaza si no es un incidente en México o no tiene ubicación clara. Categoría: road=accidente/cierre/congestión; security=asalto/bloqueo/balacera/manifestación/operativo. importante=true solo con riesgo alto. trafico: fluido, moderado o detenido para road; null para security. No inventes datos. Devuelve únicamente JSON válido con este formato: {"valido":false,"ubicacion":"","municipio":"","estado":"","categoria":"road","resumen":"","trafico":null,"detail":"","importante":false}. resumen corto; detail fiel, máximo 280 caracteres. TEXTO: ${text}`;
   const rawResponse = await consultGroq(prompt, null, 320);
   if(!rawResponse) { log(`❌ La IA no respondió para: ${text.slice(0, 70)}... Reintentaré el próximo ciclo.`, 'warn'); unsee(key); return; }
@@ -1440,6 +1461,9 @@ async function processAlert(key, text) {
     const data = JSON.parse(cleanJson);
     if(!data.valido) return;
     if(!['road','security'].includes(data.categoria)) return;
+    data.resumen = String(data.resumen || '').replace(/\s+/g, ' ').trim();
+    data.detail = String(data.detail || '').replace(/\s+/g, ' ').trim();
+    if(data.resumen.length < 8 || data.detail.length < 15) { log('🗑️ Alerta descartada: texto insuficiente.', 'info'); return; }
     log(`📍 Ubicando [${data.categoria}]: ${data.resumen}...`);
     const estado = data.estado || '';
     const candidates = [];
@@ -1463,7 +1487,7 @@ async function processAlert(key, text) {
     }
     if(!isInMexico(loc.lat, loc.lon)) { log(`🚫 Fuera de México: ${data.resumen}`, 'warn'); return; }
     const isDup = alerts.some(a => Math.abs(a.lat - loc.lat) < 0.0001 && Math.abs(a.lon - loc.lon) < 0.0001); if(isDup) return;
-    const alertObj = { id: Date.now(), lat: loc.lat, lon: loc.lon, category: data.categoria, title: data.resumen, location: data.ubicacion || data.municipio || estado, state: estado, precision: loc.prec, corridor: loc.corridor || null, time: new Date(), trafico: data.trafico || null, detail: (data.detail || '').slice(0, 280), liked: false };
+    const alertObj = { id: Date.now(), lat: loc.lat, lon: loc.lon, category: data.categoria, title: data.resumen, location: data.ubicacion || data.municipio || estado, state: estado, precision: loc.prec, corridor: loc.corridor || null, time: new Date(), trafico: data.trafico || null, detail: data.detail.slice(0, 280), importante: !!data.importante, source_type: 'media', source_name: sourceName || 'Fuente RSS', verification_status: 'verified', liked: false };
     alerts.push(alertObj); addMarkerToMap(alertObj); updateLists(); persistAlerts(); log(`✅ ALERTA [${data.categoria}]${loc.prec !== 'punto' ? ' (aprox: ' + loc.prec + ')' : ''}: ${data.resumen} @ ${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}`, 'success');
     if(data.importante) notifyImportant(alertObj);
     if(processingQueue.length === 0 && !document.getElementById('panel-ris').classList.contains('active')) map.panTo([loc.lat, loc.lon]);
@@ -1471,6 +1495,15 @@ async function processAlert(key, text) {
 }
 
 function removeAlert(id) { alerts = alerts.filter(a => a.id !== id); markers.clearLayers(); alerts.forEach(a => addMarkerToMap(a)); updateLists(); persistAlerts(); }
+function alertSourceLabel(a) {
+  if(a.source_type === 'community') {
+    if(a.verification_status === 'verified') return 'Comunidad · Verificado';
+    if(a.verification_status === 'corroborated') return 'Comunidad · Coincidente';
+    return 'Reporte ciudadano · Sin verificar';
+  }
+  if(a.source_type === 'operator') return 'Operador Nexus Vial';
+  return 'Fuente: ' + (a.source_name || 'Nexus Vial');
+}
 function addMarkerToMap(alert) {
   const isSec = alert.category === 'security';
   const expired = isAlertExpired(alert);
@@ -1485,6 +1518,7 @@ function addMarkerToMap(alert) {
     <div style="max-width:240px;">
       <b>${alert.title}</b><br>
       <span style="color:#5f6368;font-size:12px;">${alert.location}</span>${nota}${chip}${stale}
+      <div class="alert-source"><i class="fa-solid fa-circle-info"></i> ${alertSourceLabel(alert)}</div>
       <br><button onclick="openAlertDetail(${alert.id})" style="margin-top:8px;width:100%;padding:6px 10px;border:none;border-radius:6px;background:#1976d2;color:#fff;cursor:pointer;font-size:12px;font-weight:600;">Ver detalle</button>
     </div>`);
   m.category = alert.category; markers.addLayer(m);
@@ -1496,7 +1530,7 @@ function alertCardHTML(a) {
   return `
     <div style="display:flex; justify-content:space-between; align-items:start;"><b>${a.title}</b>
     <div class="card-actions"><button onclick="event.stopPropagation(); toggleLike(${a.id})" id="btn-heart-${a.id}" class="btn-heart${a.liked ? ' liked' : ''}" title="Me gusta / Detalle"><i class="fa-solid fa-heart"></i></button><button onclick="event.stopPropagation(); shareAlert(${a.id})" class="btn-whatsapp-alert" title="Compartir"><i class="fa-brands fa-whatsapp"></i></button><button onclick="event.stopPropagation(); removeAlert(${a.id})" class="btn-delete-alert" title="Eliminar">X</button></div></div>
-    <div style="font-size:11px;color:var(--text-muted)">${a.location}</div>${trafficChip}${stale}
+    <div style="font-size:11px;color:var(--text-muted)">${a.location}</div>${trafficChip}${stale}<div class="alert-source"><i class="fa-solid fa-circle-info"></i> ${alertSourceLabel(a)}</div>
   `;
 }
 function makeAlertCard(a) {
@@ -1525,7 +1559,7 @@ function shareAlert(id) {
     const alert = alerts.find(a => a.id === id); if(!alert) return;
     const mapLink = LINKS.gmapsLink.replace('{lat}', alert.lat).replace('{lon}', alert.lon);
     const trafico = alert.category === 'road' && alert.trafico ? `\n🚦 *Tráfico:* ${trafficStyle(alert.trafico).label}` : '';
-    const text = `🚨 *NEXUS VIAL - ALERTA* 🚨\n\n📌 *Evento:* ${alert.title}\n📍 *Ubicación:* ${alert.location}${trafico}\n🔗 *Ver:* ${mapLink}`;
+    const text = `🚨 *NEXUS VIAL - ALERTA* 🚨\n\n📌 *Evento:* ${alert.title}\n📍 *Ubicación:* ${alert.location}${trafico}\n📰 *${alertSourceLabel(alert)}*\n🔗 *Ver:* ${mapLink}`;
     window.open(LINKS.waShare.replace('{t}', encodeURIComponent(text)), '_blank');
 }
 
@@ -1565,6 +1599,7 @@ function openAlertDetail(id) {
   document.getElementById('am-desc').textContent = a.detail || 'Sin descripción detallada.';
   document.getElementById('am-desc').textContent += (a.state ? '\n📍 Estado: ' + a.state : '');
   document.getElementById('am-time').textContent = formatAlertTime(a.time);
+  document.getElementById('am-source').textContent = alertSourceLabel(a);
   const cat = document.getElementById('am-cat');
   cat.textContent = a.category === 'security' ? 'Seguridad' : 'Vial';
   cat.style.background = a.category === 'security' ? 'rgba(217,48,37,.12)' : 'rgba(30,142,62,.12)';
@@ -1605,7 +1640,21 @@ function refreshRisAuto() {
   sec.forEach(a => { const s = a.state || 'Sin estado'; const t = securityType(a.title + ' ' + (a.detail || '')); st[s] = (st[s] || 0) + 1; ty[t] = (ty[t] || 0) + 1; });
   renderChartsInto('uc-states', 'uc-types', st, ty);
 }
-function loadCriticalPoints() { const input = document.getElementById('criticalPointsInput').value; try { const points = JSON.parse(input); localStorage.setItem('steele_critical', input); criticalPoints = points; applyFilter(''); log(`✅ Puntos cargados.`, 'success'); } catch(e) { log("Error JSON Puntos", 'err'); } }
+function riskPointType(p) { return p && (p.risk_type === 'road_risk' || p.type === 'road_risk') ? 'road_risk' : 'red_zone'; }
+function loadCriticalPoints() { const input = document.getElementById('criticalPointsInput').value; try { const points = JSON.parse(input); if(!Array.isArray(points)) throw new Error('Se esperaba una lista'); localStorage.setItem('steele_critical', input); criticalPoints = points.filter(p => p && Number.isFinite(+p.lat) && Number.isFinite(+p.lon) && p.title).map(p => ({ ...p, lat:+p.lat, lon:+p.lon, risk_type:riskPointType(p) })); applyFilter(''); rebuildU(); log(`✅ Zonas cargadas: ${criticalPoints.length}.`, 'success'); } catch(e) { log("Error JSON de zonas de riesgo", 'err'); } }
+function renderRiskPoints(keyword='') {
+  staticLayer.clearLayers();
+  const q = String(keyword || '').toLowerCase();
+  criticalPoints.filter(p => (!q || String(p.title || '').toLowerCase().includes(q)) && (riskPointType(p) === 'red_zone' ? nfState.redZone : nfState.roadRisk)).forEach(p => {
+    const red = riskPointType(p) === 'red_zone';
+    const color = red ? '#DC2626' : '#F59E0B';
+    const iconClass = red ? 'fa-shield-halved' : 'fa-road-barrier';
+    const label = red ? 'ZONA ROJA' : 'RIESGO VIAL';
+    const icon = L.divIcon({ className:'custom-pin', html:`<div style="background:${color};width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;border:2px solid white;"><i class="fa-solid ${iconClass}"></i></div>`, iconSize:[28,28], iconAnchor:[14,28] });
+    L.marker([p.lat,p.lon],{icon}).bindPopup(`<b style="color:${color}">${label}: ${p.title}</b><br>${p.desc || ''}`).addTo(staticLayer);
+    L.circle([p.lat,p.lon],{color,weight:1,fillColor:color,fillOpacity:.1,radius:+p.radius || 3000}).addTo(staticLayer);
+  });
+}
 const MEXICO_STATES = ["Aguascalientes","Baja California","Baja California Sur","Campeche","CDMX","Chiapas","Chihuahua","Coahuila","Colima","Durango","Estado de México","Guanajuato","Guerrero","Hidalgo","Jalisco","Michoacán","Morelos","Nayarit","Nuevo León","Oaxaca","Puebla","Querétaro","Quintana Roo","San Luis Potosí","Sinaloa","Sonora","Tabasco","Tamaulipas","Tlaxcala","Veracruz","Yucatán","Zacatecas"];
 let lastFilter = '';
 function renderStateFilters() {
@@ -1628,7 +1677,7 @@ function applyFilter(keyword) {
   filteredAlerts.forEach(a => addMarkerToMap(a));
   document.querySelectorAll('#state-grid button').forEach(btn => btn.style.background = btn.textContent === keyword ? 'var(--accent)' : '');
   document.querySelectorAll('#state-grid button').forEach(btn => btn.style.color = btn.textContent === keyword ? '#fff' : '');
-  staticLayer.clearLayers(); const filteredPoints = keyword ? criticalPoints.filter(p => p.title.toLowerCase().includes(keyword.toLowerCase())) : criticalPoints; filteredPoints.forEach(p => { const icon = L.divIcon({ className: 'custom-pin', html: `<div style="background:rgba(156, 39, 176, 0.08); width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#9c27b0; border:2px solid #9c27b0;"><i class="fa-solid fa-skull"></i></div>`, iconSize: [24, 24], iconAnchor: [12, 24] }); const marker = L.marker([p.lat, p.lon], {icon}); marker.bindPopup(`<b>⛔ ${p.title}</b><br>${p.desc}`); staticLayer.addLayer(marker); staticLayer.addLayer(L.circle([p.lat, p.lon], { color: '#9c27b0', weight: 1, fillColor: '#9c27b0', fillOpacity: 0.08, radius: 3000 })); }); }
+  renderRiskPoints(keyword); }
 async function detectModels() { try { const res = await fetch('/api/groq?action=models'); const data = await res.json(); const select = document.getElementById('modelSelect'); const rsel = document.getElementById('reportModelSelect'); const saved = rsel ? rsel.value : ''; select.innerHTML = ''; if(rsel){ rsel.innerHTML=''; const o0=document.createElement('option'); o0.value=''; o0.text='(igual que alertas)'; rsel.appendChild(o0); } const preferred = ['openai/gpt-oss-20b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'allam-2-7b']; const models = (data.data || []).map(x => (typeof x === 'string' ? x : x.id)); const addOpt = (id, target) => { const o = document.createElement('option'); o.value = id; o.text = id; target.appendChild(o); }; preferred.forEach(p => { if(models.includes(p)) { addOpt(p, select); if(rsel) addOpt(p, rsel); } }); models.forEach(id => { if(!preferred.includes(id)) { addOpt(id, select); if(rsel) addOpt(id, rsel); } }); if(rsel && saved) rsel.value = saved; if(select.options.length === 0) log("Sin modelos disponibles", 'warn'); else { log(`✅ Modelos cargados (${select.options.length}).`, 'success'); saveConfig(); } } catch(e) { log(`Error detección (necesitas servidor)`,'err'); } }
 function calculateRoute() { const o = document.getElementById('routeOrigin').value; const d = document.getElementById('routeDest').value; if(!o || !d) return; if(routeControl) { map.removeControl(routeControl); routeControl = null; } Promise.all([ fetch(LINKS.nominatim.replace('{q}', encodeURIComponent(o + ', Mexico'))).then(r=>r.json()), fetch(LINKS.nominatim.replace('{q}', encodeURIComponent(d + ', Mexico'))).then(r=>r.json()) ]).then(res => { if(!res[0][0] || !res[1][0]) return; routeControl = L.Routing.control({ waypoints: [L.latLng(res[0][0].lat, res[0][0].lon), L.latLng(res[1][0].lat, res[1][0].lon)], router: L.Routing.osrmv1({ serviceUrl: LINKS.osrm }), lineOptions: { styles: [{color: '#b388ff', opacity: 0.8, weight: 6}] }, createMarker: ()=>null, addWaypoints: false, fitSelectedRoutes: true }).addTo(map); routeControl.on('routesfound', e => { activeRoute = e.routes[0]; const stats = `${(activeRoute.summary.totalDistance/1000).toFixed(1)} km | ${(activeRoute.summary.totalTime/60).toFixed(0)} min`; document.getElementById('routeStats').innerText = stats; const rb = document.getElementById('routeBoxStats'); if(rb) rb.innerText = stats; updateRouteAlerts(activeRoute.coordinates); }); }); }
 
@@ -1952,7 +2001,7 @@ function uxResponsive() {
 }
 window.addEventListener('resize', () => { if(document.body.classList.contains('user-mode')) uxResponsive(); });
 
-const nfState = { road:true, security:true, imp:true, risk:true };
+const nfState = { road:true, security:true, redZone:true, roadRisk:true };
 let uType = 'all'; let uState = ''; let uRange = 0;
 function setNF(kind, on) { nfState[kind] = !!on; rebuildU(); }
 function setState(v) { uState = v; rebuildU(); }
@@ -1961,7 +2010,6 @@ function matchesFilters(a) {
   if(uType !== 'all' && a.category !== uType) return false;
   if(a.category === 'security' && !nfState.security) return false;
   if(a.category === 'road' && !nfState.road) return false;
-  if(a.importante && !nfState.imp) return false;
   if(uState && !((a.state || '').toLowerCase().includes(uState.toLowerCase()) || (a.location || '').toLowerCase().includes(uState.toLowerCase()))) return false;
   if(uRange > 0 && (Date.now() - new Date(a.time).getTime()) > uRange * 3600 * 1000) return false;
   const qs = document.getElementById('feed-search');
@@ -1973,9 +2021,11 @@ function refreshCounters() {
   const road = alerts.filter(a => a.category === 'road').length;
   const sec = alerts.filter(a => a.category === 'security').length;
   const imp = alerts.filter(a => a.importante).length;
+  const redZones = criticalPoints.filter(p => riskPointType(p) === 'red_zone').length;
+  const roadRisks = criticalPoints.filter(p => riskPointType(p) === 'road_risk').length;
   const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
   set('pc-total', road + sec); set('pc-road', road); set('pc-sec', sec); set('pc-imp', imp);
-  set('nc-road', road); set('nc-sec', sec); set('nc-imp', imp); set('nc-risk', criticalPoints.length);
+  set('nc-road', road); set('nc-sec', sec); set('nc-imp', redZones); set('nc-risk', roadRisks);
 }
 function rebuildU() {
   const fl = document.getElementById('feed-list');
@@ -1984,7 +2034,8 @@ function rebuildU() {
   const vis = alerts.filter(matchesFilters);
   markers.clearLayers();
   vis.forEach(a => addMarkerToMap(a));
-  if(nfState.risk) { if(!map.hasLayer(staticLayer)) map.addLayer(staticLayer); }
+  renderRiskPoints(uState);
+  if(nfState.redZone || nfState.roadRisk) { if(!map.hasLayer(staticLayer)) map.addLayer(staticLayer); }
   else if(map.hasLayer(staticLayer)) map.removeLayer(staticLayer);
   if(fl) { fl.innerHTML = ''; [...vis].sort((a, b) => new Date(b.time) - new Date(a.time)).forEach(a => fl.appendChild(makeAlertCard(a))); }
   if(fe) fe.style.display = vis.length ? 'none' : 'block';
@@ -2019,11 +2070,13 @@ async function submitEntryAlert() {
   const estado = document.getElementById('ent-state').value;
   const trafico = document.getElementById('ent-trafico').value || null;
   const detalle = (document.getElementById('ent-detail').value || '').replace(/\s+/g, ' ').trim().slice(0, 280);
+  if(title.length < 8 || detalle.length < 15) { log('Agrega un título claro y una descripción de al menos 15 caracteres.', 'warn'); return; }
   const importante = document.getElementById('ent-imp').checked;
   const g = await geocodeBest(lugar);
   if(!g) { log('📍 No se localizó la ubicación.', 'err'); return; }
   if(!isInMexico(g.lat, g.lon)) { log('🚫 Ubicación fuera de México.', 'warn'); return; }
-  const obj = { id: Date.now(), lat: g.lat, lon: g.lon, category: cat, title, location: lugar, state: estado, precision: 'punto', time: new Date(), trafico: cat === 'road' ? trafico : null, detail: detalle, importante, liked: false };
+  const isOperator = document.body.classList.contains('operator-mode');
+  const obj = { id: Date.now(), lat: g.lat, lon: g.lon, category: cat, title, location: lugar, state: estado, precision: 'punto', time: new Date(), trafico: cat === 'road' ? trafico : null, detail: detalle, importante, source_type: isOperator ? 'operator' : 'community', source_name: isOperator ? 'Nexus Vial' : 'Comunidad', verification_status: isOperator ? 'verified' : 'unverified', confirmations: 0, liked: false };
   alerts.push(obj); addMarkerToMap(obj); updateLists(); persistAlerts();
   log(`✅ ALERTA MANUAL [${cat}]: ${title} @ ${g.lat.toFixed(4)}, ${g.lon.toFixed(4)}`, 'success');
   closeEntryModal();
@@ -2295,6 +2348,7 @@ function riskGo(i) { weatherGoMap(i); }
 // === GENERADOR DE RUTAS (alternativas reales OSRM) ===
 const QUICK_ROUTES = [['Ciudad de México', 'Querétaro'], ['Ciudad de México', 'Puebla'], ['Ciudad de México', 'Guadalajara'], ['Monterrey', 'Ciudad de México']];
 let routeSel = 0; let routeOptions = [];
+let routeOriginCoords = null;
 function openRouteModal() {
   const cards = document.getElementById('route-cards');
   if(cards && !routeOptions.length) cards.innerHTML = '<div style="color:#6B7280; font-size:12px;">Escribe origen y destino, después pulsa <b>Buscar rutas</b>.</div>';
@@ -2308,6 +2362,7 @@ function setQuick(i, el) {
   if(el) el.classList.add('active');
   const [o, d] = QUICK_ROUTES[i] || [];
   const oi = document.getElementById('rm-origin'), di = document.getElementById('rm-dest');
+  routeOriginCoords = null;
   if(oi) oi.value = o; if(di) di.value = d;
   calcUserRoute();
 }
@@ -2319,7 +2374,7 @@ async function calcUserRoute() {
   cards.innerHTML = '<div style="color:#9CA3AF; font-size:12px;"><i class="fa-solid fa-spinner fa-spin"></i> Calculando alternativas reales...</div>';
   try {
     const res = await Promise.all([
-      fetch(LINKS.nominatim.replace('{q}', encodeURIComponent(o + ', Mexico'))).then(r => r.json()),
+      routeOriginCoords ? Promise.resolve([{ lat:routeOriginCoords.lat, lon:routeOriginCoords.lon }]) : fetch(LINKS.nominatim.replace('{q}', encodeURIComponent(o + ', Mexico'))).then(r => r.json()),
       fetch(LINKS.nominatim.replace('{q}', encodeURIComponent(d + ', Mexico'))).then(r => r.json())
     ]);
     if(!res[0][0] || !res[1][0]) { cards.innerHTML = '<div style="color:#EF4444; font-size:12px;">No se localizaron origen/destino.</div>'; return; }
@@ -2339,10 +2394,14 @@ async function calcUserRoute() {
     cards.insertAdjacentHTML('afterbegin', '<div style="color:#9CA3AF;font-size:11px;margin-bottom:8px;">Selecciona una opción y pulsa <b>Ver en el mapa</b>.</div>');
   } catch(e) { cards.innerHTML = '<div style="color:#EF4444; font-size:12px;">Error al consultar el servidor de rutas.</div>'; }
 }
-function routeSecurityPct(coords) {
-  let near = 0, imp = 0;
-  alerts.forEach(a => { const dist = distToPolylineKm(a.lat, a.lon, coords); if(dist !== null && dist <= ROUTE_BUFFER_KM) { near++; if(a.importante) imp++; } });
-  return Math.max(35, Math.min(100, 100 - near * 8 - imp * 15));
+function routeRiskSummary(coords) {
+  let alertsNear = 0, important = 0, redZones = 0, roadRisks = 0;
+  alerts.forEach(a => { const dist=distToPolylineKm(a.lat,a.lon,coords); if(dist!==null && dist<=ROUTE_BUFFER_KM){ alertsNear++; if(a.importante) important++; } });
+  criticalPoints.forEach(p => { const dist=distToPolylineKm(p.lat,p.lon,coords); if(dist!==null && dist<=ROUTE_BUFFER_KM){ if(riskPointType(p)==='red_zone') redZones++; else roadRisks++; } });
+  const score = alertsNear * 2 + important * 4 + redZones * 5 + roadRisks * 3;
+  const level = score >= 18 ? 'Crítico' : score >= 10 ? 'Alto' : score >= 4 ? 'Medio' : 'Bajo';
+  const color = score >= 18 ? '#DC2626' : score >= 10 ? '#F97316' : score >= 4 ? '#F59E0B' : '#10B981';
+  return { alertsNear, important, redZones, roadRisks, level, color };
 }
 function renderRouteCards() {
   const cards = document.getElementById('route-cards'); if(!cards) return;
@@ -2350,19 +2409,19 @@ function renderRouteCards() {
   const d = (document.getElementById('rm-dest').value || '').trim();
   cards.innerHTML = '';
   routeOptions.forEach((r, i) => {
-    const km = r.distance / 1000, min = Math.round(r.duration / 60), toll = Math.round(km * 3.2);
-    const sec = routeSecurityPct(r.coord);
+    const km = r.distance / 1000, min = Math.round(r.duration / 60);
+    const risk = routeRiskSummary(r.coord);
     const card = document.createElement('div');
     card.className = 'rm-card' + (i === routeSel ? ' selected' : '');
     card.onclick = () => { routeSel = i; renderRouteCards(); };
-    card.innerHTML = `<div class="rm-badges"><span class="rm-tag">${r.label}</span><span class="rm-tag sec"><i class="fa-solid fa-shield-halved"></i> ${sec}% seguro</span></div>
+    card.innerHTML = `<div class="rm-badges"><span class="rm-tag">${r.label}</span><span class="rm-tag sec" style="color:${risk.color};border-color:${risk.color}"><i class="fa-solid fa-triangle-exclamation"></i> Riesgo ${risk.level}</span></div>
       <div class="rm-name">${o} → ${d}</div>
       <div class="rm-divider"></div>
       <div class="rm-cols">
         <div class="rm-col"><b>${km.toFixed(1)} km</b><span>Distancia</span></div>
         <div class="rm-col"><b>${min} min</b><span>Tiempo est.</span></div>
-        <div class="rm-col"><b>≈ $${toll}</b><span>Peaje est.</span></div>
-      </div>`;
+        <div class="rm-col"><b>${risk.alertsNear + risk.redZones + risk.roadRisks}</b><span>Riesgos cerca</span></div>
+      </div><div class="alert-source"><i class="fa-solid fa-shield-halved"></i> ${risk.redZones} zona(s) roja(s) · ${risk.roadRisks} riesgo(s) vial(es) · ${risk.alertsNear} alerta(s)</div>`;
     cards.appendChild(card);
   });
 }
@@ -2376,10 +2435,10 @@ function copyItinerary() {
   const r = routeOptions[routeSel]; if(!r) return;
   const o = (document.getElementById('rm-origin').value || '').trim();
   const d = (document.getElementById('rm-dest').value || '').trim();
-  const km = (r.distance / 1000).toFixed(1), min = Math.round(r.duration / 60), toll = Math.round(km * 3.2);
-  const sec = routeSecurityPct(r.coord);
+  const km = (r.distance / 1000).toFixed(1), min = Math.round(r.duration / 60);
+  const risk = routeRiskSummary(r.coord);
   const near = nearAlertsForRoute(r.coord);
-  const txt = `🧭 NEXUS VIAL · RUTA\n${r.label}\n${o} → ${d}\n📏 ${km} km · ⏱ ${min} min · 🛣 Peaje ≈ $${toll}\n🛡 Seguridad: ${sec}%\n` + (near.length ? '\n⚠ Cerca de la ruta:\n' + near.map(n => `· ${n.categoria === 'security' ? '🛡' : '🚗'} ${n.title} (${n.location}, a ${n.km.toFixed(1)} km)`).join('\n') : '\n✅ Sin alertas cerca de la ruta.');
+  const txt = `🧭 NEXUS VIAL · RUTA\n${r.label}\n${o} → ${d}\n📏 ${km} km · ⏱ ${min} min\n⚠ Riesgo ${risk.level}: ${risk.redZones} zona(s) roja(s), ${risk.roadRisks} riesgo(s) vial(es), ${risk.alertsNear} alerta(s)\n` + (near.length ? '\n⚠ Cerca de la ruta:\n' + near.map(n => `· ${n.categoria === 'security' ? '🛡' : '🚗'} ${n.title} (${n.location}, a ${n.km.toFixed(1)} km)`).join('\n') : '\n✅ Sin alertas activas cerca de la ruta.');
   navigator.clipboard.writeText(txt);
   log('🧭 Itinerario copiado al portapapeles.', 'success');
 }
@@ -2404,7 +2463,7 @@ function showSelectedRoute() {
 function clearUserRoute() {
   if(routeControl) { map.removeControl(routeControl); routeControl = null; }
   routeLineLayer.clearLayers();
-  activeRoute = null; routeOptions = []; routeSel = 0; routeNearAlerts = [];
+  activeRoute = null; routeOptions = []; routeSel = 0; routeNearAlerts = []; routeOriginCoords = null;
   const oi = document.getElementById('rm-origin'), di = document.getElementById('rm-dest');
   if(oi) oi.value = ''; if(di) di.value = '';
   const cards = document.getElementById('route-cards');
@@ -2416,6 +2475,23 @@ function clearUserRoute() {
   document.querySelectorAll('.rm-qbtn').forEach(b => b.classList.remove('active'));
   map.setView([23.6345, -102.5528], 5);
   log('🧹 Ruta eliminada del mapa.', 'info');
+}
+function swapRouteEndpoints() {
+  const oi=document.getElementById('rm-origin'), di=document.getElementById('rm-dest'); if(!oi || !di) return;
+  const tmp=oi.value; oi.value=di.value; di.value=tmp; routeOriginCoords=null; routeOptions=[];
+  const cards=document.getElementById('route-cards'); if(cards) cards.innerHTML='<div style="color:#6B7280;font-size:12px;">Pulsa <b>Buscar rutas</b> para calcular el trayecto invertido.</div>';
+}
+function useCurrentLocationForRoute() {
+  const btn=document.getElementById('rm-use-location'), input=document.getElementById('rm-origin');
+  if(!navigator.geolocation) { if(input) input.value='Ubicación no disponible'; return; }
+  if(btn) { btn.disabled=true; btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Ubicando…'; }
+  navigator.geolocation.getCurrentPosition(async pos => {
+    routeOriginCoords={lat:pos.coords.latitude,lon:pos.coords.longitude};
+    let label='Mi ubicación actual';
+    try { const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${routeOriginCoords.lat}&lon=${routeOriginCoords.lon}`,{headers:{'Accept-Language':'es'}}); const d=await r.json(); if(d?.display_name) label=d.display_name.split(',').slice(0,3).join(',').trim(); } catch(e) {}
+    if(input) input.value=label;
+    if(btn) { btn.disabled=false; btn.innerHTML='<i class="fa-solid fa-location-crosshairs"></i> Ubicación aplicada'; }
+  }, () => { if(btn) { btn.disabled=false; btn.innerHTML='<i class="fa-solid fa-location-crosshairs"></i> Reintentar ubicación'; } }, {enableHighAccuracy:true,timeout:10000,maximumAge:60000});
 }
 let gpsWatchId = null; let myPosition = null;
 function gpsTrack() {
