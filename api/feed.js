@@ -5,6 +5,16 @@
 const MAX_OUT = 30;
 const MAX_PER_MIN = 60;
 const rate = new Map();
+const ALLOWED_FEED_HOSTS = ['rss.app', 'news.google.com'];
+
+function allowedFeedUrl(raw) {
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== 'https:') return false;
+    const host = u.hostname.toLowerCase();
+    return ALLOWED_FEED_HOSTS.some(allowed => host === allowed || host.endsWith('.' + allowed));
+  } catch (e) { return false; }
+}
 
 // === FILTRO: solo incidentes viales/seguridad en México ===
 const ARR = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -52,6 +62,15 @@ function stripHtml(s) {
     .replace(/&nbsp;/gi, ' ').replace(/&#0?8232;/g, ' ').trim();
 }
 
+function sourceName(it, feedUrl) {
+  const raw = String((it && (it.source_name || it.source || it.author)) || '').trim();
+  if (raw && raw !== '[object Object]') return raw.slice(0, 80);
+  const hay = ARR(String((it && it.title) || '') + ' ' + String(feedUrl || ''));
+  if (hay.includes('capufe')) return 'CAPUFE';
+  if (hay.includes('guardia nacional')) return 'Guardia Nacional';
+  try { return new URL(feedUrl).hostname.replace(/^www\./, '').slice(0, 80); } catch (e) { return 'Fuente RSS'; }
+}
+
 function parseRssItems(raw) {
   const trimmed = raw.trim();
   if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
@@ -67,7 +86,8 @@ function parseRssItems(raw) {
       .slice(0, MAX_OUT)
       .map(it => ({
         title: String(it.title || it.description_text || '').trim(),
-        content_text: String(it.description_text || it.description_html || it.description || it.content || '').trim()
+        content_text: String(it.description_text || it.description_html || it.description || it.content || '').trim(),
+        source_name: String(it.source_name || it.source || it.author || '').trim().slice(0, 80)
       }));
   }
 
@@ -79,7 +99,8 @@ function parseRssItems(raw) {
     const title = stripHtml(tag(/<title[^>]*>([\s\S]*?)<\/title>/i, block));
     if (title) items.push({
       title,
-      content_text: stripHtml(tag(/<description[^>]*>([\s\S]*?)<\/description>/i, block))
+      content_text: stripHtml(tag(/<description[^>]*>([\s\S]*?)<\/description>/i, block)),
+      source_name: stripHtml(tag(/<(?:source|author)[^>]*>([\s\S]*?)<\/(?:source|author)>/i, block))
     });
   }
   return items.slice(0, MAX_OUT);
@@ -90,14 +111,17 @@ module.exports = async (req, res) => {
   if (rateLimited(remoteIp(req))) return res.status(429).json({ error: 'demasiadas peticiones, espera un minuto' });
 
   const url = String((req.query && req.query.url) || '').trim();
-  if (!/^https?:\/\//i.test(url)) return res.status(400).json({ error: 'url inválida' });
+  if (!allowedFeedUrl(url)) return res.status(400).json({ error: 'fuente RSS no autorizada' });
   if (url.length > 800) return res.status(400).json({ error: 'url demasiado larga' });
 
   try {
     const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (NEXUS VIAL; monitoreo vial)' } });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const items = parseRssItems(await r.text());
-    const kept = items.filter(it => mexVialScore(it.title + ' ' + (it.content_text || '')).keep);
+    const kept = items
+      .filter(it => it.title.trim().length >= 8 && String(it.content_text || '').trim().length >= 15)
+      .filter(it => mexVialScore(it.title + ' ' + (it.content_text || '')).keep)
+      .map(it => ({ ...it, source_name: (!it.source_name || it.source_name === 'Fuente RSS') ? sourceName(it, url) : it.source_name }));
     return res.status(200).json({ items: kept, total: items.length, kept: kept.length });
   } catch (e) {
     const msg = String((e && e.message) || e);
