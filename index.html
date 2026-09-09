@@ -151,6 +151,9 @@ body.dark-mode .leaflet-control-attribution a{ color:#bbb; }
 .landing-mode.user{ border:none; background:linear-gradient(90deg,#f9ab00,#ff6d00); color:#1a1a1a; }
 .landing-mode.full{ border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.08); color:#fff; }
 .landing-mode small{ display:block; margin-top:3px; font-size:10px; font-weight:500; opacity:.75; }
+.rm-search-actions{ display:grid; grid-template-columns:1fr auto; gap:8px; margin:10px 0 12px; }
+.rm-search-actions button{ margin:0; border-radius:8px; }
+.rm-search-actions .rm-clear{ background:transparent; color:#EF4444; border:1px solid rgba(239,68,68,.55); width:auto; padding:10px 14px; }
 .landing-foot{ margin-top:18px; font-size:11px; color:#8b96a8; }
 
 /* ALERTAS CERCANAS A LA RUTA */
@@ -494,7 +497,7 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
     </div>
     <div class="landing-modes">
       <button class="landing-mode user" onclick="enterPlatform('user')"><i class="fa-solid fa-user"></i> Modo usuario<small>Solo lo que necesitas</small></button>
-      <button class="landing-mode full" onclick="enterPlatform('operator')"><i class="fa-solid fa-table-columns"></i> Modo completo<small>Panel y herramientas</small></button>
+      <button class="landing-mode full" onclick="enterPlatform('operator')"><i class="fa-solid fa-user-shield"></i> Administrador<small>Plataforma completa</small></button>
     </div>
     <div class="landing-foot">Puedes cambiar de modo en cualquier momento</div>
   </div>
@@ -524,6 +527,9 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
   <div class="nav-item" onclick="switchPanel('reports')"><div class="nav-icon"><i class="fa-solid fa-file-contract"></i></div><span class="nav-label">Reportes</span></div>
   
   <div style="flex:1"></div>
+  <div class="nav-item" onclick="toggleOperator()" style="border-top:1px solid var(--border);">
+    <div class="nav-icon"><i class="fa-solid fa-user"></i></div><span class="nav-label">Modo Usuario</span>
+  </div>
   <div class="nav-item" onclick="switchPanel('monitor')" style="border-top:1px solid var(--border); background:rgba(26,115,232,0.05);">
     <div class="nav-icon" style="color:var(--accent)"><i class="fa-solid fa-user-group"></i></div><span class="nav-label" style="color:var(--accent)">Personal Activo</span>
   </div>
@@ -877,6 +883,10 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
             <input id="rm-dest" placeholder="Querétaro" />
           </div>
         </div>
+        <div class="rm-search-actions">
+          <button onclick="calcUserRoute()"><i class="fa-solid fa-magnifying-glass"></i> Buscar rutas</button>
+          <button class="rm-clear" onclick="clearUserRoute()" title="Borrar ruta y resultados"><i class="fa-solid fa-trash-can"></i> Limpiar</button>
+        </div>
         <div class="rm-quick">
           <button class="rm-qbtn" onclick="setQuick(0, this)">CDMX → Querétaro</button>
           <button class="rm-qbtn" onclick="setQuick(1, this)">CDMX → Puebla</button>
@@ -892,7 +902,7 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
       <div class="rm-foot">
         <button class="rm-copy" onclick="copyItinerary()"><i class="fa-solid fa-copy"></i> Copiar Itinerario</button>
         <button class="rm-cancel" onclick="closeModal('route-modal')">Cancelar</button>
-        <button class="rm-main" onclick="traceRouteOnMap()"><i class="fa-solid fa-arrow-right"></i> Trazar Ruta</button>
+        <button class="rm-main" onclick="showSelectedRoute()"><i class="fa-solid fa-map-location-dot"></i> Ver en el mapa</button>
       </div>
     </div>
   </div>
@@ -2286,9 +2296,10 @@ function riskGo(i) { weatherGoMap(i); }
 const QUICK_ROUTES = [['Ciudad de México', 'Querétaro'], ['Ciudad de México', 'Puebla'], ['Ciudad de México', 'Guadalajara'], ['Monterrey', 'Ciudad de México']];
 let routeSel = 0; let routeOptions = [];
 function openRouteModal() {
-  routeOptions = []; routeSel = 0;
-  const cards = document.getElementById('route-cards'); if(cards) cards.innerHTML = '<div style="color:#6B7280; font-size:12px;">Ingresa origen y destino para comparar hasta 3 opciones reales.</div>';
-  const ra = document.getElementById('routeModalAlerts'); if(ra) ra.innerHTML = '<div style="font-size:12px; color:var(--text-muted);">Traza una ruta para analizar el entorno.</div>';
+  const cards = document.getElementById('route-cards');
+  if(cards && !routeOptions.length) cards.innerHTML = '<div style="color:#6B7280; font-size:12px;">Escribe origen y destino, después pulsa <b>Buscar rutas</b>.</div>';
+  const ra = document.getElementById('routeModalAlerts');
+  if(ra && !activeRoute) ra.innerHTML = '<div style="font-size:12px; color:var(--text-muted);">Las alertas aparecerán al seleccionar una ruta.</div>';
   document.querySelectorAll('.rm-qbtn').forEach(b => b.classList.remove('active'));
   openModal('route-modal');
 }
@@ -2325,7 +2336,7 @@ async function calcUserRoute() {
     }));
     routeSel = 0;
     renderRouteCards();
-    traceRouteOnMap();
+    cards.insertAdjacentHTML('afterbegin', '<div style="color:#9CA3AF;font-size:11px;margin-bottom:8px;">Selecciona una opción y pulsa <b>Ver en el mapa</b>.</div>');
   } catch(e) { cards.innerHTML = '<div style="color:#EF4444; font-size:12px;">Error al consultar el servidor de rutas.</div>'; }
 }
 function routeSecurityPct(coords) {
@@ -2343,7 +2354,7 @@ function renderRouteCards() {
     const sec = routeSecurityPct(r.coord);
     const card = document.createElement('div');
     card.className = 'rm-card' + (i === routeSel ? ' selected' : '');
-    card.onclick = () => { routeSel = i; renderRouteCards(); traceRouteOnMap(); };
+    card.onclick = () => { routeSel = i; renderRouteCards(); };
     card.innerHTML = `<div class="rm-badges"><span class="rm-tag">${r.label}</span><span class="rm-tag sec"><i class="fa-solid fa-shield-halved"></i> ${sec}% seguro</span></div>
       <div class="rm-name">${o} → ${d}</div>
       <div class="rm-divider"></div>
@@ -2380,6 +2391,31 @@ function traceRouteOnMap() {
   activeRoute = { summary: { totalDistance: r.distance, totalTime: r.duration }, coordinates: r.coord };
   updateRouteAlerts(r.coord);
   log(`🧭 Ruta trazada: ${(r.distance / 1000).toFixed(1)} km · ${Math.round(r.duration / 60)} min.`, 'success');
+}
+function showSelectedRoute() {
+  if(!routeOptions.length) {
+    const cards = document.getElementById('route-cards');
+    if(cards) cards.innerHTML = '<div style="color:#F59E0B;font-size:12px;">Primero escribe origen y destino y pulsa <b>Buscar rutas</b>.</div>';
+    return;
+  }
+  traceRouteOnMap();
+  closeModal('route-modal');
+}
+function clearUserRoute() {
+  if(routeControl) { map.removeControl(routeControl); routeControl = null; }
+  routeLineLayer.clearLayers();
+  activeRoute = null; routeOptions = []; routeSel = 0; routeNearAlerts = [];
+  const oi = document.getElementById('rm-origin'), di = document.getElementById('rm-dest');
+  if(oi) oi.value = ''; if(di) di.value = '';
+  const cards = document.getElementById('route-cards');
+  if(cards) cards.innerHTML = '<div style="color:#6B7280;font-size:12px;">Escribe origen y destino, después pulsa <b>Buscar rutas</b>.</div>';
+  const ra = document.getElementById('routeModalAlerts');
+  if(ra) ra.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Las alertas aparecerán al seleccionar una ruta.</div>';
+  const stats = document.getElementById('routeStats'); if(stats) stats.innerText = '';
+  const legacyAlerts = document.getElementById('routeAlerts'); if(legacyAlerts) legacyAlerts.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Traza una ruta para analizar el entorno.</div>';
+  document.querySelectorAll('.rm-qbtn').forEach(b => b.classList.remove('active'));
+  map.setView([23.6345, -102.5528], 5);
+  log('🧹 Ruta eliminada del mapa.', 'info');
 }
 let gpsWatchId = null; let myPosition = null;
 function gpsTrack() {
