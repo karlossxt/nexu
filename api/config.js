@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=120');
   return res.status(200).json({
     rss: [rssPri, rssSec || DEFAULT_RSS_SEC],
-    model: process.env.GROQ_MODEL || 'openai/gpt-oss-20b',
+    model: process.env.GROQ_MODEL || 'qwen/qwen3.8-27b',
     reportModel: process.env.REPORT_MODEL || 'openai/gpt-oss-120b'
   });
 };
