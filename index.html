@@ -1078,7 +1078,8 @@ window.onload = function() {
   } catch(e) {}
 
   if(localStorage.getItem('steele_critical')) { document.getElementById('criticalPointsInput').value = localStorage.getItem('steele_critical'); loadCriticalPoints(); }
-  const savedModel = localStorage.getItem('steele_model');
+  let savedModel = localStorage.getItem('steele_model');
+  if(savedModel === 'openai/gpt-oss-20b') { savedModel = 'qwen/qwen3.8-27b'; localStorage.setItem('steele_model', savedModel); }
   if(savedModel && savedModel !== 'undefined') { const s=document.getElementById('modelSelect'); const o=document.createElement('option'); o.value=savedModel; o.text=savedModel; s.add(o); s.value=savedModel; }
   const savedRModel = localStorage.getItem('steele_rmodel');
   if(savedRModel && savedRModel !== 'undefined') { const s=document.getElementById('reportModelSelect'); const o=document.createElement('option'); o.value=savedRModel; o.text=savedRModel; s.add(o); s.value=savedRModel; }
@@ -1337,8 +1338,8 @@ function stopSystem() {
 // === IA & GEOCODING ===
 async function consultGroq(prompt, model, maxTokens=700) {
   const sel = document.getElementById('modelSelect');
-  const GOOD = ['openai/gpt-oss-20b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'allam-2-7b'];
-  const m = model || (sel && GOOD.includes(sel.value) ? sel.value : 'openai/gpt-oss-20b');
+  const GOOD = ['qwen/qwen3.8-27b', 'allam-2-7b'];
+  const m = model || (sel && GOOD.includes(sel.value) ? sel.value : 'qwen/qwen3.8-27b');
   const token = localStorage.getItem('nv_token') || '';
   const headers = { 'Content-Type': 'application/json' };
   if(token) headers['x-app-token'] = token;
