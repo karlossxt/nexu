@@ -128,7 +128,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({
       rss: [rssPri, rssSec || 'https://news.google.com/rss/search?q=accidente+OR+bloqueo+OR+asalto+carretera+mexico&hl=es-419&gl=MX&ceid=MX:es-419'],
-      model: ENV.GROQ_MODEL || 'openai/gpt-oss-20b',
+      model: ENV.GROQ_MODEL || 'qwen/qwen3.8-27b',
       reportModel: ENV.REPORT_MODEL || 'openai/gpt-oss-120b'
     }));
   }
