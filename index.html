@@ -433,6 +433,25 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
 #map{ order:2; }
 #panel-right{ order:3; }
 .ris-auto{ font-size:11.5px; color:#10B981; background:rgba(16,185,129,.08); border:1px solid rgba(16,185,129,.25); border-radius:8px; padding:8px 10px; margin-bottom:12px; display:flex; gap:8px; align-items:flex-start; line-height:1.5; }
+.ris-controls{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+.ris-controls select{ margin:0; min-width:0; }
+.ris-graph-btn{ margin:0 0 12px; border-radius:8px; background:linear-gradient(90deg,#0891B2,#2563EB); }
+.ris-summary{ display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-bottom:12px; }
+.ris-stat{ border:1px solid var(--border); background:var(--card-bg); border-radius:8px; padding:9px 6px; text-align:center; }
+.ris-stat b{ display:block; color:var(--accent); font-size:19px; }
+.ris-stat span{ color:var(--text-muted); font-size:9px; font-weight:800; text-transform:uppercase; }
+.ris-chart-title{ color:var(--text-muted); font-size:10px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; margin:12px 0 5px; }
+body.user-mode:not(.dark-mode){ --bg:#EEF3F8; --panel:#FFFFFF; --border:#D8E1EC; --text:#172033; --text-muted:#667085; --accent:#1D65D8; --glass:rgba(255,255,255,.96); --input-bg:#F7F9FC; --card-bg:#FFFFFF; --card-hover:#F3F7FC; --log-bg:#F7F9FC; }
+body.user-mode:not(.dark-mode) .u-panel{ color:#172033; background:linear-gradient(180deg,#FFFFFF 0%,#F7F9FC 100%); border-color:#D8E1EC; }
+body.user-mode:not(.dark-mode) #panel-right{ background:#F7F9FC; }
+body.user-mode:not(.dark-mode) .pl-brand, body.user-mode:not(.dark-mode) .pc-card b, body.user-mode:not(.dark-mode) .uf-row, body.user-mode:not(.dark-mode) .rm-name, body.user-mode:not(.dark-mode) .rm-col b, body.user-mode:not(.dark-mode) .m-head{ color:#172033; }
+body.user-mode:not(.dark-mode) .pc-card, body.user-mode:not(.dark-mode) .uf-row, body.user-mode:not(.dark-mode) .pr-search, body.user-mode:not(.dark-mode) .rm-card, body.user-mode:not(.dark-mode) .u-modal-card, body.user-mode:not(.dark-mode) .m-x, body.user-mode:not(.dark-mode) .rm-qbtn{ background:#FFFFFF; border-color:#D8E1EC; }
+body.user-mode:not(.dark-mode) .pl-dropdowns select, body.user-mode:not(.dark-mode) .pr-search input{ background-color:#FFFFFF; color:#172033; border-color:#D8E1EC; }
+body.user-mode:not(.dark-mode) .alert-card{ background:#FFFFFF; border-color:#D8E1EC; color:#172033; box-shadow:0 3px 12px rgba(15,23,42,.06); }
+body.user-mode:not(.dark-mode) .alert-card:hover{ background:#F7FAFD; }
+body.user-mode:not(.dark-mode) .alert-card b{ color:#172033; }
+body.user-mode:not(.dark-mode) .leaflet-popup-content-wrapper, body.user-mode:not(.dark-mode) .leaflet-popup-tip{ background:#FFFFFF; color:#172033; }
+body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark-mode) .nv-mtbtn{ background:#FFFFFF; color:#334155; border-color:#D8E1EC; }
 .nv-maptools{ display:flex; flex-direction:column; gap:6px; }
 .nv-mtbtn{ width:36px; height:36px; border-radius:9px; background:#131822; color:#dfe7f5; border:1px solid #1E293B; cursor:pointer; font-size:15px; display:grid; place-items:center; box-shadow:0 4px 14px rgba(0,0,0,.5); }
 .nv-mtbtn:hover{ color:#2563EB; border-color:#2563EB; }
@@ -534,6 +553,7 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
   .landing-modes{ grid-template-columns:1fr; }
   .landing-mode{ min-height:54px; }
   .toast-important{ left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom)); max-width:none; }
+  .ris-controls{ grid-template-columns:1fr; }
 }
 </style>
 </head>
@@ -647,8 +667,9 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
   <div id="panel-ris" class="panel-container">
     <div class="panel-header"><div class="panel-title" style="color:var(--ris)">Reporte RIS</div></div>
     <div class="panel-body">
-        <textarea id="risDataInput" style="height:80px; color:var(--ris); font-family:monospace;">[{"state": "Sinaloa", "type": "Ataque Armado", "lat": 24.80, "lon": -107.39, "desc": "Enfrentamiento"}, {"state": "Guanajuato", "type": "Acción Policiaca", "lat": 20.67, "lon": -101.35, "desc": "Operativo"}, {"state": "Zacatecas", "type": "Bloqueo", "lat": 22.77, "lon": -102.57, "desc": "Quema Vehículos"}, {"state": "Michoacán", "type": "Balacera", "lat": 19.15, "lon": -102.05, "desc": "Tiroteo Apatzingán"}, {"state": "Edomex", "type": "Asalto", "lat": 19.63, "lon": -99.10, "desc": "Robo transporte"}, {"state": "Jalisco", "type": "Bloqueo", "lat": 20.65, "lon": -103.34, "desc": "Cierre parcial"}]</textarea>
-        <button onclick="processRisData()" style="background:var(--ris); color:black; margin-bottom:20px; width:100%;">Generar</button>
+        <div class="ris-controls"><select id="op-ris-state"></select><select id="op-ris-type"><option value="all">Todas las incidencias</option><option value="road">Incidencias viales</option><option value="security">Incidencias de seguridad</option></select><select id="op-ris-time"><option value="0">Todo el periodo</option><option value="6">Últimas 6 horas</option><option value="12">Últimas 12 horas</option><option value="24">Últimas 24 horas</option></select></div>
+        <button class="ris-graph-btn" onclick="graphRis('op')"><i class="fa-solid fa-chart-column"></i> Graficar</button>
+        <div class="ris-summary"><div class="ris-stat"><b id="op-ris-total">0</b><span>Total</span></div><div class="ris-stat"><b id="op-ris-road">0</b><span>Viales</span></div><div class="ris-stat"><b id="op-ris-security">0</b><span>Seguridad</span></div></div>
         <div class="chart-container"><canvas id="chartStates"></canvas></div>
         <div class="chart-container" style="height:180px;"><canvas id="chartTypes"></canvas></div>
     </div>
@@ -777,9 +798,14 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
         <div id="feed-empty"><i class="fa-solid fa-shield-halved"></i><div id="feed-empty-msg">Sin alertas coincidentes con los filtros activos</div></div>
       </div>
       <div class="pr-sec" data-sec="ris">
-        <div class="ris-auto"><i class="fa-solid fa-shield-halved"></i><div>RIS alimentado <b>automáticamente</b> desde las alertas de seguridad en vivo. Se actualiza solo.</div></div>
-        <div id="ris-empty" style="color:#6B7280; font-size:12px; padding:20px 4px; display:none;"><i class="fa-solid fa-inbox"></i> Sin alertas de seguridad aún. La gráfica aparecerá cuando lleguen.</div>
+        <div class="ris-auto"><i class="fa-solid fa-chart-line"></i><div>Analiza las alertas recibidas por <b>país, estado, categoría y periodo</b>.</div></div>
+        <div class="ris-controls"><select id="u-ris-state"></select><select id="u-ris-type"><option value="all">Todas las incidencias</option><option value="road">Incidencias viales</option><option value="security">Incidencias de seguridad</option></select><select id="u-ris-time"><option value="0">Todo el periodo</option><option value="6">Últimas 6 horas</option><option value="12">Últimas 12 horas</option><option value="24">Últimas 24 horas</option></select></div>
+        <button class="ris-graph-btn" onclick="graphRis('u')"><i class="fa-solid fa-chart-column"></i> Graficar</button>
+        <div class="ris-summary"><div class="ris-stat"><b id="u-ris-total">0</b><span>Total</span></div><div class="ris-stat"><b id="u-ris-road">0</b><span>Viales</span></div><div class="ris-stat"><b id="u-ris-security">0</b><span>Seguridad</span></div></div>
+        <div id="ris-empty" style="color:#6B7280; font-size:12px; padding:20px 4px; display:none;"><i class="fa-solid fa-inbox"></i> No hay alertas para los filtros elegidos.</div>
+        <div class="ris-chart-title">Incidencias por estado</div>
         <div class="chart-container"><canvas id="uc-states"></canvas></div>
+        <div class="ris-chart-title">Distribución por tipo</div>
         <div class="chart-container" style="height:180px;"><canvas id="uc-types"></canvas></div>
       </div>
       <div class="pr-sec" data-sec="reportes">
@@ -1088,10 +1114,10 @@ function renderChartsInto(canvasSId, canvasTId, states, types) {
   if(cs) {
     const ctx = cs.getContext('2d');
     if(chartInstances[canvasSId]) chartInstances[canvasSId].destroy();
-    chartInstances[canvasSId] = new Chart(ctx, { type: 'bar', data: { labels: Object.keys(states), datasets: [{ label: 'Incidentes', data: Object.values(states), backgroundColor: 'rgba(0, 188, 212, 0.6)', borderColor: 'rgba(0, 188, 212, 1)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: textColor } }, x: { ticks: { color: textColor } } } } });
+    chartInstances[canvasSId] = new Chart(ctx, { type: 'bar', data: { labels: Object.keys(states), datasets: [{ label: 'Incidentes', data: Object.values(states), backgroundColor: 'rgba(0, 188, 212, 0.6)', borderColor: 'rgba(0, 188, 212, 1)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero:true, ticks: { precision:0, color: textColor } }, x: { ticks: { color: textColor } } } } });
   }
   const ct = document.getElementById(canvasTId);
-  if(ct && Object.keys(types).length) {
+  if(ct) {
     const ctx2 = ct.getContext('2d');
     if(chartInstances[canvasTId]) chartInstances[canvasTId].destroy();
     chartInstances[canvasTId] = new Chart(ctx2, { type: 'doughnut', data: { labels: Object.keys(types), datasets: [{ data: Object.values(types), backgroundColor: ['#ef5350', '#ffca28', '#66bb6a', '#ab47bc', '#29b6f6'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: textColor, font: {size: 10} } } } } });
@@ -1186,9 +1212,10 @@ window.onload = function() {
   renderDirectory();
   renderStateFilters();
   buildStateFilter();
+  buildRisFilters();
   buildEntryStates();
   rebuildU();
-  refreshRisAuto();
+  graphRis('u');
   uxResponsive();
   hncTick();
   setInterval(hncTick, 1000);
@@ -1211,6 +1238,7 @@ function toggleTheme() { const isDark = document.body.classList.contains('dark-m
 function applyTheme(toDark) {
     if(toDark) { document.body.classList.add('dark-mode'); map.removeLayer(lightLayer); map.addLayer(darkLayer); localStorage.setItem('steele_theme', 'dark'); }
     else { document.body.classList.remove('dark-mode'); map.removeLayer(darkLayer); map.addLayer(lightLayer); localStorage.setItem('steele_theme', 'light'); }
+    if(document.getElementById('u-ris-state')) { graphRis('u', true); graphRis('op', true); }
 }
 
 let lastPanel = 'config';
@@ -1234,7 +1262,7 @@ function switchPanel(id) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   event.currentTarget.classList.add('active');
   map.removeLayer(risLayer); map.removeLayer(markers); map.removeLayer(staticLayer);
-  if (id === 'ris') { map.addLayer(risLayer); } 
+  if (id === 'ris') { graphRis('op', true); map.addLayer(risLayer); }
   else if (id === 'road') { map.addLayer(markers); filterMapMarkers('road'); }
   else if (id === 'security') { map.addLayer(markers); map.addLayer(staticLayer); filterMapMarkers('security'); }
   else if (id === 'config') { map.addLayer(staticLayer); }
@@ -1758,17 +1786,34 @@ function filterDirectoryIn(containerId, queryElId) { const query = document.getE
 function filterDirectory() { filterDirectoryIn('directory-list', 'dirSearch'); }
 function buildStateFilter() { const sel = document.getElementById('lp-state'); if(!sel) return; sel.innerHTML = '<option value="">📍 Todos los estados</option>'; MEXICO_STATES.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); }); }
 function processRis(data, canvasSId, canvasTId, fit) { risPoints = data; risLayer.clearLayers(); data.forEach(p => { const icon = L.divIcon({ className: 'custom-pin', html: `<div style="background:#00bcd4; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; border:2px solid white;"><i class="fa-solid fa-clock-rotate-left"></i></div>`, iconSize: [26, 26], iconAnchor: [13, 26] }); const m = L.marker([p.lat, p.lon], {icon}); m.bindPopup(`<div style='color:#00838f'><b>RIS: ${p.type}</b><br>${p.desc}</div>`); risLayer.addLayer(m); }); const statsState = {}, statsType = {}; data.forEach(p => { statsState[p.state] = (statsState[p.state] || 0) + 1; statsType[p.type] = (statsType[p.type] || 0) + 1; }); renderChartsInto(canvasSId, canvasTId, statsState, statsType); log(`📊 RIS Procesado.`, 'success'); map.addLayer(risLayer); if(fit && risLayer.getLayers().length) map.fitBounds(risLayer.getBounds(), { padding: [50, 50] }); return { statsState, statsType }; }
-function processRisData() { try { return processRis(JSON.parse(document.getElementById('risDataInput').value), 'chartStates', 'chartTypes', true); } catch(e) { log("Error JSON RIS", 'err'); } }
 function securityType(t) { const s = (t || '').toLowerCase(); if(/bloqueo|manifestaci|protesta|marcha|planton|cierre total/.test(s)) return 'Bloqueo / Manifestación'; if(/asalto|robo|atraco|secuestro|extorsi/.test(s)) return 'Asalto / Robo'; if(/balacera|tiroteo|disparo|enfrentamiento|ataque|ejecuci|narcobloqueo|quema|veta/.test(s)) return 'Ataque Armado'; if(/opera|detenci|polic|guardia|federal|fiscal|militar/.test(s)) return 'Operativo Policial'; return 'Otro'; }
-function refreshRisAuto() {
-  const emp = document.getElementById('ris-empty');
-  const sec = alerts.filter(a => a.category === 'security');
-  if(!sec.length) { renderChartsInto('uc-states', 'uc-types', {}, {}); if(emp) emp.style.display = 'block'; return; }
-  if(emp) emp.style.display = 'none';
-  const st = {}, ty = {};
-  sec.forEach(a => { const s = a.state || 'Sin estado'; const t = securityType(a.title + ' ' + (a.detail || '')); st[s] = (st[s] || 0) + 1; ty[t] = (ty[t] || 0) + 1; });
-  renderChartsInto('uc-states', 'uc-types', st, ty);
+function roadIncidentType(a) { const s = ((a.title || '') + ' ' + (a.detail || '')).toLowerCase(); if(/choque|accidente|volcadura|derrape/.test(s)) return 'Accidente'; if(/bloqueo|cierre|manifestaci/.test(s)) return 'Cierre / Bloqueo'; if(/obra|mantenimiento|reducci/.test(s)) return 'Obras'; if(/tráfico|trafico|carga|congesti|detenido/.test(s)) return 'Tráfico'; if(/lluvia|niebla|inundaci|derrumbe|deslave/.test(s)) return 'Clima / Vía'; return 'Otra vial'; }
+function buildRisFilters() {
+  ['u','op'].forEach(prefix => { const sel=document.getElementById(prefix+'-ris-state'); if(!sel) return; sel.innerHTML='<option value="">Todo México</option>'; MEXICO_STATES.forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o); }); });
 }
+function graphRis(prefix='u', quiet=false) {
+  const state = document.getElementById(prefix+'-ris-state')?.value || '';
+  const type = document.getElementById(prefix+'-ris-type')?.value || 'all';
+  const hours = +(document.getElementById(prefix+'-ris-time')?.value || 0);
+  const norm = s => normAcc(s || '');
+  const selected = alerts.filter(a => {
+    if(type !== 'all' && a.category !== type) return false;
+    if(state && !norm((a.state || '') + ' ' + (a.location || '')).includes(norm(state))) return false;
+    if(hours && Date.now() - new Date(a.time).getTime() > hours*3600000) return false;
+    return true;
+  });
+  const st = {}, ty = {};
+  selected.forEach(a => { const s=a.state || 'Sin estado'; const t=a.category === 'security' ? securityType(a.title+' '+(a.detail||'')) : roadIncidentType(a); st[s]=(st[s]||0)+1; ty[t]=(ty[t]||0)+1; });
+  risLayer.clearLayers();
+  selected.forEach(a => { const color=a.category==='security'?'#EF4444':'#F97316'; const icon=L.divIcon({className:'custom-pin',html:`<div style="background:${color};width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:white;border:2px solid white;"><i class="fa-solid ${a.category==='security'?'fa-shield-halved':'fa-car-burst'}"></i></div>`,iconSize:[24,24],iconAnchor:[12,24]}); L.marker([a.lat,a.lon],{icon}).bindPopup(`<b>${a.title}</b><br>${a.location}<br><small>${alertSourceLabel(a)}</small>`).addTo(risLayer); });
+  const ids = prefix === 'u' ? ['uc-states','uc-types'] : ['chartStates','chartTypes'];
+  renderChartsInto(ids[0], ids[1], st, ty);
+  const set=(suffix,value)=>{ const el=document.getElementById(prefix+'-ris-'+suffix); if(el) el.textContent=value; };
+  set('total',selected.length); set('road',selected.filter(a=>a.category==='road').length); set('security',selected.filter(a=>a.category==='security').length);
+  if(prefix === 'u') { const emp=document.getElementById('ris-empty'); if(emp) emp.style.display=selected.length?'none':'block'; }
+  if(!quiet) log(`📊 RIS: ${selected.length} incidencia(s) graficadas${state ? ' en '+state : ' en México'}.`, 'success');
+}
+function refreshRisAuto() { graphRis('u', true); if(document.getElementById('panel-ris')?.classList.contains('active')) graphRis('op', true); }
 function riskPointType(p) { return p && (p.risk_type === 'road_risk' || p.type === 'road_risk') ? 'road_risk' : 'red_zone'; }
 function loadCriticalPoints() { const input = document.getElementById('criticalPointsInput').value; try { const points = JSON.parse(input); if(!Array.isArray(points)) throw new Error('Se esperaba una lista'); localStorage.setItem('steele_critical', input); criticalPoints = points.filter(p => p && Number.isFinite(+p.lat) && Number.isFinite(+p.lon) && p.title).map(p => ({ ...p, lat:+p.lat, lon:+p.lon, risk_type:riskPointType(p) })); applyFilter(''); rebuildU(); log(`✅ Zonas cargadas: ${criticalPoints.length}.`, 'success'); } catch(e) { log("Error JSON de zonas de riesgo", 'err'); } }
 function renderRiskPoints(keyword='') {
@@ -1853,7 +1898,6 @@ function enterPlatform(mode='user') {
   localStorage.setItem('nv_mode', operator ? 'operator' : 'user');
   document.body.classList.toggle('user-mode', !operator);
   document.body.classList.toggle('operator-mode', operator);
-  if(!document.body.classList.contains('dark-mode')) applyTheme(true);
   map.invalidateSize();
   if(!operator) { uxResponsive(); rebuildU(); }
   requestNotifPerm();
@@ -1865,7 +1909,7 @@ function toggleOperator() {
   document.body.classList.toggle('operator-mode', !isUser);
   localStorage.setItem('nv_mode', isUser ? 'user' : 'operator');
   map.invalidateSize();
-  if(!isUser) { applyTheme(true); } else { settings.load(); }
+  if(isUser) { uxResponsive(); rebuildU(); }
 }
 
 // === RELOJ + HOY NO CIRCULA ===
