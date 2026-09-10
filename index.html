@@ -1094,6 +1094,7 @@ let risPoints = [];
 let activeRoute = null; 
 let routeNearAlerts = []; 
 let markers = L.markerClusterGroup({ disableClusteringAtZoom: 16 });
+let alertAreaLayer = L.layerGroup();
 let staticLayer = L.layerGroup(); 
 let risLayer = L.layerGroup(); 
 let routeControl = null;
@@ -1132,7 +1133,7 @@ const map = L.map('map', { zoomControl: false }).setView([19.4326, -99.1332], 5)
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 L.Control.MapTools = L.Control.extend({ options: { position: 'bottomleft' }, onAdd() { const div = L.DomUtil.create('div', 'nv-maptools'); div.innerHTML = '<button class="nv-mtbtn" onclick="gpsTrack()" title="Mi ubicación (GPS)"><i class="fa-solid fa-location-crosshairs"></i></button><button class="nv-mtbtn" onclick="map.setView([19.4326,-99.1332],5)" title="Centrar en México"><i class="fa-solid fa-location-dot"></i></button><button id="traffic-toggle" class="nv-mtbtn" onclick="toggleTraffic()" title="Mostrar tráfico en vivo"><i class="fa-solid fa-traffic-light"></i></button><button class="nv-mtbtn" onclick="toggleTheme()" title="Capa claro / oscuro"><i class="fa-solid fa-circle-half-stroke"></i></button>'; L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div); return div; } });
 lightLayer.addTo(map);
-map.addLayer(markers); map.addLayer(staticLayer);
+map.addLayer(alertAreaLayer); map.addLayer(markers); map.addLayer(staticLayer);
 let routeLineLayer = L.layerGroup(); map.addLayer(routeLineLayer);
 new L.Control.MapTools().addTo(map);
 
@@ -1263,12 +1264,12 @@ function switchPanel(id) {
   document.getElementById(`panel-${id}`).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   event.currentTarget.classList.add('active');
-  map.removeLayer(risLayer); map.removeLayer(markers); map.removeLayer(staticLayer);
+  map.removeLayer(risLayer); map.removeLayer(alertAreaLayer); map.removeLayer(markers); map.removeLayer(staticLayer);
   if (id === 'ris') { graphRis('op', true); map.addLayer(risLayer); }
-  else if (id === 'road') { map.addLayer(markers); filterMapMarkers('road'); }
-  else if (id === 'security') { map.addLayer(markers); map.addLayer(staticLayer); filterMapMarkers('security'); }
+  else if (id === 'road') { map.addLayer(alertAreaLayer); map.addLayer(markers); filterMapMarkers('road'); }
+  else if (id === 'security') { map.addLayer(alertAreaLayer); map.addLayer(markers); map.addLayer(staticLayer); filterMapMarkers('security'); }
   else if (id === 'config') { map.addLayer(staticLayer); }
-  else { map.addLayer(markers); map.addLayer(staticLayer); filterMapMarkers('all'); }
+  else { map.addLayer(alertAreaLayer); map.addLayer(markers); map.addLayer(staticLayer); filterMapMarkers('all'); }
 }
 
 /* =========================================
@@ -1630,7 +1631,7 @@ async function processAlert(key, text, sourceName='Fuente RSS') {
   } catch(e) { log(`❌ Error al procesar: ${String((e && e.message) || e)}. Reintentaré el próximo ciclo.`, 'warn'); unsee(key); }
 }
 
-function removeAlert(id) { alerts = alerts.filter(a => a.id !== id); markers.clearLayers(); alerts.forEach(a => addMarkerToMap(a)); updateLists(); persistAlerts(); }
+function removeAlert(id) { alerts = alerts.filter(a => a.id !== id); markers.clearLayers(); alertAreaLayer.clearLayers(); alerts.forEach(a => addMarkerToMap(a)); updateLists(); persistAlerts(); }
 function alertSourceLabel(a) {
   if(a.source_type === 'community') {
     if(a.verification_status === 'verified') return 'Comunidad · Verificado';
@@ -1648,6 +1649,13 @@ function precisionLabel(a) {
   if(a.precision === 'estado') return 'Solo referencia estatal';
   return 'Zona aproximada';
 }
+function estimatedRadiusMeters(a) {
+  return ({ punto:200, kilometro:500, tramo:2500, zona:3000, municipio:6000, estado:15000 }[a.precision] || 3000);
+}
+function estimatedRadiusLabel(a) {
+  const meters=estimatedRadiusMeters(a);
+  return meters < 1000 ? `${meters} m` : `${(meters/1000).toLocaleString('es-MX',{maximumFractionDigits:1})} km`;
+}
 function alertDistanceKm(a) {
   return myPosition ? haversineKm(myPosition.lat, myPosition.lon, a.lat, a.lon) : null;
 }
@@ -1664,7 +1672,9 @@ function addMarkerToMap(alert) {
   const iconClass = expired ? 'fa-clock-rotate-left' : (isSec ? 'fa-user-shield' : 'fa-car-burst');
   const icon = L.divIcon({ className: 'custom-pin', html: `<div style="background:${color}; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; border:2px solid white; box-shadow:0 3px 6px rgba(0,0,0,0.5); font-size:16px;"><i class="fa-solid ${iconClass}"></i></div>`, iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32] });
   const m = L.marker([alert.lat, alert.lon], {icon});
-  const nota = `<div class="location-meta"><span class="precision-chip"><i class="fa-solid fa-location-dot"></i> ${precisionLabel(alert)}</span></div>`;
+  const radius=estimatedRadiusMeters(alert);
+  L.circle([alert.lat,alert.lon],{radius,color,weight:1.5,opacity:.7,dashArray:alert.precision==='punto'?null:'5 5',fillColor:color,fillOpacity:alert.precision==='punto'?.06:.12,interactive:true}).bindTooltip(`Área estimada · radio ${estimatedRadiusLabel(alert)}`,{direction:'top'}).addTo(alertAreaLayer);
+  const nota = `<div class="location-meta"><span class="precision-chip"><i class="fa-solid fa-location-dot"></i> ${precisionLabel(alert)}</span><span class="distance-chip"><i class="fa-solid fa-circle-dot"></i> Área estimada: ${estimatedRadiusLabel(alert)}</span></div>`;
   const chip = (!isSec && alert.trafico) ? `<div style="margin-top:5px;"><span class="traffic-chip" style="background:${trafficStyle(alert.trafico).bg}; color:${trafficStyle(alert.trafico).color};">${trafficStyle(alert.trafico).label}</span></div>` : '';
   const stale = expired ? `<div style="margin-top:5px;"><span class="traffic-chip" style="background:rgba(154,160,166,.2); color:#80868b;">🕓 Hace más de 8h</span></div>` : '';
   m.bindPopup(`
@@ -1709,7 +1719,7 @@ function renderDrawer() {
   rebuildU();
   refreshRisAuto();
 }
-function filterMapMarkers(context) { markers.clearLayers(); alerts.forEach(a => { if(context === 'all' || a.category === context) addMarkerToMap(a); }); }
+function filterMapMarkers(context) { markers.clearLayers(); alertAreaLayer.clearLayers(); alerts.forEach(a => { if(context === 'all' || a.category === context) addMarkerToMap(a); }); }
 function shareAlert(id) {
     const alert = alerts.find(a => a.id === id); if(!alert) return;
     const mapLink = LINKS.gmapsLink.replace('{lat}', alert.lat).replace('{lon}', alert.lon);
@@ -1756,6 +1766,7 @@ function openAlertDetail(id) {
   document.getElementById('am-time').textContent = formatAlertTime(a.time);
   document.getElementById('am-source').textContent = alertSourceLabel(a);
   document.getElementById('am-precision').textContent = precisionLabel(a) + (a.km !== null && a.km !== undefined && a.km !== '' ? ' · km ' + a.km : '');
+  document.getElementById('am-precision').textContent += ' · área estimada: radio ' + estimatedRadiusLabel(a);
   const distance = alertDistanceKm(a);
   document.getElementById('am-distance-row').style.display = distance === null ? 'none' : 'block';
   document.getElementById('am-distance').textContent = distance === null ? '' : `${distance < 10 ? distance.toFixed(1) : Math.round(distance)} km desde tu ubicación`;
@@ -1849,6 +1860,7 @@ function renderStateFilters() {
 function applyFilter(keyword) {
   lastFilter = keyword;
   markers.clearLayers();
+  alertAreaLayer.clearLayers();
   const filteredAlerts = keyword ? alerts.filter(a => (a.state && a.state.toLowerCase().includes(keyword.toLowerCase())) || a.location.toLowerCase().includes(keyword.toLowerCase()) || a.title.toLowerCase().includes(keyword.toLowerCase())) : alerts;
   filteredAlerts.forEach(a => addMarkerToMap(a));
   document.querySelectorAll('#state-grid button').forEach(btn => btn.style.background = btn.textContent === keyword ? 'var(--accent)' : '');
@@ -2160,7 +2172,7 @@ function notifyImportant(a) {
   setTimeout(() => { document.title = prev; }, 8000);
 }
 function refreshAlertAges() {
-  markers.clearLayers(); alerts.forEach(a => addMarkerToMap(a)); updateLists();
+  markers.clearLayers(); alertAreaLayer.clearLayers(); alerts.forEach(a => addMarkerToMap(a)); updateLists();
 }
 function clearMapRoute() { if(routeControl) { map.removeControl(routeControl); routeControl = null; activeRoute = null; } routeLineLayer && routeLineLayer.clearLayers(); routeNearAlerts = []; document.getElementById('routeStats').innerText = ""; const b=document.getElementById('routeAlerts'); if(b) b.innerHTML='<div style="font-size:12px;color:var(--text-muted);">Traza una ruta para analizar el entorno.</div>'; const rb2=document.getElementById('routeBoxStats'); if(rb2) rb2.innerText=''; const rbt=document.getElementById('routeBoxAlerts'); if(rbt) rbt.innerHTML=''; document.getElementById('aiReport').innerText = "Esperando ruta..."; }
 async function generateRiskReport() { const box = document.getElementById('aiReport'); if(!activeRoute) { box.innerText = "Traza ruta."; return; } box.innerText = "Analizando..."; box.classList.add('typing'); const nearInfo = routeNearAlerts.map(a => `- [a ${a.distKm.toFixed(1)} km de la ruta] ${a.category}: ${a.title} (${a.location})`).join('\n'); const incidents = nearInfo || (alerts.map(a => `- ${a.category}: ${a.title} (${a.location})`).join('\n')) || "Sin incidentes recientes."; const riskPoints = criticalPoints.map(p => `- ZONA ROJA: ${p.title} (${p.desc})`).join('\n'); const prompt = `Analiza ruta ${document.getElementById('routeOrigin').value} a ${document.getElementById('routeDest').value}. Alertas Vivas: ${incidents}. Puntos Criticos: ${riskPoints}. Da veredicto seguridad.`; const report = await consultGroq(prompt, (document.getElementById('reportModelSelect') || {}).value || 'openai/gpt-oss-120b'); box.classList.remove('typing'); box.innerText = report || "Error."; }
@@ -2234,7 +2246,10 @@ function rebuildU() {
   const fe = document.getElementById('feed-empty');
   const em = document.getElementById('feed-empty-msg');
   const vis = alerts.filter(matchesFilters);
+  if(!map.hasLayer(alertAreaLayer)) map.addLayer(alertAreaLayer);
+  if(!map.hasLayer(markers)) map.addLayer(markers);
   markers.clearLayers();
+  alertAreaLayer.clearLayers();
   vis.forEach(a => addMarkerToMap(a));
   renderRiskPoints(uState);
   if(nfState.redZone || nfState.roadRisk) { if(!map.hasLayer(staticLayer)) map.addLayer(staticLayer); }
@@ -2737,6 +2752,7 @@ function confirmClearAlerts() {
   if(!confirm('¿Borrar ' + alerts.length + ' alertas del mapa y del feed?')) return;
   alerts = [];
   markers.clearLayers();
+  alertAreaLayer.clearLayers();
   routeNearAlerts = [];
   updateLists();
   persistAlerts();
