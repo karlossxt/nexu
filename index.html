@@ -587,7 +587,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
   <div class="nav-item active" onclick="switchPanel('config')"><div class="nav-icon"><i class="fa-solid fa-sliders"></i></div><span class="nav-label">Configuración</span></div>
   <div class="nav-separator"></div>
   
-  <div class="nav-item" onclick="switchPanel('ris')"><div class="nav-icon" style="color:var(--ris)"><i class="fa-solid fa-chart-pie"></i></div><span class="nav-label" style="color:var(--ris)">RIS Analytics</span></div>
+  <div class="nav-item" onclick="switchPanel('ris')"><div class="nav-icon" style="color:var(--ris)"><i class="fa-solid fa-chart-pie"></i></div><span class="nav-label" style="color:var(--ris)">Radar Vial</span></div>
   <div class="nav-item" onclick="switchPanel('filters')"><div class="nav-icon"><i class="fa-solid fa-filter"></i></div><span class="nav-label">Segmentación</span></div>
   
   <div class="nav-item" onclick="switchPanel('road')"><div class="nav-icon"><i class="fa-solid fa-triangle-exclamation"></i></div><span class="nav-label">Alertas Viales</span></div>
@@ -665,7 +665,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
 
   <!-- PANEL RIS -->
   <div id="panel-ris" class="panel-container">
-    <div class="panel-header"><div class="panel-title" style="color:var(--ris)">Reporte RIS</div></div>
+    <div class="panel-header"><div class="panel-title" style="color:var(--ris)"><i class="fa-solid fa-chart-line"></i> Radar Vial</div></div>
     <div class="panel-body">
         <div class="ris-controls"><select id="op-ris-state"></select><select id="op-ris-type"><option value="all">Todas las incidencias</option><option value="road">Incidencias viales</option><option value="security">Incidencias de seguridad</option></select><select id="op-ris-time"><option value="0">Todo el periodo</option><option value="6">Últimas 6 horas</option><option value="12">Últimas 12 horas</option><option value="24">Últimas 24 horas</option></select></div>
         <button class="ris-graph-btn" onclick="graphRis('op')"><i class="fa-solid fa-chart-column"></i> Graficar</button>
@@ -787,7 +787,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
       </div>
       <div class="pr-tabs">
         <div class="pr-tab active" data-tab="feed" onclick="switchPR('feed')"><i class="fa-solid fa-bolt"></i> Live</div>
-        <div class="pr-tab" data-tab="ris" onclick="switchPR('ris')"><i class="fa-solid fa-chart-pie"></i> RIS</div>
+        <div class="pr-tab" data-tab="ris" onclick="switchPR('ris')"><i class="fa-solid fa-chart-pie"></i> Radar</div>
         <div class="pr-tab" data-tab="reportes" onclick="switchPR('reportes')"><i class="fa-solid fa-file-contract"></i> Reportes</div>
       </div>
     </div>
@@ -824,7 +824,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
     <div class="u-rail">
       <button onclick="toggleRight()" title="Expandir panel"><i class="fa-solid fa-angles-left"></i></button>
       <button onclick="switchPR('feed')" title="Feed"><i class="fa-solid fa-bolt"></i></button>
-      <button onclick="switchPR('ris')" title="RIS"><i class="fa-solid fa-chart-pie"></i></button>
+      <button onclick="switchPR('ris')" title="Radar Vial"><i class="fa-solid fa-chart-pie"></i></button>
       <button onclick="switchPR('reportes')" title="Reportes"><i class="fa-solid fa-file-contract"></i></button>
       <button onclick="openRouteModal()" title="Ruta"><i class="fa-solid fa-route"></i></button>
     </div>
@@ -1786,7 +1786,7 @@ function renderDirectory() { renderDirectoryInto('directory-list'); }
 function filterDirectoryIn(containerId, queryElId) { const query = document.getElementById(queryElId).value.toLowerCase(); document.getElementById(containerId).querySelectorAll('.contact-card').forEach(card => { card.style.display = card.dataset.name.includes(query) ? 'flex' : 'none'; }); }
 function filterDirectory() { filterDirectoryIn('directory-list', 'dirSearch'); }
 function buildStateFilter() { const sel = document.getElementById('lp-state'); if(!sel) return; sel.innerHTML = '<option value="">📍 Todos los estados</option>'; MEXICO_STATES.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); }); }
-function processRis(data, canvasSId, canvasTId, fit) { risPoints = data; risLayer.clearLayers(); data.forEach(p => { const icon = L.divIcon({ className: 'custom-pin', html: `<div style="background:#00bcd4; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; border:2px solid white;"><i class="fa-solid fa-clock-rotate-left"></i></div>`, iconSize: [26, 26], iconAnchor: [13, 26] }); const m = L.marker([p.lat, p.lon], {icon}); m.bindPopup(`<div style='color:#00838f'><b>RIS: ${p.type}</b><br>${p.desc}</div>`); risLayer.addLayer(m); }); const statsState = {}, statsType = {}; data.forEach(p => { statsState[p.state] = (statsState[p.state] || 0) + 1; statsType[p.type] = (statsType[p.type] || 0) + 1; }); renderChartsInto(canvasSId, canvasTId, statsState, statsType); log(`📊 RIS Procesado.`, 'success'); map.addLayer(risLayer); if(fit && risLayer.getLayers().length) map.fitBounds(risLayer.getBounds(), { padding: [50, 50] }); return { statsState, statsType }; }
+function processRis(data, canvasSId, canvasTId, fit) { risPoints = data; risLayer.clearLayers(); data.forEach(p => { const icon = L.divIcon({ className: 'custom-pin', html: `<div style="background:#00bcd4; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; border:2px solid white;"><i class="fa-solid fa-clock-rotate-left"></i></div>`, iconSize: [26, 26], iconAnchor: [13, 26] }); const m = L.marker([p.lat, p.lon], {icon}); m.bindPopup(`<div style='color:#00838f'><b>Radar Vial: ${p.type}</b><br>${p.desc}</div>`); risLayer.addLayer(m); }); const statsState = {}, statsType = {}; data.forEach(p => { statsState[p.state] = (statsState[p.state] || 0) + 1; statsType[p.type] = (statsType[p.type] || 0) + 1; }); renderChartsInto(canvasSId, canvasTId, statsState, statsType); log(`📊 Radar Vial procesado.`, 'success'); map.addLayer(risLayer); if(fit && risLayer.getLayers().length) map.fitBounds(risLayer.getBounds(), { padding: [50, 50] }); return { statsState, statsType }; }
 function securityType(t) { const s = (t || '').toLowerCase(); if(/bloqueo|manifestaci|protesta|marcha|planton|cierre total/.test(s)) return 'Bloqueo / Manifestación'; if(/asalto|robo|atraco|secuestro|extorsi/.test(s)) return 'Asalto / Robo'; if(/balacera|tiroteo|disparo|enfrentamiento|ataque|ejecuci|narcobloqueo|quema|veta/.test(s)) return 'Ataque Armado'; if(/opera|detenci|polic|guardia|federal|fiscal|militar/.test(s)) return 'Operativo Policial'; return 'Otro'; }
 function roadIncidentType(a) { const s = ((a.title || '') + ' ' + (a.detail || '')).toLowerCase(); if(/choque|accidente|volcadura|derrape/.test(s)) return 'Accidente'; if(/bloqueo|cierre|manifestaci/.test(s)) return 'Cierre / Bloqueo'; if(/obra|mantenimiento|reducci/.test(s)) return 'Obras'; if(/tráfico|trafico|carga|congesti|detenido/.test(s)) return 'Tráfico'; if(/lluvia|niebla|inundaci|derrumbe|deslave/.test(s)) return 'Clima / Vía'; return 'Otra vial'; }
 function buildRisFilters() {
@@ -1812,7 +1812,7 @@ function graphRis(prefix='u', quiet=false) {
   const set=(suffix,value)=>{ const el=document.getElementById(prefix+'-ris-'+suffix); if(el) el.textContent=value; };
   set('total',selected.length); set('road',selected.filter(a=>a.category==='road').length); set('security',selected.filter(a=>a.category==='security').length);
   if(prefix === 'u') { const emp=document.getElementById('ris-empty'); if(emp) emp.style.display=selected.length?'none':'block'; }
-  if(!quiet) log(`📊 RIS: ${selected.length} incidencia(s) graficadas${state ? ' en '+state : ' en México'}.`, 'success');
+  if(!quiet) log(`📊 Radar Vial: ${selected.length} incidencia(s) graficadas${state ? ' en '+state : ' en México'}.`, 'success');
 }
 function refreshRisAuto() { graphRis('u', true); if(document.getElementById('panel-ris')?.classList.contains('active')) graphRis('op', true); }
 function riskPointType(p) { return p && (p.risk_type === 'road_risk' || p.type === 'road_risk') ? 'road_risk' : 'red_zone'; }
