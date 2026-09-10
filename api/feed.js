@@ -62,9 +62,30 @@ function stripHtml(s) {
     .replace(/&nbsp;/gi, ' ').replace(/&#0?8232;/g, ' ').trim();
 }
 
+function cleanSourceName(value) {
+  const raw = stripHtml(String(value || '')).trim();
+  if (!raw || raw === '[object Object]' || /^fuente rss$/i.test(raw) || /^(?:www\.)?rss\.app$/i.test(raw)) return '';
+  const handle = raw.replace(/^@/, '');
+  const key = handle.toLowerCase().replace(/[_\s-]+/g, '');
+  const known = {
+    capufe: 'CAPUFE',
+    gncarreteras: 'Guardia Nacional Carreteras',
+    ovialcdmx: 'OVIAL CDMX',
+    ssccdmx: 'SSC CDMX',
+    conaguaclima: 'CONAGUA Clima'
+  };
+  if (known[key]) return known[key];
+  if (/^[\w.-]+\.[a-z]{2,}$/i.test(handle)) {
+    const brand = handle.replace(/^www\./i, '').split('.')[0];
+    return brand.charAt(0).toUpperCase() + brand.slice(1);
+  }
+  return handle.replace(/_/g, ' ').slice(0, 80);
+}
+
 function sourceName(it, feedUrl) {
   const raw = String((it && (it.source_name || it.source || it.author)) || '').trim();
-  if (raw && raw !== '[object Object]') return raw.slice(0, 80);
+  const cleaned = cleanSourceName(raw);
+  if (cleaned) return cleaned;
   const hay = ARR(String((it && it.title) || '') + ' ' + String(feedUrl || ''));
   if (hay.includes('capufe')) return 'CAPUFE';
   if (hay.includes('guardia nacional')) return 'Guardia Nacional';
@@ -100,7 +121,7 @@ function parseRssItems(raw) {
     if (title) items.push({
       title,
       content_text: stripHtml(tag(/<description[^>]*>([\s\S]*?)<\/description>/i, block)),
-      source_name: stripHtml(tag(/<(?:source|author)[^>]*>([\s\S]*?)<\/(?:source|author)>/i, block))
+      source_name: cleanSourceName(tag(/<(?:dc:creator|source|author)[^>]*>([\s\S]*?)<\/(?:dc:creator|source|author)>/i, block))
     });
   }
   return items.slice(0, MAX_OUT);
