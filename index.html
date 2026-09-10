@@ -1521,20 +1521,35 @@ function cleanGeoQuery(q) {
     return c ? c : q;
 }
 
-async function geocodeBest(place) {
+async function geocodeBest(place, options = {}) {
     const cleaned = cleanGeoQuery(place);
     const candidates = [place, cleaned].filter((v, i, a) => a.indexOf(v) === i);
     for(const c of candidates) {
         try {
+            const headers = {}; const token = localStorage.getItem('nv_token');
+            if(token) headers['x-app-token'] = token;
+            const secureUrl = `/api/geocode?q=${encodeURIComponent(c)}&snap=${options.snapToRoad ? '1' : '0'}`;
+            const secureRes = await fetch(secureUrl, { headers, cache: 'no-store' });
+            if(secureRes.ok) {
+                const data = await secureRes.json();
+                const lat = Number(data.lat), lon = Number(data.lon);
+                if(Number.isFinite(lat) && Number.isFinite(lon)) return {
+                    lat, lon, provider: data.provider || 'google', confidence: Number(data.confidence) || 0.5,
+                    roadSnapped: !!data.road_snapped, locationType: data.location_type || '',
+                    formattedAddress: data.formatted_address || c
+                };
+            }
+        } catch(e) {}
+        try {
             const geoUrl = LINKS.nominatim.replace('{q}', encodeURIComponent(c + ', Mexico'));
             const res = await fetch(geoUrl); const geoData = await res.json();
-            if(geoData && geoData.length > 0) return { lat: parseFloat(geoData[0].lat), lon: parseFloat(geoData[0].lon) };
+            if(geoData && geoData.length > 0) return { lat: parseFloat(geoData[0].lat), lon: parseFloat(geoData[0].lon), provider: 'openstreetmap', confidence: 0.62, roadSnapped: false };
         } catch(e) {}
     }
     try {
         const backupUrl = LINKS.photon.replace('{q}', encodeURIComponent(place + ', Mexico'));
         const res2 = await fetch(backupUrl); const data2 = await res2.json();
-        if(data2.features?.length > 0) { const c = data2.features[0].geometry.coordinates; return { lat: c[1], lon: c[0] }; }
+        if(data2.features?.length > 0) { const c = data2.features[0].geometry.coordinates; return { lat: c[1], lon: c[0], provider: 'photon', confidence: 0.52, roadSnapped: false }; }
     } catch(e2) {}
     return null;
 }
@@ -1594,7 +1609,7 @@ function geocodeCorridor(text) {
   if(km !== null) p = pointAtKm(c, km);
   if(!p) { const mid = c.pts && c.pts.length ? c.pts[Math.floor(c.pts.length/2)] : null; if(mid) p = { lat: mid[0], lon: mid[1] }; }
   if(!p) return null;
-  return { lat: p.lat, lon: p.lon, km: km, prec: km !== null ? 'kilometro' : 'tramo', corridor: c.name };
+  return { lat: p.lat, lon: p.lon, km: km, prec: km !== null ? 'kilometro' : 'tramo', corridor: c.name, confidence: km !== null ? 0.90 : 0.66, provider: 'red_vial' };
 }
 async function processAlert(key, text, sourceName='Fuente RSS') {
   const prompt = `Clasifica este texto. Rechaza si no es un incidente en México o no tiene ubicación clara. Extrae literalmente carretera, kilómetro, sentido, cruce/caseta/entronque y municipio cuando existan; usa cadena vacía si no aparecen. Categoría: road=accidente/cierre/congestión; security=asalto/bloqueo/balacera/manifestación/operativo. importante=true solo con riesgo alto. trafico: fluido, moderado o detenido para road; null para security. No inventes datos. Devuelve solo JSON válido: {"valido":false,"ubicacion":"","referencia":"","carretera":"","kilometro":"","sentido":"","municipio":"","estado":"","categoria":"road","resumen":"","trafico":null,"detail":"","importante":false}. resumen corto; detail fiel, máximo 280 caracteres. TEXTO: ${text}`;
@@ -1613,7 +1628,7 @@ async function processAlert(key, text, sourceName='Fuente RSS') {
     const candidates = [];
     let loc = null;
     const cc = geocodeCorridor(text);
-    if(cc) { loc = { lat: cc.lat, lon: cc.lon, prec: cc.prec, corridor: cc.corridor }; log(`🛣️ Corredor detectado: ${cc.corridor}${cc.km != null ? ' (km ' + cc.km.toFixed(3) + ')' : ''}`, 'info'); }
+    if(cc) { loc = { lat: cc.lat, lon: cc.lon, prec: cc.prec, corridor: cc.corridor, confidence: cc.confidence, provider: cc.provider, roadSnapped: false }; log(`🛣️ Corredor detectado: ${cc.corridor}${cc.km != null ? ' (km ' + cc.km.toFixed(3) + ')' : ''}`, 'info'); }
     const exactParts = [data.referencia, data.ubicacion, data.municipio, estado].filter(Boolean);
     if(exactParts.length >= 2) candidates.push({ q: [...new Set(exactParts)].join(', '), prec: data.referencia ? 'punto' : 'zona' });
     if(data.ubicacion) candidates.push({ q: data.ubicacion + (data.municipio ? ', ' + data.municipio : '') + (estado ? ', ' + estado : ''), prec: 'zona' });
@@ -1623,8 +1638,8 @@ async function processAlert(key, text, sourceName='Fuente RSS') {
     for(const c of candidates) {
       if(loc) break;
       if(seen.has(c.q)) continue; seen.add(c.q);
-      const g = await geocodeBest(c.q);
-      if(g) { loc = { lat: g.lat, lon: g.lon, prec: c.prec, corridor: cc ? cc.corridor : null }; break; }
+      const g = await geocodeBest(c.q, { snapToRoad: data.categoria === 'road' && ['punto','zona'].includes(c.prec) });
+      if(g) { loc = { lat: g.lat, lon: g.lon, prec: g.roadSnapped ? 'carretera' : c.prec, corridor: null, confidence: g.confidence, provider: g.provider, roadSnapped: g.roadSnapped }; break; }
     }
     if(!loc) {
       if(data.importante) log(`🚩 Importante sin coordenadas: ${data.resumen} (${estado || 'sin ubicación conocida'})`, 'warn');
@@ -1633,7 +1648,7 @@ async function processAlert(key, text, sourceName='Fuente RSS') {
     }
     if(!isInMexico(loc.lat, loc.lon)) { log(`🚫 Fuera de México: ${data.resumen}`, 'warn'); return; }
     const isDup = alerts.some(a => Math.abs(a.lat - loc.lat) < 0.0001 && Math.abs(a.lon - loc.lon) < 0.0001); if(isDup) return;
-    const alertObj = { id: Date.now(), lat: loc.lat, lon: loc.lon, category: data.categoria, title: data.resumen, location: data.ubicacion || data.referencia || data.municipio || estado, state: estado, precision: loc.prec, corridor: loc.corridor || null, km: cc?.km ?? data.kilometro ?? null, direction: data.sentido || '', time: new Date(), trafico: data.trafico || null, detail: data.detail.slice(0, 280), importante: !!data.importante, source_type: 'media', source_name: sourceName || 'Fuente RSS', verification_status: 'verified', liked: false };
+    const alertObj = { id: Date.now(), lat: loc.lat, lon: loc.lon, category: data.categoria, title: data.resumen, location: data.ubicacion || data.referencia || data.municipio || estado, state: estado, precision: loc.prec, corridor: loc.corridor || null, km: cc?.km ?? data.kilometro ?? null, direction: data.sentido || '', location_confidence: loc.confidence || 0.5, location_provider: loc.provider || 'local', road_snapped: !!loc.roadSnapped, time: new Date(), trafico: data.trafico || null, detail: data.detail.slice(0, 280), importante: !!data.importante, source_type: 'media', source_name: sourceName || 'Fuente RSS', verification_status: 'verified', liked: false };
     alerts.push(alertObj); addMarkerToMap(alertObj); updateLists(); persistAlerts(); log(`✅ ALERTA [${data.categoria}]${loc.prec !== 'punto' ? ' (aprox: ' + loc.prec + ')' : ''}: ${data.resumen} @ ${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}`, 'success');
     if(data.importante) notifyImportant(alertObj);
     if(processingQueue.length === 0 && !document.getElementById('panel-ris').classList.contains('active')) map.panTo([loc.lat, loc.lon]);
@@ -1651,6 +1666,7 @@ function alertSourceLabel(a) {
   return 'Fuente: ' + (a.source_name || 'Nexus Vial');
 }
 function precisionLabel(a) {
+  if(a.precision === 'carretera') return 'Ajustado a carretera';
   if(a.precision === 'kilometro') return 'Kilómetro calculado';
   if(a.precision === 'punto') return 'Punto localizado';
   if(a.precision === 'tramo') return 'Tramo aproximado';
@@ -1659,7 +1675,7 @@ function precisionLabel(a) {
   return 'Zona aproximada';
 }
 function estimatedRadiusMeters(a) {
-  return ({ punto:200, kilometro:500, tramo:2500, zona:3000, municipio:6000, estado:15000 }[a.precision] || 3000);
+  return ({ punto:200, carretera:350, kilometro:500, tramo:2500, zona:3000, municipio:6000, estado:15000 }[a.precision] || 3000);
 }
 function estimatedRadiusLabel(a) {
   const meters=estimatedRadiusMeters(a);
@@ -1776,6 +1792,7 @@ function openAlertDetail(id) {
   document.getElementById('am-source').textContent = alertSourceLabel(a);
   document.getElementById('am-precision').textContent = precisionLabel(a) + (a.km !== null && a.km !== undefined && a.km !== '' ? ' · km ' + a.km : '');
   document.getElementById('am-precision').textContent += ' · área estimada: radio ' + estimatedRadiusLabel(a);
+  if(Number.isFinite(Number(a.location_confidence))) document.getElementById('am-precision').textContent += ' · confianza ' + Math.round(Number(a.location_confidence) * 100) + '%';
   const distance = alertDistanceKm(a);
   document.getElementById('am-distance-row').style.display = distance === null ? 'none' : 'block';
   document.getElementById('am-distance').textContent = distance === null ? '' : `${distance < 10 ? distance.toFixed(1) : Math.round(distance)} km desde tu ubicación`;
@@ -2298,11 +2315,11 @@ async function submitEntryAlert() {
   const detalle = (document.getElementById('ent-detail').value || '').replace(/\s+/g, ' ').trim().slice(0, 280);
   if(title.length < 8 || detalle.length < 15) { log('Agrega un título claro y una descripción de al menos 15 caracteres.', 'warn'); return; }
   const importante = document.getElementById('ent-imp').checked;
-  const g = await geocodeBest(lugar);
+  const g = await geocodeBest(lugar, { snapToRoad: cat === 'road' });
   if(!g) { log('📍 No se localizó la ubicación.', 'err'); return; }
   if(!isInMexico(g.lat, g.lon)) { log('🚫 Ubicación fuera de México.', 'warn'); return; }
   const isOperator = document.body.classList.contains('operator-mode');
-  const obj = { id: Date.now(), lat: g.lat, lon: g.lon, category: cat, title, location: lugar, state: estado, precision: 'punto', time: new Date(), trafico: cat === 'road' ? trafico : null, detail: detalle, importante, source_type: isOperator ? 'operator' : 'community', source_name: isOperator ? 'Nexus Vial' : 'Comunidad', verification_status: isOperator ? 'verified' : 'unverified', confirmations: 0, liked: false };
+  const obj = { id: Date.now(), lat: g.lat, lon: g.lon, category: cat, title, location: lugar, state: estado, precision: g.roadSnapped ? 'carretera' : 'punto', location_confidence: g.confidence || 0.5, location_provider: g.provider || 'local', road_snapped: !!g.roadSnapped, time: new Date(), trafico: cat === 'road' ? trafico : null, detail: detalle, importante, source_type: isOperator ? 'operator' : 'community', source_name: isOperator ? 'Nexus Vial' : 'Comunidad', verification_status: isOperator ? 'verified' : 'unverified', confirmations: 0, liked: false };
   alerts.push(obj); addMarkerToMap(obj); updateLists(); persistAlerts();
   log(`✅ ALERTA MANUAL [${cat}]: ${title} @ ${g.lat.toFixed(4)}, ${g.lon.toFixed(4)}`, 'success');
   closeEntryModal();
