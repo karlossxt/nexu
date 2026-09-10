@@ -1202,7 +1202,8 @@ window.onload = function() {
   const soundOn = localStorage.getItem('nv_sound');
   if(soundOn === 'off') document.getElementById('soundToggle').checked = false;
   const savedTheme = localStorage.getItem('steele_theme');
-  if(savedTheme === 'dark') applyTheme(true);
+  const themeChosenByUser = localStorage.getItem('nv_theme_user_set') === '1';
+  applyTheme(themeChosenByUser && savedTheme === 'dark');
   const rss1 = localStorage.getItem('steele_rss1'); if(rss1) document.getElementById('rssInputPrimary').value = rss1;
   const rss2 = localStorage.getItem('steele_rss2'); if(rss2) document.getElementById('rssInputSecondary').value = rss2;
   if(!document.getElementById('rssInputPrimary').value) document.getElementById('rssInputPrimary').value = LINKS.feeds.pri.url;
@@ -1234,7 +1235,7 @@ function saveToken() {
 }
 function persistAlerts() { try { localStorage.setItem('nv_alerts', JSON.stringify(alerts)); } catch(e) {} }
 
-function toggleTheme() { const isDark = document.body.classList.contains('dark-mode'); applyTheme(!isDark); }
+function toggleTheme() { const isDark = document.body.classList.contains('dark-mode'); localStorage.setItem('nv_theme_user_set', '1'); applyTheme(!isDark); }
 function applyTheme(toDark) {
     if(toDark) { document.body.classList.add('dark-mode'); map.removeLayer(lightLayer); map.addLayer(darkLayer); localStorage.setItem('steele_theme', 'dark'); }
     else { document.body.classList.remove('dark-mode'); map.removeLayer(darkLayer); map.addLayer(lightLayer); localStorage.setItem('steele_theme', 'light'); }
