@@ -1108,7 +1108,7 @@ window.onload = function() {
   try {
     const savedAlerts = localStorage.getItem('nv_alerts');
     if(savedAlerts) {
-      alerts = (JSON.parse(savedAlerts) || []).filter(a => a && typeof a.lat === 'number' && a.time && String(a.title || '').trim().length >= 8 && String(a.detail || '').trim().length >= 15 && (Date.now() - new Date(a.time).getTime()) < 24*3600*1000).map(a => ({ ...a, source_type: a.source_type || 'system', source_name: a.source_name || 'Nexus Vial', verification_status: a.verification_status || 'verified', importante: !!a.importante }));
+      alerts = (JSON.parse(savedAlerts) || []).filter(a => a && typeof a.lat === 'number' && a.time && String(a.title || '').trim().length >= 8 && String(a.detail || '').trim().length >= 15 && (Date.now() - new Date(a.time).getTime()) < 24*3600*1000).map(a => ({ ...a, source_type: a.source_type || 'system', source_name: inferSourceName({ title: `${a.title || ''} ${a.detail || ''}`, source_name: a.source_name || 'Nexus Vial' }), verification_status: a.verification_status || 'verified', importante: !!a.importante }));
       alerts.forEach(a => addMarkerToMap(a));
       if(alerts.length) { updateLists(); persistAlerts(); }
     }
@@ -1237,11 +1237,25 @@ function feedIsRelevant(text) {
 }
 function inferSourceName(item, feedUrl='') {
   const supplied = String(item?.source_name || item?.source || item?.author || '').trim();
-  if(supplied && supplied !== '[object Object]' && supplied !== 'Fuente RSS') return supplied.slice(0, 80);
+  const friendlySource = value => {
+    const raw = String(value || '').trim();
+    if(!raw || raw === '[object Object]' || /^fuente rss$/i.test(raw) || /^(?:www\.)?rss\.app$/i.test(raw)) return '';
+    const handle = raw.replace(/^@/, '');
+    const key = handle.toLowerCase().replace(/[_\s-]+/g, '');
+    const known = { capufe:'CAPUFE', gncarreteras:'Guardia Nacional Carreteras', ovialcdmx:'OVIAL CDMX', ssccdmx:'SSC CDMX', conaguaclima:'CONAGUA Clima' };
+    if(known[key]) return known[key];
+    if(/^[\w.-]+\.[a-z]{2,}$/i.test(handle)) {
+      const brand = handle.replace(/^www\./i, '').split('.')[0];
+      return brand.charAt(0).toUpperCase() + brand.slice(1);
+    }
+    return handle.replace(/_/g, ' ').slice(0, 80);
+  };
+  const cleaned = friendlySource(supplied);
+  if(cleaned) return cleaned;
   const hay = ((item?.title || '') + ' ' + feedUrl).toLowerCase();
   if(hay.includes('capufe')) return 'CAPUFE';
   if(hay.includes('guardia nacional')) return 'Guardia Nacional';
-  try { return new URL(feedUrl).hostname.replace(/^www\./, '').slice(0, 80); } catch(e) { return 'Fuente RSS'; }
+  try { return friendlySource(new URL(feedUrl).hostname) || 'Fuente no identificada'; } catch(e) { return 'Fuente no identificada'; }
 }
 async function parseFeedItems(url) {
     let raw = null;
@@ -1291,7 +1305,8 @@ async function parseFeedItems(url) {
         doc.querySelectorAll('item').forEach(node => {
             const title = (node.querySelector('title')?.textContent || '').trim();
             const desc = node.querySelector('description')?.textContent || '';
-            const source = node.querySelector('source, author')?.textContent || '';
+            const sourceNode = Array.from(node.children).find(el => ['creator','source','author'].includes(el.localName));
+            const source = sourceNode?.textContent || '';
             if(title && desc.trim().length >= 15) items.push({ title, content_text: desc, source_name: inferSourceName({ title, source_name: source }, url) });
         });
     }
