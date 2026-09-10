@@ -432,6 +432,10 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
 .nv-mtbtn{ width:36px; height:36px; border-radius:9px; background:#131822; color:#dfe7f5; border:1px solid #1E293B; cursor:pointer; font-size:15px; display:grid; place-items:center; box-shadow:0 4px 14px rgba(0,0,0,.5); }
 .nv-mtbtn:hover{ color:#2563EB; border-color:#2563EB; }
 .nv-mtbtn.active{ color:#2563EB; }
+.traffic-legend{ display:none; position:absolute; left:50%; bottom:28px; transform:translateX(-50%); z-index:1200; gap:12px; align-items:center; padding:8px 12px; border-radius:10px; background:rgba(12,16,23,.9); border:1px solid #1E293B; color:#E5E7EB; font-size:10px; box-shadow:0 5px 20px rgba(0,0,0,.45); }
+.traffic-legend.open{ display:flex; }
+.traffic-legend span{ display:flex; align-items:center; gap:4px; white-space:nowrap; }
+.traffic-line{ width:18px; height:4px; border-radius:4px; display:inline-block; }
 .leaflet-bottom.leaflet-left .nv-maptools{ margin-left:14px; margin-bottom:14px; }
 
 /* === MODULO CLIMA VIAL (TRAMOS CARRETEROS) === */
@@ -540,6 +544,7 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
 
 <div class="main-content">
   <div id="map"></div>
+  <div id="traffic-legend" class="traffic-legend"><b>TRÁFICO</b><span><i class="traffic-line" style="background:#22C55E"></i> Fluido</span><span><i class="traffic-line" style="background:#F59E0B"></i> Lento</span><span><i class="traffic-line" style="background:#EF4444"></i> Congestionado</span></div>
   <button id="panel-launcher" onclick="togglePanel()" title="Abrir panel"><i class="fa-solid fa-sliders"></i> Panel Central</button>
 
   <!-- PANEL CONFIG -->
@@ -1014,6 +1019,8 @@ let markers = L.markerClusterGroup({ disableClusteringAtZoom: 16 });
 let staticLayer = L.layerGroup(); 
 let risLayer = L.layerGroup(); 
 let routeControl = null;
+let trafficLayer = null;
+let trafficEnabled = false;
 let feedInterval = null;
 let ageInterval = null;
 let processingQueue = []; 
@@ -1045,11 +1052,39 @@ const lightLayer = L.tileLayer(LINKS.tilesLight, { attribution: '&copy; <a href=
 const darkLayer = L.tileLayer(LINKS.tilesDark, { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attributions">CARTO</a>', subdomains: 'abcd', maxZoom: 20 });
 const map = L.map('map', { zoomControl: false }).setView([19.4326, -99.1332], 5);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
-L.Control.MapTools = L.Control.extend({ options: { position: 'bottomleft' }, onAdd() { const div = L.DomUtil.create('div', 'nv-maptools'); div.innerHTML = '<button class="nv-mtbtn" onclick="gpsTrack()" title="Mi ubicación (GPS)"><i class="fa-solid fa-location-crosshairs"></i></button><button class="nv-mtbtn" onclick="map.setView([19.4326,-99.1332],5)" title="Centrar en México"><i class="fa-solid fa-location-dot"></i></button><button class="nv-mtbtn" onclick="toggleTheme()" title="Capa claro / oscuro"><i class="fa-solid fa-circle-half-stroke"></i></button>'; L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div); return div; } });
+L.Control.MapTools = L.Control.extend({ options: { position: 'bottomleft' }, onAdd() { const div = L.DomUtil.create('div', 'nv-maptools'); div.innerHTML = '<button class="nv-mtbtn" onclick="gpsTrack()" title="Mi ubicación (GPS)"><i class="fa-solid fa-location-crosshairs"></i></button><button class="nv-mtbtn" onclick="map.setView([19.4326,-99.1332],5)" title="Centrar en México"><i class="fa-solid fa-location-dot"></i></button><button id="traffic-toggle" class="nv-mtbtn" onclick="toggleTraffic()" title="Mostrar tráfico en vivo"><i class="fa-solid fa-traffic-light"></i></button><button class="nv-mtbtn" onclick="toggleTheme()" title="Capa claro / oscuro"><i class="fa-solid fa-circle-half-stroke"></i></button>'; L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div); return div; } });
 lightLayer.addTo(map);
 map.addLayer(markers); map.addLayer(staticLayer);
 let routeLineLayer = L.layerGroup(); map.addLayer(routeLineLayer);
 new L.Control.MapTools().addTo(map);
+
+function trafficMessage(message, error=false) {
+  const old = document.getElementById('traffic-message'); if(old) old.remove();
+  const box = document.createElement('div'); box.id = 'traffic-message'; box.className = 'toast-important';
+  box.style.borderLeftColor = error ? '#EF4444' : '#2563EB';
+  box.innerHTML = `<b><i class="fa-solid fa-traffic-light"></i> Tráfico</b><div>${message}</div>`;
+  document.body.appendChild(box); setTimeout(() => box.remove(), 5000);
+}
+async function toggleTraffic() {
+  const btn = document.getElementById('traffic-toggle');
+  const legend = document.getElementById('traffic-legend');
+  if(trafficEnabled) {
+    if(trafficLayer && map.hasLayer(trafficLayer)) map.removeLayer(trafficLayer);
+    trafficEnabled = false; btn?.classList.remove('active'); legend?.classList.remove('open');
+    return;
+  }
+  if(btn) { btn.disabled = true; btn.classList.add('active'); }
+  try {
+    const check = await fetch('/api/traffic?check=1', { cache:'no-store' });
+    if(!check.ok) throw new Error('config');
+    if(!trafficLayer) trafficLayer = L.tileLayer('/api/traffic?z={z}&x={x}&y={y}', { opacity:.82, maxZoom:20, zIndex:450, attribution:'Tráfico © TomTom' });
+    trafficLayer.addTo(map); trafficEnabled = true; legend?.classList.add('open');
+    trafficMessage('Capa de circulación en vivo activada.');
+  } catch(e) {
+    btn?.classList.remove('active');
+    trafficMessage('La fuente de tráfico aún no está configurada.', true);
+  } finally { if(btn) btn.disabled = false; }
+}
 
 // DIRECTORIO COMPLETO
 const directoryData = [
