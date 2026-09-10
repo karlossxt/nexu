@@ -134,6 +134,11 @@ body.dark-mode .leaflet-control-attribution a{ color:#bbb; }
 .btn-heart:hover{ transform:scale(1.2); }
 .btn-heart.liked{ color:#e91e63; }
 .traffic-chip{ display:inline-block; font-size:10px; font-weight:700; padding:2px 8px; border-radius:12px; margin-top:6px; }
+.location-meta{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:7px; }
+.precision-chip,.distance-chip{ display:inline-flex; align-items:center; gap:4px; font-size:9.5px; font-weight:800; padding:3px 7px; border-radius:12px; }
+.precision-chip{ color:#38BDF8; background:rgba(56,189,248,.12); border:1px solid rgba(56,189,248,.25); }
+.distance-chip{ color:#10B981; background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.25); }
+.card-nav{ width:auto; min-height:30px; padding:6px 9px; border-radius:7px; background:rgba(37,99,235,.14); border:1px solid rgba(37,99,235,.4); color:#60A5FA; font-size:10px; box-shadow:none; }
 
 /* LANDING / ENTRADA */
 #landing{ position:fixed; inset:0; z-index:20000; display:flex; align-items:center; justify-content:center; padding:20px; background:linear-gradient(135deg,#0b0f19 0%,#12203a 55%,#1a2f52 100%); }
@@ -487,6 +492,49 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
 .wg-line{ flex:1; height:1px; background:#1E293B; }
 .wm-foot{ margin-top:auto; padding:18px 0 22px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; font-size:11.5px; color:#6B7280; }
 @media (max-width:800px){ #w-grid{ grid-template-columns:1fr; } #wm-card{ padding:18px 16px 0; } }
+@media (max-width:700px){
+  body{ height:100dvh; min-height:100dvh; }
+  body.operator-mode{ display:block; padding-bottom:62px; box-sizing:border-box; }
+  body.operator-mode #sidebar, body.operator-mode #sidebar:hover{ position:fixed; left:0; right:0; bottom:0; top:auto; width:100%; height:62px; padding:0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); box-sizing:content-box; flex-direction:row; justify-content:flex-start; overflow-x:auto; overflow-y:hidden; border:0; border-top:1px solid var(--border); z-index:9500; }
+  body.operator-mode #sidebar .brand, body.operator-mode #sidebar .nav-separator{ display:none; }
+  body.operator-mode #sidebar .nav-item{ flex:0 0 58px; width:58px; height:58px; padding:0; border-left:0; border-bottom:3px solid transparent; justify-content:center; }
+  body.operator-mode #sidebar .nav-item.active{ border-left:0; border-bottom-color:var(--accent); }
+  body.operator-mode #sidebar .nav-icon{ min-width:58px; font-size:18px; }
+  body.operator-mode #sidebar .nav-label, body.operator-mode #sidebar:hover .nav-label{ display:none; opacity:0; }
+  body.operator-mode .main-content{ height:calc(100dvh - 62px); }
+  body.operator-mode .panel-container{ top:8px; left:8px; right:8px; bottom:8px; width:auto; max-height:none; border-radius:14px; }
+  body.user-mode #panel-left{ display:none; }
+  body.user-mode #panel-right{ position:absolute; right:8px; top:72px; bottom:auto; width:48px; height:auto; max-height:calc(100dvh - 150px); border:1px solid #1E293B; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.5); }
+  body.user-mode:not(.right-rail) #panel-right{ inset:58px 0 0 0; width:100%; height:auto; max-height:none; border:0; border-radius:0; z-index:7000; }
+  body.user-mode:not(.right-rail) #panel-right .pr-top, body.user-mode:not(.right-rail) #panel-right .pr-body, body.user-mode:not(.right-rail) #panel-right .pr-foot{ display:block; }
+  body.user-mode:not(.right-rail) #panel-right .pr-body{ display:flex; min-height:0; }
+  body.user-mode:not(.right-rail) #panel-right .pr-sec.active{ width:100%; box-sizing:border-box; }
+  body.user-mode:not(.right-rail) #panel-right .u-rail{ display:none; }
+  #circula, body.left-rail #circula{ left:10px; top:10px; max-width:calc(100vw - 72px); font-size:10px; padding:7px 10px; }
+  .hnc-more{ display:none; }
+  .leaflet-bottom.leaflet-left .nv-maptools{ margin-left:8px; margin-bottom:22px; }
+  .leaflet-bottom.leaflet-right{ bottom:10px; }
+  .traffic-legend{ bottom:76px; max-width:calc(100vw - 28px); flex-wrap:wrap; justify-content:center; }
+  #alert-modal{ align-items:flex-end; padding:0; }
+  #alert-modal-card{ max-width:none; max-height:86dvh; border-radius:18px 18px 0 0; padding:18px 16px calc(18px + env(safe-area-inset-bottom)); }
+  .am-actions{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .am-actions button{ min-height:46px; padding:10px 8px; }
+  .alert-card{ min-height:44px; }
+  .card-actions{ gap:5px; }
+  .btn-heart,.btn-whatsapp-alert,.btn-delete-alert{ width:32px; height:32px; }
+  .u-modal{ align-items:flex-end; padding:0; }
+  .u-modal-card{ max-width:none; max-height:90dvh; border-radius:18px 18px 0 0; padding-bottom:env(safe-area-inset-bottom); }
+  .rm-fields{ flex-direction:column; }
+  .rm-foot{ position:sticky; bottom:0; background:#0C1017; flex-wrap:wrap; padding-bottom:calc(14px + env(safe-area-inset-bottom)); }
+  .rm-foot button{ min-width:calc(50% - 4px); }
+  #landing{ padding:12px; }
+  #landing-card{ padding:26px 18px; border-radius:16px; }
+  .landing-brand{ font-size:29px; }
+  .landing-logo{ font-size:42px; }
+  .landing-modes{ grid-template-columns:1fr; }
+  .landing-mode{ min-height:54px; }
+  .toast-important{ left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom)); max-width:none; }
+}
 </style>
 </head>
 <body>
@@ -962,10 +1010,13 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
     <div class="am-meta">
       <div>🕐 <span id="am-time"></span></div>
       <div>📰 <span id="am-source"></span></div>
+      <div>🎯 <span id="am-precision"></span></div>
+      <div id="am-distance-row" style="display:none;">📏 <span id="am-distance"></span></div>
       <div>🌤 <span id="am-weather">Cargando clima...</span></div>
     </div>
     <div class="am-actions">
       <button id="am-center" onclick="centerAlert()"><i class="fa-solid fa-location-crosshairs"></i> Centrar en el mapa</button>
+      <button id="am-navigate" onclick="navigateToAlert(currentAlertId)"><i class="fa-solid fa-diamond-turn-right"></i> Cómo llegar</button>
       <button id="am-share" onclick="shareAlert(currentAlertId)"><i class="fa-brands fa-whatsapp"></i> Compartir</button>
     </div>
   </div>
@@ -1503,10 +1554,10 @@ function geocodeCorridor(text) {
   if(km !== null) p = pointAtKm(c, km);
   if(!p) { const mid = c.pts && c.pts.length ? c.pts[Math.floor(c.pts.length/2)] : null; if(mid) p = { lat: mid[0], lon: mid[1] }; }
   if(!p) return null;
-  return { lat: p.lat, lon: p.lon, km: km, prec: 'tramo', corridor: c.name };
+  return { lat: p.lat, lon: p.lon, km: km, prec: km !== null ? 'kilometro' : 'tramo', corridor: c.name };
 }
 async function processAlert(key, text, sourceName='Fuente RSS') {
-  const prompt = `Clasifica este texto. Rechaza si no es un incidente en México o no tiene ubicación clara. Categoría: road=accidente/cierre/congestión; security=asalto/bloqueo/balacera/manifestación/operativo. importante=true solo con riesgo alto. trafico: fluido, moderado o detenido para road; null para security. No inventes datos. Devuelve únicamente JSON válido con este formato: {"valido":false,"ubicacion":"","municipio":"","estado":"","categoria":"road","resumen":"","trafico":null,"detail":"","importante":false}. resumen corto; detail fiel, máximo 280 caracteres. TEXTO: ${text}`;
+  const prompt = `Clasifica este texto. Rechaza si no es un incidente en México o no tiene ubicación clara. Extrae literalmente carretera, kilómetro, sentido, cruce/caseta/entronque y municipio cuando existan; usa cadena vacía si no aparecen. Categoría: road=accidente/cierre/congestión; security=asalto/bloqueo/balacera/manifestación/operativo. importante=true solo con riesgo alto. trafico: fluido, moderado o detenido para road; null para security. No inventes datos. Devuelve solo JSON válido: {"valido":false,"ubicacion":"","referencia":"","carretera":"","kilometro":"","sentido":"","municipio":"","estado":"","categoria":"road","resumen":"","trafico":null,"detail":"","importante":false}. resumen corto; detail fiel, máximo 280 caracteres. TEXTO: ${text}`;
   const rawResponse = await consultGroq(prompt, null, 320);
   if(!rawResponse) { log(`❌ La IA no respondió para: ${text.slice(0, 70)}... Reintentaré el próximo ciclo.`, 'warn'); unsee(key); return; }
   try {
@@ -1523,7 +1574,9 @@ async function processAlert(key, text, sourceName='Fuente RSS') {
     let loc = null;
     const cc = geocodeCorridor(text);
     if(cc) { loc = { lat: cc.lat, lon: cc.lon, prec: cc.prec, corridor: cc.corridor }; log(`🛣️ Corredor detectado: ${cc.corridor}${cc.km != null ? ' (km ' + cc.km.toFixed(3) + ')' : ''}`, 'info'); }
-    if(data.ubicacion) candidates.push({ q: data.ubicacion, prec: 'punto' });
+    const exactParts = [data.referencia, data.ubicacion, data.municipio, estado].filter(Boolean);
+    if(exactParts.length >= 2) candidates.push({ q: [...new Set(exactParts)].join(', '), prec: data.referencia ? 'punto' : 'zona' });
+    if(data.ubicacion) candidates.push({ q: data.ubicacion + (data.municipio ? ', ' + data.municipio : '') + (estado ? ', ' + estado : ''), prec: 'zona' });
     if(data.municipio) candidates.push({ q: data.municipio + (estado ? ', ' + estado : ''), prec: 'municipio' });
     if(estado) candidates.push({ q: estado + ', Mexico', prec: 'estado' });
     const seen = new Set();
@@ -1540,7 +1593,7 @@ async function processAlert(key, text, sourceName='Fuente RSS') {
     }
     if(!isInMexico(loc.lat, loc.lon)) { log(`🚫 Fuera de México: ${data.resumen}`, 'warn'); return; }
     const isDup = alerts.some(a => Math.abs(a.lat - loc.lat) < 0.0001 && Math.abs(a.lon - loc.lon) < 0.0001); if(isDup) return;
-    const alertObj = { id: Date.now(), lat: loc.lat, lon: loc.lon, category: data.categoria, title: data.resumen, location: data.ubicacion || data.municipio || estado, state: estado, precision: loc.prec, corridor: loc.corridor || null, time: new Date(), trafico: data.trafico || null, detail: data.detail.slice(0, 280), importante: !!data.importante, source_type: 'media', source_name: sourceName || 'Fuente RSS', verification_status: 'verified', liked: false };
+    const alertObj = { id: Date.now(), lat: loc.lat, lon: loc.lon, category: data.categoria, title: data.resumen, location: data.ubicacion || data.referencia || data.municipio || estado, state: estado, precision: loc.prec, corridor: loc.corridor || null, km: cc?.km ?? data.kilometro ?? null, direction: data.sentido || '', time: new Date(), trafico: data.trafico || null, detail: data.detail.slice(0, 280), importante: !!data.importante, source_type: 'media', source_name: sourceName || 'Fuente RSS', verification_status: 'verified', liked: false };
     alerts.push(alertObj); addMarkerToMap(alertObj); updateLists(); persistAlerts(); log(`✅ ALERTA [${data.categoria}]${loc.prec !== 'punto' ? ' (aprox: ' + loc.prec + ')' : ''}: ${data.resumen} @ ${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}`, 'success');
     if(data.importante) notifyImportant(alertObj);
     if(processingQueue.length === 0 && !document.getElementById('panel-ris').classList.contains('active')) map.panTo([loc.lat, loc.lon]);
@@ -1557,6 +1610,23 @@ function alertSourceLabel(a) {
   if(a.source_type === 'operator') return 'Operador Nexus Vial';
   return 'Fuente: ' + (a.source_name || 'Nexus Vial');
 }
+function precisionLabel(a) {
+  if(a.precision === 'kilometro') return 'Kilómetro calculado';
+  if(a.precision === 'punto') return 'Punto localizado';
+  if(a.precision === 'tramo') return 'Tramo aproximado';
+  if(a.precision === 'municipio') return 'Centro del municipio';
+  if(a.precision === 'estado') return 'Solo referencia estatal';
+  return 'Zona aproximada';
+}
+function alertDistanceKm(a) {
+  return myPosition ? haversineKm(myPosition.lat, myPosition.lon, a.lat, a.lon) : null;
+}
+function navigateToAlert(id) {
+  const a = alerts.find(x => x.id === id); if(!a) return;
+  const destination = `${a.lat},${a.lon}`;
+  const origin = myPosition ? `&origin=${myPosition.lat},${myPosition.lon}` : '';
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}${origin}&travelmode=driving`, '_blank', 'noopener');
+}
 function addMarkerToMap(alert) {
   const isSec = alert.category === 'security';
   const expired = isAlertExpired(alert);
@@ -1564,7 +1634,7 @@ function addMarkerToMap(alert) {
   const iconClass = expired ? 'fa-clock-rotate-left' : (isSec ? 'fa-user-shield' : 'fa-car-burst');
   const icon = L.divIcon({ className: 'custom-pin', html: `<div style="background:${color}; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; border:2px solid white; box-shadow:0 3px 6px rgba(0,0,0,0.5); font-size:16px;"><i class="fa-solid ${iconClass}"></i></div>`, iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32] });
   const m = L.marker([alert.lat, alert.lon], {icon});
-  const nota = alert.precision && alert.precision !== 'punto' ? `<br><small style="color:#5f6368;">📍 aprox: ${alert.corridor && alert.precision === 'tramo' ? alert.corridor + ' · km' : alert.precision}</small>` : '';
+  const nota = `<div class="location-meta"><span class="precision-chip"><i class="fa-solid fa-location-dot"></i> ${precisionLabel(alert)}</span></div>`;
   const chip = (!isSec && alert.trafico) ? `<div style="margin-top:5px;"><span class="traffic-chip" style="background:${trafficStyle(alert.trafico).bg}; color:${trafficStyle(alert.trafico).color};">${trafficStyle(alert.trafico).label}</span></div>` : '';
   const stale = expired ? `<div style="margin-top:5px;"><span class="traffic-chip" style="background:rgba(154,160,166,.2); color:#80868b;">🕓 Hace más de 8h</span></div>` : '';
   m.bindPopup(`
@@ -1572,7 +1642,7 @@ function addMarkerToMap(alert) {
       <b>${alert.title}</b><br>
       <span style="color:#5f6368;font-size:12px;">${alert.location}</span>${nota}${chip}${stale}
       <div class="alert-source"><i class="fa-solid fa-circle-info"></i> ${alertSourceLabel(alert)}</div>
-      <br><button onclick="openAlertDetail(${alert.id})" style="margin-top:8px;width:100%;padding:6px 10px;border:none;border-radius:6px;background:#1976d2;color:#fff;cursor:pointer;font-size:12px;font-weight:600;">Ver detalle</button>
+      <br><div style="display:flex;gap:6px;"><button onclick="openAlertDetail(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:none;border-radius:6px;background:#1976d2;color:#fff;cursor:pointer;font-size:12px;font-weight:600;">Ver detalle</button><button onclick="navigateToAlert(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:1px solid #2563EB;border-radius:6px;background:transparent;color:#60A5FA;cursor:pointer;font-size:12px;font-weight:600;">Cómo llegar</button></div>
     </div>`);
   m.category = alert.category; markers.addLayer(m);
 }
@@ -1580,10 +1650,12 @@ function alertCardHTML(a) {
   const t = trafficStyle(a.trafico || 'moderado');
   const trafficChip = a.category === 'road' && a.trafico ? `<div><span class="traffic-chip" style="background:${t.bg}; color:${t.color};">${t.label}</span></div>` : '';
   const stale = isAlertExpired(a) ? `<div><span class="traffic-chip" style="background:rgba(154,160,166,.2); color:#80868b;">🕓 Hace más de 8h</span></div>` : '';
+  const distance = alertDistanceKm(a);
+  const locationMeta = `<div class="location-meta"><span class="precision-chip"><i class="fa-solid fa-location-dot"></i> ${precisionLabel(a)}</span>${distance === null ? '' : `<span class="distance-chip"><i class="fa-solid fa-route"></i> ${distance < 10 ? distance.toFixed(1) : Math.round(distance)} km de ti</span>`}<button class="card-nav" onclick="event.stopPropagation(); navigateToAlert(${a.id})"><i class="fa-solid fa-diamond-turn-right"></i> Ir</button></div>`;
   return `
     <div style="display:flex; justify-content:space-between; align-items:start;"><b>${a.title}</b>
     <div class="card-actions"><button onclick="event.stopPropagation(); toggleLike(${a.id})" id="btn-heart-${a.id}" class="btn-heart${a.liked ? ' liked' : ''}" title="Me gusta / Detalle"><i class="fa-solid fa-heart"></i></button><button onclick="event.stopPropagation(); shareAlert(${a.id})" class="btn-whatsapp-alert" title="Compartir"><i class="fa-brands fa-whatsapp"></i></button><button onclick="event.stopPropagation(); removeAlert(${a.id})" class="btn-delete-alert" title="Eliminar">X</button></div></div>
-    <div style="font-size:11px;color:var(--text-muted)">${a.location}</div>${trafficChip}${stale}<div class="alert-source"><i class="fa-solid fa-circle-info"></i> ${alertSourceLabel(a)}</div>
+    <div style="font-size:11px;color:var(--text-muted)">${a.location}</div>${locationMeta}${trafficChip}${stale}<div class="alert-source"><i class="fa-solid fa-circle-info"></i> ${alertSourceLabel(a)}</div>
   `;
 }
 function makeAlertCard(a) {
@@ -1653,6 +1725,10 @@ function openAlertDetail(id) {
   document.getElementById('am-desc').textContent += (a.state ? '\n📍 Estado: ' + a.state : '');
   document.getElementById('am-time').textContent = formatAlertTime(a.time);
   document.getElementById('am-source').textContent = alertSourceLabel(a);
+  document.getElementById('am-precision').textContent = precisionLabel(a) + (a.km !== null && a.km !== undefined && a.km !== '' ? ' · km ' + a.km : '');
+  const distance = alertDistanceKm(a);
+  document.getElementById('am-distance-row').style.display = distance === null ? 'none' : 'block';
+  document.getElementById('am-distance').textContent = distance === null ? '' : `${distance < 10 ? distance.toFixed(1) : Math.round(distance)} km desde tu ubicación`;
   const cat = document.getElementById('am-cat');
   cat.textContent = a.category === 'security' ? 'Seguridad' : 'Vial';
   cat.style.background = a.category === 'security' ? 'rgba(217,48,37,.12)' : 'rgba(30,142,62,.12)';
@@ -2556,6 +2632,7 @@ function gpsTrack() {
     const stopBtn = `<button onclick="stopGps()" style="margin:4px 0 0 4px; padding:5px 10px; border:none; border-radius:6px; background:#1E293B; color:#9CA3AF; cursor:pointer; font-size:11px;"><i class="fa-solid fa-xmark"></i> Detener</button>`;
     map.openPopup(`<b style="color:#2563EB"><i class="fa-solid fa-location-crosshairs"></i> Tu ubicación</b><br><button onclick="traceFromHere()" style="margin-top:8px; width:100%; padding:7px 10px; border:none; border-radius:6px; background:#2563EB; color:#fff; cursor:pointer; font-size:12px; font-weight:700;"><i class="fa-solid fa-route"></i> Trazar ruta desde aquí</button>${stopBtn}`, [myPosition.lat, myPosition.lon]);
     map.setView([myPosition.lat, myPosition.lon], 14);
+    rebuildU();
   };
   if(gpsWatchId !== null) { got({ coords: { latitude: myPosition.lat, longitude: myPosition.lon } }); return; }
   navigator.geolocation.getCurrentPosition(got, () => { openRouteModal(); }, { enableHighAccuracy: true, timeout: 8000 });
