@@ -321,6 +321,11 @@ body.left-rail #panel-left .u-rail{ display:flex; }
 .pr-search{ display:flex; align-items:center; gap:8px; background:#131822; border:1px solid #1E293B; border-radius:20px; padding:8px 12px; margin-bottom:12px; }
 .pr-search i{ color:#6B7280; font-size:13px; }
 .pr-search input{ background:transparent; border:none; outline:none; color:#fff; font-size:12px; flex:1; margin:0; padding:0; }
+.feed-tools{ display:grid; grid-template-columns:1fr auto; gap:7px; margin-bottom:12px; }
+.feed-tools .pr-search{ margin:0; }
+.feed-sort{ width:auto; min-width:126px; margin:0; padding:8px 24px 8px 9px; border-radius:18px; font-size:11px; }
+.empty-reset{ width:auto; margin-top:12px; padding:8px 13px; border-radius:18px; }
+.reports-note{ color:var(--text-muted); font-size:11px; line-height:1.5; padding:10px 12px; margin-bottom:12px; border:1px solid var(--border); border-radius:8px; background:var(--card-bg); }
 #feed-list{ display:flex; flex-direction:column; gap:8px; }
 #feed-empty{ text-align:center; color:#6B7280; padding:44px 10px; }
 #feed-empty i{ font-size:40px; color:#1E293B; margin-bottom:12px; }
@@ -554,6 +559,8 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
   .landing-mode{ min-height:54px; }
   .toast-important{ left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom)); max-width:none; }
   .ris-controls{ grid-template-columns:1fr; }
+  .feed-tools{ grid-template-columns:1fr; }
+  .feed-sort{ width:100%; }
 }
 </style>
 </head>
@@ -701,7 +708,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
   </div>
   <div id="panel-analysis" class="panel-container"><div class="panel-header"><div class="panel-title" style="color:#b388ff">IA Supervisor</div></div><div class="panel-body"><button onclick="generateRiskReport()" style="background:#6200ea; color:#fff;">Analizar Riesgos</button><div id="aiReport" class="ai-box" style="margin-top:15px;">Esperando ruta...</div></div></div>
   <div id="panel-admin" class="panel-container"><div class="panel-header"><div class="panel-title">Gestión Personal</div></div><div class="panel-body"><label>Nuevo Empleado</label><input placeholder="Nombre"><button class="btn-outline" style="width:100%;">Registrar</button></div></div>
-  <div id="panel-reports" class="panel-container"><div class="panel-header"><div class="panel-title">Reportes</div></div><div class="panel-body"><button onclick="reportCard()" style="margin-bottom:10px;"><i class="fa-solid fa-download"></i> Generar reporte del día</button><button onclick="downloadReportCSV()" class="btn-outline" style="margin-bottom:10px;"><i class="fa-solid fa-file-csv"></i> Descargar CSV</button><button onclick="downloadReportHTML()" class="btn-outline"><i class="fa-solid fa-file-lines"></i> Descargar HTML</button></div></div>
+  <div id="panel-reports" class="panel-container"><div class="panel-header"><div class="panel-title">Reportes</div></div><div class="panel-body"><button onclick="reportCard()" style="margin-bottom:10px;"><i class="fa-solid fa-download"></i> Generar reporte del día</button><button onclick="downloadReportCSV()" class="btn-outline" style="margin-bottom:10px;"><i class="fa-solid fa-file-csv"></i> Descargar CSV</button><button onclick="downloadReportHTML()" class="btn-outline" style="margin-bottom:20px;"><i class="fa-solid fa-file-lines"></i> Descargar HTML</button><label>Administración de datos</label><button onclick="confirmClearAlerts()" class="btn-danger"><i class="fa-solid fa-trash-can"></i> Eliminar todas las alertas</button></div></div>
   
   <div id="panel-monitor" class="panel-container">
     <div class="panel-header"><div class="panel-title" style="color:var(--accent)">Personal Activo</div><div class="badge" style="background:var(--success); color:white; padding:2px 8px; border-radius:4px; font-size:12px;">Activos</div></div>
@@ -763,10 +770,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
       <div style="flex:1"></div>
       <div class="pl-actions">
         <button class="pa-main" onclick="openEntryModal()"><i class="fa-solid fa-plus"></i> Ingresar Alerta</button>
-        <div class="pa-row">
-          <button class="pa-half" onclick="downloadReportCSV()"><i class="fa-solid fa-file-csv"></i> Descargar CSV</button>
-          <button class="pa-half danger" onclick="confirmClearAlerts()"><i class="fa-solid fa-broom"></i> Limpiar</button>
-        </div>
+        <button class="pa-half" onclick="resetUserFilters()"><i class="fa-solid fa-filter-circle-xmark"></i> Restablecer filtros</button>
       </div>
     </div>
     <div class="u-rail">
@@ -793,9 +797,9 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
     </div>
     <div class="pr-body">
       <div class="pr-sec active" data-sec="feed">
-        <div class="pr-search"><i class="fa-solid fa-magnifying-glass"></i><input id="feed-search" placeholder="Buscar alertas, lugar, estado..." oninput="rebuildU()"></div>
+        <div class="feed-tools"><div class="pr-search"><i class="fa-solid fa-magnifying-glass"></i><input id="feed-search" placeholder="Buscar alertas, lugar, estado..." oninput="rebuildU()"></div><select id="feed-sort" class="feed-sort" onchange="setFeedSort(this.value)" title="Ordenar alertas"><option value="recent">Más recientes</option><option value="near">Más cercanas</option><option value="risk">Mayor riesgo</option><option value="precision">Mayor precisión</option></select></div>
         <div id="feed-list"></div>
-        <div id="feed-empty"><i class="fa-solid fa-shield-halved"></i><div id="feed-empty-msg">Sin alertas coincidentes con los filtros activos</div></div>
+        <div id="feed-empty"><i class="fa-solid fa-shield-halved"></i><div id="feed-empty-msg">Sin alertas coincidentes con los filtros activos</div><button class="empty-reset" onclick="resetUserFilters()"><i class="fa-solid fa-rotate-left"></i> Restablecer filtros</button></div>
       </div>
       <div class="pr-sec" data-sec="ris">
         <div class="ris-auto"><i class="fa-solid fa-chart-line"></i><div>Analiza las alertas recibidas por <b>país, estado, categoría y periodo</b>.</div></div>
@@ -810,6 +814,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
       </div>
       <div class="pr-sec" data-sec="reportes">
         <div class="pr-search"><i class="fa-solid fa-note-sticky"></i><input value="Reporte del día" disabled style="opacity:.6"></div>
+        <div class="reports-note"><i class="fa-solid fa-circle-info"></i> Las exportaciones incluyen las alertas que coincidan con los filtros activos de estado, periodo y categoría.</div>
         <button onclick="reportCard()" style="border-radius:8px; margin-bottom:10px;"><i class="fa-solid fa-download"></i> Resumen del día</button>
         <button onclick="downloadReportCSV()" class="btn-outline" style="border-radius:8px; margin-bottom:10px;"><i class="fa-solid fa-file-csv"></i> Descargar CSV</button>
         <button onclick="downloadReportHTML()" class="btn-outline" style="border-radius:8px;"><i class="fa-solid fa-file-lines"></i> Descargar HTML</button>
@@ -1014,10 +1019,6 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
           <div class="rep-stat-title">🚦 Tráfico detenido</div><div class="rep-stat-value" id="rep-stop">0</div>
         </div>
         <div id="rep-list" class="alert-list"></div>
-      </div>
-      <div class="am-actions">
-        <button onclick="downloadReportCSV()"><i class="fa-solid fa-file-csv"></i> Descargar CSV</button>
-        <button onclick="downloadReportHTML()"><i class="fa-solid fa-file-lines"></i> Descargar HTML</button>
       </div>
     </div>
   </div>
@@ -2053,14 +2054,16 @@ function tickClock() {
 setInterval(tickClock, 1000); tickClock();
 
 // === REPORTE DEL DÍA ===
+function reportAlerts() { return document.body.classList.contains('user-mode') ? alerts.filter(matchesFilters) : alerts; }
 function reportCard() {
-  document.getElementById('rep-road').textContent = alerts.filter(a => a.category === 'road').length;
-  document.getElementById('rep-sec').textContent = alerts.filter(a => a.category === 'security').length;
-  document.getElementById('rep-imp').textContent = alerts.filter(a => a.importante).length;
-  document.getElementById('rep-stop').textContent = alerts.filter(a => a.category === 'road' && a.trafico === 'detenido').length;
+  const data = reportAlerts();
+  document.getElementById('rep-road').textContent = data.filter(a => a.category === 'road').length;
+  document.getElementById('rep-sec').textContent = data.filter(a => a.category === 'security').length;
+  document.getElementById('rep-imp').textContent = data.filter(a => a.importante).length;
+  document.getElementById('rep-stop').textContent = data.filter(a => a.category === 'road' && a.trafico === 'detenido').length;
   const list = document.getElementById('rep-list');
   list.innerHTML = '';
-  [...alerts].sort((a,b) => b.time - a.time).slice(0, 15).forEach(a => list.appendChild(makeAlertCard(a)));
+  [...data].sort((a,b) => new Date(b.time) - new Date(a.time)).slice(0, 15).forEach(a => list.appendChild(makeAlertCard(a)));
   document.getElementById('report-modal').style.display = 'flex';
 }
 function closeReport() { document.getElementById('report-modal').style.display = 'none'; }
@@ -2068,7 +2071,7 @@ document.getElementById('report-modal') && document.getElementById('report-modal
 function csvCell(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
 function downloadReportCSV() {
   const rows = [['hora','categoria','trafico','importante','titulo','ubicacion','estado','lat','lon']];
-  [...alerts].sort((a,b) => b.time - a.time).forEach(a => rows.push([
+  [...reportAlerts()].sort((a,b) => b.time - a.time).forEach(a => rows.push([
     csvCell(formatAlertTime(a.time)), a.category, a.trafico || '', a.importante ? 'Si' : 'No',
     csvCell(a.title), csvCell(a.location), csvCell(a.state || ''), a.lat, a.lon
   ]));
@@ -2076,12 +2079,13 @@ function downloadReportCSV() {
   saveBlob(csv, 'text/csv', 'nexus-vial-reporte-' + new Date().toISOString().slice(0,10) + '.csv');
 }
 function downloadReportHTML() {
+  const data = reportAlerts();
   const hoy = new Date().toLocaleString('es-MX', { dateStyle: 'full' });
-  const roads = alerts.filter(a => a.category === 'road').length;
-  const secs = alerts.filter(a => a.category === 'security').length;
-  const imps = alerts.filter(a => a.importante).length;
-  const stops = alerts.filter(a => a.category === 'road' && a.trafico === 'detenido').length;
-  const rows = [...alerts].sort((a,b) => b.time - a.time).map(a =>
+  const roads = data.filter(a => a.category === 'road').length;
+  const secs = data.filter(a => a.category === 'security').length;
+  const imps = data.filter(a => a.importante).length;
+  const stops = data.filter(a => a.category === 'road' && a.trafico === 'detenido').length;
+  const rows = [...data].sort((a,b) => b.time - a.time).map(a =>
     `<tr><td>${formatAlertTime(a.time)}</td><td>${a.category === 'security' ? 'Seguridad' : 'Vial'}</td><td>${a.trafico || '-'}</td><td>${a.importante ? '⚠' : '—'}</td><td>${a.title || ''}</td><td>${a.location || ''}</td><td>${a.state || ''}</td></tr>`
   ).join('');
   const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Nexus Vial · Reporte</title><style>
@@ -2176,10 +2180,34 @@ function uxResponsive() {
 window.addEventListener('resize', () => { if(document.body.classList.contains('user-mode')) uxResponsive(); });
 
 const nfState = { road:true, security:true, redZone:true, roadRisk:true };
-let uType = 'all'; let uState = ''; let uRange = 0;
+let uType = 'all'; let uState = ''; let uRange = 0; let uSort = 'recent';
 function setNF(kind, on) { nfState[kind] = !!on; rebuildU(); }
 function setState(v) { uState = v; rebuildU(); }
 function setRange(v) { uRange = +v || 0; rebuildU(); }
+function setFeedSort(v) {
+  uSort = v || 'recent';
+  if(uSort === 'near' && !myPosition) trafficMessage('Activa el GPS para ordenar las alertas por cercanía.');
+  rebuildU();
+}
+function sortVisibleAlerts(list) {
+  const risk = a => (a.importante ? 100 : 0) + (a.category === 'security' ? 30 : 10) + (a.trafico === 'detenido' ? 20 : 0);
+  const precision = a => ({punto:5,kilometro:4,zona:3,tramo:2,municipio:1,estado:0}[a.precision] ?? 0);
+  return [...list].sort((a,b) => {
+    if(uSort === 'near' && myPosition) return (alertDistanceKm(a) ?? Infinity) - (alertDistanceKm(b) ?? Infinity);
+    if(uSort === 'risk') return risk(b) - risk(a) || new Date(b.time) - new Date(a.time);
+    if(uSort === 'precision') return precision(b) - precision(a) || new Date(b.time) - new Date(a.time);
+    return new Date(b.time) - new Date(a.time);
+  });
+}
+function resetUserFilters() {
+  uType='all'; uState=''; uRange=0; uSort='recent';
+  Object.keys(nfState).forEach(k => nfState[k]=true);
+  document.querySelectorAll('.pl-filters input[type="checkbox"]').forEach(el => { el.checked=true; });
+  const values={ 'lp-state':'', 'lp-range':'0', 'feed-search':'', 'feed-sort':'recent' };
+  Object.entries(values).forEach(([id,value]) => { const el=document.getElementById(id); if(el) el.value=value; });
+  rebuildU();
+  trafficMessage('Filtros restablecidos.');
+}
 function matchesFilters(a) {
   if(uType !== 'all' && a.category !== uType) return false;
   if(a.category === 'security' && !nfState.security) return false;
@@ -2211,9 +2239,9 @@ function rebuildU() {
   renderRiskPoints(uState);
   if(nfState.redZone || nfState.roadRisk) { if(!map.hasLayer(staticLayer)) map.addLayer(staticLayer); }
   else if(map.hasLayer(staticLayer)) map.removeLayer(staticLayer);
-  if(fl) { fl.innerHTML = ''; [...vis].sort((a, b) => new Date(b.time) - new Date(a.time)).forEach(a => fl.appendChild(makeAlertCard(a))); }
+  if(fl) { fl.innerHTML = ''; sortVisibleAlerts(vis).forEach(a => fl.appendChild(makeAlertCard(a))); }
   if(fe) fe.style.display = vis.length ? 'none' : 'block';
-  if(em) em.textContent = vis.length ? '' : (alerts.length ? 'Sin alertas coincidentes con los filtros activos' : 'Aún no llegan alertas. Escaneando novedades cada 3 min...');
+  if(em) em.textContent = vis.length ? '' : (alerts.length ? 'No hay alertas con estos filtros. Amplía el periodo o selecciona Todo México.' : 'Aún no llegan alertas. Escaneando novedades cada 3 min...');
   refreshCounters();
 }
 
