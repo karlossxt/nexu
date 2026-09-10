@@ -326,6 +326,9 @@ body.left-rail #panel-left .u-rail{ display:flex; }
 .feed-sort{ width:auto; min-width:126px; margin:0; padding:8px 24px 8px 9px; border-radius:18px; font-size:11px; }
 .empty-reset{ width:auto; margin-top:12px; padding:8px 13px; border-radius:18px; }
 .reports-note{ color:var(--text-muted); font-size:11px; line-height:1.5; padding:10px 12px; margin-bottom:12px; border:1px solid var(--border); border-radius:8px; background:var(--card-bg); }
+.soon-badge{ margin-left:auto; padding:2px 6px; border-radius:10px; background:rgba(245,158,11,.14); color:#D97706; border:1px solid rgba(245,158,11,.32); font-size:8px; font-weight:900; letter-spacing:.04em; text-transform:uppercase; }
+.feature-soon{ opacity:.68; cursor:not-allowed; }
+.feature-soon .switch{ pointer-events:none; }
 #feed-list{ display:flex; flex-direction:column; gap:8px; }
 #feed-empty{ text-align:center; color:#6B7280; padding:44px 10px; }
 #feed-empty i{ font-size:40px; color:#1E293B; margin-bottom:12px; }
@@ -574,7 +577,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
     <div class="landing-feats">
       <div class="landing-feat"><i class="fa-solid fa-triangle-exclamation"></i> Alertas en vivo</div>
       <div class="landing-feat"><i class="fa-solid fa-cloud-sun"></i> Clima por punto</div>
-      <div class="landing-feat"><i class="fa-solid fa-route"></i> Rutas con riesgo</div>
+      <div class="landing-feat"><i class="fa-solid fa-route"></i> Rutas próximamente</div>
       <div class="landing-feat"><i class="fa-solid fa-shield-halved"></i> Seguridad vial</div>
     </div>
     <div class="landing-modes">
@@ -600,7 +603,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
   <div class="nav-item" onclick="switchPanel('road')"><div class="nav-icon"><i class="fa-solid fa-triangle-exclamation"></i></div><span class="nav-label">Alertas Viales</span></div>
   <div class="nav-item" onclick="switchPanel('security')"><div class="nav-icon"><i class="fa-solid fa-shield-cat"></i></div><span class="nav-label">Seguridad</span></div>
   
-  <div class="nav-item" onclick="switchPanel('route')"><div class="nav-icon"><i class="fa-solid fa-route"></i></div><span class="nav-label">Rutas</span></div>
+  <div class="nav-item feature-soon" onclick="showComingSoon('Planificador de rutas')"><div class="nav-icon"><i class="fa-solid fa-route"></i></div><span class="nav-label">Rutas · Próximamente</span></div>
   <div class="nav-item" onclick="switchPanel('analysis')"><div class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div><span class="nav-label">IA Análisis</span></div>
   <div class="nav-separator"></div>
   
@@ -754,8 +757,8 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
       <div class="pl-filters">
         <div class="uf-row"><span class="dot" style="background:#F97316;color:#F97316;"></span><span>Viales</span><span class="uf-count" id="nc-road">0</span><label class="switch"><input type="checkbox" checked onchange="setNF('road', this.checked)"><span class="slider" style="--sw:#F97316"></span></label></div>
         <div class="uf-row"><span class="dot" style="background:#EF4444;color:#EF4444;"></span><span>Seguridad</span><span class="uf-count" id="nc-sec">0</span><label class="switch"><input type="checkbox" checked onchange="setNF('security', this.checked)"><span class="slider" style="--sw:#EF4444"></span></label></div>
-        <div class="uf-row"><span class="dot" style="background:#DC2626;color:#DC2626;"></span><span>Zonas rojas</span><span class="uf-count" id="nc-imp">0</span><label class="switch"><input type="checkbox" checked onchange="setNF('redZone', this.checked)"><span class="slider" style="--sw:#DC2626"></span></label></div>
-        <div class="uf-row"><span class="dot" style="background:#F59E0B;color:#F59E0B;"></span><span>Riesgos viales</span><span class="uf-count" id="nc-risk">0</span><label class="switch"><input type="checkbox" checked onchange="setNF('roadRisk', this.checked)"><span class="slider" style="--sw:#F59E0B"></span></label></div>
+        <div class="uf-row feature-soon" onclick="showComingSoon('Zonas rojas')"><span class="dot" style="background:#DC2626;color:#DC2626;"></span><span>Zonas rojas</span><span class="soon-badge">Próximamente</span><label class="switch"><input type="checkbox" disabled><span class="slider" style="--sw:#DC2626"></span></label></div>
+        <div class="uf-row feature-soon" onclick="showComingSoon('Riesgos viales')"><span class="dot" style="background:#F59E0B;color:#F59E0B;"></span><span>Riesgos viales</span><span class="soon-badge">Próximamente</span><label class="switch"><input type="checkbox" disabled><span class="slider" style="--sw:#F59E0B"></span></label></div>
       </div>
       <div class="pl-section">JURISDICCIÓN</div>
       <div class="pl-dropdowns">
@@ -776,7 +779,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
     <div class="u-rail">
       <button onclick="toggleLeft()" title="Expandir panel"><i class="fa-solid fa-angles-right"></i></button>
       <button onclick="openDirModal()" title="Emergencias"><i class="fa-solid fa-tower-broadcast"></i></button>
-      <button onclick="openRouteModal()" title="Planificar ruta"><i class="fa-solid fa-route"></i></button>
+      <button class="feature-soon" onclick="showComingSoon('Planificador de rutas')" title="Rutas · Próximamente"><i class="fa-solid fa-route"></i></button>
       <button onclick="openEntryModal()" title="Ingresar alerta"><i class="fa-solid fa-plus"></i></button>
       <button onclick="toggleOperator()" title="Modo operador"><i class="fa-solid fa-user-gear"></i></button>
     </div>
@@ -831,7 +834,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
       <button onclick="switchPR('feed')" title="Feed"><i class="fa-solid fa-bolt"></i></button>
       <button onclick="switchPR('ris')" title="Radar Vial"><i class="fa-solid fa-chart-pie"></i></button>
       <button onclick="switchPR('reportes')" title="Reportes"><i class="fa-solid fa-file-contract"></i></button>
-      <button onclick="openRouteModal()" title="Ruta"><i class="fa-solid fa-route"></i></button>
+      <button class="feature-soon" onclick="showComingSoon('Planificador de rutas')" title="Rutas · Próximamente"><i class="fa-solid fa-route"></i></button>
     </div>
   </aside>
 
@@ -1143,6 +1146,12 @@ function trafficMessage(message, error=false) {
   box.style.borderLeftColor = error ? '#EF4444' : '#2563EB';
   box.innerHTML = `<b><i class="fa-solid fa-traffic-light"></i> Tráfico</b><div>${message}</div>`;
   document.body.appendChild(box); setTimeout(() => box.remove(), 5000);
+}
+function showComingSoon(feature) {
+  const old=document.getElementById('coming-soon-message'); if(old) old.remove();
+  const box=document.createElement('div'); box.id='coming-soon-message'; box.className='toast-important'; box.style.borderLeftColor='#F59E0B';
+  box.innerHTML=`<b style="color:#D97706"><i class="fa-solid fa-hourglass-half"></i> Próximamente</b><div><b>${feature}</b> está en revisión para ofrecer una experiencia confiable.</div>`;
+  document.body.appendChild(box); setTimeout(()=>box.remove(),4500);
 }
 async function toggleTraffic() {
   const btn = document.getElementById('traffic-toggle');
@@ -2191,7 +2200,7 @@ function uxResponsive() {
 }
 window.addEventListener('resize', () => { if(document.body.classList.contains('user-mode')) uxResponsive(); });
 
-const nfState = { road:true, security:true, redZone:true, roadRisk:true };
+const nfState = { road:true, security:true, redZone:false, roadRisk:false };
 let uType = 'all'; let uState = ''; let uRange = 0; let uSort = 'recent';
 function setNF(kind, on) { nfState[kind] = !!on; rebuildU(); }
 function setState(v) { uState = v; rebuildU(); }
@@ -2213,8 +2222,8 @@ function sortVisibleAlerts(list) {
 }
 function resetUserFilters() {
   uType='all'; uState=''; uRange=0; uSort='recent';
-  Object.keys(nfState).forEach(k => nfState[k]=true);
-  document.querySelectorAll('.pl-filters input[type="checkbox"]').forEach(el => { el.checked=true; });
+  nfState.road=true; nfState.security=true; nfState.redZone=false; nfState.roadRisk=false;
+  document.querySelectorAll('.pl-filters input[type="checkbox"]:not(:disabled)').forEach(el => { el.checked=true; });
   const values={ 'lp-state':'', 'lp-range':'0', 'feed-search':'', 'feed-sort':'recent' };
   Object.entries(values).forEach(([id,value]) => { const el=document.getElementById(id); if(el) el.value=value; });
   rebuildU();
@@ -2566,7 +2575,8 @@ function riskGo(i) { weatherGoMap(i); }
 const QUICK_ROUTES = [['Ciudad de México', 'Querétaro'], ['Ciudad de México', 'Puebla'], ['Ciudad de México', 'Guadalajara'], ['Monterrey', 'Ciudad de México']];
 let routeSel = 0; let routeOptions = [];
 let routeOriginCoords = null;
-function openRouteModal() {
+function openRouteModal() { showComingSoon('Planificador de rutas'); }
+function openRouteModalPreview() {
   const cards = document.getElementById('route-cards');
   if(cards && !routeOptions.length) cards.innerHTML = '<div style="color:#6B7280; font-size:12px;">Escribe origen y destino, después pulsa <b>Buscar rutas</b>.</div>';
   const ra = document.getElementById('routeModalAlerts');
@@ -2718,7 +2728,7 @@ function gpsTrack() {
     myPosition = { lat: pos.coords.latitude, lon: pos.coords.longitude };
     const el = document.getElementById('gps-state'); if(el) el.textContent = 'AQUÍ: ' + myPosition.lat.toFixed(3) + ', ' + myPosition.lon.toFixed(3);
     const stopBtn = `<button onclick="stopGps()" style="margin:4px 0 0 4px; padding:5px 10px; border:none; border-radius:6px; background:#1E293B; color:#9CA3AF; cursor:pointer; font-size:11px;"><i class="fa-solid fa-xmark"></i> Detener</button>`;
-    map.openPopup(`<b style="color:#2563EB"><i class="fa-solid fa-location-crosshairs"></i> Tu ubicación</b><br><button onclick="traceFromHere()" style="margin-top:8px; width:100%; padding:7px 10px; border:none; border-radius:6px; background:#2563EB; color:#fff; cursor:pointer; font-size:12px; font-weight:700;"><i class="fa-solid fa-route"></i> Trazar ruta desde aquí</button>${stopBtn}`, [myPosition.lat, myPosition.lon]);
+    map.openPopup(`<b style="color:#2563EB"><i class="fa-solid fa-location-crosshairs"></i> Tu ubicación</b><br><button onclick="showComingSoon('Planificador de rutas')" style="margin-top:8px; width:100%; padding:7px 10px; border:1px solid #F59E0B; border-radius:6px; background:rgba(245,158,11,.12); color:#D97706; cursor:pointer; font-size:12px; font-weight:700;"><i class="fa-solid fa-hourglass-half"></i> Rutas · Próximamente</button>${stopBtn}`, [myPosition.lat, myPosition.lon]);
     map.setView([myPosition.lat, myPosition.lon], 14);
     rebuildU();
   };
