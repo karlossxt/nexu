@@ -1076,13 +1076,15 @@ async function toggleTraffic() {
   if(btn) { btn.disabled = true; btn.classList.add('active'); }
   try {
     const check = await fetch('/api/traffic?check=1', { cache:'no-store' });
-    if(!check.ok) throw new Error('config');
+    const status = await check.json().catch(() => ({}));
+    if(!check.ok || !status.available) throw new Error(status.reason || 'config');
     if(!trafficLayer) trafficLayer = L.tileLayer('/api/traffic?z={z}&x={x}&y={y}', { opacity:.82, maxZoom:20, zIndex:450, attribution:'Tráfico © TomTom' });
     trafficLayer.addTo(map); trafficEnabled = true; legend?.classList.add('open');
     trafficMessage('Capa de circulación en vivo activada.');
   } catch(e) {
     btn?.classList.remove('active');
-    trafficMessage('La fuente de tráfico aún no está configurada.', true);
+    const msg = e.message === 'key_forbidden' ? 'TomTom rechazó la clave. Revisa que Traffic API esté habilitada y sin restricciones incompatibles.' : e.message === 'missing_key' ? 'Falta configurar TOMTOM_API_KEY en Vercel.' : 'La fuente de tráfico no está disponible en este momento.';
+    trafficMessage(msg, true);
   } finally { if(btn) btn.disabled = false; }
 }
 
