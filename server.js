@@ -163,6 +163,27 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  if (url.pathname === '/api/geocode') {
+    try {
+      const geocodeHandler = require('./api/geocode.js');
+      const q = {};
+      for (const [k, v] of url.searchParams) q[k] = v;
+      const adaptReq = { method: req.method, headers: req.headers, query: q, socket: req.socket || { remoteAddress: null } };
+      const adaptRes = {
+        _code: 200, _headers: {},
+        setHeader(k, v) { this._headers[k] = v; },
+        status(c) { this._code = c; return this; },
+        json(obj) { res.writeHead(this._code, Object.assign({ 'Content-Type': 'application/json' }, this._headers)); res.end(JSON.stringify(obj)); },
+        end() { res.end(); }
+      };
+      await geocodeHandler(adaptReq, adaptRes);
+      return;
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: String((e && e.message) || e) }));
+    }
+  }
+
   const filePath = path.normalize(path.join(ROOT, url.pathname === '/' ? 'index.html' : url.pathname));
   if (!filePath.startsWith(ROOT)) {
     res.writeHead(403);
