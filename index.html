@@ -459,11 +459,14 @@ body.user-mode:not(.dark-mode) .alert-card{ background:#FFFFFF; border-color:#D8
 body.user-mode:not(.dark-mode) .alert-card:hover{ background:#F7FAFD; }
 body.user-mode:not(.dark-mode) .alert-card b{ color:#172033; }
 body.user-mode:not(.dark-mode) .leaflet-popup-content-wrapper, body.user-mode:not(.dark-mode) .leaflet-popup-tip{ background:#FFFFFF; color:#172033; }
-body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark-mode) .nv-mtbtn{ background:#FFFFFF; color:#334155; border-color:#D8E1EC; }
-.nv-maptools{ display:flex; flex-direction:column; gap:6px; }
-.nv-mtbtn{ width:36px; height:36px; border-radius:9px; background:#131822; color:#dfe7f5; border:1px solid #1E293B; cursor:pointer; font-size:15px; display:grid; place-items:center; box-shadow:0 4px 14px rgba(0,0,0,.5); }
-.nv-mtbtn:hover{ color:#2563EB; border-color:#2563EB; }
-.nv-mtbtn.active{ color:#2563EB; }
+body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark-mode) .nv-mtbtn{ background:transparent; color:#334155; border-color:transparent; }
+.nv-maptools{ display:flex; flex-direction:column; gap:4px; padding:5px; border:1px solid var(--border); border-radius:15px; background:var(--glass); box-shadow:0 8px 24px rgba(15,23,42,.18); backdrop-filter:blur(12px); }
+.nv-mtbtn{ position:relative; width:42px; height:42px; padding:0; border-radius:11px; background:transparent; color:var(--text-muted); border:1px solid transparent; cursor:pointer; font-size:16px; display:grid; place-items:center; box-shadow:none; transition:background .16s,color .16s,transform .16s,border-color .16s; }
+.nv-mtbtn:hover,.nv-mtbtn:focus-visible{ color:var(--accent); background:rgba(37,99,235,.10); border-color:rgba(37,99,235,.22); transform:translateY(-1px); outline:none; box-shadow:none; }
+.nv-mtbtn.active{ color:#fff; background:var(--accent); border-color:var(--accent); box-shadow:0 5px 12px rgba(37,99,235,.28); }
+.nv-mtbtn:disabled{ opacity:.55; cursor:wait; transform:none; }
+.nv-mtbtn::after{ content:attr(data-label); position:absolute; left:calc(100% + 10px); top:50%; transform:translateY(-50%) translateX(-4px); padding:7px 9px; border-radius:7px; background:#111827; color:#fff; font-size:11px; font-weight:700; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .14s,transform .14s; box-shadow:0 5px 16px rgba(0,0,0,.25); }
+.nv-mtbtn:hover::after,.nv-mtbtn:focus-visible::after{ opacity:1; transform:translateY(-50%) translateX(0); }
 .traffic-legend{ display:none; position:absolute; left:50%; bottom:28px; transform:translateX(-50%); z-index:1200; gap:12px; align-items:center; padding:8px 12px; border-radius:10px; background:rgba(12,16,23,.9); border:1px solid #1E293B; color:#E5E7EB; font-size:10px; box-shadow:0 5px 20px rgba(0,0,0,.45); }
 .traffic-legend.open{ display:flex; }
 .traffic-legend span{ display:flex; align-items:center; gap:4px; white-space:nowrap; }
@@ -540,6 +543,9 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
   #circula, body.left-rail #circula{ left:10px; top:10px; max-width:calc(100vw - 72px); font-size:10px; padding:7px 10px; }
   .hnc-more{ display:none; }
   .leaflet-bottom.leaflet-left .nv-maptools{ margin-left:8px; margin-bottom:22px; }
+  .nv-maptools{ flex-direction:row; padding:4px; gap:2px; border-radius:14px; }
+  .nv-mtbtn{ width:44px; height:44px; font-size:16px; }
+  .nv-mtbtn::after{ display:none; }
   .leaflet-bottom.leaflet-right{ bottom:10px; }
   .traffic-legend{ bottom:76px; max-width:calc(100vw - 28px); flex-wrap:wrap; justify-content:center; }
   #alert-modal{ align-items:flex-end; padding:0; }
@@ -1134,7 +1140,7 @@ const lightLayer = L.tileLayer(LINKS.tilesLight, { attribution: '&copy; <a href=
 const darkLayer = L.tileLayer(LINKS.tilesDark, { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attributions">CARTO</a>', subdomains: 'abcd', maxZoom: 20 });
 const map = L.map('map', { zoomControl: false }).setView([19.4326, -99.1332], 5);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
-L.Control.MapTools = L.Control.extend({ options: { position: 'bottomleft' }, onAdd() { const div = L.DomUtil.create('div', 'nv-maptools'); div.innerHTML = '<button class="nv-mtbtn" onclick="gpsTrack()" title="Mi ubicación (GPS)"><i class="fa-solid fa-location-crosshairs"></i></button><button class="nv-mtbtn" onclick="map.setView([19.4326,-99.1332],5)" title="Centrar en México"><i class="fa-solid fa-location-dot"></i></button><button id="traffic-toggle" class="nv-mtbtn" onclick="toggleTraffic()" title="Mostrar tráfico en vivo"><i class="fa-solid fa-traffic-light"></i></button><button class="nv-mtbtn" onclick="toggleTheme()" title="Capa claro / oscuro"><i class="fa-solid fa-circle-half-stroke"></i></button>'; L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div); return div; } });
+L.Control.MapTools = L.Control.extend({ options: { position: 'bottomleft' }, onAdd() { const div = L.DomUtil.create('div', 'nv-maptools'); div.setAttribute('role','toolbar'); div.setAttribute('aria-label','Herramientas del mapa'); div.innerHTML = '<button id="gps-toggle" class="nv-mtbtn" onclick="gpsTrack()" title="Mi ubicación" data-label="Mi ubicación" aria-label="Activar mi ubicación" aria-pressed="false"><i class="fa-solid fa-location-crosshairs"></i></button><button class="nv-mtbtn" onclick="map.setView([23.6345,-102.5528],5)" title="Vista nacional" data-label="Vista nacional" aria-label="Centrar mapa en México"><i class="fa-solid fa-map-location-dot"></i></button><button id="traffic-toggle" class="nv-mtbtn" onclick="toggleTraffic()" title="Tráfico en vivo" data-label="Tráfico en vivo" aria-label="Mostrar tráfico en vivo" aria-pressed="false"><i class="fa-solid fa-traffic-light"></i></button><button id="theme-toggle" class="nv-mtbtn" onclick="toggleTheme()" title="Cambiar tema" data-label="Cambiar tema" aria-label="Cambiar modo claro u oscuro" aria-pressed="false"><i class="fa-solid fa-moon"></i></button>'; L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div); return div; } });
 lightLayer.addTo(map);
 map.addLayer(alertAreaLayer); map.addLayer(markers); map.addLayer(staticLayer);
 let routeLineLayer = L.layerGroup(); map.addLayer(routeLineLayer);
@@ -1158,7 +1164,7 @@ async function toggleTraffic() {
   const legend = document.getElementById('traffic-legend');
   if(trafficEnabled) {
     if(trafficLayer && map.hasLayer(trafficLayer)) map.removeLayer(trafficLayer);
-    trafficEnabled = false; btn?.classList.remove('active'); legend?.classList.remove('open');
+    trafficEnabled = false; btn?.classList.remove('active'); btn?.setAttribute('aria-pressed','false'); legend?.classList.remove('open');
     return;
   }
   if(btn) { btn.disabled = true; btn.classList.add('active'); }
@@ -1167,7 +1173,7 @@ async function toggleTraffic() {
     const status = await check.json().catch(() => ({}));
     if(!check.ok || !status.available) throw new Error(status.reason || 'config');
     if(!trafficLayer) trafficLayer = L.tileLayer('/api/traffic?z={z}&x={x}&y={y}', { opacity:.82, maxZoom:20, zIndex:450, attribution:'Tráfico © TomTom' });
-    trafficLayer.addTo(map); trafficEnabled = true; legend?.classList.add('open');
+    trafficLayer.addTo(map); trafficEnabled = true; btn?.setAttribute('aria-pressed','true'); legend?.classList.add('open');
     trafficMessage('Capa de circulación en vivo activada.');
   } catch(e) {
     btn?.classList.remove('active');
@@ -1250,6 +1256,8 @@ function toggleTheme() { const isDark = document.body.classList.contains('dark-m
 function applyTheme(toDark) {
     if(toDark) { document.body.classList.add('dark-mode'); map.removeLayer(lightLayer); map.addLayer(darkLayer); localStorage.setItem('steele_theme', 'dark'); }
     else { document.body.classList.remove('dark-mode'); map.removeLayer(darkLayer); map.addLayer(lightLayer); localStorage.setItem('steele_theme', 'light'); }
+    const themeBtn=document.getElementById('theme-toggle');
+    if(themeBtn) { themeBtn.classList.toggle('active',toDark); themeBtn.setAttribute('aria-pressed',String(toDark)); themeBtn.dataset.label=toDark?'Usar modo claro':'Usar modo oscuro'; themeBtn.title=themeBtn.dataset.label; themeBtn.innerHTML=`<i class="fa-solid fa-${toDark?'sun':'moon'}"></i>`; }
     if(document.getElementById('u-ris-state')) { graphRis('u', true); graphRis('op', true); }
 }
 
@@ -2743,6 +2751,7 @@ function gpsTrack() {
   if(!navigator.geolocation) { openRouteModal(); return; }
   const got = (pos) => {
     myPosition = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+    const gpsBtn=document.getElementById('gps-toggle'); if(gpsBtn){ gpsBtn.classList.add('active'); gpsBtn.setAttribute('aria-pressed','true'); gpsBtn.dataset.label='GPS activo'; }
     const el = document.getElementById('gps-state'); if(el) el.textContent = 'AQUÍ: ' + myPosition.lat.toFixed(3) + ', ' + myPosition.lon.toFixed(3);
     const stopBtn = `<button onclick="stopGps()" style="margin:4px 0 0 4px; padding:5px 10px; border:none; border-radius:6px; background:#1E293B; color:#9CA3AF; cursor:pointer; font-size:11px;"><i class="fa-solid fa-xmark"></i> Detener</button>`;
     map.openPopup(`<b style="color:#2563EB"><i class="fa-solid fa-location-crosshairs"></i> Tu ubicación</b><br><button onclick="showComingSoon('Planificador de rutas')" style="margin-top:8px; width:100%; padding:7px 10px; border:1px solid #F59E0B; border-radius:6px; background:rgba(245,158,11,.12); color:#D97706; cursor:pointer; font-size:12px; font-weight:700;"><i class="fa-solid fa-hourglass-half"></i> Rutas · Próximamente</button>${stopBtn}`, [myPosition.lat, myPosition.lon]);
@@ -2755,6 +2764,7 @@ function gpsTrack() {
 }
 function stopGps() {
   if(gpsWatchId !== null) { navigator.geolocation.clearWatch(gpsWatchId); gpsWatchId = null; }
+  const gpsBtn=document.getElementById('gps-toggle'); if(gpsBtn){ gpsBtn.classList.remove('active'); gpsBtn.setAttribute('aria-pressed','false'); gpsBtn.dataset.label='Mi ubicación'; }
   const el = document.getElementById('gps-state'); if(el) el.textContent = 'ACTIVO';
 }
 async function traceFromHere() {
