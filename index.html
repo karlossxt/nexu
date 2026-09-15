@@ -349,6 +349,10 @@ body.left-rail #panel-left .u-rail{ display:flex; }
 .nv-topbar{ display:none; position:absolute; top:12px; left:14px; right:14px; height:58px; z-index:3600; align-items:center; gap:12px; padding:7px 10px; box-sizing:border-box; border:1px solid var(--border); border-radius:16px; background:var(--glass); box-shadow:0 8px 26px rgba(15,23,42,.16); backdrop-filter:blur(15px); }
 body.user-mode .nv-topbar{ display:flex; }
 body.user-mode .u-panel{ top:84px; }
+body.user-mode #circula{ top:84px; left:14px; width:340px; max-width:340px; min-height:38px; box-sizing:border-box; justify-content:center; }
+body.user-mode #panel-left{ top:132px; }
+body.user-mode.left-rail #circula{ left:76px; width:auto; max-width:340px; }
+body.user-mode.left-rail #panel-left{ top:84px; }
 .nt-brand{ display:flex; align-items:center; gap:9px; min-width:175px; font-weight:900; color:var(--text); }
 .nt-brand i{ width:36px; height:36px; display:grid; place-items:center; border-radius:11px; color:#fff; background:linear-gradient(145deg,#0EA5E9,#2563EB); box-shadow:0 5px 14px rgba(37,99,235,.28); }
 .nt-brand span{ color:var(--accent); }
@@ -576,6 +580,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
 @media (min-width:701px) and (max-width:1100px){
   #panel-left{ width:300px; }
   #panel-right{ width:320px; }
+  body.user-mode #circula{ width:300px; max-width:300px; }
   .nt-brand{ min-width:auto; }
   .nt-brand strong{ display:none; }
   .nt-btn span:not(.nt-count){ display:none; }
@@ -594,6 +599,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
   body.operator-mode .main-content{ height:calc(100dvh - 62px); }
   body.operator-mode .panel-container{ top:8px; left:8px; right:8px; bottom:8px; width:auto; max-height:none; border-radius:14px; }
   body.user-mode #panel-left{ display:none; }
+  body.user-mode #circula, body.user-mode.left-rail #circula{ left:10px; top:10px; width:auto; max-width:calc(100vw - 72px); min-height:0; }
   .nv-topbar{ display:none !important; }
   .focus-banner{ top:10px; left:10px; right:10px; width:auto; min-width:0; transform:none; }
   .fb-action{ display:none; }
