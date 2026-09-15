@@ -329,6 +329,20 @@ body.left-rail #panel-left .u-rail{ display:flex; }
 .soon-badge{ margin-left:auto; padding:2px 6px; border-radius:10px; background:rgba(245,158,11,.14); color:#D97706; border:1px solid rgba(245,158,11,.32); font-size:8px; font-weight:900; letter-spacing:.04em; text-transform:uppercase; }
 .feature-soon{ opacity:.68; cursor:not-allowed; }
 .feature-soon .switch{ pointer-events:none; }
+.future-tools{ display:grid; gap:7px; padding:0 14px 10px; }
+.future-tool{ width:100%; display:grid; grid-template-columns:34px 1fr auto; align-items:center; gap:9px; padding:9px 10px; text-align:left; color:var(--text); background:var(--card-bg); border:1px solid var(--border); border-radius:9px; box-shadow:none; }
+.future-tool:hover{ transform:none; background:var(--card-hover); border-color:rgba(37,99,235,.45); box-shadow:none; }
+.future-tool .ft-icon{ width:32px; height:32px; display:grid; place-items:center; border-radius:8px; color:var(--accent); background:rgba(37,99,235,.11); font-size:14px; }
+.future-tool b{ display:block; font-size:11px; line-height:1.25; }
+.future-tool small{ display:block; margin-top:2px; color:var(--text-muted); font-size:9px; font-weight:600; }
+.future-tool .soon-badge{ margin:0; }
+.incident-pin-wrap{ background:transparent; border:0; }
+.incident-pin{ --pin:#F97316; position:relative; width:38px; height:38px; display:grid; place-items:center; color:#fff; background:var(--pin); border:3px solid #fff; border-radius:14px 14px 14px 4px; transform:rotate(-45deg); box-shadow:0 5px 14px rgba(15,23,42,.38); }
+.incident-pin i{ transform:rotate(45deg); font-size:15px; }
+.incident-pin::after{ content:''; position:absolute; inset:-6px; border:2px solid var(--pin); border-radius:18px 18px 18px 7px; opacity:0; }
+.incident-pin.important::after{ animation:incidentPulse 1.7s ease-out infinite; }
+.incident-pin.expired{ filter:grayscale(1); opacity:.75; }
+@keyframes incidentPulse{ 0%{ transform:scale(.78); opacity:.75; } 100%{ transform:scale(1.35); opacity:0; } }
 #feed-list{ display:flex; flex-direction:column; gap:8px; }
 #feed-empty{ text-align:center; color:#6B7280; padding:44px 10px; }
 #feed-empty i{ font-size:40px; color:#1E293B; margin-bottom:12px; }
@@ -775,6 +789,12 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
           <option value="12">🕛 Últimas 12 horas</option>
           <option value="24">🗓 Últimas 24 horas</option>
         </select>
+      </div>
+      <div class="pl-section">PRÓXIMAS FUNCIONES</div>
+      <div class="future-tools">
+        <button class="future-tool" onclick="showComingSoon('Seguimiento de unidades GPS')"><span class="ft-icon"><i class="fa-solid fa-satellite-dish"></i></span><span><b>Unidades GPS en vivo</b><small>Ubicación y estado de vehículos</small></span><span class="soon-badge">Próximamente</span></button>
+        <button class="future-tool" onclick="showComingSoon('Grupos de operación')"><span class="ft-icon"><i class="fa-solid fa-comments"></i></span><span><b>Grupos de operación</b><small>Comunicación por empresa o recorrido</small></span><span class="soon-badge">Próximamente</span></button>
+        <button class="future-tool" onclick="showComingSoon('Cuentas y equipos')"><span class="ft-icon"><i class="fa-solid fa-users-gear"></i></span><span><b>Cuentas y equipos</b><small>Usuarios, roles y preferencias</small></span><span class="soon-badge">Próximamente</span></button>
       </div>
       <div style="flex:1"></div>
       <div class="pl-actions">
@@ -1698,12 +1718,22 @@ function navigateToAlert(id) {
   const origin = myPosition ? `&origin=${myPosition.lat},${myPosition.lon}` : '';
   window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}${origin}&travelmode=driving`, '_blank', 'noopener');
 }
+function incidentVisual(alert) {
+  const text=((alert.title || '')+' '+(alert.detail || '')).toLowerCase();
+  if(isAlertExpired(alert)) return { color:'#64748B', icon:'fa-clock-rotate-left', label:'Alerta anterior' };
+  if(/incendio|fuego|explosi/.test(text)) return { color:'#DC2626', icon:'fa-fire-flame-curved', label:'Incendio' };
+  if(/inundaci|encharcamiento|desbord/.test(text)) return { color:'#0284C7', icon:'fa-water', label:'Inundación' };
+  if(/bloqueo|cierre|manifestaci|protesta/.test(text)) return { color:'#E11D48', icon:'fa-road-barrier', label:'Bloqueo' };
+  if(/asalto|robo|balacera|arma|homicidio|secuestro/.test(text)) return { color:'#7C3AED', icon:'fa-shield-halved', label:'Seguridad' };
+  if(/volcadura|choque|accidente|colisi/.test(text)) return { color:'#EA580C', icon:'fa-car-burst', label:'Accidente' };
+  if(/tráfico|trafico|congesti|carga vehicular/.test(text)) return { color:'#D97706', icon:'fa-car-side', label:'Tráfico' };
+  return alert.category === 'security' ? { color:'#DC2626', icon:'fa-user-shield', label:'Seguridad' } : { color:'#F97316', icon:'fa-triangle-exclamation', label:'Incidencia vial' };
+}
 function addMarkerToMap(alert) {
   const isSec = alert.category === 'security';
   const expired = isAlertExpired(alert);
-  const color = expired ? '#9aa0a6' : (isSec ? '#d93025' : trafficStyle(alert.trafico || 'moderado').color);
-  const iconClass = expired ? 'fa-clock-rotate-left' : (isSec ? 'fa-user-shield' : 'fa-car-burst');
-  const icon = L.divIcon({ className: 'custom-pin', html: `<div style="background:${color}; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; border:2px solid white; box-shadow:0 3px 6px rgba(0,0,0,0.5); font-size:16px;"><i class="fa-solid ${iconClass}"></i></div>`, iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32] });
+  const visual = incidentVisual(alert); const color=visual.color;
+  const icon = L.divIcon({ className: 'incident-pin-wrap', html: `<div class="incident-pin${alert.importante?' important':''}${expired?' expired':''}" style="--pin:${color}" title="${visual.label}"><i class="fa-solid ${visual.icon}"></i></div>`, iconSize: [44, 44], iconAnchor: [19, 44], popupAnchor: [0, -42] });
   const m = L.marker([alert.lat, alert.lon], {icon});
   const radius=estimatedRadiusMeters(alert);
   L.circle([alert.lat,alert.lon],{radius,color,weight:1.5,opacity:.7,dashArray:alert.precision==='punto'?null:'5 5',fillColor:color,fillOpacity:alert.precision==='punto'?.06:.12,interactive:true}).bindTooltip(`Área estimada · radio ${estimatedRadiusLabel(alert)}`,{direction:'top'}).addTo(alertAreaLayer);
