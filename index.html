@@ -708,7 +708,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
   <div id="panel-ris" class="panel-container">
     <div class="panel-header"><div class="panel-title" style="color:var(--ris)"><i class="fa-solid fa-chart-line"></i> Radar Vial</div></div>
     <div class="panel-body">
-        <div class="ris-controls"><select id="op-ris-state"></select><select id="op-ris-type"><option value="all">Todas las incidencias</option><option value="road">Incidencias viales</option><option value="security">Incidencias de seguridad</option></select><select id="op-ris-time"><option value="0">Todo el periodo</option><option value="6">Últimas 6 horas</option><option value="12">Últimas 12 horas</option><option value="24">Últimas 24 horas</option></select></div>
+        <div class="ris-controls"><select id="op-ris-state"></select><select id="op-ris-type"><option value="all">Todas las incidencias</option><option value="road">Incidencias viales</option><option value="security">Incidencias de seguridad</option></select><select id="op-ris-time"><option value="0">Todo el periodo</option><option value="1">Última hora</option><option value="3">Últimas 3 horas</option><option value="6">Últimas 6 horas</option><option value="12">Últimas 12 horas</option><option value="24">Últimas 24 horas</option></select></div>
         <button class="ris-graph-btn" onclick="graphRis('op')"><i class="fa-solid fa-chart-column"></i> Graficar</button>
         <div class="ris-summary"><div class="ris-stat"><b id="op-ris-total">0</b><span>Total</span></div><div class="ris-stat"><b id="op-ris-road">0</b><span>Viales</span></div><div class="ris-stat"><b id="op-ris-security">0</b><span>Seguridad</span></div></div>
         <div class="chart-container"><canvas id="chartStates"></canvas></div>
@@ -796,6 +796,8 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
         <select id="lp-state" onchange="setState(this.value)" title="Filtrar por estado"></select>
         <select id="lp-range" onchange="setRange(this.value)" title="Ventana de tiempo">
           <option value="0">📅 Toda la jornada</option>
+          <option value="1">🕐 Última hora</option>
+          <option value="3">🕒 Últimas 3 horas</option>
           <option value="6">🕕 Últimas 6 horas</option>
           <option value="12">🕛 Últimas 12 horas</option>
           <option value="24">🗓 Últimas 24 horas</option>
@@ -843,7 +845,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
       </div>
       <div class="pr-sec" data-sec="ris">
         <div class="ris-auto"><i class="fa-solid fa-chart-line"></i><div>Analiza las alertas recibidas por <b>país, estado, categoría y periodo</b>.</div></div>
-        <div class="ris-controls"><select id="u-ris-state"></select><select id="u-ris-type"><option value="all">Todas las incidencias</option><option value="road">Incidencias viales</option><option value="security">Incidencias de seguridad</option></select><select id="u-ris-time"><option value="0">Todo el periodo</option><option value="6">Últimas 6 horas</option><option value="12">Últimas 12 horas</option><option value="24">Últimas 24 horas</option></select></div>
+        <div class="ris-controls"><select id="u-ris-state"></select><select id="u-ris-type"><option value="all">Todas las incidencias</option><option value="road">Incidencias viales</option><option value="security">Incidencias de seguridad</option></select><select id="u-ris-time"><option value="0">Todo el periodo</option><option value="1">Última hora</option><option value="3">Últimas 3 horas</option><option value="6">Últimas 6 horas</option><option value="12">Últimas 12 horas</option><option value="24">Últimas 24 horas</option></select></div>
         <button class="ris-graph-btn" onclick="graphRis('u')"><i class="fa-solid fa-chart-column"></i> Graficar</button>
         <div class="ris-summary"><div class="ris-stat"><b id="u-ris-total">0</b><span>Total</span></div><div class="ris-stat"><b id="u-ris-road">0</b><span>Viales</span></div><div class="ris-stat"><b id="u-ris-security">0</b><span>Seguridad</span></div></div>
         <div id="ris-empty" style="color:#6B7280; font-size:12px; padding:20px 4px; display:none;"><i class="fa-solid fa-inbox"></i> No hay alertas para los filtros elegidos.</div>
