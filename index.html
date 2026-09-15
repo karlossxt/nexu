@@ -244,7 +244,7 @@ body.user-mode #circula{ display:flex; }
 /* ============================================
    NEXUS VIAL v23 · UI CYBERPUNK (MODO USUARIO)
    ============================================ */
-.main-content{ display:flex; flex-direction:row; align-items:stretch; }
+.main-content{ display:flex; flex-direction:row; align-items:stretch; position:relative; }
 #map{ position:relative; inset:auto; flex:1; min-width:0; height:100%; background:#05070A; z-index:1; }
 body.user-mode{ --bg:#05070A; --panel:#0C1017; --border:#1E293B; --text:#ffffff; --text-muted:#9CA3AF; --accent:#2563EB; --danger:#EF4444; --warn:#F97316; --success:#10B981; --critical:#D946EF; --ris:#22d3ee; --glass:rgba(12,16,23,.96); --input-bg:#131822; --card-bg:#131822; --card-hover:#151A22; --log-bg:#0C1017; font-family:'Inter','Segoe UI',sans-serif; }
 body.user-mode #sidebar{ display:none; }
@@ -252,8 +252,9 @@ body.user-mode .panel-container, body.user-mode #panel-launcher{ display:none !i
 body.operator-mode .u-panel, body.operator-mode .u-modal{ display:none !important; }
 
 /* === PANEL LATERAL (IZQUIERDA) === */
-.u-panel{ width:340px; flex-shrink:0; position:relative; z-index:2000; display:flex; flex-direction:column; overflow:hidden; color:#fff; background:linear-gradient(180deg,#0C1017 0%,#080A0F 100%); border-right:1px solid #1E293B; }
-#panel-right{ width:340px; border-right:none; border-left:1px solid #1E293B; background:#05070A; }
+.u-panel{ width:340px; position:absolute; top:14px; bottom:14px; z-index:2000; display:flex; flex-direction:column; overflow:hidden; color:#fff; background:linear-gradient(180deg,#0C1017 0%,#080A0F 100%); border:1px solid #1E293B; border-radius:16px; box-shadow:0 12px 36px rgba(15,23,42,.28); backdrop-filter:blur(14px); }
+#panel-left{ left:14px; }
+#panel-right{ width:360px; right:14px; border:1px solid #1E293B; background:#05070A; }
 .pl-topbar{ display:flex; justify-content:flex-end; padding:6px 10px; }
 .pc-btn{ width:auto; background:transparent; border:none; color:#6B7280; cursor:pointer; font-size:12px; padding:4px 8px; }
 .pc-btn:hover{ color:#2563EB; }
@@ -279,8 +280,8 @@ body.operator-mode .u-panel, body.operator-mode .u-modal{ display:none !importan
 .pc-card b{ display:block; font-size:26px; font-weight:800; line-height:1.1; }
 .pc-card span{ font-size:9.5px; text-transform:uppercase; letter-spacing:.05em; color:#6B7280; font-weight:700; }
 .v-blue{ color:#2563EB; } .v-orange{ color:#F97316; } .v-red{ color:#EF4444; } .v-mag{ color:#D946EF; }
-.pl-filters{ padding:0 14px; }
-.uf-row{ display:flex; align-items:center; gap:9px; background:#131822; border:1px solid #1E293B; border-radius:6px; padding:8px 10px; margin-bottom:6px; font-size:12px; color:#fff; }
+.pl-filters{ padding:0 14px; display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+.uf-row{ display:flex; align-items:center; gap:6px; min-height:38px; box-sizing:border-box; background:#131822; border:1px solid #1E293B; border-radius:8px; padding:7px 8px; margin:0; font-size:11px; color:#fff; }
 .uf-row .dot{ width:8px; height:8px; border-radius:50%; box-shadow:0 0 6px currentColor; }
 .uf-count{ margin-left:auto; color:#9CA3AF; font-size:12px; min-width:26px; text-align:right; }
 .switch{ position:relative; display:inline-block; width:34px; height:18px; flex:0 0 34px; }
@@ -329,6 +330,8 @@ body.left-rail #panel-left .u-rail{ display:flex; }
 .soon-badge{ margin-left:auto; padding:2px 6px; border-radius:10px; background:rgba(245,158,11,.14); color:#D97706; border:1px solid rgba(245,158,11,.32); font-size:8px; font-weight:900; letter-spacing:.04em; text-transform:uppercase; }
 .feature-soon{ opacity:.68; cursor:not-allowed; }
 .feature-soon .switch{ pointer-events:none; }
+.pl-filters .feature-soon .switch{ display:none; }
+.pl-filters .soon-badge{ margin-left:auto; font-size:7px; padding:2px 4px; }
 .future-tools{ display:grid; gap:7px; padding:0 14px 10px; }
 .future-tool{ width:100%; display:grid; grid-template-columns:34px 1fr auto; align-items:center; gap:9px; padding:9px 10px; text-align:left; color:var(--text); background:var(--card-bg); border:1px solid var(--border); border-radius:9px; box-shadow:none; }
 .future-tool:hover{ transform:none; background:var(--card-hover); border-color:rgba(37,99,235,.45); box-shadow:none; }
@@ -464,7 +467,7 @@ body.user-mode .leaflet-control-zoom a:hover{ background:#2563EB; }
 .ris-stat span{ color:var(--text-muted); font-size:9px; font-weight:800; text-transform:uppercase; }
 .ris-chart-title{ color:var(--text-muted); font-size:10px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; margin:12px 0 5px; }
 body.user-mode:not(.dark-mode){ --bg:#EEF3F8; --panel:#FFFFFF; --border:#D8E1EC; --text:#172033; --text-muted:#667085; --accent:#1D65D8; --glass:rgba(255,255,255,.96); --input-bg:#F7F9FC; --card-bg:#FFFFFF; --card-hover:#F3F7FC; --log-bg:#F7F9FC; }
-body.user-mode:not(.dark-mode) .u-panel{ color:#172033; background:linear-gradient(180deg,#FFFFFF 0%,#F7F9FC 100%); border-color:#D8E1EC; }
+body.user-mode:not(.dark-mode) .u-panel{ color:#172033; background:rgba(255,255,255,.94); border-color:#D8E1EC; box-shadow:0 12px 34px rgba(30,64,90,.16); }
 body.user-mode:not(.dark-mode) #panel-right{ background:#F7F9FC; }
 body.user-mode:not(.dark-mode) .pl-brand, body.user-mode:not(.dark-mode) .pc-card b, body.user-mode:not(.dark-mode) .uf-row, body.user-mode:not(.dark-mode) .rm-name, body.user-mode:not(.dark-mode) .rm-col b, body.user-mode:not(.dark-mode) .m-head{ color:#172033; }
 body.user-mode:not(.dark-mode) .pc-card, body.user-mode:not(.dark-mode) .uf-row, body.user-mode:not(.dark-mode) .pr-search, body.user-mode:not(.dark-mode) .rm-card, body.user-mode:not(.dark-mode) .u-modal-card, body.user-mode:not(.dark-mode) .m-x, body.user-mode:not(.dark-mode) .rm-qbtn{ background:#FFFFFF; border-color:#D8E1EC; }
@@ -472,6 +475,10 @@ body.user-mode:not(.dark-mode) .pl-dropdowns select, body.user-mode:not(.dark-mo
 body.user-mode:not(.dark-mode) .alert-card{ background:#FFFFFF; border-color:#D8E1EC; color:#172033; box-shadow:0 3px 12px rgba(15,23,42,.06); }
 body.user-mode:not(.dark-mode) .alert-card:hover{ background:#F7FAFD; }
 body.user-mode:not(.dark-mode) .alert-card b{ color:#172033; }
+body.user-mode:not(.dark-mode) .pl-filters .uf-row:nth-child(1){ color:#9A4A00; background:#FFF4E8; border-color:#FFD3A8; }
+body.user-mode:not(.dark-mode) .pl-filters .uf-row:nth-child(2){ color:#B42318; background:#FFF0F0; border-color:#FFC7C7; }
+body.user-mode:not(.dark-mode) .pl-filters .uf-row:nth-child(3){ color:#B42318; background:#FFF5E6; border-color:#FFD58A; }
+body.user-mode:not(.dark-mode) .pl-filters .uf-row:nth-child(4){ color:#175CD3; background:#EEF4FF; border-color:#B2CCFF; }
 body.user-mode:not(.dark-mode) .leaflet-popup-content-wrapper, body.user-mode:not(.dark-mode) .leaflet-popup-tip{ background:#FFFFFF; color:#172033; }
 body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark-mode) .nv-mtbtn{ background:transparent; color:#334155; border-color:transparent; }
 .nv-maptools{ display:flex; flex-direction:column; gap:4px; padding:5px; border:1px solid var(--border); border-radius:15px; background:var(--glass); box-shadow:0 8px 24px rgba(15,23,42,.18); backdrop-filter:blur(12px); }
@@ -536,6 +543,10 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
 .wg-line{ flex:1; height:1px; background:#1E293B; }
 .wm-foot{ margin-top:auto; padding:18px 0 22px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; font-size:11.5px; color:#6B7280; }
 @media (max-width:800px){ #w-grid{ grid-template-columns:1fr; } #wm-card{ padding:18px 16px 0; } }
+@media (min-width:701px) and (max-width:1100px){
+  #panel-left{ width:300px; }
+  #panel-right{ width:320px; }
+}
 @media (max-width:700px){
   body{ height:100dvh; min-height:100dvh; }
   body.operator-mode{ display:block; padding-bottom:62px; box-sizing:border-box; }
@@ -773,7 +784,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
         <div class="pc-card"><b class="v-red" id="pc-sec">0</b><span>Seguridad</span></div>
         <div class="pc-card"><b class="v-mag" id="pc-imp">0</b><span>Importantes</span></div>
       </div>
-      <div class="pl-section">FILTROS DE RED</div>
+      <div class="pl-section"><i class="fa-solid fa-layer-group"></i> CAPAS DEL MAPA</div>
       <div class="pl-filters">
         <div class="uf-row"><span class="dot" style="background:#F97316;color:#F97316;"></span><span>Viales</span><span class="uf-count" id="nc-road">0</span><label class="switch"><input type="checkbox" checked onchange="setNF('road', this.checked)"><span class="slider" style="--sw:#F97316"></span></label></div>
         <div class="uf-row"><span class="dot" style="background:#EF4444;color:#EF4444;"></span><span>Seguridad</span><span class="uf-count" id="nc-sec">0</span><label class="switch"><input type="checkbox" checked onchange="setNF('security', this.checked)"><span class="slider" style="--sw:#EF4444"></span></label></div>
