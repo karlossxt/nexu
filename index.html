@@ -227,7 +227,7 @@ body.user-mode #userfilter{ position:static; display:flex; gap:6px; padding:0; b
 .fp-section .chart-container{ position:relative; height:200px; width:100%; margin:14px 0; }
 
 /* HOY NO CIRCULA + REPORTE */
-#circula{ display:none; position:absolute; top:68px; left:14px; z-index:5000; padding:8px 16px; border-radius:12px; font-size:13px; font-weight:800; box-shadow:0 6px 20px rgba(0,0,0,.18); backdrop-filter:blur(6px); }
+#circula{ display:none; position:static; align-items:center; min-width:0; max-width:310px; padding:7px 10px; border-radius:11px; font-size:10px; font-weight:800; box-shadow:none; backdrop-filter:blur(6px); cursor:pointer; }
 body.user-mode #circula{ display:flex; }
 #circula.ok{ background:rgba(30,142,62,.15); color:var(--success); border:1px solid rgba(30,142,62,.45); }
 #circula.no{ background:rgba(217,48,37,.15); color:var(--danger); border:1px solid rgba(217,48,37,.45); }
@@ -357,9 +357,7 @@ body.left-rail #panel-left .u-rail{ display:flex; }
 .nv-topbar{ display:none; position:absolute; top:12px; left:14px; right:14px; height:58px; z-index:3600; align-items:center; gap:12px; padding:7px 10px; box-sizing:border-box; border:1px solid var(--border); border-radius:16px; background:var(--glass); box-shadow:0 8px 26px rgba(15,23,42,.16); backdrop-filter:blur(15px); }
 body.user-mode .nv-topbar{ display:flex; }
 body.user-mode .u-panel{ top:84px; }
-body.user-mode #circula{ top:84px; left:14px; width:340px; max-width:340px; min-height:38px; box-sizing:border-box; justify-content:center; }
-body.user-mode #panel-left{ top:132px; }
-body.user-mode.left-rail #circula{ left:76px; width:auto; max-width:340px; }
+body.user-mode #panel-left{ top:84px; }
 body.user-mode.left-rail #panel-left{ top:84px; }
 .nt-brand{ display:flex; align-items:center; gap:9px; min-width:175px; font-weight:900; color:var(--text); }
 .nt-brand i{ width:36px; height:36px; display:grid; place-items:center; border-radius:11px; color:#fff; background:linear-gradient(145deg,#0EA5E9,#2563EB); box-shadow:0 5px 14px rgba(37,99,235,.28); }
@@ -493,9 +491,9 @@ body.user-mode:not(.dark-mode) .ac-location{ color:#667085; }
 .rm-main:hover{ filter:brightness(1.12); }
 
 /* FLOTANTES DEL MAPA */
-#circula{ position:absolute; top:14px; left:348px; z-index:5000; padding:7px 14px; border-radius:10px; font-size:12px; font-weight:800; box-shadow:0 6px 20px rgba(0,0,0,.4); backdrop-filter:blur(6px); cursor:pointer; transition:filter .15s; }
+#circula{ position:static; z-index:5000; padding:7px 10px; border-radius:10px; font-size:10px; font-weight:800; box-shadow:none; backdrop-filter:blur(6px); cursor:pointer; transition:filter .15s; }
 #circula:hover{ filter:brightness(1.15); }
-body.left-rail #circula{ left:56px; }
+#circula-msg{ overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
 .hnc-dot{ width:8px; height:8px; border-radius:50%; background:#6B7280; flex:0 0 auto; }
 .hnc-more{ margin-left:6px; font-size:9px; color:#9CA3AF; }
 .hnc-day{ margin-left:8px; font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#38BDF8; background:rgba(56,189,248,.12); border:1px solid rgba(56,189,248,.3); padding:3px 9px; border-radius:5px; }
@@ -552,8 +550,10 @@ body.user-mode:not(.dark-mode) .alert-card:hover{ background:#F7FAFD; }
 body.user-mode:not(.dark-mode) .alert-card b{ color:#172033; }
 body.user-mode:not(.dark-mode) .pl-filters .uf-row:nth-child(1){ color:#9A4A00; background:#FFF4E8; border-color:#FFD3A8; }
 body.user-mode:not(.dark-mode) .pl-filters .uf-row:nth-child(2){ color:#B42318; background:#FFF0F0; border-color:#FFC7C7; }
-body.user-mode:not(.dark-mode) .pl-filters .uf-row:nth-child(3){ color:#B42318; background:#FFF5E6; border-color:#FFD58A; }
-body.user-mode:not(.dark-mode) .pl-filters .uf-row:nth-child(4){ color:#175CD3; background:#EEF4FF; border-color:#B2CCFF; }
+body.user-mode:not(.dark-mode) .pl-filters .uf-row:nth-child(3){ color:#B42318; background:#FFF0F0; border-color:#FFC7C7; }
+body.user-mode:not(.dark-mode) .pl-filters .uf-row:nth-child(4){ color:#B42318; background:#FFF5E6; border-color:#FFD58A; }
+body.user-mode:not(.dark-mode) .pl-filters .uf-row:nth-child(5){ color:#175CD3; background:#EEF4FF; border-color:#B2CCFF; }
+.blockage-filter{ grid-column:1/-1; }
 body.user-mode:not(.dark-mode) .leaflet-popup-content-wrapper, body.user-mode:not(.dark-mode) .leaflet-popup-tip{ background:#FFFFFF; color:#172033; }
 body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark-mode) .nv-mtbtn{ background:transparent; color:#334155; border-color:transparent; }
 .nv-maptools{ display:flex; flex-direction:column; gap:4px; padding:5px; border:1px solid var(--border); border-radius:15px; background:var(--glass); box-shadow:0 8px 24px rgba(15,23,42,.18); backdrop-filter:blur(12px); }
@@ -623,7 +623,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
 @media (min-width:701px) and (max-width:1100px){
   #panel-left{ width:300px; }
   #panel-right{ width:320px; }
-  body.user-mode #circula{ width:300px; max-width:300px; }
+  .nv-topbar #circula{ width:auto; max-width:250px; }
   .nt-brand{ min-width:auto; }
   .nt-brand strong{ display:none; }
   .nt-btn span:not(.nt-count){ display:none; }
@@ -647,7 +647,6 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
   body.operator-mode .main-content{ height:calc(100dvh - 62px); }
   body.operator-mode .panel-container{ top:8px; left:8px; right:8px; bottom:8px; width:auto; max-height:none; border-radius:14px; }
   body.user-mode #panel-left{ display:none; }
-  body.user-mode #circula, body.user-mode.left-rail #circula{ left:10px; top:10px; width:auto; max-width:calc(100vw - 72px); min-height:0; }
   .nv-topbar{ display:none !important; }
   .focus-banner{ top:10px; left:10px; right:10px; width:auto; min-width:0; transform:none; }
   .fb-action{ display:none; }
@@ -662,7 +661,6 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
   body.user-mode:not(.right-rail) #panel-right .pr-body{ display:flex; min-height:0; }
   body.user-mode:not(.right-rail) #panel-right .pr-sec.active{ width:100%; box-sizing:border-box; }
   body.user-mode:not(.right-rail) #panel-right .u-rail{ display:none; }
-  #circula, body.left-rail #circula{ left:10px; top:10px; max-width:calc(100vw - 72px); font-size:10px; padding:7px 10px; }
   .hnc-more{ display:none; }
   .leaflet-bottom.leaflet-left .nv-maptools{ margin-left:8px; margin-bottom:22px; }
   body.user-mode .leaflet-bottom.leaflet-left,body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:0; }
@@ -764,6 +762,12 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <button class="nt-btn" onclick="openDirModal()"><i class="fa-solid fa-phone-volume"></i><span>Directorio</span></button>
       <button class="nt-btn feature-soon" onclick="showComingSoon('Grupos de operación')"><i class="fa-solid fa-comments"></i><span>Grupos</span></button>
     </nav>
+    <div id="circula" onclick="openHncModal()" title="Ver detalles del Hoy No Circula">
+      <span class="hnc-dot" id="circula-dot"></span>
+      <span id="circula-msg"></span>
+      <span id="circula-count" class="hnc-count"></span>
+      <i class="fa-solid fa-chevron-right hnc-more"></i>
+    </div>
     <div class="nt-actions">
       <button class="nt-btn" onclick="toggleTheme()" title="Cambiar tema"><i class="fa-solid fa-circle-half-stroke"></i></button>
       <button class="nt-btn nt-login" onclick="showComingSoon('Cuentas de usuario')"><i class="fa-solid fa-circle-user"></i><span>Iniciar sesión</span></button>
@@ -881,14 +885,6 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
     </div>
   </div>
 
-  <!-- HOY NO CIRCULA -->
-  <div id="circula" onclick="openHncModal()" title="Toca para ver los detalles del Hoy No Circula">
-    <span class="hnc-dot" id="circula-dot"></span>
-    <span id="circula-msg"></span>
-    <span id="circula-count" class="hnc-count"></span>
-    <i class="fa-solid fa-chevron-right hnc-more"></i>
-  </div>
-
   <!-- PANEL IZQUIERDO: CONTROL Y FILTROS -->
   <aside id="panel-left" class="u-panel">
     <div class="pl-topbar"><button class="pc-btn" onclick="toggleLeft()" title="Colapsar panel"><i class="fa-solid fa-angles-left"></i></button></div>
@@ -915,6 +911,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <div class="pl-filters">
         <div class="uf-row"><span class="dot" style="background:#F97316;color:#F97316;"></span><span>Viales</span><span class="uf-count" id="nc-road">0</span><label class="switch"><input type="checkbox" checked onchange="setNF('road', this.checked)"><span class="slider" style="--sw:#F97316"></span></label></div>
         <div class="uf-row"><span class="dot" style="background:#EF4444;color:#EF4444;"></span><span>Seguridad</span><span class="uf-count" id="nc-sec">0</span><label class="switch"><input type="checkbox" checked onchange="setNF('security', this.checked)"><span class="slider" style="--sw:#EF4444"></span></label></div>
+        <div class="uf-row blockage-filter"><span class="dot" style="background:#E11D48;color:#E11D48;"></span><span>Solo bloqueos</span><span class="uf-count" id="nc-blockages">0</span><label class="switch"><input id="nf-blockages" type="checkbox" onchange="setBlockagesOnly(this.checked)"><span class="slider" style="--sw:#E11D48"></span></label></div>
         <div class="uf-row feature-soon" onclick="showComingSoon('Zonas rojas')"><span class="dot" style="background:#DC2626;color:#DC2626;"></span><span>Zonas rojas</span><span class="soon-badge">Próximamente</span><label class="switch"><input type="checkbox" disabled><span class="slider" style="--sw:#DC2626"></span></label></div>
         <div class="uf-row feature-soon" onclick="showComingSoon('Riesgos viales')"><span class="dot" style="background:#F59E0B;color:#F59E0B;"></span><span>Riesgos viales</span><span class="soon-badge">Próximamente</span><label class="switch"><input type="checkbox" disabled><span class="slider" style="--sw:#F59E0B"></span></label></div>
       </div>
@@ -2476,9 +2473,18 @@ function uxResponsive() {
 }
 window.addEventListener('resize', () => { if(document.body.classList.contains('user-mode')) uxResponsive(); });
 
-const nfState = { road:true, security:true, redZone:false, roadRisk:false };
+const nfState = { road:true, security:true, blockagesOnly:false, redZone:false, roadRisk:false };
 let uType = 'all'; let uState = ''; let uRange = 3; let uSort = 'recent';
 function setNF(kind, on) { nfState[kind] = !!on; rebuildU(); }
+function isBlockageAlert(a) {
+  const text = `${a?.title || ''} ${a?.detail || ''}`.toLowerCase();
+  return /bloqueo|cierre|cerrad[ao]|sin paso|manifestantes|manifestaci[oó]n|protesta|toma de caseta|interrupci[oó]n/.test(text);
+}
+function setBlockagesOnly(on) {
+  nfState.blockagesOnly=!!on;
+  rebuildU();
+  trafficMessage(on ? 'Mostrando únicamente bloqueos y cierres.' : 'Filtro exclusivo de bloqueos desactivado.');
+}
 function setState(v) { uState = v; rebuildU(); }
 function setRange(v) { uRange = +v || 0; rebuildU(); }
 function setFeedSort(v) {
@@ -2498,8 +2504,9 @@ function sortVisibleAlerts(list) {
 }
 function resetUserFilters() {
   uType='all'; uState=''; uRange=3; uSort='recent';
-  nfState.road=true; nfState.security=true; nfState.redZone=false; nfState.roadRisk=false;
+  nfState.road=true; nfState.security=true; nfState.blockagesOnly=false; nfState.redZone=false; nfState.roadRisk=false;
   document.querySelectorAll('.pl-filters input[type="checkbox"]:not(:disabled)').forEach(el => { el.checked=true; });
+  const blockages=document.getElementById('nf-blockages'); if(blockages) blockages.checked=false;
   const values={ 'lp-state':'', 'lp-range':'3', 'feed-search':'', 'feed-sort':'recent' };
   Object.entries(values).forEach(([id,value]) => { const el=document.getElementById(id); if(el) el.value=value; });
   rebuildU();
@@ -2509,6 +2516,7 @@ function matchesFilters(a) {
   if(uType !== 'all' && a.category !== uType) return false;
   if(a.category === 'security' && !nfState.security) return false;
   if(a.category === 'road' && !nfState.road) return false;
+  if(nfState.blockagesOnly && !isBlockageAlert(a)) return false;
   if(uState && !((a.state || '').toLowerCase().includes(uState.toLowerCase()) || (a.location || '').toLowerCase().includes(uState.toLowerCase()))) return false;
   if(uRange > 0 && (Date.now() - new Date(a.time).getTime()) > uRange * 3600 * 1000) return false;
   const qs = document.getElementById('feed-search');
@@ -2520,12 +2528,13 @@ function refreshCounters() {
   const road = alerts.filter(a => a.category === 'road').length;
   const sec = alerts.filter(a => a.category === 'security').length;
   const imp = alerts.filter(a => a.importante).length;
+  const blockages = alerts.filter(isBlockageAlert).length;
   const redZones = criticalPoints.filter(p => riskPointType(p) === 'red_zone').length;
   const roadRisks = criticalPoints.filter(p => riskPointType(p) === 'road_risk').length;
   const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
   set('pc-total', road + sec); set('pc-road', road); set('pc-sec', sec); set('pc-imp', imp);
   set('nv-top-count', road + sec);
-  set('nc-road', road); set('nc-sec', sec); set('nc-imp', redZones); set('nc-risk', roadRisks);
+  set('nc-road', road); set('nc-sec', sec); set('nc-blockages', blockages); set('nc-imp', redZones); set('nc-risk', roadRisks);
 }
 function rebuildU() {
   const fl = document.getElementById('feed-list');
