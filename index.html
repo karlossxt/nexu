@@ -872,7 +872,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
         <select id="lp-range" onchange="setRange(this.value)" title="Ventana de tiempo">
           <option value="0">📅 Toda la jornada</option>
           <option value="1">🕐 Última hora</option>
-          <option value="3">🕒 Últimas 3 horas</option>
+          <option value="3" selected>🕒 Últimas 3 horas</option>
           <option value="6">🕕 Últimas 6 horas</option>
           <option value="12">🕛 Últimas 12 horas</option>
           <option value="24">🗓 Últimas 24 horas</option>
@@ -1504,7 +1504,10 @@ async function parseFeedItems(url) {
         list.forEach(it => {
             const title = it.title || it.description_text || '';
             const content = it.description_text || it.description_html || it.description || it.content || '';
-            if(title && String(content).trim().length >= 15) items.push({ title, content_text: content, source_name: inferSourceName(it, url) });
+            const rawDate = it.published_at || it.pubDate || it.pub_date || it.isoDate || it.date || it.published || it.updated || it.created_at || '';
+            const parsedDate = rawDate && new Date(rawDate);
+            const published_at = parsedDate && Number.isFinite(parsedDate.getTime()) ? parsedDate.toISOString() : '';
+            if(title && String(content).trim().length >= 15) items.push({ title, content_text: content, source_name: inferSourceName(it, url), published_at });
         });
     } else {
         const doc = new DOMParser().parseFromString(trimmed, 'text/xml');
@@ -1514,7 +1517,10 @@ async function parseFeedItems(url) {
             const desc = node.querySelector('description')?.textContent || '';
             const sourceNode = Array.from(node.children).find(el => ['creator','source','author'].includes(el.localName));
             const source = sourceNode?.textContent || '';
-            if(title && desc.trim().length >= 15) items.push({ title, content_text: desc, source_name: inferSourceName({ title, source_name: source }, url) });
+            const dateNode = Array.from(node.children).find(el => ['pubDate','date','published','updated'].includes(el.localName));
+            const parsedDate = dateNode?.textContent && new Date(dateNode.textContent);
+            const published_at = parsedDate && Number.isFinite(parsedDate.getTime()) ? parsedDate.toISOString() : '';
+            if(title && desc.trim().length >= 15) items.push({ title, content_text: desc, source_name: inferSourceName({ title, source_name: source }, url), published_at });
         });
     }
     return items;
@@ -1522,6 +1528,7 @@ async function parseFeedItems(url) {
 
 const SEEN_TTL = 6 * 3600 * 1000; // no reprocesar el mismo título dentro de 6h
 const ALERT_EXPIRE_MS = 8 * 3600 * 1000;
+const FEED_MAX_AGE_MS = 24 * 3600 * 1000; // nunca convertir noticias de otros días en alertas nuevas
 function isAlertExpired(a) { try { return Date.now() - new Date(a.time).getTime() > ALERT_EXPIRE_MS; } catch(e) { return false; } }
 function isSeen(key) {
   try {
@@ -1557,20 +1564,27 @@ async function fetchCycles(pri, sec) {
     const uniqueItems = new Set();
     let added = 0;
     let skippedNoise = 0;
+    let skippedOld = 0;
     for(const item of combinedItems) {
         if(added >= 10) break; // máx. 10 análisis de Groq por ciclo
         const body = String(item.content_text || item.description || '').replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim();
         const title = String(item.title || '').replace(/\s+/g, ' ').trim();
         if(title.length < 8 || body.length < 15) { skippedNoise++; continue; }
+        const publishedAt = item.published_at ? new Date(item.published_at) : null;
+        if(publishedAt && Number.isFinite(publishedAt.getTime())) {
+            const age = Date.now() - publishedAt.getTime();
+            if(age > FEED_MAX_AGE_MS || age < -30 * 60 * 1000) { skippedOld++; continue; }
+        }
         const text = `${title}. ${body}`.slice(0, 450);
         if(!feedIsRelevant(text)) { skippedNoise++; continue; }
         if(!uniqueItems.has(item.title) && !isSeen(item.title)) {
             uniqueItems.add(item.title);
-            processingQueue.push({ key: item.title, text, sourceName: inferSourceName(item) });
+            processingQueue.push({ key: item.title, text, sourceName: inferSourceName(item), publishedAt: publishedAt && Number.isFinite(publishedAt.getTime()) ? publishedAt.toISOString() : '' });
             added++;
         }
     }
     if(skippedNoise) log(`🗑️ Filtro: ${skippedNoise} noticias irrelevantes (Otros países / no vial).`, 'info');
+    if(skippedOld) log(`🕓 Filtro temporal: ${skippedOld} publicaciones antiguas descartadas antes del análisis IA.`, 'info');
     if(added) log(`📦 Cola: ${added} noticias nuevas para analizar.`, 'info');
     
     if(processingQueue.length > 0) {
@@ -1584,7 +1598,7 @@ async function fetchCycles(pri, sec) {
 async function processQueue() {
     if(processingQueue.length === 0) { isProcessing = false; return; }
     isProcessing = true; const job = processingQueue.shift();
-    try { await processAlert(job.key, job.text, job.sourceName); } catch(e) { log(`❌ Cola: ${String((e && e.message) || e)}`, 'warn'); unsee(job.key); }
+    try { await processAlert(job.key, job.text, job.sourceName, job.publishedAt); } catch(e) { log(`❌ Cola: ${String((e && e.message) || e)}`, 'warn'); unsee(job.key); }
     setTimeout(processQueue, 4500); 
 }
 
@@ -1727,7 +1741,7 @@ function geocodeCorridor(text) {
   if(!p) return null;
   return { lat: p.lat, lon: p.lon, km: km, prec: km !== null ? 'kilometro' : 'tramo', corridor: c.name, confidence: km !== null ? 0.90 : 0.66, provider: 'red_vial' };
 }
-async function processAlert(key, text, sourceName='Fuente RSS') {
+async function processAlert(key, text, sourceName='Fuente RSS', publishedAt='') {
   const prompt = `Clasifica este texto. Rechaza si no es un incidente en México o no tiene ubicación clara. Extrae literalmente carretera, kilómetro, sentido, cruce/caseta/entronque y municipio cuando existan; usa cadena vacía si no aparecen. Categoría: road=accidente/cierre/congestión; security=asalto/bloqueo/balacera/manifestación/operativo. importante=true solo con riesgo alto. trafico: fluido, moderado o detenido para road; null para security. No inventes datos. Devuelve solo JSON válido: {"valido":false,"ubicacion":"","referencia":"","carretera":"","kilometro":"","sentido":"","municipio":"","estado":"","categoria":"road","resumen":"","trafico":null,"detail":"","importante":false}. resumen corto; detail fiel, máximo 280 caracteres. TEXTO: ${text}`;
   const rawResponse = await consultGroq(prompt, null, 320);
   if(!rawResponse) { log(`❌ La IA no respondió para: ${text.slice(0, 70)}... Reintentaré el próximo ciclo.`, 'warn'); unsee(key); return; }
@@ -1764,7 +1778,9 @@ async function processAlert(key, text, sourceName='Fuente RSS') {
     }
     if(!isInMexico(loc.lat, loc.lon)) { log(`🚫 Fuera de México: ${data.resumen}`, 'warn'); return; }
     const isDup = alerts.some(a => Math.abs(a.lat - loc.lat) < 0.0001 && Math.abs(a.lon - loc.lon) < 0.0001); if(isDup) return;
-    const alertObj = { id: Date.now(), lat: loc.lat, lon: loc.lon, category: data.categoria, title: data.resumen, location: data.ubicacion || data.referencia || data.municipio || estado, state: estado, precision: loc.prec, corridor: loc.corridor || null, km: cc?.km ?? data.kilometro ?? null, direction: data.sentido || '', location_confidence: loc.confidence || 0.5, location_provider: loc.provider || 'local', road_snapped: !!loc.roadSnapped, time: new Date(), trafico: data.trafico || null, detail: data.detail.slice(0, 280), importante: !!data.importante, source_type: 'media', source_name: sourceName || 'Fuente RSS', verification_status: 'verified', liked: false };
+    const sourceDate = publishedAt && new Date(publishedAt);
+    const alertTime = sourceDate && Number.isFinite(sourceDate.getTime()) ? sourceDate : new Date();
+    const alertObj = { id: Date.now(), lat: loc.lat, lon: loc.lon, category: data.categoria, title: data.resumen, location: data.ubicacion || data.referencia || data.municipio || estado, state: estado, precision: loc.prec, corridor: loc.corridor || null, km: cc?.km ?? data.kilometro ?? null, direction: data.sentido || '', location_confidence: loc.confidence || 0.5, location_provider: loc.provider || 'local', road_snapped: !!loc.roadSnapped, time: alertTime, published_at: alertTime.toISOString(), trafico: data.trafico || null, detail: data.detail.slice(0, 280), importante: !!data.importante, source_type: 'media', source_name: sourceName || 'Fuente RSS', verification_status: 'verified', liked: false };
     alerts.push(alertObj); addMarkerToMap(alertObj); updateLists(); persistAlerts(); log(`✅ ALERTA [${data.categoria}]${loc.prec !== 'punto' ? ' (aprox: ' + loc.prec + ')' : ''}: ${data.resumen} @ ${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}`, 'success');
     if(data.importante) notifyImportant(alertObj);
     if(processingQueue.length === 0 && !document.getElementById('panel-ris').classList.contains('active')) map.panTo([loc.lat, loc.lon]);
@@ -2367,7 +2383,7 @@ function uxResponsive() {
 window.addEventListener('resize', () => { if(document.body.classList.contains('user-mode')) uxResponsive(); });
 
 const nfState = { road:true, security:true, redZone:false, roadRisk:false };
-let uType = 'all'; let uState = ''; let uRange = 0; let uSort = 'recent';
+let uType = 'all'; let uState = ''; let uRange = 3; let uSort = 'recent';
 function setNF(kind, on) { nfState[kind] = !!on; rebuildU(); }
 function setState(v) { uState = v; rebuildU(); }
 function setRange(v) { uRange = +v || 0; rebuildU(); }
@@ -2387,10 +2403,10 @@ function sortVisibleAlerts(list) {
   });
 }
 function resetUserFilters() {
-  uType='all'; uState=''; uRange=0; uSort='recent';
+  uType='all'; uState=''; uRange=3; uSort='recent';
   nfState.road=true; nfState.security=true; nfState.redZone=false; nfState.roadRisk=false;
   document.querySelectorAll('.pl-filters input[type="checkbox"]:not(:disabled)').forEach(el => { el.checked=true; });
-  const values={ 'lp-state':'', 'lp-range':'0', 'feed-search':'', 'feed-sort':'recent' };
+  const values={ 'lp-state':'', 'lp-range':'3', 'feed-search':'', 'feed-sort':'recent' };
   Object.entries(values).forEach(([id,value]) => { const el=document.getElementById(id); if(el) el.value=value; });
   rebuildU();
   trafficMessage('Filtros restablecidos.');
