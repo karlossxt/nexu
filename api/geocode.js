@@ -26,6 +26,17 @@ function confidenceFor(result) {
   return Math.max(0.20, score);
 }
 
+function normalizeState(value) {
+  const key = String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const aliases = {
+    cdmx: 'ciudaddemexico', distritofederal: 'ciudaddemexico',
+    edomex: 'mexico', estadodemexico: 'mexico',
+    nuevoleon: 'nuevoleon', sanluispotosi: 'sanluispotosi',
+    michoacan: 'michoacan', queretaro: 'queretaro'
+  };
+  return aliases[key] || key;
+}
+
 function pruneCache() {
   if (cache.size < 500) return;
   const now = Date.now();
@@ -45,6 +56,7 @@ module.exports = async (req, res) => {
   if (rateLimited(remoteIp(req))) return res.status(429).json({ error: 'demasiadas peticiones' });
 
   const query = String((req.query && req.query.q) || '').replace(/\s+/g, ' ').trim();
+  const expectedState = String((req.query && req.query.state) || '').replace(/\s+/g, ' ').trim();
   const snap = String((req.query && req.query.snap) || '') === '1';
   if (query.length < 3 || query.length > 240) return res.status(400).json({ error: 'consulta inválida' });
 
@@ -64,6 +76,11 @@ module.exports = async (req, res) => {
     if (!upstream.ok || body.status === 'REQUEST_DENIED') return res.status(502).json({ error: 'google_rechazado', providerStatus: body.status });
     const result = body.results && body.results[0];
     if (!result) return res.status(404).json({ error: 'sin_resultados', providerStatus: body.status });
+    const stateComponent = (result.address_components || []).find(c => (c.types || []).includes('administrative_area_level_1'));
+    const resolvedState = stateComponent && stateComponent.long_name || '';
+    if (expectedState && resolvedState && normalizeState(expectedState) !== normalizeState(resolvedState)) {
+      return res.status(409).json({ error: 'estado_no_coincide', expected_state: expectedState, resolved_state: resolvedState });
+    }
 
     let lat = Number(result.geometry.location.lat);
     let lon = Number(result.geometry.location.lng);
@@ -92,6 +109,7 @@ module.exports = async (req, res) => {
       formatted_address: result.formatted_address || query,
       location_type: result.geometry.location_type || 'APPROXIMATE',
       partial_match: !!result.partial_match,
+      resolved_state: resolvedState,
       road_snapped: roadSnapped,
       confidence: Number(confidence.toFixed(2))
     };
