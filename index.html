@@ -384,19 +384,47 @@ body.user-mode.left-rail #panel-left{ top:84px; }
 #feed-empty{ text-align:center; color:#6B7280; padding:44px 10px; }
 #feed-empty i{ font-size:40px; color:#1E293B; margin-bottom:12px; }
 .pr-foot{ padding:12px; border-top:1px solid #1E293B; }
-.pr-gps{ width:100%; background:#2563EB; border:none; color:#fff; padding:13px; border-radius:8px; font-weight:800; font-size:12px; letter-spacing:.04em; cursor:pointer; box-shadow:0 0 18px rgba(37,99,235,.35); }
-.pr-gps small{ display:block; font-weight:600; font-size:10px; opacity:.7; margin-top:3px; }
+.pr-gps{ --gps-color:#64748B; width:100%; display:grid; grid-template-columns:34px 1fr auto; align-items:center; gap:9px; text-align:left; background:var(--card-bg); border:1px solid var(--border); color:var(--text); padding:9px 10px; border-radius:11px; cursor:pointer; box-shadow:none; }
+.pr-gps:hover{ background:var(--card-hover); border-color:color-mix(in srgb,var(--gps-color) 45%,var(--border)); box-shadow:none; }
+.gps-icon{ width:34px; height:34px; display:grid; place-items:center; border-radius:10px; color:var(--gps-color); background:color-mix(in srgb,var(--gps-color) 12%,transparent); font-size:14px; }
+.gps-copy{ min-width:0; }
+.gps-copy b{ display:block; color:var(--text); font-size:11px; letter-spacing:.02em; }
+.gps-copy small{ display:block; margin-top:2px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; color:var(--text-muted); font-weight:600; font-size:9px; }
+.gps-status-dot{ width:9px; height:9px; border-radius:50%; background:var(--gps-color); box-shadow:0 0 0 4px color-mix(in srgb,var(--gps-color) 12%,transparent); }
+.pr-gps.searching{ --gps-color:#F59E0B; }
+.pr-gps.searching .gps-icon i{ animation:gpsSpin 1.2s linear infinite; }
+.pr-gps.active{ --gps-color:#10B981; border-color:rgba(16,185,129,.38); }
+.pr-gps.error{ --gps-color:#EF4444; }
+@keyframes gpsSpin{ to{ transform:rotate(360deg); } }
 body.right-rail #panel-right{ width:48px; }
 body.right-rail #panel-right .pr-top, body.right-rail #panel-right .pr-body, body.right-rail #panel-right .pr-foot{ display:none; }
 #panel-right .u-rail{ position:absolute; top:0; left:0; width:100%; }
 body.right-rail #panel-right .u-rail{ display:flex; }
 
 /* TARJETAS DE ALERTA (modo usuario) */
-body.user-mode .alert-card{ background:#131822; border:1px solid #1E293B; border-left:4px solid #F97316; color:#fff; border-radius:8px; padding:10px 12px; }
-body.user-mode .alert-card.type-security{ border-left-color:#EF4444; }
-body.user-mode .alert-card:hover{ background:#151A22; transform:translateX(2px); }
-body.user-mode .alert-card b{ color:#fff; }
-body.user-mode .alert-card div, body.user-mode .alert-card span{ color:#9CA3AF; }
+body.user-mode .alert-card{ --incident:#F97316; background:#131822; border:1px solid #1E293B; border-left:4px solid var(--incident); color:#fff; border-radius:11px; padding:11px; box-shadow:0 4px 14px rgba(0,0,0,.12); }
+body.user-mode .alert-card.type-security{ --incident:#EF4444; }
+body.user-mode .alert-card:hover{ background:#151A22; border-color:color-mix(in srgb,var(--incident) 38%,#1E293B); transform:translateY(-1px); box-shadow:0 8px 20px rgba(0,0,0,.18); }
+.ac-head{ display:grid; grid-template-columns:34px 1fr auto; gap:9px; align-items:center; margin-bottom:8px; }
+.ac-icon{ width:34px; height:34px; display:grid; place-items:center; border-radius:10px; color:var(--incident) !important; background:color-mix(in srgb,var(--incident) 13%,transparent); font-size:14px; }
+.ac-kind{ min-width:0; }
+.ac-kind b{ display:block; color:var(--incident) !important; font-size:9px; line-height:1.15; letter-spacing:.055em; text-transform:uppercase; }
+.ac-kind time{ display:block; margin-top:3px; color:var(--text-muted); font-size:9px; }
+.ac-title{ display:block; color:#fff !important; font-size:12px; line-height:1.36; margin-bottom:5px; }
+.ac-location{ display:flex; align-items:flex-start; gap:5px; color:#9CA3AF; font-size:10px; line-height:1.35; }
+.ac-location i{ margin-top:2px; color:var(--incident); }
+.ac-tags{ display:flex; align-items:center; flex-wrap:wrap; gap:5px; margin-top:8px; padding-top:8px; border-top:1px solid rgba(148,163,184,.12); }
+.ac-tags .precision-chip,.ac-tags .distance-chip,.ac-tags .traffic-chip{ margin:0; }
+.ac-source{ display:flex; align-items:center; min-width:0; gap:5px; margin-top:8px; color:var(--text-muted); font-size:9px; }
+.ac-source span:first-of-type{ overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.ac-source > i{ color:#60A5FA; }
+.ac-actions{ margin-left:auto; display:flex; gap:3px; }
+.ac-action{ width:27px; height:27px; padding:0; display:grid; place-items:center; border-radius:8px; color:var(--text-muted); background:transparent; border:1px solid transparent; box-shadow:none; }
+.ac-action:hover{ color:var(--incident); background:color-mix(in srgb,var(--incident) 10%,transparent); border-color:color-mix(in srgb,var(--incident) 22%,transparent); box-shadow:none; }
+.ac-action.share{ color:#22C55E; }
+.ac-action.delete:hover{ color:#EF4444; background:rgba(239,68,68,.10); border-color:rgba(239,68,68,.2); }
+body.user-mode:not(.dark-mode) .ac-title{ color:#172033 !important; }
+body.user-mode:not(.dark-mode) .ac-location{ color:#667085; }
 
 /* MODALES CYBERPUNK */
 .u-modal{ display:none; position:fixed; inset:0; z-index:12000; background:rgba(2,4,8,.72); align-items:center; justify-content:center; padding:16px; }
@@ -629,6 +657,10 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
   .alert-card{ min-height:44px; }
   .card-actions{ gap:5px; }
   .btn-heart,.btn-whatsapp-alert,.btn-delete-alert{ width:32px; height:32px; }
+  .ac-action{ width:34px; height:34px; }
+  .ac-tags{ gap:4px; }
+  .ac-tags .card-nav{ min-height:30px; padding:5px 8px; }
+  .pr-gps{ min-height:56px; }
   .u-modal{ align-items:flex-end; padding:0; }
   .u-modal-card{ max-width:none; max-height:90dvh; border-radius:18px 18px 0 0; padding-bottom:env(safe-area-inset-bottom); }
   .rm-fields{ flex-direction:column; }
@@ -938,9 +970,10 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
       </div>
     </div>
     <div class="pr-foot">
-      <button class="pr-gps" onclick="gpsTrack()" title="Seguimiento GPS en vivo">
-        <i class="fa-solid fa-satellite-dish"></i> SEGUIMIENTO GPS: <span id="gps-state">ACTIVO</span>
-        <small>Aprieta para centrar en tu ubicación · 2ª vez = trazar ruta desde aquí</small>
+      <button id="gps-panel-button" class="pr-gps" onclick="toggleGpsTracking()" title="Activar ubicación para ordenar alertas cercanas" aria-pressed="false">
+        <span class="gps-icon"><i class="fa-solid fa-location-crosshairs"></i></span>
+        <span class="gps-copy"><b id="gps-state">Ubicación desactivada</b><small id="gps-detail">Actívala para ver alertas cercanas</small></span>
+        <span class="gps-status-dot" aria-hidden="true"></span>
       </button>
     </div>
     <div class="u-rail">
@@ -1854,6 +1887,16 @@ function incidentVisual(alert) {
   if(/tráfico|trafico|congesti|carga vehicular/.test(text)) return { color:'#D97706', icon:'fa-car-side', label:'Tráfico' };
   return alert.category === 'security' ? { color:'#DC2626', icon:'fa-user-shield', label:'Seguridad' } : { color:'#F97316', icon:'fa-triangle-exclamation', label:'Incidencia vial' };
 }
+function formatRelativeAlertTime(value) {
+  const stamp = new Date(value).getTime();
+  if(!Number.isFinite(stamp)) return 'Hora no disponible';
+  const minutes = Math.max(0, Math.floor((Date.now() - stamp) / 60000));
+  if(minutes < 1) return 'Hace un momento';
+  if(minutes < 60) return `Hace ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if(hours < 24) return `Hace ${hours} h`;
+  return new Date(stamp).toLocaleDateString('es-MX', { day:'numeric', month:'short' });
+}
 function addMarkerToMap(alert) {
   const isSec = alert.category === 'security';
   const expired = isAlertExpired(alert);
@@ -1877,14 +1920,21 @@ function addMarkerToMap(alert) {
 }
 function alertCardHTML(a) {
   const t = trafficStyle(a.trafico || 'moderado');
-  const trafficChip = a.category === 'road' && a.trafico ? `<div><span class="traffic-chip" style="background:${t.bg}; color:${t.color};">${t.label}</span></div>` : '';
-  const stale = isAlertExpired(a) ? `<div><span class="traffic-chip" style="background:rgba(154,160,166,.2); color:#80868b;">🕓 Hace más de 8h</span></div>` : '';
+  const visual = incidentVisual(a);
+  const trafficChip = a.category === 'road' && a.trafico ? `<span class="traffic-chip" style="background:${t.bg}; color:${t.color};">${t.label}</span>` : '';
+  const stale = isAlertExpired(a) ? `<span class="traffic-chip" style="background:rgba(154,160,166,.2); color:#80868b;">Alerta anterior</span>` : '';
   const distance = alertDistanceKm(a);
-  const locationMeta = `<div class="location-meta"><span class="precision-chip"><i class="fa-solid fa-location-dot"></i> ${precisionLabel(a)}</span>${distance === null ? '' : `<span class="distance-chip"><i class="fa-solid fa-route"></i> ${distance < 10 ? distance.toFixed(1) : Math.round(distance)} km de ti</span>`}<button class="card-nav" onclick="event.stopPropagation(); navigateToAlert(${a.id})"><i class="fa-solid fa-diamond-turn-right"></i> Ir</button></div>`;
+  const distanceChip = distance === null ? '' : `<span class="distance-chip"><i class="fa-solid fa-route"></i> ${distance < 10 ? distance.toFixed(1) : Math.round(distance)} km</span>`;
   return `
-    <div style="display:flex; justify-content:space-between; align-items:start;"><b>${a.title}</b>
-    <div class="card-actions"><button onclick="event.stopPropagation(); toggleLike(${a.id})" id="btn-heart-${a.id}" class="btn-heart${a.liked ? ' liked' : ''}" title="Me gusta / Detalle"><i class="fa-solid fa-heart"></i></button><button onclick="event.stopPropagation(); shareAlert(${a.id})" class="btn-whatsapp-alert" title="Compartir"><i class="fa-brands fa-whatsapp"></i></button><button onclick="event.stopPropagation(); removeAlert(${a.id})" class="btn-delete-alert" title="Eliminar">X</button></div></div>
-    <div style="font-size:11px;color:var(--text-muted)">${a.location}</div>${locationMeta}${trafficChip}${stale}<div class="alert-source"><i class="fa-solid fa-circle-info"></i> ${alertSourceLabel(a)}</div>
+    <div class="ac-head">
+      <span class="ac-icon" style="--incident:${visual.color}"><i class="fa-solid ${visual.icon}"></i></span>
+      <span class="ac-kind"><b style="color:${visual.color}!important">${visual.label}</b><time datetime="${new Date(a.time).toISOString()}">${formatRelativeAlertTime(a.time)}</time></span>
+      ${a.importante ? '<span class="traffic-chip" style="background:rgba(239,68,68,.12);color:#EF4444">Importante</span>' : ''}
+    </div>
+    <b class="ac-title">${a.title}</b>
+    <div class="ac-location"><i class="fa-solid fa-location-dot"></i><span>${a.location || 'Ubicación aproximada'}</span></div>
+    <div class="ac-tags"><span class="precision-chip"><i class="fa-solid fa-crosshairs"></i> ${precisionLabel(a)}</span>${distanceChip}${trafficChip}${stale}<button class="card-nav" onclick="event.stopPropagation(); navigateToAlert(${a.id})"><i class="fa-solid fa-diamond-turn-right"></i> Ir</button></div>
+    <div class="ac-source"><i class="fa-solid fa-circle-info"></i><span>${alertSourceLabel(a)}</span><span class="ac-actions"><button onclick="event.stopPropagation(); toggleLike(${a.id})" id="btn-heart-${a.id}" class="ac-action${a.liked ? ' liked' : ''}" title="Guardar alerta" aria-label="Guardar alerta"><i class="fa-solid fa-heart"></i></button><button onclick="event.stopPropagation(); shareAlert(${a.id})" class="ac-action share" title="Compartir" aria-label="Compartir alerta"><i class="fa-brands fa-whatsapp"></i></button><button onclick="event.stopPropagation(); removeAlert(${a.id})" class="ac-action delete" title="Eliminar" aria-label="Eliminar alerta"><i class="fa-solid fa-xmark"></i></button></span></div>
   `;
 }
 function makeAlertCard(a) {
@@ -2904,26 +2954,53 @@ function useCurrentLocationForRoute() {
   }, () => { if(btn) { btn.disabled=false; btn.innerHTML='<i class="fa-solid fa-location-crosshairs"></i> Reintentar ubicación'; } }, {enableHighAccuracy:true,timeout:10000,maximumAge:60000});
 }
 let gpsWatchId = null; let myPosition = null;
+function setGpsUi(state, detail='') {
+  const panel=document.getElementById('gps-panel-button');
+  const label=document.getElementById('gps-state');
+  const sub=document.getElementById('gps-detail');
+  if(panel) {
+    panel.classList.toggle('searching', state === 'searching');
+    panel.classList.toggle('active', state === 'active');
+    panel.classList.toggle('error', state === 'error');
+    panel.setAttribute('aria-pressed', state === 'active' ? 'true' : 'false');
+  }
+  const copy = {
+    idle:['Ubicación desactivada','Actívala para ver alertas cercanas'],
+    searching:['Buscando tu ubicación','Acepta el permiso del navegador'],
+    active:['Ubicación activa',detail || 'Ordenando alertas por cercanía'],
+    error:['No pudimos ubicarte',detail || 'Revisa el permiso de ubicación']
+  }[state] || ['Ubicación desactivada','Actívala para ver alertas cercanas'];
+  if(label) label.textContent=copy[0];
+  if(sub) sub.textContent=copy[1];
+}
+function toggleGpsTracking() { if(gpsWatchId !== null) stopGps(); else gpsTrack(); }
 function gpsTrack() {
   if(!map) return;
-  if(!navigator.geolocation) { openRouteModal(); return; }
+  if(!navigator.geolocation) { setGpsUi('error','Tu navegador no ofrece geolocalización'); return; }
+  setGpsUi('searching');
   const got = (pos) => {
     myPosition = { lat: pos.coords.latitude, lon: pos.coords.longitude };
     const gpsBtn=document.getElementById('gps-toggle'); if(gpsBtn){ gpsBtn.classList.add('active'); gpsBtn.setAttribute('aria-pressed','true'); gpsBtn.dataset.label='GPS activo'; }
-    const el = document.getElementById('gps-state'); if(el) el.textContent = 'AQUÍ: ' + myPosition.lat.toFixed(3) + ', ' + myPosition.lon.toFixed(3);
+    const accuracy=Math.round(pos.coords.accuracy || 0);
+    setGpsUi('active', accuracy ? `Precisión aproximada: ${accuracy} m` : 'Alertas cercanas disponibles');
     const stopBtn = `<button onclick="stopGps()" style="margin:4px 0 0 4px; padding:5px 10px; border:none; border-radius:6px; background:#1E293B; color:#9CA3AF; cursor:pointer; font-size:11px;"><i class="fa-solid fa-xmark"></i> Detener</button>`;
     map.openPopup(`<b style="color:#2563EB"><i class="fa-solid fa-location-crosshairs"></i> Tu ubicación</b><br><button onclick="showComingSoon('Planificador de rutas')" style="margin-top:8px; width:100%; padding:7px 10px; border:1px solid #F59E0B; border-radius:6px; background:rgba(245,158,11,.12); color:#D97706; cursor:pointer; font-size:12px; font-weight:700;"><i class="fa-solid fa-hourglass-half"></i> Rutas · Próximamente</button>${stopBtn}`, [myPosition.lat, myPosition.lon]);
     map.setView([myPosition.lat, myPosition.lon], 14);
     rebuildU();
   };
-  if(gpsWatchId !== null) { got({ coords: { latitude: myPosition.lat, longitude: myPosition.lon } }); return; }
-  navigator.geolocation.getCurrentPosition(got, () => { openRouteModal(); }, { enableHighAccuracy: true, timeout: 8000 });
-  gpsWatchId = navigator.geolocation.watchPosition(got, null, { enableHighAccuracy: true, maximumAge: 3000 });
+  if(gpsWatchId !== null) { if(myPosition) got({ coords: { latitude: myPosition.lat, longitude: myPosition.lon, accuracy:0 } }); return; }
+  const failed = err => {
+    const msg = err?.code === 1 ? 'Permiso de ubicación denegado' : err?.code === 3 ? 'La ubicación tardó demasiado' : 'Ubicación no disponible';
+    setGpsUi('error', msg);
+    if(gpsWatchId !== null) { navigator.geolocation.clearWatch(gpsWatchId); gpsWatchId=null; }
+  };
+  gpsWatchId = navigator.geolocation.watchPosition(got, failed, { enableHighAccuracy: true, maximumAge: 3000, timeout:15000 });
 }
 function stopGps() {
   if(gpsWatchId !== null) { navigator.geolocation.clearWatch(gpsWatchId); gpsWatchId = null; }
   const gpsBtn=document.getElementById('gps-toggle'); if(gpsBtn){ gpsBtn.classList.remove('active'); gpsBtn.setAttribute('aria-pressed','false'); gpsBtn.dataset.label='Mi ubicación'; }
-  const el = document.getElementById('gps-state'); if(el) el.textContent = 'ACTIVO';
+  setGpsUi('idle');
+  rebuildU();
 }
 async function traceFromHere() {
   if(!myPosition) return;
