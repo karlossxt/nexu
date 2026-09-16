@@ -92,6 +92,13 @@ function sourceName(it, feedUrl) {
   try { return new URL(feedUrl).hostname.replace(/^www\./, '').slice(0, 80); } catch (e) { return 'Fuente RSS'; }
 }
 
+function itemDate(it) {
+  const raw = it && (it.published_at || it.pubDate || it.pub_date || it.isoDate || it.date || it.published || it.updated || it.created_at);
+  if (!raw) return '';
+  const parsed = new Date(raw);
+  return Number.isFinite(parsed.getTime()) ? parsed.toISOString() : '';
+}
+
 function parseRssItems(raw) {
   const trimmed = raw.trim();
   if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
@@ -108,7 +115,8 @@ function parseRssItems(raw) {
       .map(it => ({
         title: String(it.title || it.description_text || '').trim(),
         content_text: String(it.description_text || it.description_html || it.description || it.content || '').trim(),
-        source_name: String(it.source_name || it.source || it.author || '').trim().slice(0, 80)
+        source_name: String(it.source_name || it.source || it.author || '').trim().slice(0, 80),
+        published_at: itemDate(it)
       }));
   }
 
@@ -121,7 +129,10 @@ function parseRssItems(raw) {
     if (title) items.push({
       title,
       content_text: stripHtml(tag(/<description[^>]*>([\s\S]*?)<\/description>/i, block)),
-      source_name: cleanSourceName(tag(/<(?:dc:creator|source|author)[^>]*>([\s\S]*?)<\/(?:dc:creator|source|author)>/i, block))
+      source_name: cleanSourceName(tag(/<(?:dc:creator|source|author)[^>]*>([\s\S]*?)<\/(?:dc:creator|source|author)>/i, block)),
+      published_at: itemDate({
+        pubDate: stripHtml(tag(/<(?:pubDate|dc:date|published|updated)[^>]*>([\s\S]*?)<\/(?:pubDate|dc:date|published|updated)>/i, block))
+      })
     });
   }
   return items.slice(0, MAX_OUT);
