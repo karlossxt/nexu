@@ -555,6 +555,8 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
 .traffic-legend span{ display:flex; align-items:center; gap:4px; white-space:nowrap; }
 .traffic-line{ width:18px; height:4px; border-radius:4px; display:inline-block; }
 .leaflet-bottom.leaflet-left .nv-maptools{ margin-left:14px; margin-bottom:14px; }
+body.user-mode .leaflet-bottom.leaflet-left{ margin-left:346px; transition:margin-left .25s ease; }
+body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
 
 /* === MODULO CLIMA VIAL (TRAMOS CARRETEROS) === */
 #weather-modal{ background:#0B0F17; padding:0; }
@@ -645,6 +647,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
   #circula, body.left-rail #circula{ left:10px; top:10px; max-width:calc(100vw - 72px); font-size:10px; padding:7px 10px; }
   .hnc-more{ display:none; }
   .leaflet-bottom.leaflet-left .nv-maptools{ margin-left:8px; margin-bottom:22px; }
+  body.user-mode .leaflet-bottom.leaflet-left,body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:0; }
   .nv-maptools{ flex-direction:row; padding:4px; gap:2px; border-radius:14px; }
   .nv-mtbtn{ width:44px; height:44px; font-size:16px; }
   .nv-mtbtn::after{ display:none; }
@@ -1215,6 +1218,7 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
 const LINKS = {
   tilesLight: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=cb1_317y_1_f7f06d935a7e5545cf55ebba',
   tilesDark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png?key=cb1_317y_1_f7f06d935a7e5545cf55ebba',
+  tilesSatellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
   nominatim: 'https://nominatim.openstreetmap.org/search?format=json&q={q}&limit=1&countrycodes=mx',
   photon: 'https://photon.komoot.io/api/?q={q}&limit=1&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village',
   rssProxyJson: 'https://api.rss2json.com/v1/api.json?rss_url={u}',
@@ -1279,13 +1283,35 @@ function renderChartsInto(canvasSId, canvasTId, states, types) {
 // MAPA
 const lightLayer = L.tileLayer(LINKS.tilesLight, { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attributions">CARTO</a>', subdomains: 'abcd', maxZoom: 20 });
 const darkLayer = L.tileLayer(LINKS.tilesDark, { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attributions">CARTO</a>', subdomains: 'abcd', maxZoom: 20 });
+const satelliteLayer = L.tileLayer(LINKS.tilesSatellite, { attribution: 'Imágenes &copy; Esri', maxZoom: 19 });
+let baseMapMode = localStorage.getItem('nv_base_map') === 'satellite' ? 'satellite' : 'streets';
 const map = L.map('map', { zoomControl: false }).setView([19.4326, -99.1332], 5);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
-L.Control.MapTools = L.Control.extend({ options: { position: 'bottomleft' }, onAdd() { const div = L.DomUtil.create('div', 'nv-maptools'); div.setAttribute('role','toolbar'); div.setAttribute('aria-label','Herramientas del mapa'); div.innerHTML = '<button id="gps-toggle" class="nv-mtbtn" onclick="gpsTrack()" title="Mi ubicación" data-label="Mi ubicación" aria-label="Activar mi ubicación" aria-pressed="false"><i class="fa-solid fa-location-crosshairs"></i></button><button class="nv-mtbtn" onclick="map.setView([23.6345,-102.5528],5)" title="Vista nacional" data-label="Vista nacional" aria-label="Centrar mapa en México"><i class="fa-solid fa-map-location-dot"></i></button><button id="traffic-toggle" class="nv-mtbtn" onclick="toggleTraffic()" title="Tráfico en vivo" data-label="Tráfico en vivo" aria-label="Mostrar tráfico en vivo" aria-pressed="false"><i class="fa-solid fa-traffic-light"></i></button><button id="theme-toggle" class="nv-mtbtn" onclick="toggleTheme()" title="Cambiar tema" data-label="Cambiar tema" aria-label="Cambiar modo claro u oscuro" aria-pressed="false"><i class="fa-solid fa-moon"></i></button>'; L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div); return div; } });
-lightLayer.addTo(map);
+L.Control.MapTools = L.Control.extend({ options: { position: 'bottomleft' }, onAdd() { const div = L.DomUtil.create('div', 'nv-maptools'); div.setAttribute('role','toolbar'); div.setAttribute('aria-label','Herramientas del mapa'); div.innerHTML = '<button id="gps-toggle" class="nv-mtbtn" onclick="gpsTrack()" title="Mi ubicación" data-label="Mi ubicación" aria-label="Activar mi ubicación" aria-pressed="false"><i class="fa-solid fa-location-crosshairs"></i></button><button class="nv-mtbtn" onclick="map.setView([23.6345,-102.5528],5)" title="Vista nacional" data-label="Vista nacional" aria-label="Centrar mapa en México"><i class="fa-solid fa-map-location-dot"></i></button><button id="satellite-toggle" class="nv-mtbtn" onclick="toggleSatellite()" title="Vista satélite" data-label="Vista satélite" aria-label="Cambiar a vista satélite" aria-pressed="false"><i class="fa-solid fa-satellite"></i></button><button id="traffic-toggle" class="nv-mtbtn" onclick="toggleTraffic()" title="Tráfico en vivo" data-label="Tráfico en vivo" aria-label="Mostrar tráfico en vivo" aria-pressed="false"><i class="fa-solid fa-traffic-light"></i></button><button id="theme-toggle" class="nv-mtbtn" onclick="toggleTheme()" title="Cambiar tema" data-label="Cambiar tema" aria-label="Cambiar modo claro u oscuro" aria-pressed="false"><i class="fa-solid fa-moon"></i></button>'; L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div); return div; } });
+(baseMapMode === 'satellite' ? satelliteLayer : lightLayer).addTo(map);
 map.addLayer(alertAreaLayer); map.addLayer(markers); map.addLayer(staticLayer);
 let routeLineLayer = L.layerGroup(); map.addLayer(routeLineLayer);
 new L.Control.MapTools().addTo(map);
+
+function setBaseMap(mode) {
+  baseMapMode = mode === 'satellite' ? 'satellite' : 'streets';
+  [lightLayer,darkLayer,satelliteLayer].forEach(layer => { if(map.hasLayer(layer)) map.removeLayer(layer); });
+  if(baseMapMode === 'satellite') satelliteLayer.addTo(map);
+  else (document.body.classList.contains('dark-mode') ? darkLayer : lightLayer).addTo(map);
+  localStorage.setItem('nv_base_map',baseMapMode);
+  const btn=document.getElementById('satellite-toggle');
+  const satellite=baseMapMode === 'satellite';
+  if(btn) {
+    btn.classList.toggle('active',satellite);
+    btn.setAttribute('aria-pressed',String(satellite));
+    btn.setAttribute('aria-label',satellite?'Cambiar a vista de calles':'Cambiar a vista satélite');
+    btn.dataset.label=satellite?'Vista de calles':'Vista satélite';
+    btn.title=btn.dataset.label;
+    btn.innerHTML=`<i class="fa-solid fa-${satellite?'map':'satellite'}"></i>`;
+  }
+}
+function toggleSatellite() { setBaseMap(baseMapMode === 'satellite' ? 'streets' : 'satellite'); }
+setTimeout(() => setBaseMap(baseMapMode),0);
 
 function trafficMessage(message, error=false) {
   const old = document.getElementById('traffic-message'); if(old) old.remove();
@@ -1395,8 +1421,9 @@ function persistAlerts() { try { localStorage.setItem('nv_alerts', JSON.stringif
 
 function toggleTheme() { const isDark = document.body.classList.contains('dark-mode'); localStorage.setItem('nv_theme_user_set', '1'); applyTheme(!isDark); }
 function applyTheme(toDark) {
-    if(toDark) { document.body.classList.add('dark-mode'); map.removeLayer(lightLayer); map.addLayer(darkLayer); localStorage.setItem('steele_theme', 'dark'); }
-    else { document.body.classList.remove('dark-mode'); map.removeLayer(darkLayer); map.addLayer(lightLayer); localStorage.setItem('steele_theme', 'light'); }
+    if(toDark) { document.body.classList.add('dark-mode'); localStorage.setItem('steele_theme', 'dark'); }
+    else { document.body.classList.remove('dark-mode'); localStorage.setItem('steele_theme', 'light'); }
+    setBaseMap(baseMapMode);
     const themeBtn=document.getElementById('theme-toggle');
     if(themeBtn) { themeBtn.classList.toggle('active',toDark); themeBtn.setAttribute('aria-pressed',String(toDark)); themeBtn.dataset.label=toDark?'Usar modo claro':'Usar modo oscuro'; themeBtn.title=themeBtn.dataset.label; themeBtn.innerHTML=`<i class="fa-solid fa-${toDark?'sun':'moon'}"></i>`; }
     if(document.getElementById('u-ris-state')) { graphRis('u', true); graphRis('op', true); }
