@@ -151,7 +151,7 @@ body.dark-mode .leaflet-control-attribution a{ color:#bbb; }
 /* LANDING / ENTRADA */
 #landing{ position:fixed; inset:0; z-index:20000; display:flex; align-items:center; justify-content:center; padding:20px; background:linear-gradient(135deg,#0b0f19 0%,#12203a 55%,#1a2f52 100%); }
 #landing-card{ width:100%; max-width:420px; text-align:center; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); border-radius:20px; padding:40px 28px; box-shadow:0 30px 80px rgba(0,0,0,.5); }
-.landing-logo{ width:118px; height:90px; margin:0 auto 8px; object-fit:cover; object-position:center; border-radius:14px; background:#000; box-shadow:0 12px 34px rgba(0,0,0,.38); }
+.landing-logo{ width:118px; height:90px; margin:0 auto 8px; object-fit:cover; object-position:center; border-radius:14px; background:#fff; box-shadow:0 12px 34px rgba(0,0,0,.38); }
 .landing-brand{ color:#fff; font-size:34px; letter-spacing:2px; margin:4px 0; }
 .landing-brand span{ color:#f9ab00; }
 .landing-sub{ color:#aeb9cc; margin:6px 0 22px; font-size:15px; }
@@ -363,9 +363,9 @@ body.user-mode.left-rail #circula{ left:76px; width:auto; max-width:340px; }
 body.user-mode.left-rail #panel-left{ top:84px; }
 .nt-brand{ display:flex; align-items:center; gap:9px; min-width:175px; font-weight:900; color:var(--text); }
 .nt-brand i{ width:36px; height:36px; display:grid; place-items:center; border-radius:11px; color:#fff; background:linear-gradient(145deg,#0EA5E9,#2563EB); box-shadow:0 5px 14px rgba(37,99,235,.28); }
-.nt-logo{ width:38px; height:38px; object-fit:cover; border-radius:10px; background:#000; box-shadow:0 5px 14px rgba(15,23,42,.25); }
+.nt-logo{ width:38px; height:38px; object-fit:cover; border:1px solid rgba(15,23,42,.12); border-radius:10px; background:#fff; box-shadow:0 5px 14px rgba(15,23,42,.18); }
 .nt-brand span{ color:var(--accent); }
-.pl-logo-img{ width:34px; height:34px; object-fit:cover; border-radius:8px; background:#000; }
+.pl-logo-img{ width:34px; height:34px; object-fit:cover; border-radius:8px; background:#fff; }
 .nt-nav{ display:flex; align-items:center; gap:5px; flex:1; }
 .nt-btn{ position:relative; width:auto; min-height:40px; padding:8px 11px; display:flex; align-items:center; justify-content:center; gap:7px; border:1px solid transparent; border-radius:11px; color:var(--text-muted); background:transparent; box-shadow:none; font-size:11px; }
 .nt-btn:hover{ color:var(--accent); background:rgba(37,99,235,.09); box-shadow:none; }
@@ -704,7 +704,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
 
 <div id="landing">
   <div id="landing-card">
-    <img class="landing-logo" src="/favicon-256.png" alt="Logo de 11 Vial">
+    <img class="landing-logo" src="/logo11-white.png" alt="Logo de 11 Vial">
     <h1 class="landing-brand">11 <span>Vial</span></h1>
     <p class="landing-sub">Riesgos al viajar en México, en tiempo real.</p>
     <div class="landing-feats">
@@ -723,7 +723,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
 
 <nav id="sidebar">
   <div class="brand">
-    <img src="/favicon-256.png" class="brand-logo" alt="Logo de 11 Vial">
+    <img src="/logo11-white.png" class="brand-logo" alt="Logo de 11 Vial">
     <span class="brand-text">11 VIAL</span>
   </div>
   
@@ -756,7 +756,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
 <div class="main-content">
   <div id="map"></div>
   <header class="nv-topbar" aria-label="Navegación principal">
-    <div class="nt-brand"><img class="nt-logo" src="/favicon-256.png" alt=""><strong>11 <span>VIAL</span></strong></div>
+    <div class="nt-brand"><img class="nt-logo" src="/logo11-white.png" alt=""><strong>11 <span>VIAL</span></strong></div>
     <nav class="nt-nav">
       <button class="nt-btn active" onclick="clearAlertFocus()"><i class="fa-solid fa-map-location-dot"></i><span>Mapa en vivo</span></button>
       <button class="nt-btn" onclick="document.body.classList.remove('right-rail');switchPR('feed')"><i class="fa-solid fa-triangle-exclamation"></i><span>Alertas</span><em id="nv-top-count" class="nt-count">0</em></button>
@@ -894,7 +894,6 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
     <div class="pl-topbar"><button class="pc-btn" onclick="toggleLeft()" title="Colapsar panel"><i class="fa-solid fa-angles-left"></i></button></div>
     <div class="pl-content">
       <div class="pl-head">
-        <div class="pl-brand"><img class="pl-logo-img" src="/favicon-256.png" alt=""> 11 VIAL</div>
         <div class="pl-btns">
           <button class="ph-btn blue" onclick="openWeatherModal()" title="Clima y condiciones en tramos carreteros"><i class="fa-solid fa-cloud-sun"></i> Clima Vial</button>
           <button class="ph-btn red" onclick="openDirModal()" title="Directorio de emergencias"><i class="fa-solid fa-tower-broadcast"></i> Emergencias</button>
