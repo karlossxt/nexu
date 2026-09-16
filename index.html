@@ -455,6 +455,24 @@ body.user-mode:not(.dark-mode) .ac-location{ color:#667085; }
 .diag-card{ padding:10px 12px; border:1px solid #D8E1EC; border-radius:10px; background:#fff; }
 .diag-card b{ display:block; color:#175CD3; font-size:20px; }
 .diag-card span{ color:#667085; font-size:9px; font-weight:800; text-transform:uppercase; }
+.acn-analytics{ max-width:1120px; margin:12px auto 0; padding:0 22px; }
+.acn-analytics-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:9px; }
+.acn-analytics-head h3{ margin:0; font-size:13px; }
+.acn-analytics-head span{ color:#667085; font-size:10px; }
+.acn-analysis-toggle{ display:none; width:auto; padding:8px 10px; border-radius:9px; font-size:10px; }
+.acn-charts{ display:grid; grid-template-columns:1.35fr 1fr 1fr; gap:10px; }
+.acn-chart{ min-width:0; height:210px; padding:12px; box-sizing:border-box; border:1px solid #D8E1EC; border-radius:13px; background:#fff; }
+.acn-chart.wide{ grid-column:span 1; }
+.acn-chart h4{ margin:0 0 8px; color:#475467; font-size:10px; text-transform:uppercase; letter-spacing:.04em; }
+.acn-chart-body{ position:relative; height:164px; }
+.acn-ranking{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+.acn-rank-card{ padding:12px 14px; border:1px solid #D8E1EC; border-radius:13px; background:#fff; }
+.acn-rank-card h4{ margin:0 0 10px; color:#475467; font-size:10px; text-transform:uppercase; letter-spacing:.04em; }
+.acn-rank-row{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:center; margin-top:8px; font-size:10px; color:#344054; }
+.acn-rank-label{ overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.acn-rank-row b{ color:#175CD3; }
+.acn-rank-bar{ grid-column:1/-1; height:5px; margin-top:-5px; overflow:hidden; border-radius:5px; background:#EEF2F6; }
+.acn-rank-bar i{ display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#1570EF,#38BDF8); }
 .acn-list{ max-width:1060px; margin:0 auto; padding:18px 22px 40px; display:flex; flex-direction:column; gap:12px; }
 .acn-card{ --sev:#F59E0B; padding:15px 18px; border:1px solid color-mix(in srgb,var(--sev) 65%,#D8E1EC); border-radius:16px; background:#fff; box-shadow:0 5px 16px rgba(15,23,42,.06); }
 .acn-card-top,.acn-card-foot{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
@@ -469,9 +487,43 @@ body.user-mode:not(.dark-mode) .ac-location{ color:#667085; }
 .loc-confidence.low{ color:#B54708; }
 .acn-empty{ padding:50px; text-align:center; color:#667085; }
 body.dark-mode .alert-center{ background:#080C12; color:#F8FAFC; }
-body.dark-mode .acn-header,body.dark-mode .acn-toolbar,body.dark-mode .diag-card,body.dark-mode .acn-card{ background:#0F151F; border-color:#263244; color:#F8FAFC; }
+body.dark-mode .acn-header,body.dark-mode .acn-toolbar,body.dark-mode .diag-card,body.dark-mode .acn-card,body.dark-mode .acn-chart,body.dark-mode .acn-rank-card{ background:#0F151F; border-color:#263244; color:#F8FAFC; }
 body.dark-mode .acn-toolbar select,body.dark-mode .acn-toolbar input{ background:#151E2C; border-color:#344054; color:#F8FAFC; }
-@media(max-width:700px){ .acn-header{padding:12px}.acn-toolbar{padding:10px}.diag-grid{grid-template-columns:repeat(2,1fr);padding:10px}.acn-list{padding:12px 10px 30px}.acn-card{padding:13px}.acn-card-top time{width:100%;margin-left:0}.acn-card-foot .source{margin-left:0}.acn-toolbar select{flex:1}.acn-map{margin-left:auto} }
+body.dark-mode .acn-chart h4,body.dark-mode .acn-rank-card h4,body.dark-mode .acn-analytics-head span,body.dark-mode .acn-rank-row{ color:#98A2B3; }
+body.dark-mode .acn-rank-bar{ background:#263244; }
+@media(max-width:980px){ .acn-charts{grid-template-columns:1fr 1fr}.acn-chart:first-child{grid-column:1/-1}.acn-ranking{grid-template-columns:1fr 1fr} }
+@media(max-width:700px){
+  .alert-center{ height:100dvh; overscroll-behavior:contain; }
+  .acn-header{ padding:11px 12px; position:sticky; }
+  .acn-title h2{ font-size:16px; line-height:1.2; }
+  .acn-title p{ display:none; }
+  .acn-close{ width:42px; height:42px; flex:0 0 auto; }
+  .acn-toolbar{ display:grid; grid-template-columns:1fr 1fr; padding:10px; gap:7px; position:sticky; top:65px; z-index:1; box-shadow:0 4px 12px rgba(15,23,42,.06); }
+  .acn-toolbar select,.acn-toolbar input{ width:100%; min-width:0; min-height:43px; font-size:12px; }
+  .acn-toolbar input{ grid-column:1/-1; }
+  .diag-grid{ grid-template-columns:repeat(3,1fr); padding:10px; gap:6px; }
+  .diag-card{ padding:9px 7px; }
+  .diag-card b{ font-size:18px; }
+  .diag-card span{ font-size:8px; line-height:1.2; }
+  .acn-analytics{ padding:0 10px; margin-top:4px; }
+  .acn-analytics-head{ align-items:flex-start; flex-direction:column; gap:3px; }
+  .acn-analysis-toggle{ display:flex; align-items:center; justify-content:center; gap:6px; width:100%; min-height:42px; margin:7px 0 0; }
+  .acn-analytics:not(.open) .acn-charts,.acn-analytics:not(.open) .acn-ranking{ display:none; }
+  .acn-analytics:not(.open) .acn-analysis-toggle i{ transform:rotate(0); }
+  .acn-analytics.open .acn-analysis-toggle i{ transform:rotate(180deg); }
+  .acn-charts,.acn-ranking{ grid-template-columns:1fr; }
+  .acn-chart:first-child{ grid-column:auto; }
+  .acn-chart{ height:220px; }
+  .acn-chart-body{ height:174px; }
+  .acn-list{ padding:12px 10px calc(30px + env(safe-area-inset-bottom)); }
+  .acn-card{ padding:13px; border-radius:13px; }
+  .acn-card-top time{ width:100%; margin-left:0; }
+  .acn-card h3{ font-size:14px; line-height:1.35; }
+  .acn-card-foot{ display:grid; grid-template-columns:auto 1fr; align-items:start; }
+  .acn-card-foot .source{ grid-column:1/-1; margin-left:0; padding-top:5px; }
+  .acn-card-foot .loc-confidence,.acn-card-foot b{ grid-column:2; }
+  .acn-map{ grid-column:1/-1; width:100%; min-height:42px; margin:4px 0 0; }
+}
 .m-head{ display:flex; align-items:center; gap:8px; padding:14px 16px; border-bottom:1px solid #1E293B; font-weight:800; font-size:13px; letter-spacing:.03em; text-transform:uppercase; color:#fff; }
 .m-x{ margin-left:auto; width:28px; height:28px; border-radius:50%; background:#131822; border:none; color:#9CA3AF; cursor:pointer; }
 .m-body{ padding:16px; }
@@ -1213,6 +1265,22 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
         <input id="acn-search" oninput="renderAlertCenter()" placeholder="Buscar carretera, kilómetro, estado o incidente…">
       </div>
       <div id="diag-grid" class="diag-grid"></div>
+      <section class="acn-analytics" aria-label="Análisis de alertas filtradas">
+        <div class="acn-analytics-head">
+          <h3><i class="fa-solid fa-chart-line" style="color:#1570EF"></i> Análisis de las alertas visibles</h3>
+          <span id="acn-analysis-caption">Los gráficos respetan los filtros seleccionados.</span>
+        </div>
+        <button class="acn-analysis-toggle" onclick="toggleAlertCenterAnalytics(this)" aria-expanded="false"><i class="fa-solid fa-chevron-down"></i> <span>Mostrar gráficas</span></button>
+        <div class="acn-charts">
+          <article class="acn-chart"><h4>Actividad en el periodo</h4><div class="acn-chart-body"><canvas id="acn-trend-chart"></canvas></div></article>
+          <article class="acn-chart"><h4>Categorías</h4><div class="acn-chart-body"><canvas id="acn-category-chart"></canvas></div></article>
+          <article class="acn-chart"><h4>Prioridad y precisión</h4><div class="acn-chart-body"><canvas id="acn-quality-chart"></canvas></div></article>
+        </div>
+        <div class="acn-ranking">
+          <article class="acn-rank-card"><h4>Estados con más alertas</h4><div id="acn-state-ranking"></div></article>
+          <article class="acn-rank-card"><h4>Fuentes principales</h4><div id="acn-source-ranking"></div></article>
+        </div>
+      </section>
       <main id="acn-list" class="acn-list"></main>
     </div>
   </div>
@@ -2651,6 +2719,45 @@ function renderDiagnostics() {
   ];
   box.innerHTML=values.map(([label,value])=>`<div class="diag-card"><b>${value}</b><span>${label}</span></div>`).join('');
 }
+function alertCenterRanking(targetId, entries, emptyLabel) {
+  const box=document.getElementById(targetId); if(!box) return;
+  const rows=entries.sort((a,b)=>b[1]-a[1]).slice(0,5);
+  if(!rows.length){ box.innerHTML=`<div class="acn-empty" style="padding:16px">${emptyLabel}</div>`; return; }
+  const max=Math.max(...rows.map(x=>x[1]),1);
+  box.innerHTML=rows.map(([label,value])=>`<div class="acn-rank-row"><span class="acn-rank-label" title="${label}">${label}</span><b>${value}</b><span class="acn-rank-bar"><i style="width:${Math.max(6,value/max*100)}%"></i></span></div>`).join('');
+}
+function renderAlertCenterAnalytics(visible,hours) {
+  const caption=document.getElementById('acn-analysis-caption');
+  if(caption) caption.textContent=`${visible.length} alerta${visible.length===1?'':'s'} · últimas ${hours===1?'hora':hours+' horas'} · datos del filtro actual`;
+  const countBy=(items,keyFn)=>items.reduce((out,item)=>{ const key=keyFn(item)||'Sin identificar'; out[key]=(out[key]||0)+1; return out; },{});
+  const states=countBy(visible,a=>a.state||'Sin estado');
+  const sources=countBy(visible,a=>alertSourceLabel(a).replace(/^Fuente:\s*/i,'')||'Sin identificar');
+  alertCenterRanking('acn-state-ranking',Object.entries(states),'No hay estados para mostrar.');
+  alertCenterRanking('acn-source-ranking',Object.entries(sources),'No hay fuentes para mostrar.');
+  if(typeof Chart==='undefined') return;
+  ['acn-trend-chart','acn-category-chart','acn-quality-chart'].forEach(id=>{ if(chartInstances[id]){ chartInstances[id].destroy(); delete chartInstances[id]; } });
+  const dark=document.body.classList.contains('dark-mode'), text=dark?'#CBD5E1':'#667085', grid=dark?'rgba(148,163,184,.12)':'rgba(71,84,103,.10)';
+  const end=Date.now(), bins=hours<=1?6:hours<=3?6:8, binMs=hours*3600000/bins;
+  const trend=Array.from({length:bins},()=>0);
+  visible.forEach(a=>{ const age=end-new Date(a.time).getTime(), index=bins-1-Math.floor(age/binMs); if(index>=0&&index<bins) trend[index]++; });
+  const labels=trend.map((_,i)=>{ const date=new Date(end-(bins-1-i)*binMs); return date.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}); });
+  const common={responsive:true,maintainAspectRatio:false,animation:{duration:250},plugins:{legend:{labels:{color:text,font:{size:10},boxWidth:10}}}};
+  const trendCanvas=document.getElementById('acn-trend-chart');
+  if(trendCanvas) chartInstances['acn-trend-chart']=new Chart(trendCanvas,{type:'line',data:{labels,datasets:[{label:'Alertas',data:trend,borderColor:'#1570EF',backgroundColor:'rgba(21,112,239,.13)',fill:true,tension:.35,pointRadius:2}]},options:{...common,plugins:{legend:{display:false}},scales:{x:{ticks:{color:text,font:{size:9}},grid:{display:false}},y:{beginAtZero:true,ticks:{color:text,precision:0},grid:{color:grid}}}}});
+  const categoryCanvas=document.getElementById('acn-category-chart');
+  const categories=[visible.filter(a=>a.category==='road'&&!isBlockageAlert(a)).length,visible.filter(a=>a.category==='security').length,visible.filter(isBlockageAlert).length];
+  if(categoryCanvas) chartInstances['acn-category-chart']=new Chart(categoryCanvas,{type:'doughnut',data:{labels:['Viales','Seguridad','Bloqueos'],datasets:[{data:categories,backgroundColor:['#1570EF','#EF4444','#F59E0B'],borderWidth:0}]},options:{...common,cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:text,font:{size:9},boxWidth:9}}}}});
+  const qualityCanvas=document.getElementById('acn-quality-chart');
+  const quality=[visible.filter(a=>alertSeverity(a)==='critical').length,visible.filter(a=>alertSeverity(a)==='high').length,visible.filter(a=>alertSeverity(a)==='medium').length,visible.filter(a=>(Number(a.location_confidence)||0)<.58).length];
+  if(qualityCanvas) chartInstances['acn-quality-chart']=new Chart(qualityCanvas,{type:'bar',data:{labels:['Crítica','Alta','Media','Ubic. aprox.'],datasets:[{data:quality,backgroundColor:['#EF4444','#F97316','#F59E0B','#38BDF8'],borderRadius:5}]},options:{...common,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{color:text,precision:0},grid:{color:grid}},y:{ticks:{color:text,font:{size:9}},grid:{display:false}}}}});
+}
+function toggleAlertCenterAnalytics(button) {
+  const section=button?.closest('.acn-analytics'); if(!section) return;
+  const open=section.classList.toggle('open');
+  button.setAttribute('aria-expanded',String(open));
+  const label=button.querySelector('span'); if(label) label.textContent=open?'Ocultar gráficas':'Mostrar gráficas';
+  if(open) requestAnimationFrame(()=>Object.values(chartInstances).forEach(chart=>chart?.resize?.()));
+}
 function renderAlertCenter() {
   const list=document.getElementById('acn-list'); if(!list) return;
   buildAlertCenterStates(); renderDiagnostics();
@@ -2668,6 +2775,7 @@ function renderAlertCenter() {
     if(q&&!((a.title||'').toLowerCase().includes(q)||(a.location||'').toLowerCase().includes(q)||(a.detail||'').toLowerCase().includes(q))) return false;
     return true;
   }).sort((a,b)=>new Date(b.time)-new Date(a.time));
+  renderAlertCenterAnalytics(visible,hours);
   if(!visible.length){list.innerHTML='<div class="acn-empty"><i class="fa-solid fa-inbox"></i><p>No hay alertas para estos filtros.</p></div>';return;}
   const sevMeta={critical:['Prioridad crítica','#EF4444'],high:['Prioridad alta','#F97316'],medium:['Prioridad media','#F59E0B']};
   list.innerHTML=visible.map(a=>{
