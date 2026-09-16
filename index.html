@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>11 Vial — Riesgos al viajar en México</title>
-<meta name="description" content="11 Vial: alertas viales y de seguridad para anticipar incidencias en tu trayecto por México." />
+<title>Zero Vial — Riesgos al viajar en México</title>
+<meta name="description" content="Zero Vial: alertas viales y de seguridad para anticipar incidencias en tu trayecto por México." />
 <meta name="theme-color" content="#05070a" />
-<meta property="og:title" content="11 Vial — Viaja con mayor información" />
+<meta property="og:title" content="Zero Vial — Viaja con mayor información" />
 <meta property="og:description" content="Alertas viales y de seguridad con ubicación aproximada y fuentes identificadas." />
 <meta property="og:image" content="/favicon-256.png" />
 <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
@@ -40,7 +40,7 @@ body{ margin:0; font-family:'Roboto','Segoe UI',sans-serif; background:var(--bg)
 #sidebar:hover .brand-text { display:inline-block; opacity: 1; }
 
 .brand{ width:100%; display:flex; flex-direction: column; align-items:center; justify-content:center; margin-bottom:20px; overflow:hidden; padding:10px 0; cursor: pointer; }
-.brand-logo { width: 50px; height: 50px; object-fit: contain; transition: 0.3s; border-radius: 8px; background: rgba(255,255,255,0.2); padding: 4px; }
+.brand-logo { width: 50px; height: 50px; object-fit: contain; transition: 0.3s; border-radius: 9px; background:#000; padding: 4px; }
 #sidebar:hover .brand-logo { width: 70px; height: 70px; }
 .brand-text { font-weight:800; font-size:18px; color:var(--accent); white-space:nowrap; opacity:0; display:none; transition:0.3s; margin-top: 10px; letter-spacing: 1px; }
 
@@ -151,9 +151,10 @@ body.dark-mode .leaflet-control-attribution a{ color:#bbb; }
 /* LANDING / ENTRADA */
 #landing{ position:fixed; inset:0; z-index:20000; display:flex; align-items:center; justify-content:center; padding:20px; background:linear-gradient(135deg,#0b0f19 0%,#12203a 55%,#1a2f52 100%); }
 #landing-card{ width:100%; max-width:420px; text-align:center; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); border-radius:20px; padding:40px 28px; box-shadow:0 30px 80px rgba(0,0,0,.5); }
-.landing-logo{ width:118px; height:90px; margin:0 auto 8px; object-fit:cover; object-position:center; border-radius:14px; background:#fff; box-shadow:0 12px 34px rgba(0,0,0,.38); }
+.landing-logo{ width:min(310px,88%); height:190px; margin:0 auto 8px; object-fit:contain; object-position:center; border-radius:16px; background:#000; box-shadow:0 12px 34px rgba(0,0,0,.38); }
 .landing-brand{ color:#fff; font-size:34px; letter-spacing:2px; margin:4px 0; }
 .landing-brand span{ color:#f9ab00; }
+.sr-only{ position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important; }
 .landing-sub{ color:#aeb9cc; margin:6px 0 22px; font-size:15px; }
 .landing-feats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:26px; }
 .landing-feat{ background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:12px 8px; color:#e8edf5; font-size:13px; font-weight:600; }
@@ -250,7 +251,7 @@ body.user-mode #circula{ display:flex; }
 </style>
 <style>
 /* ============================================
-   NEXUS VIAL v23 · UI CYBERPUNK (MODO USUARIO)
+   ZERO VIAL v23 · UI CYBERPUNK (MODO USUARIO)
    ============================================ */
 .main-content{ display:flex; flex-direction:row; align-items:stretch; position:relative; }
 #map{ position:relative; inset:auto; flex:1; min-width:0; height:100%; background:#05070A; z-index:1; }
@@ -771,7 +772,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
   #landing{ padding:12px; }
   #landing-card{ padding:26px 18px; border-radius:16px; }
   .landing-brand{ font-size:29px; }
-  .landing-logo{ width:104px; height:80px; }
+  .landing-logo{ width:min(260px,92%); height:160px; }
   .landing-modes{ grid-template-columns:1fr; }
   .landing-mode{ min-height:54px; }
   .toast-important{ left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom)); max-width:none; }
@@ -785,8 +786,8 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
 
 <div id="landing">
   <div id="landing-card">
-    <img class="landing-logo" src="/logo11-white.png" alt="Logo de 11 Vial">
-    <h1 class="landing-brand">11 <span>Vial</span></h1>
+    <img class="landing-logo" src="/zero-logo.png" alt="Zero Vial">
+    <h1 class="sr-only">Zero Vial</h1>
     <p class="landing-sub">Riesgos al viajar en México, en tiempo real.</p>
     <div class="landing-feats">
       <div class="landing-feat"><i class="fa-solid fa-triangle-exclamation"></i> Alertas en vivo</div>
@@ -804,8 +805,8 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
 
 <nav id="sidebar">
   <div class="brand">
-    <img src="/logo11-white.png" class="brand-logo" alt="Logo de 11 Vial">
-    <span class="brand-text">11 VIAL</span>
+    <img src="/zero-mark.png" class="brand-logo" alt="Logo de Zero Vial">
+    <span class="brand-text">ZERO VIAL</span>
   </div>
   
   <div class="nav-item active" onclick="switchPanel('config')"><div class="nav-icon"><i class="fa-solid fa-sliders"></i></div><span class="nav-label">Configuración</span></div>
@@ -837,7 +838,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
 <div class="main-content">
   <div id="map"></div>
   <header class="nv-topbar" aria-label="Navegación principal">
-    <div class="nt-brand"><img class="nt-logo" src="/logo11-white.png" alt=""><strong>11 <span>VIAL</span></strong></div>
+    <div class="nt-brand"><img class="nt-logo" src="/zero-mark.png" alt=""><strong>ZERO <span>VIAL</span></strong></div>
     <nav class="nt-nav">
       <button class="nt-btn active" onclick="clearAlertFocus()"><i class="fa-solid fa-map-location-dot"></i><span>Mapa en vivo</span></button>
       <button class="nt-btn" onclick="document.body.classList.remove('right-rail');switchPR('feed')"><i class="fa-solid fa-triangle-exclamation"></i><span>Alertas</span><em id="nv-top-count" class="nt-count">0</em></button>
@@ -1339,7 +1340,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
 <script src="red-vial.js"></script>
 <script>
 /* =========================================
-   SISTEMA NEXUS VIAL v21.1
+   SISTEMA ZERO VIAL v21.1
    ========================================= */
 
 /* =========================================
@@ -1350,8 +1351,8 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
    app los toma vía /api/config.
    ========================================= */
 const LINKS = {
-  tilesLight: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=cb1_317y_1_f7f06d935a7e5545cf55ebba',
-  tilesDark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png?key=cb1_317y_1_f7f06d935a7e5545cf55ebba',
+  tilesLight: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+  tilesDark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
   tilesSatellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
   nominatim: 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q={q}&limit=1&countrycodes=mx',
   photon: 'https://photon.komoot.io/api/?q={q}&limit=1&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village',
@@ -1505,7 +1506,7 @@ window.onload = function() {
   try {
     const savedAlerts = localStorage.getItem('nv_alerts');
     if(savedAlerts) {
-      alerts = (JSON.parse(savedAlerts) || []).filter(a => a && typeof a.lat === 'number' && a.time && String(a.title || '').trim().length >= 8 && String(a.detail || '').trim().length >= 15 && (Date.now() - new Date(a.time).getTime()) < 24*3600*1000).map(a => ({ ...a, source_type: a.source_type || 'system', source_name: inferSourceName({ title: `${a.title || ''} ${a.detail || ''}`, source_name: a.source_name || '11 Vial' }), verification_status: a.verification_status || 'verified', importante: !!a.importante }));
+      alerts = (JSON.parse(savedAlerts) || []).filter(a => a && typeof a.lat === 'number' && a.time && String(a.title || '').trim().length >= 8 && String(a.detail || '').trim().length >= 15 && (Date.now() - new Date(a.time).getTime()) < 24*3600*1000).map(a => ({ ...a, source_type: a.source_type || 'system', source_name: inferSourceName({ title: `${a.title || ''} ${a.detail || ''}`, source_name: a.source_name || 'Zero Vial' }), verification_status: a.verification_status || 'verified', importante: !!a.importante }));
       alerts.forEach(a => addMarkerToMap(a));
       if(alerts.length) { updateLists(); persistAlerts(); }
     }
@@ -1540,7 +1541,7 @@ window.onload = function() {
   uxResponsive();
   hncTick();
   setInterval(hncTick, 1000);
-  log("Sistema 11 Vial listo.");
+  log("Sistema Zero Vial listo.");
   setTimeout(autoBoot, 400);
 };
 
@@ -2006,8 +2007,8 @@ function alertSourceLabel(a) {
     if(a.verification_status === 'corroborated') return 'Comunidad · Coincidente';
     return 'Reporte ciudadano · Sin verificar';
   }
-  if(a.source_type === 'operator') return 'Operador 11 Vial';
-  return 'Fuente: ' + (a.source_name || '11 Vial');
+  if(a.source_type === 'operator') return 'Operador Zero Vial';
+  return 'Fuente: ' + (a.source_name || 'Zero Vial');
 }
 function precisionLabel(a) {
   if(a.precision === 'carretera') return 'Ajustado a carretera';
@@ -2142,7 +2143,7 @@ function shareAlert(id) {
     const alert = alerts.find(a => a.id === id); if(!alert) return;
     const mapLink = LINKS.gmapsLink.replace('{lat}', alert.lat).replace('{lon}', alert.lon);
     const trafico = alert.category === 'road' && alert.trafico ? `\n🚦 *Tráfico:* ${trafficStyle(alert.trafico).label}` : '';
-    const text = `🚨 *11 VIAL - ALERTA* 🚨\n\n📌 *Evento:* ${alert.title}\n📍 *Ubicación:* ${alert.location}${trafico}\n📰 *${alertSourceLabel(alert)}*\n🔗 *Ver:* ${mapLink}`;
+    const text = `🚨 *ZERO VIAL - ALERTA* 🚨\n\n📌 *Evento:* ${alert.title}\n📍 *Ubicación:* ${alert.location}${trafico}\n📰 *${alertSourceLabel(alert)}*\n🔗 *Ver:* ${mapLink}`;
     window.open(LINKS.waShare.replace('{t}', encodeURIComponent(text)), '_blank');
 }
 
@@ -2508,7 +2509,7 @@ function downloadReportCSV() {
     csvCell(a.title), csvCell(a.location), csvCell(a.state || ''), a.lat, a.lon
   ]));
   const csv = '\ufeff' + rows.map(r => r.join(',')).join('\n');
-  saveBlob(csv, 'text/csv', '11-vial-reporte-' + new Date().toISOString().slice(0,10) + '.csv');
+  saveBlob(csv, 'text/csv', 'zero-vial-reporte-' + new Date().toISOString().slice(0,10) + '.csv');
 }
 function downloadReportHTML() {
   const data = reportAlerts();
@@ -2520,7 +2521,7 @@ function downloadReportHTML() {
   const rows = [...data].sort((a,b) => b.time - a.time).map(a =>
     `<tr><td>${formatAlertTime(a.time)}</td><td>${a.category === 'security' ? 'Seguridad' : 'Vial'}</td><td>${a.trafico || '-'}</td><td>${a.importante ? '⚠' : '—'}</td><td>${a.title || ''}</td><td>${a.location || ''}</td><td>${a.state || ''}</td></tr>`
   ).join('');
-  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>11 Vial · Reporte</title><style>
+  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Zero Vial · Reporte</title><style>
     body{font-family:Segoe UI,Arial,sans-serif;margin:28px;color:#222}
     h1{font-size:20px;margin:0 0 4px}h2{font-size:14px;font-weight:400;color:#666;margin:0 0 18px}
     .stats{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
@@ -2531,7 +2532,7 @@ function downloadReportHTML() {
     th,td{border:1px solid #d5dbe3;padding:6px 8px;text-align:left}
     th{background:#eef1f5}@media print{body{margin:8mm}}
     </style></head><body>
-    <h1>11 VIAL</h1><h2>Reporte generado: ${hoy}</h2>
+    <h1>ZERO VIAL</h1><h2>Reporte generado: ${hoy}</h2>
     <div class="stats">
       <div class="card"><b>${roads}</b><span>Viales</span></div>
       <div class="card"><b>${secs}</b><span>Seguridad</span></div>
@@ -2540,7 +2541,7 @@ function downloadReportHTML() {
     </div>
     <table><tr><th>Hora</th><th>Categoría</th><th>Tráfico</th><th>Imp.</th><th>Título</th><th>Ubicación</th><th>Estado</th></tr>${rows}
     </table></body></html>`;
-  saveBlob(html, 'text/html', '11-vial-reporte-' + new Date().toISOString().slice(0,10) + '.html');
+  saveBlob(html, 'text/html', 'zero-vial-reporte-' + new Date().toISOString().slice(0,10) + '.html');
 }
 function saveBlob(content, type, filename) {
   const a = document.createElement('a');
@@ -2584,7 +2585,7 @@ function notifyImportant(a) {
   showImportantToast(a);
   try {
     if('Notification' in window && Notification.permission === 'granted') {
-      new Notification('🚨 11 VIAL — Alerta importante', { body: (a.title || '') + ' · ' + (a.location || '') });
+      new Notification('🚨 ZERO VIAL — Alerta importante', { body: (a.title || '') + ' · ' + (a.location || '') });
     }
   } catch(e) {}
   const prev = document.title;
@@ -2598,7 +2599,7 @@ function clearMapRoute() { if(routeControl) { map.removeControl(routeControl); r
 async function generateRiskReport() { const box = document.getElementById('aiReport'); if(!activeRoute) { box.innerText = "Traza ruta."; return; } box.innerText = "Analizando..."; box.classList.add('typing'); const nearInfo = routeNearAlerts.map(a => `- [a ${a.distKm.toFixed(1)} km de la ruta] ${a.category}: ${a.title} (${a.location})`).join('\n'); const incidents = nearInfo || (alerts.map(a => `- ${a.category}: ${a.title} (${a.location})`).join('\n')) || "Sin incidentes recientes."; const riskPoints = criticalPoints.map(p => `- ZONA ROJA: ${p.title} (${p.desc})`).join('\n'); const prompt = `Analiza ruta ${document.getElementById('routeOrigin').value} a ${document.getElementById('routeDest').value}. Alertas Vivas: ${incidents}. Puntos Criticos: ${riskPoints}. Da veredicto seguridad.`; const report = await consultGroq(prompt, (document.getElementById('reportModelSelect') || {}).value || 'openai/gpt-oss-120b'); box.classList.remove('typing'); box.innerText = report || "Error."; }
 
 /* =========================================
-   NEXUS VIAL v23 UI · FILTROS, MODALES Y RUTAS
+   ZERO VIAL v23 UI · FILTROS, MODALES Y RUTAS
    ========================================= */
 function toggleLeft() { document.body.classList.toggle('left-rail'); map.invalidateSize(); }
 function toggleRight() { document.body.classList.toggle('right-rail'); map.invalidateSize(); }
@@ -2823,7 +2824,7 @@ async function submitEntryAlert() {
   if(!g) { log('📍 No se localizó la ubicación.', 'err'); return; }
   if(!isInMexico(g.lat, g.lon)) { log('🚫 Ubicación fuera de México.', 'warn'); return; }
   const isOperator = document.body.classList.contains('operator-mode');
-  const obj = { id: Date.now(), lat: g.lat, lon: g.lon, category: cat, title, location: lugar, state: estado, precision: g.roadSnapped ? 'carretera' : 'punto', location_confidence: g.confidence || 0.5, location_provider: g.provider || 'local', road_snapped: !!g.roadSnapped, time: new Date(), trafico: cat === 'road' ? trafico : null, detail: detalle, importante, source_type: isOperator ? 'operator' : 'community', source_name: isOperator ? '11 Vial' : 'Comunidad', verification_status: isOperator ? 'verified' : 'unverified', confirmations: 0, liked: false };
+  const obj = { id: Date.now(), lat: g.lat, lon: g.lon, category: cat, title, location: lugar, state: estado, precision: g.roadSnapped ? 'carretera' : 'punto', location_confidence: g.confidence || 0.5, location_provider: g.provider || 'local', road_snapped: !!g.roadSnapped, time: new Date(), trafico: cat === 'road' ? trafico : null, detail: detalle, importante, source_type: isOperator ? 'operator' : 'community', source_name: isOperator ? 'Zero Vial' : 'Comunidad', verification_status: isOperator ? 'verified' : 'unverified', confirmations: 0, liked: false };
   alerts.push(obj); addMarkerToMap(obj); updateLists(); persistAlerts();
   log(`✅ ALERTA MANUAL [${cat}]: ${title} @ ${g.lat.toFixed(4)}, ${g.lon.toFixed(4)}`, 'success');
   closeEntryModal();
@@ -3186,7 +3187,7 @@ function copyItinerary() {
   const km = (r.distance / 1000).toFixed(1), min = Math.round(r.duration / 60);
   const risk = routeRiskSummary(r.coord);
   const near = nearAlertsForRoute(r.coord);
-  const txt = `🧭 11 VIAL · RUTA\n${r.label}\n${o} → ${d}\n📏 ${km} km · ⏱ ${min} min\n⚠ Riesgo ${risk.level}: ${risk.redZones} zona(s) roja(s), ${risk.roadRisks} riesgo(s) vial(es), ${risk.alertsNear} alerta(s)\n` + (near.length ? '\n⚠ Cerca de la ruta:\n' + near.map(n => `· ${n.categoria === 'security' ? '🛡' : '🚗'} ${n.title} (${n.location}, a ${n.km.toFixed(1)} km)`).join('\n') : '\n✅ Sin alertas activas cerca de la ruta.');
+  const txt = `🧭 ZERO VIAL · RUTA\n${r.label}\n${o} → ${d}\n📏 ${km} km · ⏱ ${min} min\n⚠ Riesgo ${risk.level}: ${risk.redZones} zona(s) roja(s), ${risk.roadRisks} riesgo(s) vial(es), ${risk.alertsNear} alerta(s)\n` + (near.length ? '\n⚠ Cerca de la ruta:\n' + near.map(n => `· ${n.categoria === 'security' ? '🛡' : '🚗'} ${n.title} (${n.location}, a ${n.km.toFixed(1)} km)`).join('\n') : '\n✅ Sin alertas activas cerca de la ruta.');
   navigator.clipboard.writeText(txt);
   log('🧭 Itinerario copiado al portapapeles.', 'success');
 }

@@ -200,5 +200,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`NEXUS VIAL disponible en http://localhost:${PORT}`);
+  console.log(`ZERO VIAL disponible en http://localhost:${PORT}`);
 });

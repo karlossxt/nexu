@@ -1,4 +1,4 @@
-// Geocodificación segura para Nexus Vial.
+// Geocodificación segura para Zero Vial.
 // GOOGLE_MAPS_API_KEY vive únicamente en Vercel; nunca llega al navegador.
 
 const MAX_PER_MIN = 30;

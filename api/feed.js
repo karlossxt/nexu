@@ -147,7 +147,7 @@ module.exports = async (req, res) => {
   if (url.length > 800) return res.status(400).json({ error: 'url demasiado larga' });
 
   try {
-    const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (NEXUS VIAL; monitoreo vial)' } });
+    const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (ZERO VIAL; monitoreo vial)' } });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const items = parseRssItems(await r.text());
     const kept = items
