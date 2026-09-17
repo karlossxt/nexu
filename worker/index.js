@@ -22,12 +22,15 @@ const AI_DELAY_MS = Math.max(5_000, Number(env.AI_DELAY_MS) || 10_000);
 const FEEDS = [env.RSS_PRI, env.RSS_SEC].map(x => String(x || '').trim()).filter(Boolean);
 const DEFAULT_FEED = 'https://news.google.com/rss/search?q=accidente+OR+bloqueo+OR+asalto+carretera+mexico&hl=es-419&gl=MX&ceid=MX:es-419';
 if (!FEEDS.length) FEEDS.push(DEFAULT_FEED);
+const processedIds = new Map();
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const log = (level, message, data) => console.log(JSON.stringify({ time: new Date().toISOString(), level, message, ...(data || {}) }));
 const clean = value => String(value || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 const norm = value => clean(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 const hash = value => createHash('sha256').update(String(value)).digest('hex');
+const seenRecently = id => (processedIds.get(id) || 0) > Date.now();
+const markProcessed = (id, ttl = MAX_AGE_MS) => processedIds.set(id, Date.now() + ttl);
 const tag = (regex, text) => (text.match(regex) || [,''])[1];
 const decode = value => clean(String(value || '').replace(/<!\[CDATA\[|\]\]>/g, '').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"').replace(/&#0?39;|&apos;/gi, "'").replace(/&nbsp;/gi, ' '));
 
@@ -99,7 +102,7 @@ async function alreadyExists(externalId) {
 }
 
 async function classify(text) {
-  const prompt = `Clasifica esta noticia. Rechaza si no es un incidente vial o de seguridad en México o no incluye una ubicación útil. No inventes datos. Si rechazas, conserva los campos de texto vacíos. Resume el hecho sin agregar información. TEXTO: ${text.slice(0, 800)}`;
+  const prompt = `Clasifica esta noticia. Rechaza si no es un incidente vial o de seguridad relacionado con calles, carreteras o movilidad en México, o si no incluye una ubicación útil. Una balacera, delito o emergencia dentro de una escuela, vivienda o inmueble sin afectación vial debe marcarse como irrelevante. No inventes datos. Si rechazas usa valido=false, categoria=irrelevant y cadenas vacías cuando no exista el dato. Resume el hecho sin agregar información. TEXTO: ${text.slice(0, 800)}`;
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + GROQ_KEY, 'Content-Type': 'application/json' },
@@ -118,15 +121,15 @@ async function classify(text) {
             additionalProperties: false,
             properties: {
               valido: { type: 'boolean' },
-              ubicacion: { type: 'string' },
-              carretera: { type: 'string' },
+              ubicacion: { type: ['string', 'null'] },
+              carretera: { type: ['string', 'null'] },
               kilometro: { type: ['number', 'null'] },
-              municipio: { type: 'string' },
-              estado: { type: 'string' },
-              categoria: { type: 'string', enum: ['road', 'security'] },
+              municipio: { type: ['string', 'null'] },
+              estado: { type: ['string', 'null'] },
+              categoria: { type: 'string', enum: ['road', 'security', 'irrelevant'] },
               severidad: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },
-              resumen: { type: 'string' },
-              detail: { type: 'string' }
+              resumen: { type: ['string', 'null'] },
+              detail: { type: ['string', 'null'] }
             },
             required: ['valido', 'ubicacion', 'carretera', 'kilometro', 'municipio', 'estado', 'categoria', 'severidad', 'resumen', 'detail']
           }
@@ -254,6 +257,7 @@ async function cycle() {
     const unique = new Map(candidates.map(x => [x.item.url || x.item.title, x]));
     for (const { item, feed } of [...unique.values()].slice(0, MAX_AI_PER_CYCLE)) {
       const externalId = hash(item.url || item.title + '|' + item.published_at);
+      if (seenRecently(externalId)) { stats.duplicates++; continue; }
       if (await alreadyExists(externalId)) { stats.duplicates++; continue; }
       stats.analyzed++;
       try {
@@ -262,8 +266,10 @@ async function cycle() {
         else if (result === 'no_location') stats.no_location++;
         else if (result === 'duplicate') stats.duplicates++;
         else stats.rejected++;
+        markProcessed(externalId);
       } catch (error) {
         stats.errors++;
+        markProcessed(externalId, 15 * 60_000);
         log('error','Error procesando noticia',{ title:item.title.slice(0,80), error:error.message });
       }
       await sleep(AI_DELAY_MS);
