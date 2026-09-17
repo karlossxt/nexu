@@ -180,12 +180,14 @@ body.user-mode:not(.dark-mode) .pref-check{ background:#fff; border-color:#D8E1E
 .landing-feat{ background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:13px 8px; color:#EAF0F5; font-size:12px; font-weight:700; }
 .landing-feat i{ color:var(--brand-amber); margin-right:6px; }
 .landing-feat:nth-child(even) i{ color:var(--brand-cyan); }
-.landing-modes{ display:grid; grid-template-columns:1.15fr .85fr; gap:10px; max-width:590px; margin:0 auto; }
+.landing-modes{ display:grid; grid-template-columns:1fr; gap:10px; max-width:430px; margin:0 auto; }
 .landing-mode{ width:100%; min-height:60px; padding:11px 8px; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; transition:transform .15s,filter .15s,box-shadow .15s; }
 .landing-mode:hover{ transform:translateY(-2px); filter:brightness(1.08); }
 .landing-mode.user{ border:none; background:linear-gradient(105deg,#FFC02E,#FF9600); color:#101214; box-shadow:0 9px 25px rgba(255,176,0,.2); }
 .landing-mode.full{ border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.08); color:#fff; }
 .landing-mode small{ display:block; margin-top:3px; font-size:10px; font-weight:500; opacity:.75; }
+.operator-access{ display:none!important; }
+body.operator-authorized .operator-access{ display:flex!important; }
 .rm-search-actions{ display:grid; grid-template-columns:1fr auto; gap:8px; margin:10px 0 12px; }
 .rm-search-actions button{ margin:0; border-radius:8px; }
 .rm-search-actions .rm-clear{ background:transparent; color:#EF4444; border:1px solid rgba(239,68,68,.55); width:auto; padding:10px 14px; }
@@ -823,9 +825,8 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
     </div>
     <div class="landing-modes">
       <button class="landing-mode user" onclick="enterPlatform('user')"><i class="fa-solid fa-location-arrow"></i> Consultar mapa<small>Alertas filtradas para tu trayecto</small></button>
-      <button class="landing-mode full" onclick="enterPlatform('operator')"><i class="fa-solid fa-user-shield"></i> Administrador<small>Plataforma completa</small></button>
     </div>
-    <div class="landing-foot">Puedes cambiar de modo en cualquier momento · <a href="/acerca.html" style="color:#9dd1ff">Conoce Zero Vial</a></div>
+    <div class="landing-foot">Personaliza tus alertas después de iniciar sesión · <a href="/acerca.html">Conoce Zero Vial</a></div>
   </div>
 </div>
 
@@ -853,7 +854,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
   <div class="nav-item" onclick="switchPanel('reports')"><div class="nav-icon"><i class="fa-solid fa-file-contract"></i></div><span class="nav-label">Reportes</span></div>
   
   <div style="flex:1"></div>
-  <div class="nav-item" onclick="toggleOperator()" style="border-top:1px solid var(--border);">
+  <div class="nav-item operator-access" onclick="toggleOperator()" style="border-top:1px solid var(--border);">
     <div class="nav-icon"><i class="fa-solid fa-user"></i></div><span class="nav-label">Modo Usuario</span>
   </div>
   <div class="nav-item" onclick="switchPanel('monitor')" style="border-top:1px solid var(--border); background:rgba(26,115,232,0.05);">
@@ -1008,7 +1009,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
         <div class="pl-status">
           <span id="ub-status"><i class="fa-solid fa-circle-notch fa-spin"></i> Arrancando...</span>
           <span class="pl-clock"><span id="ub-time">--:--</span> · <span id="ub-date">—</span></span>
-          <button class="pl-gear" onclick="toggleOperator()" title="Modo operador"><i class="fa-solid fa-user-gear"></i></button>
+          <button class="pl-gear operator-access" onclick="toggleOperator()" title="Centro de Operaciones"><i class="fa-solid fa-user-gear"></i></button>
         </div>
       </div>
       <div class="pl-section">ESTADO GLOBAL</div>
@@ -1055,7 +1056,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <button onclick="openDirModal()" title="Emergencias"><i class="fa-solid fa-tower-broadcast"></i></button>
       <button class="feature-soon" onclick="showComingSoon('Planificador de rutas')" title="Rutas · Próximamente"><i class="fa-solid fa-route"></i></button>
       <button onclick="openEntryModal()" title="Ingresar alerta"><i class="fa-solid fa-plus"></i></button>
-      <button onclick="toggleOperator()" title="Modo operador"><i class="fa-solid fa-user-gear"></i></button>
+      <button class="operator-access" onclick="toggleOperator()" title="Centro de Operaciones"><i class="fa-solid fa-user-gear"></i></button>
     </div>
   </aside>
 
@@ -1393,6 +1394,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <button id="auth-submit" onclick="submitAuth()"><i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión</button>
       <div id="auth-message" class="correction-preview" style="display:none;margin-top:10px"></div>
       <button id="auth-preferences" class="btn-outline" onclick="openPreferences()" style="display:none;margin-top:9px"><i class="fa-solid fa-sliders"></i> Mis preferencias</button>
+      <button id="auth-operations" class="btn-outline operator-access" onclick="closeModal('auth-modal');toggleOperator()" style="margin-top:9px"><i class="fa-solid fa-shield-halved"></i> Centro de Operaciones</button>
       <button id="auth-logout" class="btn-outline" onclick="logoutZeroVial()" style="display:none;margin-top:9px"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</button>
     </div>
   </div>
@@ -1485,6 +1487,7 @@ let ucTypesInstance = null;
 let supabaseClient = null;
 let zeroVialUser = null;
 let authMode = 'login';
+let zeroVialRole = 'user';
 const zeroVialSessionStartedAt = Date.now();
 let userPreferences = { categories:['road','security'], severities:['critical','high','medium','low'], states:[], radius_km:50, time_window_hours:3, blockages_only:false, push_enabled:false };
 let correctionAlertId = null;
@@ -2462,11 +2465,25 @@ async function initSupabase(config) {
   if(!config.url||!config.anonKey||!window.supabase?.createClient) return;
   supabaseClient=window.supabase.createClient(config.url,config.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   const {data}=await supabaseClient.auth.getSession(); zeroVialUser=data?.session?.user||null; updateAccountButton();
-  if(zeroVialUser) await loadUserPreferences();
+  if(zeroVialUser) await Promise.all([loadUserRole(),loadUserPreferences()]);
   supabaseClient.auth.onAuthStateChange((_event,session)=>{
     zeroVialUser=session?.user||null; updateAccountButton();
-    if(zeroVialUser) setTimeout(loadUserPreferences,0);
+    if(zeroVialUser) setTimeout(()=>{ loadUserRole(); loadUserPreferences(); },0);
+    else { zeroVialRole='user'; applyRoleAccess(); }
   });
+}
+function applyRoleAccess() {
+  const authorized=['operator','admin'].includes(zeroVialRole);
+  document.body.classList.toggle('operator-authorized',authorized);
+  if(!authorized&&document.body.classList.contains('operator-mode')) enterPlatform('user');
+}
+async function loadUserRole() {
+  zeroVialRole='user';
+  if(supabaseClient&&zeroVialUser) {
+    const {data}=await supabaseClient.from('profiles').select('role').eq('id',zeroVialUser.id).maybeSingle();
+    if(data&&['user','operator','admin'].includes(data.role)) zeroVialRole=data.role;
+  }
+  applyRoleAccess();
 }
 function updateAccountButton() {
   const button=document.getElementById('account-button'); if(!button) return;
@@ -2499,9 +2516,9 @@ async function submitAuth() {
   if(result.error) return authMessage(result.error.message,true);
   if(authMode==='register'&&!result.data.session) return authMessage('Cuenta creada. Revisa tu correo para confirmarla.');
   zeroVialUser=result.data.user; updateAccountButton(); authMessage('Sesión iniciada correctamente.');
-  await loadUserPreferences();
+  await Promise.all([loadUserRole(),loadUserPreferences()]);
 }
-async function logoutZeroVial() { if(supabaseClient) await supabaseClient.auth.signOut(); zeroVialUser=null; updateAccountButton(); closeModal('auth-modal'); }
+async function logoutZeroVial() { if(supabaseClient) await supabaseClient.auth.signOut(); zeroVialUser=null; zeroVialRole='user'; applyRoleAccess(); updateAccountButton(); closeModal('auth-modal'); }
 function prefMessage(message,error=false) {
   const box=document.getElementById('pref-message'); if(!box) return;
   box.style.display='block'; box.style.color=error?'var(--danger)':'var(--success)'; box.textContent=message;
@@ -2576,7 +2593,7 @@ async function autoBoot() {
   await applyServerConfig();
 }
 function enterPlatform(mode='user') {
-  const operator = mode === 'operator';
+  const operator = mode === 'operator' && ['operator','admin'].includes(zeroVialRole);
   const l = document.getElementById('landing'); if(l) l.style.display = 'none';
   sessionStorage.setItem('steele_entered', '1');
   localStorage.setItem('nv_mode', operator ? 'operator' : 'user');
@@ -2589,6 +2606,10 @@ function enterPlatform(mode='user') {
 }
 function setLiveStatus(on) { const el=document.getElementById('ub-status'); if(!el) return; el.innerHTML = on ? '<span class="dot-live"></span> Monitoreando' : '<i class="fa-solid fa-pause"></i> Detenido'; el.classList.toggle('off', !on); }
 function toggleOperator() {
+  if(!['operator','admin'].includes(zeroVialRole)) {
+    document.body.classList.add('user-mode'); document.body.classList.remove('operator-mode');
+    return trafficMessage('El Centro de Operaciones requiere una cuenta autorizada.');
+  }
   const isUser = document.body.classList.toggle('user-mode');
   document.body.classList.toggle('operator-mode', !isUser);
   localStorage.setItem('nv_mode', isUser ? 'user' : 'operator');
@@ -3577,4 +3598,3 @@ function confirmClearAlerts() {
 }
 </script>
 </body>
-</html>
