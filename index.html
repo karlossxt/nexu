@@ -838,7 +838,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
     <h1 class="sr-only">Zero Vial</h1>
     <p class="landing-sub">Anticipa incidencias viales y de seguridad. Filtra lo que necesitas y decide tu trayecto con mayor información.</p>
     <div class="landing-feats">
-      <div class="landing-feat"><i class="fa-solid fa-triangle-exclamation"></i> Alertas en vivo</div>
+      <div class="landing-feat"><i class="fa-solid fa-triangle-exclamation"></i> Monitoreo activo</div>
       <div class="landing-feat"><i class="fa-solid fa-cloud-sun"></i> Clima por punto</div>
       <div class="landing-feat"><i class="fa-solid fa-route"></i> Rutas próximamente</div>
       <div class="landing-feat"><i class="fa-solid fa-shield-halved"></i> Seguridad vial</div>
@@ -856,7 +856,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <div id="landing-message" class="landing-message"></div>
       <button class="landing-guest" onclick="enterAsGuest()"><i class="fa-solid fa-compass"></i> Explorar como invitado<small>No necesitas registrarte para las pruebas</small></button>
     </div>
-    <div class="landing-foot">Personaliza tus alertas después de iniciar sesión · <a href="/acerca.html">Conoce Zero Vial</a></div>
+    <div class="landing-foot">Personaliza tus alertas después de iniciar sesión · <a href="/acerca.html">Conoce Zero Vial</a> · <a href="/ayuda.html">Ayuda</a> · <a href="/servicios.html">Servicios</a> · <a href="/terminos.html">Términos</a></div>
   </div>
 </div>
 
@@ -897,7 +897,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
   <header class="nv-topbar" aria-label="Navegación principal">
     <div class="nt-brand"><img class="nt-logo" src="/zero-mark.png" alt=""><strong>ZERO <span>VIAL</span></strong></div>
     <nav class="nt-nav">
-      <button class="nt-btn active" onclick="clearAlertFocus()"><i class="fa-solid fa-map-location-dot"></i><span>Mapa en vivo</span></button>
+      <button class="nt-btn active" onclick="clearAlertFocus()"><i class="fa-solid fa-map-location-dot"></i><span>Mapa</span></button>
       <button class="nt-btn" onclick="document.body.classList.remove('right-rail');switchPR('feed')" title="Alertas recibidas desde que abriste Zero Vial"><i class="fa-solid fa-triangle-exclamation"></i><span>Alertas</span><em id="nv-top-count" class="nt-count" aria-label="Alertas nuevas en esta sesión">0</em></button>
       <button class="nt-btn" onclick="openAlertCenter()"><i class="fa-solid fa-list-check"></i><span>Centro</span></button>
       <button class="nt-btn" onclick="document.body.classList.remove('right-rail');switchPR('ris')"><i class="fa-solid fa-chart-line"></i><span>Radar Vial</span></button>
@@ -1095,7 +1095,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
   <aside id="panel-right" class="u-panel">
     <div class="pr-top">
       <div class="pr-topbar">
-        <div class="pr-title"><i class="fa-solid fa-wave-square" style="color:#2563EB;"></i> Feed en tiempo real <span class="pr-badge"><i class="fa-solid fa-bell"></i> Alertas</span></div>
+        <div class="pr-title"><i class="fa-solid fa-wave-square" style="color:#2563EB;"></i> Alertas actualizadas <span class="pr-badge"><i class="fa-solid fa-bell"></i> Monitoreo</span></div>
         <button class="pc-btn" onclick="toggleRight()" title="Colapsar panel"><i class="fa-solid fa-angles-right"></i></button>
       </div>
       <div class="pr-tabs">
@@ -1151,7 +1151,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
     <div id="wm-card">
       <div class="wm-head">
         <div>
-          <h1>Clima y condiciones en tramos carreteros <span class="wm-live"><i class="fa-solid fa-circle" style="font-size:7px; color:#38BDF8;"></i> EN VIVO</span></h1>
+          <h1>Clima y condiciones en tramos carreteros <span class="wm-live"><i class="fa-solid fa-circle" style="font-size:7px; color:#38BDF8;"></i> DATOS ACTUALIZADOS</span></h1>
           <p>Monitoreo meteorológico de autopistas alimentado por Open-Meteo.</p>
         </div>
         <div class="wm-head-right">
@@ -1175,7 +1175,8 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
         <div class="risk-head">
           <div>
             <h3 style="margin:0 0 4px; font-size:14px;"><i class="fa-solid fa-chart-line" style="color:var(--ris);"></i> Índice de riesgo por tramo</h3>
-            <p style="margin:0; font-size:11px; color:var(--text-muted);">Cruza clima en vivo + alertas recientes + día/hora de salida. 0 = bajo · 100 = crítico.</p>
+            <p style="margin:0; font-size:11px; color:var(--text-muted);">Cruza clima, alertas recientes y horario de consulta. 0 = bajo · 100 = crítico.</p>
+            <details style="margin-top:8px;font-size:11px;color:var(--text-muted);max-width:720px;"><summary style="cursor:pointer;font-weight:700;color:var(--accent);">¿Cómo se calcula?</summary><p>Es una estimación basada en condiciones meteorológicas, incidencias recientes, severidad, proximidad y horario. No sustituye avisos oficiales ni garantiza condiciones seguras de circulación.</p></details>
           </div>
           <div style="display:flex; gap:6px; align-items:center;">
             <button class="w-pill" id="risk-ai-btn" onclick="riskAI()" title="Resumen por IA (Groq)"><i class="fa-solid fa-wand-magic-sparkles"></i> Resumen IA</button>
@@ -1535,6 +1536,8 @@ let authMode = 'login';
 let zeroVialRole = 'user';
 let zeroVialGuest = false;
 let centralWorkerHealthy = false;
+let centralWorkerState = 'unknown';
+let centralWorkerLastSuccess = null;
 let centralAlertsTimer = null;
 let centralAlertsChannel = null;
 const zeroVialSessionStartedAt = Date.now();
@@ -2547,15 +2550,30 @@ function centralAlertToUi(row,receivedAt=0) {
 async function refreshCentralWorkerHealth() {
   if(!supabaseClient) return false;
   const wasHealthy=centralWorkerHealthy;
-  const {data,error}=await supabaseClient.from('worker_status').select('status,last_success_at').eq('id','main').maybeSingle();
-  if(error||!data?.last_success_at) { centralWorkerHealthy=false; return false; }
+  const {data,error}=await supabaseClient.from('worker_status').select('status,last_success_at,last_started_at,last_error,updated_at').eq('id','main').maybeSingle();
+  if(error||!data) { centralWorkerHealthy=false; centralWorkerState='unavailable'; updateCentralStatus(); return false; }
+  centralWorkerState=data.status||'unknown';
+  centralWorkerLastSuccess=data.last_success_at||null;
   centralWorkerHealthy=data.status==='healthy'&&(Date.now()-new Date(data.last_success_at).getTime()<10*60*1000);
+  updateCentralStatus();
   if(centralWorkerHealthy&&feedInterval) {
     stopSystem(); setLiveStatus(true); log('✅ Worker central activo. Monitoreo del navegador detenido.', 'success');
   } else if(wasHealthy&&!centralWorkerHealthy&&sessionStorage.getItem('steele_entered')==='1'&&!feedInterval) {
     log('⚠️ Worker central sin señal reciente. Activando respaldo temporal.', 'warn'); startHybridSystem();
   }
   return centralWorkerHealthy;
+}
+function updateCentralStatus() {
+  const el=document.getElementById('ub-status'); if(!el) return;
+  const age=centralWorkerLastSuccess ? Math.max(0,Math.round((Date.now()-new Date(centralWorkerLastSuccess).getTime())/60000)) : null;
+  if(centralWorkerHealthy) {
+    el.innerHTML=`<span class="dot-live"></span> Monitoreo activo${age===null?'':` · actualizado hace ${age<1?'menos de 1':age} min`}`;
+    el.classList.remove('off');
+  } else if(centralWorkerState==='running') {
+    el.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Actualizando fuentes…'; el.classList.remove('off');
+  } else {
+    el.innerHTML='<i class="fa-solid fa-triangle-exclamation"></i> Sin sincronización reciente'; el.classList.add('off');
+  }
 }
 async function loadCentralAlerts() {
   if(!supabaseClient) return;
@@ -2803,7 +2821,7 @@ function enterPlatform(mode='user') {
   if(!feedInterval&&!centralWorkerHealthy) { if(!document.getElementById('modelSelect').value) detectModels(); startHybridSystem(); }
   else if(centralWorkerHealthy) setLiveStatus(true);
 }
-function setLiveStatus(on) { const el=document.getElementById('ub-status'); if(!el) return; el.innerHTML = on ? '<span class="dot-live"></span> Monitoreando' : '<i class="fa-solid fa-pause"></i> Detenido'; el.classList.toggle('off', !on); }
+function setLiveStatus(on) { if(on&&centralWorkerLastSuccess) return updateCentralStatus(); const el=document.getElementById('ub-status'); if(!el) return; el.innerHTML = on ? '<span class="dot-live"></span> Monitoreo activo' : '<i class="fa-solid fa-pause"></i> Monitoreo detenido'; el.classList.toggle('off', !on); }
 function toggleOperator() {
   if(!['operator','admin'].includes(zeroVialRole)) {
     document.body.classList.add('user-mode'); document.body.classList.remove('operator-mode');
@@ -3166,7 +3184,7 @@ function rebuildU() {
   else if(map.hasLayer(staticLayer)) map.removeLayer(staticLayer);
   if(fl) { fl.innerHTML = ''; sortVisibleAlerts(vis).forEach(a => fl.appendChild(makeAlertCard(a))); }
   if(fe) fe.style.display = vis.length ? 'none' : 'block';
-  if(em) em.textContent = vis.length ? '' : (alerts.length ? 'No hay alertas con estos filtros. Amplía el periodo o selecciona Todo México.' : 'Aún no llegan alertas. Escaneando novedades cada 3 min...');
+  if(em) em.textContent = vis.length ? '' : (alerts.length ? 'No hay alertas que coincidan con tus filtros. Amplía el periodo o selecciona Todo México.' : centralWorkerHealthy ? 'Sin incidencias nuevas en este momento. Monitoreo activo y actualización automática cada 3 min.' : centralWorkerState==='running' ? 'Actualizando fuentes…' : 'No fue posible confirmar la sincronización. La información puede estar desactualizada.');
   refreshCounters();
 }
 
