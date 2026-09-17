@@ -13,7 +13,7 @@ if (missing.length) {
 const SUPABASE_URL = env.SUPABASE_URL.replace(/\/$/, '');
 const SUPABASE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
 const GROQ_KEY = env.GROQ_API_KEY;
-const GROQ_MODEL = env.GROQ_MODEL || 'openai/gpt-oss-20b';
+const GROQ_MODEL = env.GROQ_MODEL || 'llama-3.1-8b-instant';
 const GOOGLE_KEY = env.GOOGLE_MAPS_API_KEY || '';
 const POLL_MS = Math.max(60_000, Number(env.WORKER_INTERVAL_MS) || 180_000);
 const MAX_AGE_MS = Math.max(1, Number(env.ALERT_MAX_AGE_HOURS) || 24) * 3600_000;
@@ -243,7 +243,12 @@ async function cycle() {
       }
       await sleep(1200);
     }
-    await health({ status:'healthy', last_success_at:new Date().toISOString(), last_stats:stats, last_error:null });
+    await health({
+      status: stats.errors > 0 ? 'error' : 'healthy',
+      last_success_at: stats.errors < stats.analyzed ? new Date().toISOString() : null,
+      last_stats: stats,
+      last_error: stats.errors > 0 ? `${stats.errors} noticia(s) fallaron durante el análisis` : null
+    });
     log('info','Ciclo completado',stats);
   } catch (error) {
     await health({ status:'error', last_error:error.message.slice(0,1000) });
