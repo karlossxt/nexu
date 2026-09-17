@@ -13,7 +13,7 @@ if (missing.length) {
 const SUPABASE_URL = env.SUPABASE_URL.replace(/\/$/, '');
 const SUPABASE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
 const GROQ_KEY = env.GROQ_API_KEY;
-const GROQ_MODEL = env.GROQ_MODEL || 'llama-3.1-8b-instant';
+const GROQ_MODEL = env.GROQ_MODEL || 'openai/gpt-oss-20b';
 const GOOGLE_KEY = env.GOOGLE_MAPS_API_KEY || '';
 const POLL_MS = Math.max(60_000, Number(env.WORKER_INTERVAL_MS) || 180_000);
 const MAX_AGE_MS = Math.max(1, Number(env.ALERT_MAX_AGE_HOURS) || 24) * 3600_000;
@@ -98,7 +98,7 @@ async function alreadyExists(externalId) {
 }
 
 async function classify(text) {
-  const prompt = `Clasifica esta noticia. Rechaza si no es un incidente vial o de seguridad en México o no incluye una ubicación útil. No inventes datos. Devuelve exclusivamente JSON válido: {"valido":false,"ubicacion":"","carretera":"","kilometro":null,"municipio":"","estado":"","categoria":"road","severidad":"medium","resumen":"","detail":""}. categoria sólo road o security; severidad critical, high, medium o low. TEXTO: ${text.slice(0, 1200)}`;
+  const prompt = `Clasifica esta noticia. Rechaza si no es un incidente vial o de seguridad en México o no incluye una ubicación útil. No inventes datos. Si rechazas, conserva los campos de texto vacíos. Resume el hecho sin agregar información. TEXTO: ${text.slice(0, 1200)}`;
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + GROQ_KEY, 'Content-Type': 'application/json' },
@@ -106,9 +106,32 @@ async function classify(text) {
       model: GROQ_MODEL,
       temperature: 0.1,
       max_tokens: 500,
-      response_format: { type: 'json_object' },
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'alerta_vial',
+          strict: true,
+          schema: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              valido: { type: 'boolean' },
+              ubicacion: { type: 'string' },
+              carretera: { type: 'string' },
+              kilometro: { type: ['number', 'null'] },
+              municipio: { type: 'string' },
+              estado: { type: 'string' },
+              categoria: { type: 'string', enum: ['road', 'security'] },
+              severidad: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },
+              resumen: { type: 'string' },
+              detail: { type: 'string' }
+            },
+            required: ['valido', 'ubicacion', 'carretera', 'kilometro', 'municipio', 'estado', 'categoria', 'severidad', 'resumen', 'detail']
+          }
+        }
+      },
       messages: [
-      { role: 'system', content: 'Eres analista de seguridad vial y logística en México. Responde sólo JSON.' },
+      { role: 'system', content: 'Eres analista de seguridad vial y logística en México.' },
       { role: 'user', content: prompt }
       ]
     })
