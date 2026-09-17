@@ -206,7 +206,18 @@ async function processItem(item, feed) {
     : [ai.ubicacion, ai.municipio, ai.estado];
   const locationQuery = [...new Set(locationParts.map(clean).filter(Boolean))].join(', ');
   if (locationQuery.length < 4) return 'no_location';
-  const geo = await geocode(locationQuery, ai.estado);
+  const locationQueries = [...new Set([
+    locationQuery,
+    [ai.ubicacion, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '),
+    [ai.carretera, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '),
+    [ai.municipio, ai.estado].map(clean).filter(Boolean).join(', ')
+  ].filter(query => query.length >= 4))].slice(0, 3);
+  let geo = null;
+  for (const query of locationQueries) {
+    geo = await geocode(query, ai.estado);
+    if (geo) break;
+    if (!GOOGLE_KEY) await sleep(1100);
+  }
   if (!geo || !Number.isFinite(geo.latitude) || !Number.isFinite(geo.longitude)) return 'no_location';
   const eventAt = item.published_at && Date.now() - new Date(item.published_at).getTime() <= MAX_AGE_MS ? item.published_at : new Date().toISOString();
   const row = {
