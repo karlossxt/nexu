@@ -165,20 +165,25 @@ body.user-mode:not(.dark-mode) .pref-check{ background:#fff; border-color:#D8E1E
 .card-nav{ width:auto; min-height:30px; padding:6px 9px; border-radius:7px; background:rgba(37,99,235,.14); border:1px solid rgba(37,99,235,.4); color:#60A5FA; font-size:10px; box-shadow:none; }
 
 /* LANDING / ENTRADA */
-#landing{ position:fixed; inset:0; z-index:20000; display:flex; align-items:center; justify-content:center; padding:20px; background:linear-gradient(135deg,#0b0f19 0%,#12203a 55%,#1a2f52 100%); }
-#landing-card{ width:100%; max-width:420px; text-align:center; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); border-radius:20px; padding:40px 28px; box-shadow:0 30px 80px rgba(0,0,0,.5); }
-.landing-logo{ width:min(310px,88%); height:190px; margin:0 auto 8px; object-fit:contain; object-position:center; border-radius:16px; background:#000; box-shadow:0 12px 34px rgba(0,0,0,.38); }
+#landing{ --brand-amber:#FFB000; --brand-cyan:#19C7E8; position:fixed; inset:0; z-index:20000; display:flex; align-items:center; justify-content:center; padding:24px; overflow:auto; background:radial-gradient(circle at 18% 18%,rgba(25,199,232,.13),transparent 28%),radial-gradient(circle at 82% 76%,rgba(255,176,0,.14),transparent 30%),linear-gradient(145deg,#030405 0%,#090D12 55%,#111820 100%); }
+#landing:before{ content:""; position:absolute; inset:0; pointer-events:none; opacity:.18; background:linear-gradient(115deg,transparent 0 44%,rgba(255,255,255,.11) 44.2% 44.45%,transparent 44.7% 100%),repeating-linear-gradient(90deg,transparent 0 95px,rgba(255,255,255,.04) 96px 97px); mask-image:linear-gradient(to bottom,transparent,#000 35%,#000 72%,transparent); }
+#landing-card{ position:relative; width:100%; max-width:880px; text-align:center; background:linear-gradient(150deg,rgba(18,23,30,.94),rgba(5,7,9,.97)); border:1px solid rgba(255,255,255,.14); border-top-color:rgba(255,255,255,.27); border-radius:26px; padding:28px 34px 25px; box-shadow:0 35px 100px rgba(0,0,0,.68),0 0 55px rgba(25,199,232,.07); overflow:hidden; }
+#landing-card:before{ content:""; position:absolute; left:0; right:0; top:0; height:3px; background:linear-gradient(90deg,transparent,var(--brand-cyan) 28%,#fff 50%,var(--brand-amber) 72%,transparent); }
+.landing-kicker{ display:inline-flex; align-items:center; gap:8px; color:#D7E0E8; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.045); padding:7px 12px; border-radius:20px; font-size:10px; font-weight:800; letter-spacing:.13em; text-transform:uppercase; }
+.landing-kicker i{ color:var(--brand-cyan); }
+.landing-logo{ display:block; width:min(650px,94%); height:250px; margin:-4px auto -12px; object-fit:contain; object-position:center; background:#000; mix-blend-mode:screen; }
 .landing-brand{ color:#fff; font-size:34px; letter-spacing:2px; margin:4px 0; }
 .landing-brand span{ color:#f9ab00; }
 .sr-only{ position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important; }
-.landing-sub{ color:#aeb9cc; margin:6px 0 22px; font-size:15px; }
-.landing-feats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:26px; }
-.landing-feat{ background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:12px 8px; color:#e8edf5; font-size:13px; font-weight:600; }
-.landing-feat i{ color:#f9ab00; margin-right:6px; }
-.landing-modes{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.landing-mode{ width:100%; min-height:58px; padding:11px 8px; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; transition:transform .15s,filter .15s; }
+.landing-sub{ color:#AEB9C5; margin:3px auto 20px; max-width:600px; font-size:15px; line-height:1.55; }
+.landing-feats{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:22px; }
+.landing-feat{ background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:13px 8px; color:#EAF0F5; font-size:12px; font-weight:700; }
+.landing-feat i{ color:var(--brand-amber); margin-right:6px; }
+.landing-feat:nth-child(even) i{ color:var(--brand-cyan); }
+.landing-modes{ display:grid; grid-template-columns:1.15fr .85fr; gap:10px; max-width:590px; margin:0 auto; }
+.landing-mode{ width:100%; min-height:60px; padding:11px 8px; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; transition:transform .15s,filter .15s,box-shadow .15s; }
 .landing-mode:hover{ transform:translateY(-2px); filter:brightness(1.08); }
-.landing-mode.user{ border:none; background:linear-gradient(90deg,#f9ab00,#ff6d00); color:#1a1a1a; }
+.landing-mode.user{ border:none; background:linear-gradient(105deg,#FFC02E,#FF9600); color:#101214; box-shadow:0 9px 25px rgba(255,176,0,.2); }
 .landing-mode.full{ border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.08); color:#fff; }
 .landing-mode small{ display:block; margin-top:3px; font-size:10px; font-weight:500; opacity:.75; }
 .rm-search-actions{ display:grid; grid-template-columns:1fr auto; gap:8px; margin:10px 0 12px; }
@@ -187,7 +192,8 @@ body.user-mode:not(.dark-mode) .pref-check{ background:#fff; border-color:#D8E1E
 .rm-location-actions{ display:flex; gap:8px; margin-top:8px; }
 .rm-location-actions button{ width:auto; margin:0; padding:7px 10px; border-radius:8px; background:rgba(37,99,235,.12); color:#60A5FA; border:1px solid rgba(37,99,235,.4); font-size:11px; }
 .alert-source{ margin-top:7px; font-size:10px; color:var(--text-muted); display:flex; align-items:center; gap:5px; }
-.landing-foot{ margin-top:18px; font-size:11px; color:#8b96a8; }
+.landing-foot{ margin-top:17px; font-size:11px; color:#84919F; }
+.landing-foot a{ color:var(--brand-cyan)!important; font-weight:700; }
 
 /* ALERTAS CERCANAS A LA RUTA */
 #routeAlerts{ margin-top:12px; }
@@ -805,9 +811,10 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
 
 <div id="landing">
   <div id="landing-card">
+    <div class="landing-kicker"><i class="fa-solid fa-satellite-dish"></i> Monitoreo vial inteligente</div>
     <img class="landing-logo" src="/zero-logo.png" alt="Zero Vial">
     <h1 class="sr-only">Zero Vial</h1>
-    <p class="landing-sub">Riesgos al viajar en México, en tiempo real.</p>
+    <p class="landing-sub">Anticipa incidencias viales y de seguridad. Filtra lo que necesitas y decide tu trayecto con mayor información.</p>
     <div class="landing-feats">
       <div class="landing-feat"><i class="fa-solid fa-triangle-exclamation"></i> Alertas en vivo</div>
       <div class="landing-feat"><i class="fa-solid fa-cloud-sun"></i> Clima por punto</div>
@@ -815,7 +822,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <div class="landing-feat"><i class="fa-solid fa-shield-halved"></i> Seguridad vial</div>
     </div>
     <div class="landing-modes">
-      <button class="landing-mode user" onclick="enterPlatform('user')"><i class="fa-solid fa-user"></i> Modo usuario<small>Solo lo que necesitas</small></button>
+      <button class="landing-mode user" onclick="enterPlatform('user')"><i class="fa-solid fa-location-arrow"></i> Consultar mapa<small>Alertas filtradas para tu trayecto</small></button>
       <button class="landing-mode full" onclick="enterPlatform('operator')"><i class="fa-solid fa-user-shield"></i> Administrador<small>Plataforma completa</small></button>
     </div>
     <div class="landing-foot">Puedes cambiar de modo en cualquier momento · <a href="/acerca.html" style="color:#9dd1ff">Conoce Zero Vial</a></div>
