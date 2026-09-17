@@ -1538,6 +1538,7 @@ let zeroVialGuest = false;
 let centralWorkerHealthy = false;
 let centralWorkerState = 'unknown';
 let centralWorkerLastSuccess = null;
+const MAX_NOTIFICATION_AGE_MS = 15 * 60 * 1000;
 let centralAlertsTimer = null;
 let centralAlertsChannel = null;
 const zeroVialSessionStartedAt = Date.now();
@@ -2189,7 +2190,7 @@ function showAlertFocus(a) {
   document.getElementById('focus-title').textContent=a.title || 'Incidente vial';
   document.getElementById('sac-title').textContent=a.title || 'Incidente vial';
   document.getElementById('sac-location').textContent=a.location || 'Ubicación aproximada';
-  document.getElementById('sac-meta').textContent=`${alertSourceLabel(a)} · ${precisionLabel(a)} · ${formatAlertTime(a.time)}`;
+  document.getElementById('sac-meta').textContent=`${alertSourceLabel(a)} · ${precisionLabel(a)} · ${alertTimingLabel(a)}`;
   const icon=document.getElementById('sac-icon'); icon.style.background=visual.color; icon.innerHTML=`<i class="fa-solid ${visual.icon}"></i>`;
   banner.classList.add('open'); card.classList.add('open');
 }
@@ -2260,7 +2261,7 @@ function alertCardHTML(a) {
     <b class="ac-title">${a.title}</b>
     <div class="ac-location"><i class="fa-solid fa-location-dot"></i><span>${a.location || 'Ubicación aproximada'}</span></div>
     <div class="ac-tags"><span class="precision-chip"><i class="fa-solid fa-crosshairs"></i> ${precisionLabel(a)}</span>${distanceChip}${trafficChip}${stale}<button class="card-nav" onclick="event.stopPropagation(); navigateToAlert(${a.id})"><i class="fa-solid fa-diamond-turn-right"></i> Ir</button></div>
-    <div class="ac-source"><i class="fa-solid fa-circle-info"></i><span>${alertSourceLabel(a)}</span><span class="ac-actions"><button onclick="event.stopPropagation(); toggleLike(${a.id})" id="btn-heart-${a.id}" class="ac-action${a.liked ? ' liked' : ''}" title="Guardar alerta" aria-label="Guardar alerta"><i class="fa-solid fa-heart"></i></button><button onclick="event.stopPropagation(); shareAlert(${a.id})" class="ac-action share" title="Compartir" aria-label="Compartir alerta"><i class="fa-brands fa-whatsapp"></i></button><button onclick="event.stopPropagation(); removeAlert(${a.id})" class="ac-action delete" title="Eliminar" aria-label="Eliminar alerta"><i class="fa-solid fa-xmark"></i></button></span></div>
+    <div class="ac-source"><i class="fa-solid fa-circle-info"></i><span>${alertSourceLabel(a)} · ${alertTimingLabel(a)}</span><span class="ac-actions"><button onclick="event.stopPropagation(); toggleLike(${a.id})" id="btn-heart-${a.id}" class="ac-action${a.liked ? ' liked' : ''}" title="Guardar alerta" aria-label="Guardar alerta"><i class="fa-solid fa-heart"></i></button><button onclick="event.stopPropagation(); shareAlert(${a.id})" class="ac-action share" title="Compartir" aria-label="Compartir alerta"><i class="fa-brands fa-whatsapp"></i></button><button onclick="event.stopPropagation(); removeAlert(${a.id})" class="ac-action delete" title="Eliminar" aria-label="Eliminar alerta"><i class="fa-solid fa-xmark"></i></button></span></div>
   `;
 }
 function makeAlertCard(a) {
@@ -2314,6 +2315,12 @@ async function fetchWeather(lat, lon) {
   } catch(e) { return null; }
 }
 function formatAlertTime(t) { return new Date(t).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }); }
+function alertTimingLabel(a) {
+  const published=`Publicado ${formatRelativeAlertTime(a.time)}`;
+  if(!a.detected_at) return published;
+  const delay=Math.max(0,Math.round((new Date(a.detected_at).getTime()-new Date(a.time).getTime())/60000));
+  return `${published} · detectado ${delay<1?'en menos de 1 min':`${delay} min después`}`;
+}
 function toggleLike(id) {
   const a = alerts.find(x => x.id === id); if(!a) return;
   a.liked = !a.liked;
@@ -2541,7 +2548,7 @@ function centralAlertToUi(row,receivedAt=0) {
     title:row.title, detail:row.detail||row.title, location:row.location_label||[row.road,row.municipality,row.state].filter(Boolean).join(', '),
     state:row.state||'', precision:['corrected','verified'].includes(row.location_status)?'punto':confidence>=.82?'carretera':'zona',
     location_confidence:confidence, location_provider:'central', road_snapped:false,
-    time:new Date(row.event_at), published_at:row.event_at, received_at:receivedAt,
+    time:new Date(row.event_at), published_at:row.event_at, detected_at:row.created_at||null, received_at:receivedAt,
     trafico:row.category==='road'?(severity==='critical'?'detenido':severity==='high'?'moderado':'fluido'):null,
     importante:['critical','high'].includes(severity), source_type:'media', source_name:row.source_name||'Fuente verificada',
     source_url:row.source_url||'', verification_status:row.location_status==='verified'?'verified':'automatic', liked:false
@@ -2578,7 +2585,7 @@ function updateCentralStatus() {
 async function loadCentralAlerts() {
   if(!supabaseClient) return;
   const since=new Date(Date.now()-24*3600*1000).toISOString();
-  const {data,error}=await supabaseClient.from('alerts').select('id,external_id,title,detail,category,severity,state,municipality,road,kilometer,location_label,latitude,longitude,location_confidence,location_status,source_name,source_url,event_at').gte('event_at',since).not('latitude','is',null).not('longitude','is',null).order('event_at',{ascending:false}).limit(500);
+  const {data,error}=await supabaseClient.from('alerts').select('id,external_id,title,detail,category,severity,state,municipality,road,kilometer,location_label,latitude,longitude,location_confidence,location_status,source_name,source_url,event_at,created_at').gte('event_at',since).not('latitude','is',null).not('longitude','is',null).order('event_at',{ascending:false}).limit(500);
   if(error||!Array.isArray(data)) return;
   const previous=new Map(alerts.filter(a=>a.central_id).map(a=>[a.central_id,Number(a.received_at)||0]));
   const central=data.map(row=>centralAlertToUi(row,previous.get(row.id)||0));
@@ -2597,7 +2604,7 @@ async function initCentralAlerts() {
         const alert=centralAlertToUi(payload.new,Date.now());
         alerts=alerts.filter(a=>a.central_id!==alert.central_id); alerts.push(alert);
         persistAlerts(); updateLists(); rebuildU();
-        if(alert.importante) notifyImportant(alert);
+        if(alert.importante&&isFreshForNotification(alert)) notifyImportant(alert);
       }).subscribe();
   }
 }
@@ -3068,6 +3075,7 @@ function showImportantToast(a) {
   setTimeout(() => t.remove(), 9000);
 }
 function notifyImportant(a) {
+  if(!isFreshForNotification(a)) return;
   playAlertTone();
   showImportantToast(a);
   try {
@@ -3078,6 +3086,11 @@ function notifyImportant(a) {
   const prev = document.title;
   document.title = '🚨 ' + (a.title || 'Alerta');
   setTimeout(() => { document.title = prev; }, 8000);
+}
+function isFreshForNotification(a) {
+  const published=new Date(a?.time||a?.published_at||0).getTime();
+  const age=Date.now()-published;
+  return Number.isFinite(published)&&age>=-5*60*1000&&age<=MAX_NOTIFICATION_AGE_MS;
 }
 function refreshAlertAges() {
   markers.clearLayers(); alertAreaLayer.clearLayers(); alerts.forEach(a => addMarkerToMap(a)); updateLists();
