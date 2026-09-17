@@ -154,6 +154,8 @@ body.user-mode:not(.dark-mode) .pref-check{ background:#fff; border-color:#D8E1E
 .auth-switch{ display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:14px; }
 .auth-switch button{ background:var(--card-bg); color:var(--text-muted); border:1px solid var(--border); }
 .auth-switch button.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
+.auth-link{ width:auto; display:block; margin:-5px 0 13px auto; padding:3px 0; color:#38BDF8; background:transparent; border:0; box-shadow:none; font-size:11px; }
+.auth-link:hover{ box-shadow:none; text-decoration:underline; }
 .btn-heart{ background:transparent; border:none; color:#999; padding:0; width:26px; height:26px; border-radius:50%; cursor:pointer; font-size:15px; transition:transform .15s; }
 .btn-heart:hover{ transform:scale(1.2); }
 .btn-heart.liked{ color:#e91e63; }
@@ -1391,11 +1393,25 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <div class="auth-switch"><button id="auth-login-tab" class="active" onclick="setAuthMode('login')">Iniciar sesión</button><button id="auth-register-tab" onclick="setAuthMode('register')">Crear cuenta</button></div>
       <label>Correo electrónico</label><input id="auth-email" type="email" autocomplete="email" placeholder="correo@ejemplo.com">
       <label>Contraseña</label><input id="auth-password" type="password" autocomplete="current-password" minlength="6" placeholder="Mínimo 6 caracteres">
+      <button id="auth-forgot" class="auth-link" onclick="requestPasswordRecovery()">¿Olvidaste tu contraseña?</button>
       <button id="auth-submit" onclick="submitAuth()"><i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión</button>
       <div id="auth-message" class="correction-preview" style="display:none;margin-top:10px"></div>
       <button id="auth-preferences" class="btn-outline" onclick="openPreferences()" style="display:none;margin-top:9px"><i class="fa-solid fa-sliders"></i> Mis preferencias</button>
       <button id="auth-operations" class="btn-outline operator-access" onclick="closeModal('auth-modal');toggleOperator()" style="margin-top:9px"><i class="fa-solid fa-shield-halved"></i> Centro de Operaciones</button>
       <button id="auth-logout" class="btn-outline" onclick="logoutZeroVial()" style="display:none;margin-top:9px"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</button>
+    </div>
+  </div>
+</div>
+
+<div id="recovery-modal" class="u-modal">
+  <div class="u-modal-card">
+    <div class="m-head"><i class="fa-solid fa-key" style="color:#FFB000"></i> Crear nueva contraseña<button class="m-x" onclick="closeModal('recovery-modal')">✕</button></div>
+    <div class="m-body">
+      <div class="pref-note">El enlace fue validado. Escribe una contraseña nueva para tu cuenta de Zero Vial.</div>
+      <label>Nueva contraseña</label><input id="recovery-password" type="password" autocomplete="new-password" minlength="8" placeholder="Mínimo 8 caracteres">
+      <label>Confirmar contraseña</label><input id="recovery-confirm" type="password" autocomplete="new-password" minlength="8" placeholder="Repite la contraseña">
+      <button id="recovery-submit" onclick="completePasswordRecovery()"><i class="fa-solid fa-lock"></i> Guardar nueva contraseña</button>
+      <div id="recovery-message" class="correction-preview" style="display:none;margin-top:10px"></div>
     </div>
   </div>
 </div>
@@ -2466,11 +2482,13 @@ async function initSupabase(config) {
   supabaseClient=window.supabase.createClient(config.url,config.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   const {data}=await supabaseClient.auth.getSession(); zeroVialUser=data?.session?.user||null; updateAccountButton();
   if(zeroVialUser) await Promise.all([loadUserRole(),loadUserPreferences()]);
-  supabaseClient.auth.onAuthStateChange((_event,session)=>{
+  supabaseClient.auth.onAuthStateChange((event,session)=>{
     zeroVialUser=session?.user||null; updateAccountButton();
     if(zeroVialUser) setTimeout(()=>{ loadUserRole(); loadUserPreferences(); },0);
     else { zeroVialRole='user'; applyRoleAccess(); }
+    if(event==='PASSWORD_RECOVERY') setTimeout(openRecoveryModal,0);
   });
+  if(window.location.hash.includes('type=recovery')) setTimeout(openRecoveryModal,0);
 }
 function applyRoleAccess() {
   const authorized=['operator','admin'].includes(zeroVialRole);
@@ -2495,6 +2513,16 @@ function setAuthMode(mode) {
   document.getElementById('auth-login-tab')?.classList.toggle('active',authMode==='login');
   document.getElementById('auth-register-tab')?.classList.toggle('active',authMode==='register');
   const button=document.getElementById('auth-submit'); if(button) button.innerHTML=authMode==='login'?'<i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión':'<i class="fa-solid fa-user-plus"></i> Crear cuenta';
+  const forgot=document.getElementById('auth-forgot'); if(forgot) forgot.style.display=authMode==='login'?'block':'none';
+}
+function authErrorSpanish(error) {
+  const message=String(error?.message||error||'').toLowerCase();
+  if(message.includes('invalid login credentials')) return 'El correo o la contraseña no son correctos.';
+  if(message.includes('email not confirmed')) return 'Confirma tu correo antes de iniciar sesión.';
+  if(message.includes('email rate limit exceeded')||message.includes('rate limit')) return 'Se alcanzó el límite temporal de correos. Espera una hora antes de intentarlo nuevamente.';
+  if(message.includes('user already registered')) return 'Ese correo ya tiene una cuenta. Inicia sesión o recupera tu contraseña.';
+  if(message.includes('password')) return 'La contraseña no cumple los requisitos de seguridad.';
+  return error?.message||'No fue posible completar la solicitud.';
 }
 function authMessage(message,error=false) {
   const box=document.getElementById('auth-message'); if(!box) return; box.style.display='block'; box.style.color=error?'var(--danger)':'var(--success)'; box.textContent=message;
@@ -2503,6 +2531,7 @@ function openAuthModal() {
   openModal('auth-modal');
   document.getElementById('auth-logout').style.display=zeroVialUser?'block':'none';
   document.getElementById('auth-submit').style.display=zeroVialUser?'none':'block';
+  document.getElementById('auth-forgot').style.display=!zeroVialUser&&authMode==='login'?'block':'none';
   document.getElementById('auth-message').style.display='none';
   if(!supabaseClient) authMessage('La conexión con Supabase está preparada, pero falta configurar la clave pública en Vercel.',true);
 }
@@ -2513,12 +2542,49 @@ async function submitAuth() {
   const result=authMode==='register'
     ? await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin+'/'}})
     : await supabaseClient.auth.signInWithPassword({email,password});
-  if(result.error) return authMessage(result.error.message,true);
+  if(result.error) return authMessage(authErrorSpanish(result.error),true);
   if(authMode==='register'&&!result.data.session) return authMessage('Cuenta creada. Revisa tu correo para confirmarla.');
   zeroVialUser=result.data.user; updateAccountButton(); authMessage('Sesión iniciada correctamente.');
   await Promise.all([loadUserRole(),loadUserPreferences()]);
 }
 async function logoutZeroVial() { if(supabaseClient) await supabaseClient.auth.signOut(); zeroVialUser=null; zeroVialRole='user'; applyRoleAccess(); updateAccountButton(); closeModal('auth-modal'); }
+async function requestPasswordRecovery() {
+  if(!supabaseClient) return authMessage('Supabase todavía no está configurado.',true);
+  const email=document.getElementById('auth-email').value.trim().toLowerCase();
+  if(!email||!email.includes('@')) return authMessage('Escribe primero el correo de tu cuenta.',true);
+  const last=Number(localStorage.getItem('zero_vial_recovery_sent')||0);
+  const remaining=Math.ceil((60000-(Date.now()-last))/1000);
+  if(remaining>0) return authMessage('Espera '+remaining+' segundos antes de solicitar otro correo.',true);
+  const button=document.getElementById('auth-forgot'); button.disabled=true; button.textContent='Enviando…';
+  localStorage.setItem('zero_vial_recovery_sent',String(Date.now()));
+  const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+'/'});
+  button.disabled=false; button.textContent='¿Olvidaste tu contraseña?';
+  if(error) return authMessage(authErrorSpanish(error),true);
+  authMessage('Te enviamos un enlace. Revisa también spam y promociones.');
+}
+function recoveryMessage(message,error=false) {
+  const box=document.getElementById('recovery-message'); if(!box) return;
+  box.style.display='block'; box.style.color=error?'var(--danger)':'var(--success)'; box.textContent=message;
+}
+function openRecoveryModal() {
+  closeModal('auth-modal');
+  const box=document.getElementById('recovery-message'); if(box) box.style.display='none';
+  openModal('recovery-modal');
+}
+async function completePasswordRecovery() {
+  if(!supabaseClient) return recoveryMessage('No se pudo conectar con Supabase.',true);
+  const password=document.getElementById('recovery-password').value;
+  const confirm=document.getElementById('recovery-confirm').value;
+  if(password.length<8) return recoveryMessage('La contraseña debe tener al menos 8 caracteres.',true);
+  if(password!==confirm) return recoveryMessage('Las contraseñas no coinciden.',true);
+  const button=document.getElementById('recovery-submit'); button.disabled=true; button.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Guardando…';
+  const {error}=await supabaseClient.auth.updateUser({password});
+  button.disabled=false; button.innerHTML='<i class="fa-solid fa-lock"></i> Guardar nueva contraseña';
+  if(error) return recoveryMessage(authErrorSpanish(error),true);
+  history.replaceState(null,'',window.location.pathname+window.location.search);
+  recoveryMessage('Contraseña actualizada. Ya puedes continuar con tu cuenta.');
+  setTimeout(()=>{ closeModal('recovery-modal'); updateAccountButton(); },1400);
+}
 function prefMessage(message,error=false) {
   const box=document.getElementById('pref-message'); if(!box) return;
   box.style.display='block'; box.style.color=error?'var(--danger)':'var(--success)'; box.textContent=message;
