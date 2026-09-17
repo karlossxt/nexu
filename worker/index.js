@@ -102,16 +102,31 @@ async function classify(text) {
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + GROQ_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: GROQ_MODEL, temperature: 0.1, max_tokens: 350, messages: [
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      temperature: 0.1,
+      max_tokens: 500,
+      response_format: { type: 'json_object' },
+      messages: [
       { role: 'system', content: 'Eres analista de seguridad vial y logística en México. Responde sólo JSON.' },
       { role: 'user', content: prompt }
-    ] })
+      ]
+    })
   });
   if (!response.ok) throw new Error('Groq ' + response.status + ': ' + (await response.text()).slice(0, 250));
   const data = await response.json();
-  const raw = data.choices?.[0]?.message?.content || data.choices?.[0]?.message?.reasoning || '';
-  const json = raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1);
-  return JSON.parse(json);
+  const message = data.choices?.[0]?.message || {};
+  const raw = String(message.content || message.reasoning || '').trim();
+  const start = raw.indexOf('{');
+  const end = raw.lastIndexOf('}');
+  if (!raw || start < 0 || end <= start) {
+    throw new Error('Groq devolvió una respuesta vacía o sin JSON');
+  }
+  try {
+    return JSON.parse(raw.slice(start, end + 1));
+  } catch (error) {
+    throw new Error('Groq devolvió JSON inválido: ' + error.message);
+  }
 }
 
 async function geocode(query, expectedState) {
