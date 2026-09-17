@@ -143,6 +143,14 @@ body.dark-mode .leaflet-control-attribution a{ color:#bbb; }
 .correction-grid .full{ grid-column:1/-1; }
 .correction-note{ padding:9px 11px; border-radius:9px; background:rgba(21,112,239,.10); border:1px solid rgba(21,112,239,.25); color:var(--text-muted); font-size:11px; line-height:1.45; margin-bottom:12px; }
 .correction-preview{ min-height:42px; padding:9px 11px; border:1px solid var(--border); border-radius:9px; background:var(--log-bg); color:var(--text-muted); font-size:11px; margin-bottom:12px; }
+.pref-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.pref-grid .full{ grid-column:1/-1; }
+.pref-checks{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:6px 0 14px; }
+.pref-check{ display:flex; align-items:center; gap:8px; padding:9px 10px; border:1px solid #1E293B; border-radius:9px; background:#131822; font-size:12px; }
+.pref-check input{ width:auto; margin:0; }
+.pref-note{ margin-bottom:12px; padding:9px 11px; border-radius:9px; background:rgba(56,189,248,.09); border:1px solid rgba(56,189,248,.25); color:#9CA3AF; font-size:11px; line-height:1.45; }
+body.user-mode:not(.dark-mode) .pref-check{ background:#fff; border-color:#D8E1EC; color:#172033; }
+@media(max-width:560px){ .pref-grid,.pref-checks{ grid-template-columns:1fr; } .pref-grid .full{ grid-column:auto; } }
 .auth-switch{ display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:14px; }
 .auth-switch button{ background:var(--card-bg); color:var(--text-muted); border:1px solid var(--border); }
 .auth-switch button.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
@@ -1377,7 +1385,32 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <label>Contraseña</label><input id="auth-password" type="password" autocomplete="current-password" minlength="6" placeholder="Mínimo 6 caracteres">
       <button id="auth-submit" onclick="submitAuth()"><i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión</button>
       <div id="auth-message" class="correction-preview" style="display:none;margin-top:10px"></div>
+      <button id="auth-preferences" class="btn-outline" onclick="openPreferences()" style="display:none;margin-top:9px"><i class="fa-solid fa-sliders"></i> Mis preferencias</button>
       <button id="auth-logout" class="btn-outline" onclick="logoutZeroVial()" style="display:none;margin-top:9px"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</button>
+    </div>
+  </div>
+</div>
+
+<div id="preferences-modal" class="u-modal">
+  <div class="u-modal-card">
+    <div class="m-head"><i class="fa-solid fa-sliders" style="color:#38BDF8"></i> Preferencias de alertas<button class="m-x" onclick="closeModal('preferences-modal')">✕</button></div>
+    <div class="m-body">
+      <div class="pref-note">Elige únicamente la información que necesitas. Puedes cambiar estas preferencias en cualquier momento.</div>
+      <label>Tipos de alerta</label>
+      <div class="pref-checks">
+        <label class="pref-check"><input id="pref-road" type="checkbox" checked> <i class="fa-solid fa-car-burst" style="color:#F97316"></i> Incidencias viales</label>
+        <label class="pref-check"><input id="pref-security" type="checkbox" checked> <i class="fa-solid fa-shield-halved" style="color:#EF4444"></i> Seguridad</label>
+        <label class="pref-check"><input id="pref-blockages" type="checkbox"> <i class="fa-solid fa-road-barrier" style="color:#E11D48"></i> Sólo bloqueos</label>
+        <label class="pref-check"><input id="pref-push" type="checkbox" disabled> <i class="fa-solid fa-bell" style="color:#38BDF8"></i> Push · Próximamente</label>
+      </div>
+      <div class="pref-grid">
+        <div><label>Periodo</label><select id="pref-time"><option value="1">Última hora</option><option value="3">Últimas 3 horas</option><option value="6">Últimas 6 horas</option><option value="12">Últimas 12 horas</option><option value="24">Últimas 24 horas</option></select></div>
+        <div><label>Gravedad mínima</label><select id="pref-severity"><option value="low">Todas</option><option value="medium">Media o mayor</option><option value="high">Alta o crítica</option><option value="critical">Sólo crítica</option></select></div>
+        <div class="full"><label>Estado</label><select id="pref-state"><option value="">Todo México</option></select></div>
+        <div class="full"><label>Radio cuando el GPS esté activo</label><select id="pref-radius"><option value="10">10 km</option><option value="25">25 km</option><option value="50">50 km</option><option value="100">100 km</option><option value="250">250 km</option></select></div>
+      </div>
+      <button id="pref-save" onclick="saveUserPreferences()"><i class="fa-solid fa-floppy-disk"></i> Guardar preferencias</button>
+      <div id="pref-message" class="correction-preview" style="display:none;margin-top:10px"></div>
     </div>
   </div>
 </div>
@@ -1445,6 +1478,7 @@ let ucTypesInstance = null;
 let supabaseClient = null;
 let zeroVialUser = null;
 let authMode = 'login';
+let userPreferences = { categories:['road','security'], severities:['critical','high','medium','low'], states:[], radius_km:50, time_window_hours:3, blockages_only:false, push_enabled:false };
 let correctionAlertId = null;
 const chartInstances = {};
 const diagnostics = { received:0, old:0, noise:0, queued:0, ia:0, accepted:0, noLocation:0, duplicates:0 };
@@ -2418,13 +2452,18 @@ async function applyServerConfig() {
 }
 async function initSupabase(config) {
   if(!config.url||!config.anonKey||!window.supabase?.createClient) return;
-  supabaseClient=window.supabase.createClient(config.url,config.anonKey,{auth:{persistSession:true,autoRefreshToken:true}});
+  supabaseClient=window.supabase.createClient(config.url,config.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   const {data}=await supabaseClient.auth.getSession(); zeroVialUser=data?.session?.user||null; updateAccountButton();
-  supabaseClient.auth.onAuthStateChange((_event,session)=>{ zeroVialUser=session?.user||null; updateAccountButton(); });
+  if(zeroVialUser) await loadUserPreferences();
+  supabaseClient.auth.onAuthStateChange((_event,session)=>{
+    zeroVialUser=session?.user||null; updateAccountButton();
+    if(zeroVialUser) setTimeout(loadUserPreferences,0);
+  });
 }
 function updateAccountButton() {
   const button=document.getElementById('account-button'); if(!button) return;
   const label=button.querySelector('span'); if(label) label.textContent=zeroVialUser?(zeroVialUser.email||'Mi cuenta'):'Iniciar sesión';
+  const prefs=document.getElementById('auth-preferences'); if(prefs) prefs.style.display=zeroVialUser?'block':'none';
 }
 function setAuthMode(mode) {
   authMode=mode==='register'?'register':'login';
@@ -2452,8 +2491,79 @@ async function submitAuth() {
   if(result.error) return authMessage(result.error.message,true);
   if(authMode==='register'&&!result.data.session) return authMessage('Cuenta creada. Revisa tu correo para confirmarla.');
   zeroVialUser=result.data.user; updateAccountButton(); authMessage('Sesión iniciada correctamente.');
+  await loadUserPreferences();
 }
 async function logoutZeroVial() { if(supabaseClient) await supabaseClient.auth.signOut(); zeroVialUser=null; updateAccountButton(); closeModal('auth-modal'); }
+function prefMessage(message,error=false) {
+  const box=document.getElementById('pref-message'); if(!box) return;
+  box.style.display='block'; box.style.color=error?'var(--danger)':'var(--success)'; box.textContent=message;
+}
+function preferenceSeverityFloor(severities) {
+  const order=['low','medium','high','critical'];
+  const selected=order.filter(x=>(severities||[]).includes(x));
+  return selected.length?selected[0]:'medium';
+}
+function fillPreferenceStates() {
+  const select=document.getElementById('pref-state'); if(!select||select.options.length>1) return;
+  MEXICO_STATES.forEach(state=>{ const option=document.createElement('option'); option.value=state; option.textContent=state; select.appendChild(option); });
+}
+function renderPreferencesForm() {
+  fillPreferenceStates();
+  const p=userPreferences;
+  document.getElementById('pref-road').checked=p.categories.includes('road');
+  document.getElementById('pref-security').checked=p.categories.includes('security');
+  document.getElementById('pref-blockages').checked=!!p.blockages_only;
+  document.getElementById('pref-time').value=String(p.time_window_hours||3);
+  document.getElementById('pref-severity').value=preferenceSeverityFloor(p.severities);
+  document.getElementById('pref-state').value=p.states?.[0]||'';
+  document.getElementById('pref-radius').value=String(p.radius_km||50);
+}
+function applyUserPreferences() {
+  const p=userPreferences;
+  nfState.road=p.categories.includes('road'); nfState.security=p.categories.includes('security'); nfState.blockagesOnly=!!p.blockages_only;
+  uState=p.states?.[0]||''; uRange=Number(p.time_window_hours)||3;
+  const checks=document.querySelectorAll('.pl-filters input[type="checkbox"]:not(:disabled)');
+  if(checks[0]) checks[0].checked=nfState.road; if(checks[1]) checks[1].checked=nfState.security;
+  const blockage=document.getElementById('nf-blockages'); if(blockage) blockage.checked=nfState.blockagesOnly;
+  const state=document.getElementById('lp-state'); if(state) state.value=uState;
+  const range=document.getElementById('lp-range'); if(range) range.value=String(uRange);
+  rebuildU();
+}
+async function loadUserPreferences() {
+  const local=localStorage.getItem('zero_vial_preferences');
+  if(local) { try { userPreferences={...userPreferences,...JSON.parse(local)}; } catch(e) {} }
+  if(supabaseClient&&zeroVialUser) {
+    const {data,error}=await supabaseClient.from('alert_preferences').select('*').eq('user_id',zeroVialUser.id).maybeSingle();
+    if(data&&!error) userPreferences={...userPreferences,...data};
+  }
+  localStorage.setItem('zero_vial_preferences',JSON.stringify(userPreferences));
+  applyUserPreferences();
+}
+function openPreferences() {
+  if(!zeroVialUser) { closeModal('auth-modal'); openAuthModal(); return authMessage('Inicia sesión para guardar tus preferencias.',true); }
+  closeModal('auth-modal'); renderPreferencesForm();
+  document.getElementById('pref-message').style.display='none';
+  openModal('preferences-modal');
+}
+async function saveUserPreferences() {
+  const categories=[]; if(document.getElementById('pref-road').checked) categories.push('road'); if(document.getElementById('pref-security').checked) categories.push('security');
+  if(!categories.length) return prefMessage('Selecciona al menos un tipo de alerta.',true);
+  const floor=document.getElementById('pref-severity').value, order=['low','medium','high','critical'];
+  userPreferences={
+    ...userPreferences, categories, severities:order.slice(order.indexOf(floor)),
+    states:document.getElementById('pref-state').value?[document.getElementById('pref-state').value]:[],
+    radius_km:Number(document.getElementById('pref-radius').value)||50,
+    time_window_hours:Number(document.getElementById('pref-time').value)||3,
+    blockages_only:document.getElementById('pref-blockages').checked, push_enabled:false
+  };
+  localStorage.setItem('zero_vial_preferences',JSON.stringify(userPreferences));
+  applyUserPreferences();
+  if(!supabaseClient||!zeroVialUser) return prefMessage('Preferencias guardadas en este dispositivo.');
+  const payload={user_id:zeroVialUser.id,categories:userPreferences.categories,severities:userPreferences.severities,states:userPreferences.states,radius_km:userPreferences.radius_km,time_window_hours:userPreferences.time_window_hours,blockages_only:userPreferences.blockages_only,push_enabled:false,updated_at:new Date().toISOString()};
+  const {error}=await supabaseClient.from('alert_preferences').upsert(payload,{onConflict:'user_id'});
+  if(error) return prefMessage('Se guardaron en el dispositivo, pero Supabase respondió: '+error.message,true);
+  prefMessage('Preferencias guardadas y sincronizadas.');
+}
 async function autoBoot() {
   await applyServerConfig();
 }
@@ -2787,8 +2897,13 @@ function matchesFilters(a) {
   if(a.category === 'security' && !nfState.security) return false;
   if(a.category === 'road' && !nfState.road) return false;
   if(nfState.blockagesOnly && !isBlockageAlert(a)) return false;
+  if(userPreferences?.severities?.length && !userPreferences.severities.includes(alertSeverity(a))) return false;
   if(uState && !((a.state || '').toLowerCase().includes(uState.toLowerCase()) || (a.location || '').toLowerCase().includes(uState.toLowerCase()))) return false;
   if(uRange > 0 && (Date.now() - new Date(a.time).getTime()) > uRange * 3600 * 1000) return false;
+  if(myPosition && userPreferences?.radius_km > 0) {
+    const distance=alertDistanceKm(a);
+    if(distance!==null && distance>Number(userPreferences.radius_km)) return false;
+  }
   const qs = document.getElementById('feed-search');
   const q = (qs && qs.value || '').toLowerCase();
   if(q && !((a.title || '').toLowerCase().includes(q) || (a.location || '').toLowerCase().includes(q) || (a.state || '').toLowerCase().includes(q))) return false;
