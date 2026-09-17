@@ -2446,7 +2446,9 @@ async function submitAuth() {
   if(!supabaseClient) return authMessage('Supabase todavía no está configurado en Vercel.',true);
   const email=document.getElementById('auth-email').value.trim(),password=document.getElementById('auth-password').value;
   if(!email||password.length<6) return authMessage('Ingresa un correo válido y una contraseña de al menos 6 caracteres.',true);
-  const result=authMode==='register'?await supabaseClient.auth.signUp({email,password}):await supabaseClient.auth.signInWithPassword({email,password});
+  const result=authMode==='register'
+    ? await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin+'/'}})
+    : await supabaseClient.auth.signInWithPassword({email,password});
   if(result.error) return authMessage(result.error.message,true);
   if(authMode==='register'&&!result.data.session) return authMessage('Cuenta creada. Revisa tu correo para confirmarla.');
   zeroVialUser=result.data.user; updateAccountButton(); authMessage('Sesión iniciada correctamente.');
