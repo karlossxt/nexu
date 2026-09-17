@@ -6,11 +6,19 @@ create extension if not exists pgcrypto;
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   display_name text,
+  role text not null default 'user' check (role in ('user','operator','admin')),
   plan text not null default 'free' check (plan in ('free','trial','pro','company')),
   trial_ends_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Migración segura para proyectos que ejecutaron una versión anterior.
+alter table public.profiles add column if not exists role text not null default 'user';
+do $$ begin
+  alter table public.profiles add constraint profiles_role_check check (role in ('user','operator','admin'));
+exception when duplicate_object then null;
+end $$;
 
 create table if not exists public.alerts (
   id uuid primary key default gen_random_uuid(),
@@ -79,8 +87,8 @@ create table if not exists public.push_subscriptions (
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.profiles (id, display_name, plan, trial_ends_at)
-  values (new.id, coalesce(new.raw_user_meta_data->>'name', split_part(new.email,'@',1)), 'trial', now() + interval '7 days')
+  insert into public.profiles (id, display_name, role, plan, trial_ends_at)
+  values (new.id, coalesce(new.raw_user_meta_data->>'name', split_part(new.email,'@',1)), 'user', 'trial', now() + interval '7 days')
   on conflict (id) do nothing;
   insert into public.alert_preferences (user_id) values (new.id)
   on conflict (user_id) do nothing;
