@@ -201,7 +201,10 @@ async function processItem(item, feed) {
   const title = clean(ai.resumen);
   const detail = clean(ai.detail);
   if (title.length < 8 || detail.length < 15) return 'rejected';
-  const locationQuery = [ai.carretera, ai.kilometro != null ? 'km ' + ai.kilometro : '', ai.ubicacion, ai.municipio, ai.estado].filter(Boolean).join(', ');
+  const locationParts = ai.carretera
+    ? [ai.carretera, ai.kilometro != null ? 'km ' + ai.kilometro : '', ai.municipio, ai.estado]
+    : [ai.ubicacion, ai.municipio, ai.estado];
+  const locationQuery = [...new Set(locationParts.map(clean).filter(Boolean))].join(', ');
   if (locationQuery.length < 4) return 'no_location';
   const geo = await geocode(locationQuery, ai.estado);
   if (!geo || !Number.isFinite(geo.latitude) || !Number.isFinite(geo.longitude)) return 'no_location';
@@ -237,7 +240,7 @@ async function health(values) {
 
 async function cycle() {
   const started = new Date().toISOString();
-  const stats = { received:0, relevant:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0 };
+  const stats = { received:0, relevant:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0 };
   await health({ status:'running', last_started_at:started, last_error:null });
   try {
     const candidates = [];
@@ -254,6 +257,11 @@ async function cycle() {
       }
     }
     stats.relevant = candidates.length;
+    const delays=candidates.map(x=>x.item.published_at?Math.max(0,(Date.now()-new Date(x.item.published_at).getTime())/60000):null).filter(Number.isFinite);
+    if(delays.length) {
+      stats.avg_source_delay_min=Math.round(delays.reduce((sum,value)=>sum+value,0)/delays.length);
+      stats.max_source_delay_min=Math.round(Math.max(...delays));
+    }
     const unique = new Map(candidates.map(x => [x.item.url || x.item.title, x]));
     for (const { item, feed } of [...unique.values()].slice(0, MAX_AI_PER_CYCLE)) {
       const externalId = hash(item.url || item.title + '|' + item.published_at);
@@ -274,6 +282,8 @@ async function cycle() {
       }
       await sleep(AI_DELAY_MS);
     }
+    const located=stats.inserted+stats.no_location;
+    stats.location_success_rate_pct=located?Math.round((stats.inserted/located)*100):0;
     await health({
       status: stats.errors > 0 ? 'error' : 'healthy',
       last_success_at: stats.errors < stats.analyzed ? new Date().toISOString() : null,
