@@ -3197,7 +3197,7 @@ function rebuildU() {
   else if(map.hasLayer(staticLayer)) map.removeLayer(staticLayer);
   if(fl) { fl.innerHTML = ''; sortVisibleAlerts(vis).forEach(a => fl.appendChild(makeAlertCard(a))); }
   if(fe) fe.style.display = vis.length ? 'none' : 'block';
-  if(em) em.textContent = vis.length ? '' : (alerts.length ? 'No hay alertas que coincidan con tus filtros. Amplía el periodo o selecciona Todo México.' : centralWorkerHealthy ? 'Sin incidencias nuevas en este momento. Monitoreo activo y actualización automática cada 3 min.' : centralWorkerState==='running' ? 'Actualizando fuentes…' : 'No fue posible confirmar la sincronización. La información puede estar desactualizada.');
+  if(em) em.textContent = vis.length ? '' : (alerts.length ? 'No hay alertas que coincidan con tus filtros. Amplía el periodo o selecciona Todo México.' : centralWorkerHealthy ? 'Sin incidencias nuevas en este momento. Monitoreo activo con consultas continuas.' : centralWorkerState==='running' ? 'Actualizando fuentes…' : 'No fue posible confirmar la sincronización. La información puede estar desactualizada.');
   refreshCounters();
 }
 
