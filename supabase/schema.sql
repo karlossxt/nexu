@@ -84,6 +84,16 @@ create table if not exists public.push_subscriptions (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.worker_status (
+  id text primary key,
+  status text not null default 'starting' check (status in ('starting','running','healthy','error')),
+  last_started_at timestamptz,
+  last_success_at timestamptz,
+  last_error text,
+  last_stats jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
@@ -105,9 +115,17 @@ alter table public.alerts enable row level security;
 alter table public.location_corrections enable row level security;
 alter table public.alert_preferences enable row level security;
 alter table public.push_subscriptions enable row level security;
+alter table public.worker_status enable row level security;
 
 drop policy if exists "alerts readable by everyone" on public.alerts;
 create policy "alerts readable by everyone" on public.alerts for select using (true);
+revoke insert, update, delete on public.alerts from anon, authenticated;
+grant select on public.alerts to anon, authenticated;
+
+drop policy if exists "worker status readable by everyone" on public.worker_status;
+create policy "worker status readable by everyone" on public.worker_status for select using (true);
+revoke insert, update, delete on public.worker_status from anon, authenticated;
+grant select on public.worker_status to anon, authenticated;
 
 drop policy if exists "users read own profile" on public.profiles;
 create policy "users read own profile" on public.profiles for select using (auth.uid() = id);
@@ -130,3 +148,9 @@ create policy "users manage own push subscriptions" on public.push_subscriptions
 create index if not exists alerts_event_at_idx on public.alerts(event_at desc);
 create index if not exists alerts_state_idx on public.alerts(state);
 create index if not exists corrections_alert_idx on public.location_corrections(alert_external_id, created_at desc);
+
+-- Permite que el frontend reciba nuevas alertas por Realtime.
+do $$ begin
+  alter publication supabase_realtime add table public.alerts;
+exception when duplicate_object then null;
+end $$;
