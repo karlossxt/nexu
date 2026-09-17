@@ -860,7 +860,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
     <div class="nt-brand"><img class="nt-logo" src="/zero-mark.png" alt=""><strong>ZERO <span>VIAL</span></strong></div>
     <nav class="nt-nav">
       <button class="nt-btn active" onclick="clearAlertFocus()"><i class="fa-solid fa-map-location-dot"></i><span>Mapa en vivo</span></button>
-      <button class="nt-btn" onclick="document.body.classList.remove('right-rail');switchPR('feed')"><i class="fa-solid fa-triangle-exclamation"></i><span>Alertas</span><em id="nv-top-count" class="nt-count">0</em></button>
+      <button class="nt-btn" onclick="document.body.classList.remove('right-rail');switchPR('feed')" title="Alertas recibidas desde que abriste Zero Vial"><i class="fa-solid fa-triangle-exclamation"></i><span>Alertas</span><em id="nv-top-count" class="nt-count" aria-label="Alertas nuevas en esta sesión">0</em></button>
       <button class="nt-btn" onclick="openAlertCenter()"><i class="fa-solid fa-list-check"></i><span>Centro</span></button>
       <button class="nt-btn" onclick="document.body.classList.remove('right-rail');switchPR('ris')"><i class="fa-solid fa-chart-line"></i><span>Radar Vial</span></button>
       <button class="nt-btn" onclick="openDirModal()"><i class="fa-solid fa-phone-volume"></i><span>Directorio</span></button>
@@ -1478,6 +1478,7 @@ let ucTypesInstance = null;
 let supabaseClient = null;
 let zeroVialUser = null;
 let authMode = 'login';
+const zeroVialSessionStartedAt = Date.now();
 let userPreferences = { categories:['road','security'], severities:['critical','high','medium','low'], states:[], radius_km:50, time_window_hours:3, blockages_only:false, push_enabled:false };
 let correctionAlertId = null;
 const chartInstances = {};
@@ -2910,15 +2911,17 @@ function matchesFilters(a) {
   return true;
 }
 function refreshCounters() {
-  const road = alerts.filter(a => a.category === 'road').length;
-  const sec = alerts.filter(a => a.category === 'security').length;
-  const imp = alerts.filter(a => a.importante).length;
+  const requestedAlerts = alerts.filter(matchesFilters);
+  const road = requestedAlerts.filter(a => a.category === 'road').length;
+  const sec = requestedAlerts.filter(a => a.category === 'security').length;
+  const imp = requestedAlerts.filter(a => a.importante).length;
+  const sessionAlerts = requestedAlerts.filter(a => Number(a.received_at || a.id || 0) >= zeroVialSessionStartedAt);
   const blockages = alerts.filter(isBlockageAlert).length;
   const redZones = criticalPoints.filter(p => riskPointType(p) === 'red_zone').length;
   const roadRisks = criticalPoints.filter(p => riskPointType(p) === 'road_risk').length;
   const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
   set('pc-total', road + sec); set('pc-road', road); set('pc-sec', sec); set('pc-imp', imp);
-  set('nv-top-count', road + sec);
+  set('nv-top-count', sessionAlerts.length);
   set('nc-road', road); set('nc-sec', sec); set('nc-blockages', blockages); set('nc-imp', redZones); set('nc-risk', roadRisks);
 }
 function rebuildU() {
