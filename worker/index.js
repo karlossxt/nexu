@@ -17,7 +17,8 @@ const GROQ_MODEL = env.GROQ_MODEL || 'openai/gpt-oss-20b';
 const GOOGLE_KEY = env.GOOGLE_MAPS_API_KEY || '';
 const POLL_MS = Math.max(60_000, Number(env.WORKER_INTERVAL_MS) || 180_000);
 const MAX_AGE_MS = Math.max(1, Number(env.ALERT_MAX_AGE_HOURS) || 24) * 3600_000;
-const MAX_AI_PER_CYCLE = Math.max(1, Number(env.MAX_AI_PER_CYCLE) || 10);
+const MAX_AI_PER_CYCLE = Math.max(1, Number(env.MAX_AI_PER_CYCLE) || 6);
+const AI_DELAY_MS = Math.max(5_000, Number(env.AI_DELAY_MS) || 10_000);
 const FEEDS = [env.RSS_PRI, env.RSS_SEC].map(x => String(x || '').trim()).filter(Boolean);
 const DEFAULT_FEED = 'https://news.google.com/rss/search?q=accidente+OR+bloqueo+OR+asalto+carretera+mexico&hl=es-419&gl=MX&ceid=MX:es-419';
 if (!FEEDS.length) FEEDS.push(DEFAULT_FEED);
@@ -98,14 +99,15 @@ async function alreadyExists(externalId) {
 }
 
 async function classify(text) {
-  const prompt = `Clasifica esta noticia. Rechaza si no es un incidente vial o de seguridad en México o no incluye una ubicación útil. No inventes datos. Si rechazas, conserva los campos de texto vacíos. Resume el hecho sin agregar información. TEXTO: ${text.slice(0, 1200)}`;
+  const prompt = `Clasifica esta noticia. Rechaza si no es un incidente vial o de seguridad en México o no incluye una ubicación útil. No inventes datos. Si rechazas, conserva los campos de texto vacíos. Resume el hecho sin agregar información. TEXTO: ${text.slice(0, 800)}`;
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + GROQ_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: GROQ_MODEL,
       temperature: 0.1,
-      max_tokens: 500,
+      reasoning_effort: 'minimal',
+      max_completion_tokens: 700,
       response_format: {
         type: 'json_schema',
         json_schema: {
@@ -264,7 +266,7 @@ async function cycle() {
         stats.errors++;
         log('error','Error procesando noticia',{ title:item.title.slice(0,80), error:error.message });
       }
-      await sleep(1200);
+      await sleep(AI_DELAY_MS);
     }
     await health({
       status: stats.errors > 0 ? 'error' : 'healthy',
