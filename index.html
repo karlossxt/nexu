@@ -182,6 +182,19 @@ body.user-mode:not(.dark-mode) .pref-check{ background:#fff; border-color:#D8E1E
 .landing-feat{ background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:13px 8px; color:#EAF0F5; font-size:12px; font-weight:700; }
 .landing-feat i{ color:var(--brand-amber); margin-right:6px; }
 .landing-feat:nth-child(even) i{ color:var(--brand-cyan); }
+.landing-access{ max-width:560px; margin:0 auto; padding:14px; border:1px solid rgba(255,255,255,.11); border-radius:15px; background:rgba(255,255,255,.035); }
+.landing-fields{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+.landing-fields input{ height:44px; margin:0; border-color:rgba(255,255,255,.14); border-radius:9px; background:#11161D; color:#fff; }
+.landing-auth-actions{ display:grid; grid-template-columns:1.15fr .85fr; gap:9px; margin-top:10px; }
+.landing-auth-actions button{ min-height:48px; border-radius:10px; }
+.landing-login{ color:#111318; background:linear-gradient(105deg,#FFC02E,#FF9600); box-shadow:0 9px 25px rgba(255,176,0,.18); }
+.landing-register{ color:#fff; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.23); }
+.landing-recovery{ width:auto; margin:8px auto 0; padding:3px 6px; color:#7DDFF1; background:transparent; border:0; box-shadow:none; font-size:10px; }
+.landing-recovery:hover{ box-shadow:none; text-decoration:underline; }
+.landing-message{ display:none; margin-top:9px; padding:8px 10px; border-radius:8px; font-size:11px; line-height:1.4; background:rgba(255,255,255,.05); color:#B8C4CF; }
+.landing-guest{ width:auto; margin:11px auto 0; padding:7px 12px; color:#AAB6C2; background:transparent; border:0; box-shadow:none; font-size:11px; }
+.landing-guest:hover{ color:#fff; box-shadow:none; }
+.landing-guest small{ display:block; margin-top:2px; color:#718091; font-size:9px; font-weight:500; }
 .landing-modes{ display:grid; grid-template-columns:1fr; gap:10px; max-width:430px; margin:0 auto; }
 .landing-mode{ width:100%; min-height:60px; padding:11px 8px; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; transition:transform .15s,filter .15s,box-shadow .15s; }
 .landing-mode:hover{ transform:translateY(-2px); filter:brightness(1.08); }
@@ -198,6 +211,9 @@ body.operator-authorized .operator-access{ display:flex!important; }
 .alert-source{ margin-top:7px; font-size:10px; color:var(--text-muted); display:flex; align-items:center; gap:5px; }
 .landing-foot{ margin-top:17px; font-size:11px; color:#84919F; }
 .landing-foot a{ color:var(--brand-cyan)!important; font-weight:700; }
+#guest-banner{ display:none; position:absolute; top:84px; left:50%; transform:translateX(-50%); z-index:3450; align-items:center; gap:9px; max-width:min(590px,calc(100% - 32px)); padding:8px 11px; border:1px solid rgba(255,176,0,.48); border-radius:11px; color:#5C3A00; background:rgba(255,248,226,.94); box-shadow:0 8px 24px rgba(15,23,42,.14); backdrop-filter:blur(12px); font-size:10px; font-weight:700; }
+body.guest-mode #guest-banner{ display:flex; }
+#guest-banner button{ width:auto; padding:6px 9px; border-radius:7px; color:#111318; background:#FFB000; font-size:9px; white-space:nowrap; }
 
 /* ALERTAS CERCANAS A LA RUTA */
 #routeAlerts{ margin-top:12px; }
@@ -802,6 +818,8 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
   #landing-card{ padding:26px 18px; border-radius:16px; }
   .landing-brand{ font-size:29px; }
   .landing-logo{ width:min(260px,92%); height:160px; }
+  .landing-fields,.landing-auth-actions{ grid-template-columns:1fr; }
+  .landing-access{ padding:11px; }
   .landing-modes{ grid-template-columns:1fr; }
   .landing-mode{ min-height:54px; }
   .toast-important{ left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom)); max-width:none; }
@@ -825,8 +843,18 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <div class="landing-feat"><i class="fa-solid fa-route"></i> Rutas próximamente</div>
       <div class="landing-feat"><i class="fa-solid fa-shield-halved"></i> Seguridad vial</div>
     </div>
-    <div class="landing-modes">
-      <button class="landing-mode user" onclick="enterPlatform('user')"><i class="fa-solid fa-location-arrow"></i> Consultar mapa<small>Alertas filtradas para tu trayecto</small></button>
+    <div class="landing-access">
+      <div class="landing-fields">
+        <input id="landing-email" type="email" autocomplete="email" placeholder="Correo electrónico">
+        <input id="landing-password" type="password" autocomplete="current-password" minlength="6" placeholder="Contraseña">
+      </div>
+      <div class="landing-auth-actions">
+        <button class="landing-login" onclick="landingAuth('login')"><i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión</button>
+        <button class="landing-register" onclick="landingAuth('register')"><i class="fa-solid fa-user-plus"></i> Crear cuenta</button>
+      </div>
+      <button class="landing-recovery" onclick="requestLandingRecovery()">¿Olvidaste tu contraseña?</button>
+      <div id="landing-message" class="landing-message"></div>
+      <button class="landing-guest" onclick="enterAsGuest()"><i class="fa-solid fa-compass"></i> Explorar como invitado<small>No necesitas registrarte para las pruebas</small></button>
     </div>
     <div class="landing-foot">Personaliza tus alertas después de iniciar sesión · <a href="/acerca.html">Conoce Zero Vial</a></div>
   </div>
@@ -888,6 +916,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <button class="nt-btn active" onclick="openEntryModal()"><i class="fa-solid fa-plus"></i><span>Reportar</span></button>
     </div>
   </header>
+  <div id="guest-banner"><i class="fa-solid fa-circle-info"></i><span>Modo invitado: tus preferencias sólo se guardan en este dispositivo.</span><button onclick="openAuthModal()"><i class="fa-solid fa-user-plus"></i> Crear cuenta</button></div>
   <section id="focus-banner" class="focus-banner" aria-live="polite">
     <span class="fb-icon"><i class="fa-solid fa-location-crosshairs"></i></span>
     <span class="fb-copy"><small>INCIDENTE ENFOCADO EN EL MAPA</small><b id="focus-title">—</b></span>
@@ -1405,7 +1434,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
 
 <div id="recovery-modal" class="u-modal">
   <div class="u-modal-card">
-    <div class="m-head"><i class="fa-solid fa-key" style="color:#FFB000"></i> Crear nueva contraseña<button class="m-x" onclick="closeModal('recovery-modal')">✕</button></div>
+    <div class="m-head"><i class="fa-solid fa-key" style="color:#FFB000"></i> Crear nueva contraseña<button class="m-x" onclick="cancelPasswordRecovery()">✕</button></div>
     <div class="m-body">
       <div class="pref-note">El enlace fue validado. Escribe una contraseña nueva para tu cuenta de Zero Vial.</div>
       <label>Nueva contraseña</label><input id="recovery-password" type="password" autocomplete="new-password" minlength="8" placeholder="Mínimo 8 caracteres">
@@ -1504,6 +1533,7 @@ let supabaseClient = null;
 let zeroVialUser = null;
 let authMode = 'login';
 let zeroVialRole = 'user';
+let zeroVialGuest = false;
 const zeroVialSessionStartedAt = Date.now();
 let userPreferences = { categories:['road','security'], severities:['critical','high','medium','low'], states:[], radius_km:50, time_window_hours:3, blockages_only:false, push_enabled:false };
 let correctionAlertId = null;
@@ -2527,6 +2557,39 @@ function authErrorSpanish(error) {
 function authMessage(message,error=false) {
   const box=document.getElementById('auth-message'); if(!box) return; box.style.display='block'; box.style.color=error?'var(--danger)':'var(--success)'; box.textContent=message;
 }
+function landingMessage(message,error=false) {
+  const box=document.getElementById('landing-message'); if(!box) return;
+  box.style.display='block'; box.style.color=error?'#FF9E9E':'#8BE3B7'; box.textContent=message;
+}
+function setGuestMode(on) {
+  zeroVialGuest=!!on;
+  document.body.classList.toggle('guest-mode',zeroVialGuest);
+  if(zeroVialGuest) sessionStorage.setItem('zero_vial_guest','1'); else sessionStorage.removeItem('zero_vial_guest');
+}
+async function landingAuth(mode) {
+  if(!supabaseClient) return landingMessage('La conexión está iniciando. Espera unos segundos e inténtalo nuevamente.',true);
+  const email=document.getElementById('landing-email').value.trim().toLowerCase();
+  const password=document.getElementById('landing-password').value;
+  if(!email||!email.includes('@')||password.length<6) return landingMessage('Ingresa un correo válido y una contraseña de al menos 6 caracteres.',true);
+  landingMessage(mode==='register'?'Creando tu cuenta…':'Iniciando sesión…');
+  const result=mode==='register'
+    ? await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin+'/'}})
+    : await supabaseClient.auth.signInWithPassword({email,password});
+  if(result.error) return landingMessage(authErrorSpanish(result.error),true);
+  if(mode==='register'&&!result.data.session) return landingMessage('Cuenta creada. Revisa tu correo para confirmarla y después inicia sesión.');
+  zeroVialUser=result.data.user; setGuestMode(false); updateAccountButton();
+  await Promise.all([loadUserRole(),loadUserPreferences()]);
+  enterPlatform('user');
+}
+async function enterAsGuest() {
+  setGuestMode(true);
+  await loadUserPreferences();
+  enterPlatform('user');
+}
+async function requestLandingRecovery() {
+  const email=document.getElementById('landing-email').value.trim().toLowerCase();
+  await requestPasswordRecovery(email,landingMessage);
+}
 function openAuthModal() {
   openModal('auth-modal');
   document.getElementById('auth-logout').style.display=zeroVialUser?'block':'none';
@@ -2544,23 +2607,23 @@ async function submitAuth() {
     : await supabaseClient.auth.signInWithPassword({email,password});
   if(result.error) return authMessage(authErrorSpanish(result.error),true);
   if(authMode==='register'&&!result.data.session) return authMessage('Cuenta creada. Revisa tu correo para confirmarla.');
-  zeroVialUser=result.data.user; updateAccountButton(); authMessage('Sesión iniciada correctamente.');
+  zeroVialUser=result.data.user; setGuestMode(false); updateAccountButton(); authMessage('Sesión iniciada correctamente.');
   await Promise.all([loadUserRole(),loadUserPreferences()]);
 }
 async function logoutZeroVial() { if(supabaseClient) await supabaseClient.auth.signOut(); zeroVialUser=null; zeroVialRole='user'; applyRoleAccess(); updateAccountButton(); closeModal('auth-modal'); }
-async function requestPasswordRecovery() {
-  if(!supabaseClient) return authMessage('Supabase todavía no está configurado.',true);
-  const email=document.getElementById('auth-email').value.trim().toLowerCase();
-  if(!email||!email.includes('@')) return authMessage('Escribe primero el correo de tu cuenta.',true);
+async function requestPasswordRecovery(emailOverride='',messageFn=authMessage) {
+  if(!supabaseClient) return messageFn('Supabase todavía no está configurado.',true);
+  const email=(emailOverride||document.getElementById('auth-email').value).trim().toLowerCase();
+  if(!email||!email.includes('@')) return messageFn('Escribe primero el correo de tu cuenta.',true);
   const last=Number(localStorage.getItem('zero_vial_recovery_sent')||0);
   const remaining=Math.ceil((60000-(Date.now()-last))/1000);
-  if(remaining>0) return authMessage('Espera '+remaining+' segundos antes de solicitar otro correo.',true);
+  if(remaining>0) return messageFn('Espera '+remaining+' segundos antes de solicitar otro correo.',true);
   const button=document.getElementById('auth-forgot'); button.disabled=true; button.textContent='Enviando…';
   localStorage.setItem('zero_vial_recovery_sent',String(Date.now()));
   const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+'/'});
   button.disabled=false; button.textContent='¿Olvidaste tu contraseña?';
-  if(error) return authMessage(authErrorSpanish(error),true);
-  authMessage('Te enviamos un enlace. Revisa también spam y promociones.');
+  if(error) return messageFn(authErrorSpanish(error),true);
+  messageFn('Te enviamos un enlace. Revisa también spam y promociones.');
 }
 function recoveryMessage(message,error=false) {
   const box=document.getElementById('recovery-message'); if(!box) return;
@@ -2568,8 +2631,13 @@ function recoveryMessage(message,error=false) {
 }
 function openRecoveryModal() {
   closeModal('auth-modal');
+  const landing=document.getElementById('landing'); if(landing) landing.style.display='none';
   const box=document.getElementById('recovery-message'); if(box) box.style.display='none';
   openModal('recovery-modal');
+}
+function cancelPasswordRecovery() {
+  closeModal('recovery-modal');
+  const landing=document.getElementById('landing'); if(landing) landing.style.display='flex';
 }
 async function completePasswordRecovery() {
   if(!supabaseClient) return recoveryMessage('No se pudo conectar con Supabase.',true);
@@ -2583,7 +2651,8 @@ async function completePasswordRecovery() {
   if(error) return recoveryMessage(authErrorSpanish(error),true);
   history.replaceState(null,'',window.location.pathname+window.location.search);
   recoveryMessage('Contraseña actualizada. Ya puedes continuar con tu cuenta.');
-  setTimeout(()=>{ closeModal('recovery-modal'); updateAccountButton(); },1400);
+  setGuestMode(false);
+  setTimeout(()=>{ closeModal('recovery-modal'); updateAccountButton(); enterPlatform('user'); },1400);
 }
 function prefMessage(message,error=false) {
   const box=document.getElementById('pref-message'); if(!box) return;
