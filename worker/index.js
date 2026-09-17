@@ -15,7 +15,7 @@ const SUPABASE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
 const GROQ_KEY = env.GROQ_API_KEY;
 const GROQ_MODEL = env.GROQ_MODEL || 'openai/gpt-oss-20b';
 const GOOGLE_KEY = env.GOOGLE_MAPS_API_KEY || '';
-const POLL_MS = Math.max(60_000, Number(env.WORKER_INTERVAL_MS) || 180_000);
+const POLL_MS = Math.max(60_000, Number(env.WORKER_INTERVAL_MS) || 60_000);
 const MAX_AGE_MS = Math.max(1, Number(env.ALERT_MAX_AGE_HOURS) || 24) * 3600_000;
 const MAX_AI_PER_CYCLE = Math.max(1, Number(env.MAX_AI_PER_CYCLE) || 6);
 const AI_DELAY_MS = Math.max(5_000, Number(env.AI_DELAY_MS) || 10_000);
@@ -301,7 +301,10 @@ async function main() {
   log('info','Worker Zero Vial iniciado',{ feeds:FEEDS.length, interval_ms:POLL_MS, model:GROQ_MODEL });
   await cycle();
   if (env.WORKER_ONCE === '1') return;
-  setInterval(cycle, POLL_MS);
+  while (true) {
+    await sleep(POLL_MS);
+    await cycle();
+  }
 }
 
 main().catch(error => { console.error(error); process.exit(1); });
