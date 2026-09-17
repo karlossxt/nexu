@@ -852,11 +852,12 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
         <button class="landing-login" onclick="landingAuth('login')"><i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión</button>
         <button class="landing-register" onclick="landingAuth('register')"><i class="fa-solid fa-user-plus"></i> Crear cuenta</button>
       </div>
+      <label class="landing-consent" style="display:flex;gap:8px;align-items:flex-start;text-align:left;font-size:10px;color:#A9BAD0;line-height:1.45;margin-top:8px;"><input id="landing-consent" type="checkbox" style="width:auto;margin-top:2px;"> <span>Al crear una cuenta acepto los <a href="/terminos.html" target="_blank">Términos</a> y el <a href="/privacidad.html" target="_blank">Aviso de Privacidad</a>.</span></label>
       <button class="landing-recovery" onclick="requestLandingRecovery()">¿Olvidaste tu contraseña?</button>
       <div id="landing-message" class="landing-message"></div>
       <button class="landing-guest" onclick="enterAsGuest()"><i class="fa-solid fa-compass"></i> Explorar como invitado<small>No necesitas registrarte para las pruebas</small></button>
     </div>
-    <div class="landing-foot">Personaliza tus alertas después de iniciar sesión · <a href="/acerca.html">Conoce Zero Vial</a> · <a href="/ayuda.html">Ayuda</a> · <a href="/servicios.html">Servicios</a> · <a href="/terminos.html">Términos</a></div>
+    <div class="landing-foot">Personaliza tus alertas después de iniciar sesión · <a href="/acerca.html">Conoce Zero Vial</a> · <a href="/ayuda.html">Ayuda</a> · <a href="/servicios.html">Servicios</a> · <a href="/terminos.html">Términos</a> · <a href="/privacidad.html">Privacidad</a></div>
   </div>
 </div>
 
@@ -1423,6 +1424,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <div class="auth-switch"><button id="auth-login-tab" class="active" onclick="setAuthMode('login')">Iniciar sesión</button><button id="auth-register-tab" onclick="setAuthMode('register')">Crear cuenta</button></div>
       <label>Correo electrónico</label><input id="auth-email" type="email" autocomplete="email" placeholder="correo@ejemplo.com">
       <label>Contraseña</label><input id="auth-password" type="password" autocomplete="current-password" minlength="6" placeholder="Mínimo 6 caracteres">
+      <label id="auth-consent-row" style="display:none;gap:8px;align-items:flex-start;font-size:11px;line-height:1.45;"><input id="auth-consent" type="checkbox" style="width:auto;margin:2px 0 0;"> <span>Al crear una cuenta acepto los <a href="/terminos.html" target="_blank">Términos</a> y el <a href="/privacidad.html" target="_blank">Aviso de Privacidad</a>.</span></label>
       <button id="auth-forgot" class="auth-link" onclick="requestPasswordRecovery()">¿Olvidaste tu contraseña?</button>
       <button id="auth-submit" onclick="submitAuth()"><i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión</button>
       <div id="auth-message" class="correction-preview" style="display:none;margin-top:10px"></div>
@@ -1538,6 +1540,7 @@ let zeroVialGuest = false;
 let centralWorkerHealthy = false;
 let centralWorkerState = 'unknown';
 let centralWorkerLastSuccess = null;
+let centralWorkerStats = {};
 const MAX_NOTIFICATION_AGE_MS = 15 * 60 * 1000;
 let centralAlertsTimer = null;
 let centralAlertsChannel = null;
@@ -2557,10 +2560,11 @@ function centralAlertToUi(row,receivedAt=0) {
 async function refreshCentralWorkerHealth() {
   if(!supabaseClient) return false;
   const wasHealthy=centralWorkerHealthy;
-  const {data,error}=await supabaseClient.from('worker_status').select('status,last_success_at,last_started_at,last_error,updated_at').eq('id','main').maybeSingle();
+  const {data,error}=await supabaseClient.from('worker_status').select('status,last_success_at,last_started_at,last_error,last_stats,updated_at').eq('id','main').maybeSingle();
   if(error||!data) { centralWorkerHealthy=false; centralWorkerState='unavailable'; updateCentralStatus(); return false; }
   centralWorkerState=data.status||'unknown';
   centralWorkerLastSuccess=data.last_success_at||null;
+  centralWorkerStats=data.last_stats||{};
   centralWorkerHealthy=data.status==='healthy'&&(Date.now()-new Date(data.last_success_at).getTime()<10*60*1000);
   updateCentralStatus();
   if(centralWorkerHealthy&&feedInterval) {
@@ -2631,6 +2635,7 @@ function setAuthMode(mode) {
   document.getElementById('auth-login-tab')?.classList.toggle('active',authMode==='login');
   document.getElementById('auth-register-tab')?.classList.toggle('active',authMode==='register');
   const button=document.getElementById('auth-submit'); if(button) button.innerHTML=authMode==='login'?'<i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión':'<i class="fa-solid fa-user-plus"></i> Crear cuenta';
+  const consent=document.getElementById('auth-consent-row'); if(consent) consent.style.display=authMode==='register'?'flex':'none';
   const forgot=document.getElementById('auth-forgot'); if(forgot) forgot.style.display=authMode==='login'?'block':'none';
 }
 function authErrorSpanish(error) {
@@ -2659,6 +2664,7 @@ async function landingAuth(mode) {
   const email=document.getElementById('landing-email').value.trim().toLowerCase();
   const password=document.getElementById('landing-password').value;
   if(!email||!email.includes('@')||password.length<6) return landingMessage('Ingresa un correo válido y una contraseña de al menos 6 caracteres.',true);
+  if(mode==='register'&&!document.getElementById('landing-consent')?.checked) return landingMessage('Acepta los Términos y el Aviso de Privacidad para crear tu cuenta.',true);
   landingMessage(mode==='register'?'Creando tu cuenta…':'Iniciando sesión…');
   const result=mode==='register'
     ? await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin+'/'}})
@@ -2690,6 +2696,7 @@ async function submitAuth() {
   if(!supabaseClient) return authMessage('Supabase todavía no está configurado en Vercel.',true);
   const email=document.getElementById('auth-email').value.trim(),password=document.getElementById('auth-password').value;
   if(!email||password.length<6) return authMessage('Ingresa un correo válido y una contraseña de al menos 6 caracteres.',true);
+  if(authMode==='register'&&!document.getElementById('auth-consent')?.checked) return authMessage('Acepta los Términos y el Aviso de Privacidad para crear tu cuenta.',true);
   const result=authMode==='register'
     ? await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin+'/'}})
     : await supabaseClient.auth.signInWithPassword({email,password});
@@ -3221,7 +3228,11 @@ function buildAlertCenterStates() {
 }
 function renderDiagnostics() {
   const box=document.getElementById('diag-grid'); if(!box) return;
-  const values=[
+  const s=centralWorkerStats||{};
+  const values=Object.keys(s).length?[
+    ['Recibidas',s.received??0],['Analizadas',s.analyzed??0],['Insertadas',s.inserted??0],
+    ['Sin ubicación',s.no_location??0],['Éxito ubicación',(s.location_success_rate_pct??0)+'%'],['Retraso fuente',(s.avg_source_delay_min??0)+' min']
+  ]:[
     ['Recibidas',diagnostics.received],['Antiguas descartadas',diagnostics.old],['Ruido descartado',diagnostics.noise],
     ['Consultas IA',diagnostics.ia],['Alertas aceptadas',diagnostics.accepted],['Sin ubicación',diagnostics.noLocation]
   ];
