@@ -3,6 +3,10 @@
 // desde las Variables de Entorno. Permite cambiar fuentes sin tocar código.
 
 const DEFAULT_RSS_SEC = 'https://news.google.com/rss/search?q=accidente+OR+bloqueo+OR+asalto+carretera+mexico&hl=es-419&gl=MX&ceid=MX:es-419';
+// La publishable key de Supabase está diseñada para ser visible en el cliente.
+// Las variables de Vercel tienen prioridad para permitir rotarla sin desplegar código.
+const DEFAULT_SUPABASE_URL = 'https://hjymytmsstmhivjdtxso.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_iJtw2kIhrCr1dSkKL8Mg3w_IWtbdIep';
 
 function remoteIp(req) {
   const fwd = (req.headers['x-forwarded-for'] || '').split(',')[0].trim();
@@ -32,8 +36,8 @@ module.exports = async (req, res) => {
     model: process.env.GROQ_MODEL || 'qwen/qwen3.8-27b',
     reportModel: process.env.REPORT_MODEL || 'openai/gpt-oss-120b',
     supabase: {
-      url: (process.env.SUPABASE_URL || '').trim(),
-      anonKey: (process.env.SUPABASE_ANON_KEY || '').trim()
+      url: (process.env.SUPABASE_URL || DEFAULT_SUPABASE_URL).trim(),
+      anonKey: (process.env.SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY).trim()
     }
   });
 };
