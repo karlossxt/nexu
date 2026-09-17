@@ -1534,6 +1534,9 @@ let zeroVialUser = null;
 let authMode = 'login';
 let zeroVialRole = 'user';
 let zeroVialGuest = false;
+let centralWorkerHealthy = false;
+let centralAlertsTimer = null;
+let centralAlertsChannel = null;
 const zeroVialSessionStartedAt = Date.now();
 let userPreferences = { categories:['road','security'], severities:['critical','high','medium','low'], states:[], radius_km:50, time_window_hours:3, blockages_only:false, push_enabled:false };
 let correctionAlertId = null;
@@ -2519,6 +2522,66 @@ async function initSupabase(config) {
     if(event==='PASSWORD_RECOVERY') setTimeout(openRecoveryModal,0);
   });
   if(window.location.hash.includes('type=recovery')) setTimeout(openRecoveryModal,0);
+  await initCentralAlerts();
+}
+function centralNumericId(value) {
+  let h=2166136261; const text=String(value||'');
+  for(let i=0;i<text.length;i++){ h^=text.charCodeAt(i); h=Math.imul(h,16777619); }
+  return Math.abs(h>>>0)||1;
+}
+function centralAlertToUi(row,receivedAt=0) {
+  const confidence=Number(row.location_confidence)||0;
+  const severity=row.severity||'medium';
+  return {
+    id:centralNumericId(row.id||row.external_id), central_id:row.id, external_id:row.external_id,
+    lat:Number(row.latitude), lon:Number(row.longitude), category:row.category,
+    title:row.title, detail:row.detail||row.title, location:row.location_label||[row.road,row.municipality,row.state].filter(Boolean).join(', '),
+    state:row.state||'', precision:['corrected','verified'].includes(row.location_status)?'punto':confidence>=.82?'carretera':'zona',
+    location_confidence:confidence, location_provider:'central', road_snapped:false,
+    time:new Date(row.event_at), published_at:row.event_at, received_at:receivedAt,
+    trafico:row.category==='road'?(severity==='critical'?'detenido':severity==='high'?'moderado':'fluido'):null,
+    importante:['critical','high'].includes(severity), source_type:'media', source_name:row.source_name||'Fuente verificada',
+    source_url:row.source_url||'', verification_status:row.location_status==='verified'?'verified':'automatic', liked:false
+  };
+}
+async function refreshCentralWorkerHealth() {
+  if(!supabaseClient) return false;
+  const wasHealthy=centralWorkerHealthy;
+  const {data,error}=await supabaseClient.from('worker_status').select('status,last_success_at').eq('id','main').maybeSingle();
+  if(error||!data?.last_success_at) { centralWorkerHealthy=false; return false; }
+  centralWorkerHealthy=data.status==='healthy'&&(Date.now()-new Date(data.last_success_at).getTime()<10*60*1000);
+  if(centralWorkerHealthy&&feedInterval) {
+    stopSystem(); setLiveStatus(true); log('✅ Worker central activo. Monitoreo del navegador detenido.', 'success');
+  } else if(wasHealthy&&!centralWorkerHealthy&&sessionStorage.getItem('steele_entered')==='1'&&!feedInterval) {
+    log('⚠️ Worker central sin señal reciente. Activando respaldo temporal.', 'warn'); startHybridSystem();
+  }
+  return centralWorkerHealthy;
+}
+async function loadCentralAlerts() {
+  if(!supabaseClient) return;
+  const since=new Date(Date.now()-24*3600*1000).toISOString();
+  const {data,error}=await supabaseClient.from('alerts').select('id,external_id,title,detail,category,severity,state,municipality,road,kilometer,location_label,latitude,longitude,location_confidence,location_status,source_name,source_url,event_at').gte('event_at',since).not('latitude','is',null).not('longitude','is',null).order('event_at',{ascending:false}).limit(500);
+  if(error||!Array.isArray(data)) return;
+  const previous=new Map(alerts.filter(a=>a.central_id).map(a=>[a.central_id,Number(a.received_at)||0]));
+  const central=data.map(row=>centralAlertToUi(row,previous.get(row.id)||0));
+  if(central.length) {
+    const local=alerts.filter(a=>!a.central_id&&a.source_type!=='media');
+    alerts=[...local,...central];
+    persistAlerts(); updateLists(); rebuildU();
+  }
+}
+async function initCentralAlerts() {
+  await Promise.all([refreshCentralWorkerHealth(),loadCentralAlerts()]);
+  if(!centralAlertsTimer) centralAlertsTimer=setInterval(()=>{ refreshCentralWorkerHealth(); loadCentralAlerts(); },60000);
+  if(!centralAlertsChannel&&supabaseClient.channel) {
+    centralAlertsChannel=supabaseClient.channel('zero-vial-alerts')
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'alerts'},payload=>{
+        const alert=centralAlertToUi(payload.new,Date.now());
+        alerts=alerts.filter(a=>a.central_id!==alert.central_id); alerts.push(alert);
+        persistAlerts(); updateLists(); rebuildU();
+        if(alert.importante) notifyImportant(alert);
+      }).subscribe();
+  }
 }
 function applyRoleAccess() {
   const authorized=['operator','admin'].includes(zeroVialRole);
@@ -2737,7 +2800,8 @@ function enterPlatform(mode='user') {
   map.invalidateSize();
   if(!operator) { uxResponsive(); rebuildU(); }
   requestNotifPerm();
-  if(!feedInterval) { if(!document.getElementById('modelSelect').value) detectModels(); startHybridSystem(); }
+  if(!feedInterval&&!centralWorkerHealthy) { if(!document.getElementById('modelSelect').value) detectModels(); startHybridSystem(); }
+  else if(centralWorkerHealthy) setLiveStatus(true);
 }
 function setLiveStatus(on) { const el=document.getElementById('ub-status'); if(!el) return; el.innerHTML = on ? '<span class="dot-live"></span> Monitoreando' : '<i class="fa-solid fa-pause"></i> Detenido'; el.classList.toggle('off', !on); }
 function toggleOperator() {
