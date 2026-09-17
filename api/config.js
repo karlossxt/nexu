@@ -30,6 +30,10 @@ module.exports = async (req, res) => {
   return res.status(200).json({
     rss: [rssPri, rssSec || DEFAULT_RSS_SEC],
     model: process.env.GROQ_MODEL || 'qwen/qwen3.8-27b',
-    reportModel: process.env.REPORT_MODEL || 'openai/gpt-oss-120b'
+    reportModel: process.env.REPORT_MODEL || 'openai/gpt-oss-120b',
+    supabase: {
+      url: (process.env.SUPABASE_URL || '').trim(),
+      anonKey: (process.env.SUPABASE_ANON_KEY || '').trim()
+    }
   });
 };
