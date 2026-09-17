@@ -106,7 +106,7 @@ async function classify(text) {
     body: JSON.stringify({
       model: GROQ_MODEL,
       temperature: 0.1,
-      reasoning_effort: 'minimal',
+      reasoning_effort: 'low',
       max_completion_tokens: 700,
       response_format: {
         type: 'json_schema',
