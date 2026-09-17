@@ -23,6 +23,7 @@
 <!-- FontAwesome & Chart.js -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -138,6 +139,13 @@ body.dark-mode .leaflet-control-attribution a{ color:#bbb; }
 .am-meta{ font-size:12px; color:var(--text-muted); margin:8px 0 14px; display:flex; flex-direction:column; gap:5px; }
 .am-actions{ display:flex; gap:10px; }
 .am-actions button{ flex:1; }
+.correction-grid{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+.correction-grid .full{ grid-column:1/-1; }
+.correction-note{ padding:9px 11px; border-radius:9px; background:rgba(21,112,239,.10); border:1px solid rgba(21,112,239,.25); color:var(--text-muted); font-size:11px; line-height:1.45; margin-bottom:12px; }
+.correction-preview{ min-height:42px; padding:9px 11px; border:1px solid var(--border); border-radius:9px; background:var(--log-bg); color:var(--text-muted); font-size:11px; margin-bottom:12px; }
+.auth-switch{ display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:14px; }
+.auth-switch button{ background:var(--card-bg); color:var(--text-muted); border:1px solid var(--border); }
+.auth-switch button.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
 .btn-heart{ background:transparent; border:none; color:#999; padding:0; width:26px; height:26px; border-radius:50%; cursor:pointer; font-size:15px; transition:transform .15s; }
 .btn-heart:hover{ transform:scale(1.2); }
 .btn-heart.liked{ color:#e91e63; }
@@ -858,7 +866,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
     </div>
     <div class="nt-actions">
       <button class="nt-btn" onclick="toggleTheme()" title="Cambiar tema"><i class="fa-solid fa-circle-half-stroke"></i></button>
-      <button class="nt-btn nt-login" onclick="showComingSoon('Cuentas de usuario')"><i class="fa-solid fa-circle-user"></i><span>Iniciar sesión</span></button>
+      <button id="account-button" class="nt-btn nt-login" onclick="openAuthModal()"><i class="fa-solid fa-circle-user"></i><span>Iniciar sesión</span></button>
       <button class="nt-btn active" onclick="openEntryModal()"><i class="fa-solid fa-plus"></i><span>Reportar</span></button>
     </div>
   </header>
@@ -1336,6 +1344,40 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <button id="am-center" onclick="centerAlert()"><i class="fa-solid fa-location-crosshairs"></i> Centrar en el mapa</button>
       <button id="am-navigate" onclick="navigateToAlert(currentAlertId)"><i class="fa-solid fa-diamond-turn-right"></i> Cómo llegar</button>
       <button id="am-share" onclick="shareAlert(currentAlertId)"><i class="fa-brands fa-whatsapp"></i> Compartir</button>
+      <button id="am-correct" onclick="openLocationCorrection(currentAlertId)" class="btn-outline"><i class="fa-solid fa-location-pen"></i> Corregir ubicación</button>
+    </div>
+  </div>
+</div>
+
+<div id="correction-modal" class="u-modal">
+  <div class="u-modal-card">
+    <div class="m-head"><i class="fa-solid fa-location-pen" style="color:#38BDF8"></i> Corregir ubicación<button class="m-x" onclick="closeModal('correction-modal')">✕</button></div>
+    <div class="m-body">
+      <div class="correction-note">La corrección quedará pendiente de validación. Conservaremos el punto original para comparar y mejorar la precisión futura.</div>
+      <label>Buscar dirección, carretera o kilómetro</label>
+      <div class="rm-search-actions"><input id="corr-query" placeholder="Ej. Autopista México–Querétaro km 84" style="margin:0"><button onclick="searchCorrectionLocation()"><i class="fa-solid fa-magnifying-glass"></i> Buscar</button></div>
+      <div class="correction-grid">
+        <div><label>Latitud</label><input id="corr-lat" type="number" step="0.000001"></div>
+        <div><label>Longitud</label><input id="corr-lon" type="number" step="0.000001"></div>
+        <div class="full"><label>Nombre correcto del lugar</label><input id="corr-label" placeholder="Carretera, km, municipio y estado"></div>
+        <div class="full"><label>¿Qué estaba incorrecto?</label><textarea id="corr-reason" rows="3" maxlength="500" placeholder="Describe brevemente la corrección"></textarea></div>
+      </div>
+      <div id="corr-preview" class="correction-preview">El punto corregido aparecerá aquí.</div>
+      <button onclick="saveLocationCorrection()"><i class="fa-solid fa-paper-plane"></i> Enviar corrección</button>
+    </div>
+  </div>
+</div>
+
+<div id="auth-modal" class="u-modal">
+  <div class="u-modal-card">
+    <div class="m-head"><i class="fa-solid fa-circle-user" style="color:#38BDF8"></i> Cuenta Zero Vial<button class="m-x" onclick="closeModal('auth-modal')">✕</button></div>
+    <div class="m-body">
+      <div class="auth-switch"><button id="auth-login-tab" class="active" onclick="setAuthMode('login')">Iniciar sesión</button><button id="auth-register-tab" onclick="setAuthMode('register')">Crear cuenta</button></div>
+      <label>Correo electrónico</label><input id="auth-email" type="email" autocomplete="email" placeholder="correo@ejemplo.com">
+      <label>Contraseña</label><input id="auth-password" type="password" autocomplete="current-password" minlength="6" placeholder="Mínimo 6 caracteres">
+      <button id="auth-submit" onclick="submitAuth()"><i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión</button>
+      <div id="auth-message" class="correction-preview" style="display:none;margin-top:10px"></div>
+      <button id="auth-logout" class="btn-outline" onclick="logoutZeroVial()" style="display:none;margin-top:9px"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</button>
     </div>
   </div>
 </div>
@@ -1400,6 +1442,10 @@ let chartStatesInstance = null;
 let chartTypesInstance = null;
 let ucStatesInstance = null;
 let ucTypesInstance = null;
+let supabaseClient = null;
+let zeroVialUser = null;
+let authMode = 'login';
+let correctionAlertId = null;
 const chartInstances = {};
 const diagnostics = { received:0, old:0, noise:0, queued:0, ia:0, accepted:0, noLocation:0, duplicates:0 };
 function diagAdd(key, value=1) { diagnostics[key]=(diagnostics[key]||0)+value; }
@@ -2210,6 +2256,49 @@ function openAlertDetail(id) {
   document.getElementById('alert-modal').style.display = 'flex';
 }
 function closeAlertModal() { document.getElementById('alert-modal').style.display = 'none'; }
+function correctionMessage(message,error=false) {
+  const box=document.getElementById('corr-preview'); if(!box) return;
+  box.textContent=message; box.style.color=error?'var(--danger)':'var(--text-muted)';
+}
+function openLocationCorrection(id) {
+  const a=alerts.find(x=>x.id===id); if(!a) return;
+  correctionAlertId=id;
+  document.getElementById('corr-query').value=a.location||'';
+  document.getElementById('corr-lat').value=Number(a.lat).toFixed(6);
+  document.getElementById('corr-lon').value=Number(a.lon).toFixed(6);
+  document.getElementById('corr-label').value=a.location||'';
+  document.getElementById('corr-reason').value='';
+  correctionMessage(`Punto original: ${Number(a.lat).toFixed(5)}, ${Number(a.lon).toFixed(5)} · ${a.location||'sin etiqueta'}`);
+  closeAlertModal(); openModal('correction-modal');
+}
+async function searchCorrectionLocation() {
+  const a=alerts.find(x=>x.id===correctionAlertId); if(!a) return;
+  const query=document.getElementById('corr-query').value.trim();
+  if(query.length<5) return correctionMessage('Escribe una referencia más completa.',true);
+  correctionMessage('Buscando el punto más probable…');
+  const result=await geocodeBest(query,{expectedState:a.state||'',snapToRoad:true});
+  if(!result) return correctionMessage('No se encontró una coincidencia confiable. Puedes introducir las coordenadas manualmente.',true);
+  document.getElementById('corr-lat').value=Number(result.lat).toFixed(6);
+  document.getElementById('corr-lon').value=Number(result.lon).toFixed(6);
+  document.getElementById('corr-label').value=result.formattedAddress||query;
+  correctionMessage(`Punto encontrado: ${Number(result.lat).toFixed(5)}, ${Number(result.lon).toFixed(5)} · ${result.provider||'geocodificador'}`);
+}
+async function saveLocationCorrection() {
+  const a=alerts.find(x=>x.id===correctionAlertId); if(!a) return;
+  const lat=Number(document.getElementById('corr-lat').value),lon=Number(document.getElementById('corr-lon').value);
+  const label=document.getElementById('corr-label').value.trim(),reason=document.getElementById('corr-reason').value.trim();
+  if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<14.3||lat>32.9||lon< -118.6||lon> -86.5) return correctionMessage('Las coordenadas deben corresponder a un punto dentro de México.',true);
+  if(label.length<5) return correctionMessage('Agrega el nombre correcto del lugar.',true);
+  if(reason.length<5) return correctionMessage('Explica brevemente qué estaba incorrecto.',true);
+  const correction={alert_external_id:String(a.id),original_latitude:a.lat,original_longitude:a.lon,corrected_latitude:lat,corrected_longitude:lon,corrected_label:label,reason,status:'pending',created_at:new Date().toISOString()};
+  const local=JSON.parse(localStorage.getItem('zv_location_corrections')||'[]'); local.unshift(correction); localStorage.setItem('zv_location_corrections',JSON.stringify(local.slice(0,100)));
+  if(supabaseClient&&zeroVialUser) {
+    const {error}=await supabaseClient.from('location_corrections').insert({...correction,user_id:zeroVialUser.id});
+    if(error) return correctionMessage('La corrección quedó guardada en este dispositivo, pero aún no pudo sincronizarse.',true);
+  }
+  a.correction_pending=true; persistAlerts(); closeModal('correction-modal');
+  trafficMessage(zeroVialUser?'Corrección enviada para validación.':'Corrección guardada. Inicia sesión para sincronizarla.');
+}
 function centerAlert() {
   const a = alerts.find(x => x.id === currentAlertId); if(!a) return;
   map.setView([a.lat, a.lon], 15); closeAlertModal();
@@ -2324,8 +2413,45 @@ async function applyServerConfig() {
       if(cfg.rss[0]) { const i1 = document.getElementById('rssInputPrimary'); if(!localStorage.getItem('steele_rss1')) i1.value = cfg.rss[0]; }
       if(cfg.rss[1]) { const i2 = document.getElementById('rssInputSecondary'); if(!localStorage.getItem('steele_rss2')) i2.value = cfg.rss[1]; }
     }
+    await initSupabase(cfg.supabase||{});
   } catch(e) {}
 }
+async function initSupabase(config) {
+  if(!config.url||!config.anonKey||!window.supabase?.createClient) return;
+  supabaseClient=window.supabase.createClient(config.url,config.anonKey,{auth:{persistSession:true,autoRefreshToken:true}});
+  const {data}=await supabaseClient.auth.getSession(); zeroVialUser=data?.session?.user||null; updateAccountButton();
+  supabaseClient.auth.onAuthStateChange((_event,session)=>{ zeroVialUser=session?.user||null; updateAccountButton(); });
+}
+function updateAccountButton() {
+  const button=document.getElementById('account-button'); if(!button) return;
+  const label=button.querySelector('span'); if(label) label.textContent=zeroVialUser?(zeroVialUser.email||'Mi cuenta'):'Iniciar sesión';
+}
+function setAuthMode(mode) {
+  authMode=mode==='register'?'register':'login';
+  document.getElementById('auth-login-tab')?.classList.toggle('active',authMode==='login');
+  document.getElementById('auth-register-tab')?.classList.toggle('active',authMode==='register');
+  const button=document.getElementById('auth-submit'); if(button) button.innerHTML=authMode==='login'?'<i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión':'<i class="fa-solid fa-user-plus"></i> Crear cuenta';
+}
+function authMessage(message,error=false) {
+  const box=document.getElementById('auth-message'); if(!box) return; box.style.display='block'; box.style.color=error?'var(--danger)':'var(--success)'; box.textContent=message;
+}
+function openAuthModal() {
+  openModal('auth-modal');
+  document.getElementById('auth-logout').style.display=zeroVialUser?'block':'none';
+  document.getElementById('auth-submit').style.display=zeroVialUser?'none':'block';
+  document.getElementById('auth-message').style.display='none';
+  if(!supabaseClient) authMessage('La conexión con Supabase está preparada, pero falta configurar la clave pública en Vercel.',true);
+}
+async function submitAuth() {
+  if(!supabaseClient) return authMessage('Supabase todavía no está configurado en Vercel.',true);
+  const email=document.getElementById('auth-email').value.trim(),password=document.getElementById('auth-password').value;
+  if(!email||password.length<6) return authMessage('Ingresa un correo válido y una contraseña de al menos 6 caracteres.',true);
+  const result=authMode==='register'?await supabaseClient.auth.signUp({email,password}):await supabaseClient.auth.signInWithPassword({email,password});
+  if(result.error) return authMessage(result.error.message,true);
+  if(authMode==='register'&&!result.data.session) return authMessage('Cuenta creada. Revisa tu correo para confirmarla.');
+  zeroVialUser=result.data.user; updateAccountButton(); authMessage('Sesión iniciada correctamente.');
+}
+async function logoutZeroVial() { if(supabaseClient) await supabaseClient.auth.signOut(); zeroVialUser=null; updateAccountButton(); closeModal('auth-modal'); }
 async function autoBoot() {
   await applyServerConfig();
 }
