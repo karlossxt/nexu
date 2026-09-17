@@ -209,7 +209,7 @@ async function health(values) {
 
 async function cycle() {
   const started = new Date().toISOString();
-  const stats = { received:0, relevant:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0 };
+  const stats = { received:0, relevant:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0 };
   await health({ status:'running', last_started_at:started, last_error:null });
   try {
     const candidates = [];
@@ -237,7 +237,10 @@ async function cycle() {
         else if (result === 'no_location') stats.no_location++;
         else if (result === 'duplicate') stats.duplicates++;
         else stats.rejected++;
-      } catch (error) { log('error','Error procesando noticia',{ title:item.title.slice(0,80), error:error.message }); }
+      } catch (error) {
+        stats.errors++;
+        log('error','Error procesando noticia',{ title:item.title.slice(0,80), error:error.message });
+      }
       await sleep(1200);
     }
     await health({ status:'healthy', last_success_at:new Date().toISOString(), last_stats:stats, last_error:null });
