@@ -13,6 +13,7 @@ El esquema incluye:
 - correcciones de ubicación con revisión;
 - preferencias de filtros y horarios;
 - suscripciones push;
+- estado de salud del worker central;
 - políticas RLS para que cada usuario solo pueda consultar y modificar sus propios datos.
 
 ## 2. Variables de Vercel
@@ -57,3 +58,23 @@ Cuando se compre el dominio, reemplaza la URL principal y conserva temporalmente
 ## 5. Notificaciones push
 
 La tabla y las preferencias ya quedan preparadas. El envío real se habilitará en una siguiente fase mediante claves VAPID y una función del servidor; no deben enviarse notificaciones hasta validar la precisión geográfica.
+
+## 6. Worker central
+
+El proceso de vigilancia vive en `worker/index.js` y debe ejecutarse en un
+servicio persistente, no dentro del navegador. Para Render se incluye
+`render.yaml`.
+
+Variables obligatorias del worker:
+
+```text
+SUPABASE_URL=https://hjymytmsstmhivjdtxso.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<clave secreta; sólo en el worker>
+GROQ_API_KEY=<clave de Groq>
+```
+
+También acepta `GOOGLE_MAPS_API_KEY`, `RSS_PRI`, `RSS_SEC`,
+`WORKER_INTERVAL_MS`, `ALERT_MAX_AGE_HOURS` y `MAX_AI_PER_CYCLE`.
+
+La clave `SUPABASE_SERVICE_ROLE_KEY` nunca debe agregarse a `index.html`,
+Vercel público ni un repositorio. El frontend sólo utiliza la clave publishable.
