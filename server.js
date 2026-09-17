@@ -129,7 +129,11 @@ const server = http.createServer(async (req, res) => {
     return res.end(JSON.stringify({
       rss: [rssPri, rssSec || 'https://news.google.com/rss/search?q=accidente+OR+bloqueo+OR+asalto+carretera+mexico&hl=es-419&gl=MX&ceid=MX:es-419'],
       model: ENV.GROQ_MODEL || 'qwen/qwen3.8-27b',
-      reportModel: ENV.REPORT_MODEL || 'openai/gpt-oss-120b'
+      reportModel: ENV.REPORT_MODEL || 'openai/gpt-oss-120b',
+      supabase: {
+        url: String(ENV.SUPABASE_URL || '').trim(),
+        anonKey: String(ENV.SUPABASE_ANON_KEY || '').trim()
+      }
     }));
   }
 
