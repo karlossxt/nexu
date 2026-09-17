@@ -1,0 +1,15 @@
+{
+  "name": "zero-vial",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mapa y worker central de alertas viales de Zero Vial",
+  "scripts": {
+    "start": "node server.js",
+    "worker": "node worker/index.js",
+    "worker:once": "WORKER_ONCE=1 node worker/index.js",
+    "check": "node --check server.js && node --check worker/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
