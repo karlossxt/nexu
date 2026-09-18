@@ -141,8 +141,14 @@ async function classify(text) {
       ]
     })
   });
-  if (!response.ok) throw new Error('Groq ' + response.status + ': ' + (await response.text()).slice(0, 250));
-  const data = await response.json();
+  const responseText = await response.text();
+  if (!response.ok) throw new Error('Groq ' + response.status + ': ' + responseText.slice(0, 250));
+  let data;
+  try {
+    data = JSON.parse(responseText);
+  } catch (error) {
+    throw new Error('Groq devolvió una respuesta no JSON: ' + responseText.slice(0, 120));
+  }
   const message = data.choices?.[0]?.message || {};
   const raw = String(message.content || message.reasoning || '').trim();
   const start = raw.indexOf('{');
@@ -165,18 +171,36 @@ async function geocode(query, expectedState) {
     url.searchParams.set('language', 'es');
     url.searchParams.set('region', 'mx');
     url.searchParams.set('key', GOOGLE_KEY);
-    const response = await fetch(url);
-    const body = await response.json();
-    const result = body.results?.[0];
-    if (result) {
-      const type = result.geometry?.location_type || 'APPROXIMATE';
-      const confidence = ({ ROOFTOP:.97, RANGE_INTERPOLATED:.9, GEOMETRIC_CENTER:.82, APPROXIMATE:.55 })[type] || .5;
-      return { latitude:Number(result.geometry.location.lat), longitude:Number(result.geometry.location.lng), label:result.formatted_address, confidence, status:confidence >= .82 ? 'automatic' : 'approximate' };
+    try {
+      const response = await fetch(url);
+      const raw = await response.text();
+      if (response.ok && /^\s*[\[{]/.test(raw)) {
+        const body = JSON.parse(raw);
+        const result = body.results?.[0];
+        if (result) {
+          const type = result.geometry?.location_type || 'APPROXIMATE';
+          const confidence = ({ ROOFTOP:.97, RANGE_INTERPOLATED:.9, GEOMETRIC_CENTER:.82, APPROXIMATE:.55 })[type] || .5;
+          return { latitude:Number(result.geometry.location.lat), longitude:Number(result.geometry.location.lng), label:result.formatted_address, confidence, status:confidence >= .82 ? 'automatic' : 'approximate' };
+        }
+      }
+    } catch (error) {
+      log('warn', 'Google no pudo geocodificar; usando respaldo', { query, error:error.message });
     }
   }
   const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&addressdetails=1&q=' + encodeURIComponent(query + ', México');
-  const response = await fetch(url, { headers: { 'User-Agent':'ZeroVial/1.0 contacto@zerovial.mx', 'Accept-Language':'es' } });
-  const result = (await response.json())?.[0];
+  let result;
+  try {
+    const response = await fetch(url, { headers: { 'User-Agent':'ZeroVial/1.0 contacto@zerovial.mx', 'Accept-Language':'es', Accept:'application/json' } });
+    const raw = await response.text();
+    if (!response.ok || !/^\s*\[/.test(raw)) {
+      log('warn', 'Geocodificador de respaldo devolvió una respuesta no JSON', { query, status:response.status, preview:raw.slice(0,80) });
+      return null;
+    }
+    result = JSON.parse(raw)?.[0];
+  } catch (error) {
+    log('warn', 'Geocodificador de respaldo no disponible', { query, error:error.message });
+    return null;
+  }
   if (!result) return null;
   const resolved = result.address?.state || '';
   if (expectedState && resolved && !norm(resolved).includes(norm(expectedState)) && !norm(expectedState).includes(norm(resolved))) return null;
@@ -274,10 +298,17 @@ async function cycle() {
       stats.max_source_delay_min=Math.round(Math.max(...delays));
     }
     const unique = new Map(candidates.map(x => [x.item.url || x.item.title, x]));
-    for (const { item, feed } of [...unique.values()].slice(0, MAX_AI_PER_CYCLE)) {
+    const pending = [];
+    for (const candidate of unique.values()) {
+      const { item } = candidate;
       const externalId = hash(item.url || item.title + '|' + item.published_at);
       if (seenRecently(externalId)) { stats.duplicates++; continue; }
       if (await alreadyExists(externalId)) { stats.duplicates++; continue; }
+      pending.push(candidate);
+      if (pending.length >= MAX_AI_PER_CYCLE) break;
+    }
+    for (const { item, feed } of pending) {
+      const externalId = hash(item.url || item.title + '|' + item.published_at);
       stats.analyzed++;
       try {
         const result = await processItem(item, feed);
@@ -296,8 +327,8 @@ async function cycle() {
     const located=stats.inserted+stats.no_location;
     stats.location_success_rate_pct=located?Math.round((stats.inserted/located)*100):0;
     await health({
-      status: stats.errors > 0 ? 'error' : 'healthy',
-      last_success_at: stats.errors < stats.analyzed ? new Date().toISOString() : null,
+      status:'healthy',
+      last_success_at:new Date().toISOString(),
       last_stats: stats,
       last_error: stats.errors > 0 ? `${stats.errors} noticia(s) fallaron durante el análisis` : null
     });
