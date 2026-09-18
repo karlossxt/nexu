@@ -3,15 +3,23 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Zero Vial — Riesgos al viajar en México</title>
-<meta name="description" content="Zero Vial: alertas viales y de seguridad para anticipar incidencias en tu trayecto por México." />
+<title>Zero Vial — Panorama vial y de seguridad en México</title>
+<meta name="description" content="Consulta un panorama confiable de incidencias viales y de seguridad en las carreteras de México, actualizado periódicamente." />
 <meta name="theme-color" content="#05070a" />
-<meta property="og:title" content="Zero Vial — Viaja con mayor información" />
-<meta property="og:description" content="Alertas viales y de seguridad con ubicación aproximada y fuentes identificadas." />
-<meta property="og:image" content="/favicon-256.png" />
+<link rel="canonical" href="https://www.zero-vial.com.mx/" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://www.zero-vial.com.mx/" />
+<meta property="og:title" content="Zero Vial — Panorama vial de México" />
+<meta property="og:description" content="Incidencias viales y de seguridad con fuentes identificadas, ubicación aproximada y actualización periódica." />
+<meta property="og:image" content="https://www.zero-vial.com.mx/zero-logo.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Zero Vial — Panorama vial de México" />
+<meta name="twitter:description" content="Consulta incidencias viales y de seguridad en México, actualizadas periódicamente." />
+<meta name="twitter:image" content="https://www.zero-vial.com.mx/zero-logo.png" />
 <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
 <link rel="icon" type="image/png" sizes="256x256" href="/favicon-256.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Zero Vial","url":"https://www.zero-vial.com.mx/","applicationCategory":"TravelApplication","operatingSystem":"Web","description":"Panorama de incidencias viales y de seguridad en las carreteras de México, actualizado periódicamente."}</script>
 
 <!-- Leaflet & Plugins -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -201,6 +209,26 @@ body.user-mode:not(.dark-mode) .pref-check{ background:#fff; border-color:#D8E1E
 .landing-mode.user{ border:none; background:linear-gradient(105deg,#FFC02E,#FF9600); color:#101214; box-shadow:0 9px 25px rgba(255,176,0,.2); }
 .landing-mode.full{ border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.08); color:#fff; }
 .landing-mode small{ display:block; margin-top:3px; font-size:10px; font-weight:500; opacity:.75; }
+.audience-picker{ display:grid; grid-template-columns:1fr 1fr; gap:9px; max-width:560px; margin:0 auto 12px; }
+.audience-choice{ min-height:58px; display:flex; align-items:center; justify-content:center; gap:8px; color:#DDE7F0; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.14); border-radius:12px; box-shadow:none; }
+.audience-choice.active{ color:#111318; background:linear-gradient(105deg,#7DDFF1,#19C7E8); border-color:transparent; }
+.audience-choice small{ display:block; font-size:9px; opacity:.72; }
+.company-only{ display:none!important; }
+body.company-audience .company-only{ display:flex!important; }
+body.user-mode .feature-soon{ display:none!important; }
+.audience-top{ border-color:var(--border); background:var(--card-bg); color:var(--text); }
+.onboarding{ display:none; position:fixed; inset:0; z-index:25000; align-items:center; justify-content:center; padding:18px; background:rgba(2,6,12,.72); backdrop-filter:blur(8px); }
+.onboarding.open{ display:flex; }
+.onboarding-card{ width:min(460px,100%); padding:24px; border:1px solid rgba(255,255,255,.14); border-radius:20px; color:#EEF4FA; background:linear-gradient(145deg,#111923,#070A0F); box-shadow:0 30px 80px rgba(0,0,0,.55); }
+.onboarding-icon{ width:48px; height:48px; display:grid; place-items:center; border-radius:15px; color:#071018; background:linear-gradient(145deg,#7DDFF1,#19C7E8); font-size:20px; }
+.onboarding-card h2{ margin:16px 0 8px; font-size:21px; }
+.onboarding-card p{ min-height:50px; color:#AEB9C5; font-size:13px; line-height:1.55; }
+.onboarding-progress{ display:flex; gap:6px; margin:18px 0; }
+.onboarding-progress span{ flex:1; height:4px; border-radius:4px; background:#273342; }
+.onboarding-progress span.active{ background:#19C7E8; }
+.onboarding-actions{ display:flex; align-items:center; gap:8px; }
+.onboarding-actions button{ width:auto; }
+.onboarding-skip{ margin-right:auto; color:#9DAAB7; background:transparent; box-shadow:none; }
 .operator-access{ display:none!important; }
 body.operator-authorized .operator-access{ display:flex!important; }
 .rm-search-actions{ display:grid; grid-template-columns:1fr auto; gap:8px; margin:10px 0 12px; }
@@ -833,15 +861,19 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
 
 <div id="landing">
   <div id="landing-card">
-    <div class="landing-kicker"><i class="fa-solid fa-satellite-dish"></i> Monitoreo vial inteligente</div>
+    <div class="landing-kicker"><i class="fa-solid fa-map-location-dot"></i> Panorama vial de México</div>
     <img class="landing-logo" src="/zero-logo.png" alt="Zero Vial">
     <h1 class="sr-only">Zero Vial</h1>
-    <p class="landing-sub">Anticipa incidencias viales y de seguridad. Filtra lo que necesitas y decide tu trayecto con mayor información.</p>
+    <p class="landing-sub">Un vistazo confiable a lo que ocurre en las carreteras de México, con incidencias verificables y actualización periódica.</p>
     <div class="landing-feats">
-      <div class="landing-feat"><i class="fa-solid fa-triangle-exclamation"></i> Monitoreo activo</div>
+      <div class="landing-feat"><i class="fa-solid fa-rotate"></i> Actualización periódica</div>
       <div class="landing-feat"><i class="fa-solid fa-cloud-sun"></i> Clima por punto</div>
-      <div class="landing-feat"><i class="fa-solid fa-route"></i> Rutas próximamente</div>
-      <div class="landing-feat"><i class="fa-solid fa-shield-halved"></i> Seguridad vial</div>
+      <div class="landing-feat"><i class="fa-solid fa-map-location-dot"></i> Mapa nacional</div>
+      <div class="landing-feat"><i class="fa-solid fa-shield-halved"></i> Fuentes identificadas</div>
+    </div>
+    <div class="audience-picker" aria-label="Selecciona cómo usarás Zero Vial">
+      <button id="audience-traveler" class="audience-choice active" onclick="setAudience('traveler')"><i class="fa-solid fa-car-side"></i><span>Viajero<small>Mapa, alertas y clima</small></span></button>
+      <button id="audience-company" class="audience-choice" onclick="setAudience('company')"><i class="fa-solid fa-building"></i><span>Empresa<small>Análisis y herramientas operativas</small></span></button>
     </div>
     <div class="landing-access">
       <div class="landing-fields">
@@ -861,6 +893,16 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
   </div>
 </div>
 
+<div id="onboarding" class="onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+  <div class="onboarding-card">
+    <div id="onboarding-icon" class="onboarding-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+    <h2 id="onboarding-title">Explora el mapa</h2>
+    <p id="onboarding-copy">Consulta incidencias viales y de seguridad ubicadas en el mapa nacional.</p>
+    <div id="onboarding-progress" class="onboarding-progress" aria-hidden="true"></div>
+    <div class="onboarding-actions"><button class="onboarding-skip" onclick="finishOnboarding()">Omitir</button><button id="onboarding-back" class="btn-outline" onclick="moveOnboarding(-1)">Anterior</button><button id="onboarding-next" onclick="moveOnboarding(1)">Siguiente</button></div>
+  </div>
+</div>
+
 <nav id="sidebar">
   <div class="brand">
     <img src="/zero-mark.png" class="brand-logo" alt="Logo de Zero Vial">
@@ -877,18 +919,18 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
   <div class="nav-item" onclick="switchPanel('security')"><div class="nav-icon"><i class="fa-solid fa-shield-cat"></i></div><span class="nav-label">Seguridad</span></div>
   
   <div class="nav-item feature-soon" onclick="showComingSoon('Planificador de rutas')"><div class="nav-icon"><i class="fa-solid fa-route"></i></div><span class="nav-label">Rutas · Próximamente</span></div>
-  <div class="nav-item" onclick="switchPanel('analysis')"><div class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div><span class="nav-label">IA Análisis</span></div>
+  <div class="nav-item company-only" onclick="switchPanel('analysis')"><div class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div><span class="nav-label">IA Análisis</span></div>
   <div class="nav-separator"></div>
   
   <div class="nav-item" onclick="switchPanel('directory')"><div class="nav-icon"><i class="fa-solid fa-address-book"></i></div><span class="nav-label">Directorio</span></div>
-  <div class="nav-item" onclick="switchPanel('admin')"><div class="nav-icon"><i class="fa-solid fa-address-card"></i></div><span class="nav-label">Gestión Personal</span></div>
-  <div class="nav-item" onclick="switchPanel('reports')"><div class="nav-icon"><i class="fa-solid fa-file-contract"></i></div><span class="nav-label">Reportes</span></div>
+  <div class="nav-item company-only" onclick="switchPanel('admin')"><div class="nav-icon"><i class="fa-solid fa-address-card"></i></div><span class="nav-label">Gestión Personal</span></div>
+  <div class="nav-item company-only" onclick="switchPanel('reports')"><div class="nav-icon"><i class="fa-solid fa-file-contract"></i></div><span class="nav-label">Reportes</span></div>
   
   <div style="flex:1"></div>
   <div class="nav-item operator-access" onclick="toggleOperator()" style="border-top:1px solid var(--border);">
     <div class="nav-icon"><i class="fa-solid fa-user"></i></div><span class="nav-label">Modo Usuario</span>
   </div>
-  <div class="nav-item" onclick="switchPanel('monitor')" style="border-top:1px solid var(--border); background:rgba(26,115,232,0.05);">
+  <div class="nav-item company-only" onclick="switchPanel('monitor')" style="border-top:1px solid var(--border); background:rgba(26,115,232,0.05);">
     <div class="nav-icon" style="color:var(--accent)"><i class="fa-solid fa-user-group"></i></div><span class="nav-label" style="color:var(--accent)">Personal Activo</span>
   </div>
 </nav>
@@ -912,6 +954,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <i class="fa-solid fa-chevron-right hnc-more"></i>
     </div>
     <div class="nt-actions">
+      <button id="audience-top" class="nt-btn audience-top" onclick="toggleAudience()" title="Cambiar tipo de experiencia"><i class="fa-solid fa-car-side"></i><span>Viajero</span></button>
       <button class="nt-btn" onclick="toggleTheme()" title="Cambiar tema"><i class="fa-solid fa-circle-half-stroke"></i></button>
       <button id="account-button" class="nt-btn nt-login" onclick="openAuthModal()"><i class="fa-solid fa-circle-user"></i><span>Iniciar sesión</span></button>
       <button class="nt-btn active" onclick="openEntryModal()"><i class="fa-solid fa-plus"></i><span>Reportar</span></button>
@@ -1071,8 +1114,9 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
           <option value="24">🗓 Últimas 24 horas</option>
         </select>
       </div>
-      <div class="pl-section">PRÓXIMAS FUNCIONES</div>
+      <div class="pl-section">LO QUE VIENE</div>
       <div class="future-tools">
+        <button class="future-tool" onclick="showComingSoon('Planificador de rutas')"><span class="ft-icon"><i class="fa-solid fa-route"></i></span><span><b>Planificador de rutas</b><small>Trayectos con incidencias cercanas</small></span><span class="soon-badge">En desarrollo</span></button>
         <button class="future-tool" onclick="showComingSoon('Seguimiento de unidades GPS')"><span class="ft-icon"><i class="fa-solid fa-satellite-dish"></i></span><span><b>Unidades GPS en vivo</b><small>Ubicación y estado de vehículos</small></span><span class="soon-badge">Próximamente</span></button>
         <button class="future-tool" onclick="showComingSoon('Grupos de operación')"><span class="ft-icon"><i class="fa-solid fa-comments"></i></span><span><b>Grupos de operación</b><small>Comunicación por empresa o recorrido</small></span><span class="soon-badge">Próximamente</span></button>
         <button class="future-tool" onclick="showComingSoon('Cuentas y equipos')"><span class="ft-icon"><i class="fa-solid fa-users-gear"></i></span><span><b>Cuentas y equipos</b><small>Usuarios, roles y preferencias</small></span><span class="soon-badge">Próximamente</span></button>
@@ -1691,6 +1735,7 @@ window.onload = function() {
   uxResponsive();
   hncTick();
   setInterval(hncTick, 1000);
+  setAudience(localStorage.getItem('zero_vial_audience') || 'traveler', true);
   log("Sistema Zero Vial listo.");
   setTimeout(autoBoot, 400);
 };
@@ -2823,6 +2868,48 @@ async function saveUserPreferences() {
 async function autoBoot() {
   await applyServerConfig();
 }
+const onboardingSteps=[
+  {icon:'map-location-dot',title:'Explora el mapa',copy:'Consulta incidencias viales y de seguridad ubicadas en el mapa nacional.'},
+  {icon:'triangle-exclamation',title:'Revisa las alertas',copy:'Abre cada alerta para ver su fuente, antigüedad y nivel de precisión de la ubicación.'},
+  {icon:'filter',title:'Ajusta los filtros',copy:'Elige estado, periodo, categoría o sólo bloqueos para concentrarte en lo que necesitas.'},
+  {icon:'sliders',title:'Personaliza después',copy:'Guarda tus preferencias al iniciar sesión. Las herramientas empresariales aparecen sólo en la vista Empresa.'}
+];
+let onboardingStep=0;
+function setAudience(value,quiet=false) {
+  const audience=value==='company'?'company':'traveler';
+  document.body.classList.toggle('company-audience',audience==='company');
+  localStorage.setItem('zero_vial_audience',audience);
+  document.getElementById('audience-traveler')?.classList.toggle('active',audience==='traveler');
+  document.getElementById('audience-company')?.classList.toggle('active',audience==='company');
+  const top=document.getElementById('audience-top');
+  if(top) top.innerHTML=audience==='company'?'<i class="fa-solid fa-building"></i><span>Empresa</span>':'<i class="fa-solid fa-car-side"></i><span>Viajero</span>';
+  if(!quiet&&audience==='company') landingMessage('La vista Empresa organiza análisis y herramientas operativas. Algunas funciones siguen en desarrollo.');
+}
+function toggleAudience() {
+  const company=document.body.classList.contains('company-audience');
+  setAudience(company?'traveler':'company',true);
+  trafficMessage(company?'Vista Viajero activada.':'Vista Empresa activada; las funciones en desarrollo están agrupadas en “Lo que viene”.');
+}
+function renderOnboarding() {
+  const step=onboardingSteps[onboardingStep];
+  document.getElementById('onboarding-icon').innerHTML=`<i class="fa-solid fa-${step.icon}"></i>`;
+  document.getElementById('onboarding-title').textContent=step.title;
+  document.getElementById('onboarding-copy').textContent=step.copy;
+  document.getElementById('onboarding-progress').innerHTML=onboardingSteps.map((_,i)=>`<span class="${i<=onboardingStep?'active':''}"></span>`).join('');
+  document.getElementById('onboarding-back').style.visibility=onboardingStep?'visible':'hidden';
+  document.getElementById('onboarding-next').textContent=onboardingStep===onboardingSteps.length-1?'Terminar':'Siguiente';
+}
+function maybeStartOnboarding() {
+  if(localStorage.getItem('zero_vial_onboarding_done')) return;
+  onboardingStep=0; renderOnboarding(); document.getElementById('onboarding')?.classList.add('open');
+}
+function moveOnboarding(direction) {
+  if(direction>0&&onboardingStep===onboardingSteps.length-1) return finishOnboarding();
+  onboardingStep=Math.max(0,Math.min(onboardingSteps.length-1,onboardingStep+direction)); renderOnboarding();
+}
+function finishOnboarding() {
+  localStorage.setItem('zero_vial_onboarding_done','1'); document.getElementById('onboarding')?.classList.remove('open');
+}
 function enterPlatform(mode='user') {
   const operator = mode === 'operator' && ['operator','admin'].includes(zeroVialRole);
   const l = document.getElementById('landing'); if(l) l.style.display = 'none';
@@ -2832,6 +2919,7 @@ function enterPlatform(mode='user') {
   document.body.classList.toggle('operator-mode', operator);
   map.invalidateSize();
   if(!operator) { uxResponsive(); rebuildU(); }
+  setTimeout(maybeStartOnboarding,350);
   requestNotifPerm();
   if(!feedInterval&&!centralWorkerHealthy) { if(!document.getElementById('modelSelect').value) detectModels(); startHybridSystem(); }
   else if(centralWorkerHealthy) setLiveStatus(true);
@@ -3205,7 +3293,11 @@ function rebuildU() {
   else if(map.hasLayer(staticLayer)) map.removeLayer(staticLayer);
   if(fl) { fl.innerHTML = ''; sortVisibleAlerts(vis).forEach(a => fl.appendChild(makeAlertCard(a))); }
   if(fe) fe.style.display = vis.length ? 'none' : 'block';
-  if(em) em.textContent = vis.length ? '' : (alerts.length ? 'No hay alertas que coincidan con tus filtros. Amplía el periodo o selecciona Todo México.' : centralWorkerHealthy ? 'Sin incidencias nuevas en este momento. Monitoreo activo con consultas continuas.' : centralWorkerState==='running' ? 'Actualizando fuentes…' : 'No fue posible confirmar la sincronización. La información puede estar desactualizada.');
+  if(em) {
+    const syncAge=centralWorkerLastSuccess ? Math.max(0,Math.round((Date.now()-new Date(centralWorkerLastSuccess).getTime())/60000)) : null;
+    const syncCopy=syncAge===null?'':' Última sincronización: '+(syncAge<1?'hace menos de un minuto':`hace ${syncAge} min`)+'.';
+    em.textContent = vis.length ? '' : (alerts.length ? 'No hay alertas que coincidan con tus filtros. Amplía el periodo o selecciona Todo México.' : centralWorkerHealthy ? 'Sin incidencias disponibles en este momento.'+syncCopy : centralWorkerState==='running' ? 'Las fuentes se están sincronizando. Intenta nuevamente en unos momentos.' : 'No fue posible confirmar la sincronización. La información puede estar desactualizada.');
+  }
   refreshCounters();
 }
 
