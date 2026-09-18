@@ -23,6 +23,14 @@ const FEEDS = [env.RSS_PRI, env.RSS_SEC].map(x => String(x || '').trim()).filter
 const DEFAULT_FEED = 'https://news.google.com/rss/search?q=accidente+OR+bloqueo+OR+asalto+carretera+mexico&hl=es-419&gl=MX&ceid=MX:es-419';
 if (!FEEDS.length) FEEDS.push(DEFAULT_FEED);
 const processedIds = new Map();
+// Purga entradas vencidas cada 30 min; sin esto el mapa crece sin límite en un worker
+// de larga duración (meses corriendo en Render).
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, expiresAt] of processedIds) {
+    if (expiresAt <= now) processedIds.delete(id);
+  }
+}, 30 * 60_000).unref();
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const log = (level, message, data) => console.log(JSON.stringify({ time: new Date().toISOString(), level, message, ...(data || {}) }));
@@ -127,6 +135,7 @@ async function classify(text) {
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + GROQ_KEY, 'Content-Type': 'application/json' },
+    signal: AbortSignal.timeout(20_000),
     body: JSON.stringify({
       model: GROQ_MODEL,
       temperature: 0.1,
@@ -280,13 +289,13 @@ async function processItem(item, feed) {
   const eventAt = item.published_at && Date.now() - new Date(item.published_at).getTime() <= MAX_AGE_MS ? item.published_at : new Date().toISOString();
   const row = {
     external_id: externalId,
-    title,
-    detail,
+    title: title.slice(0, 200),
+    detail: detail.slice(0, 600),
     category: ai.categoria,
     severity: ['critical','high','medium','low'].includes(ai.severidad) ? ai.severidad : 'medium',
-    state: clean(ai.estado) || null,
-    municipality: clean(ai.municipio) || null,
-    road: clean(ai.carretera) || null,
+    state: clean(ai.estado).slice(0, 80) || null,
+    municipality: clean(ai.municipio).slice(0, 80) || null,
+    road: clean(ai.carretera).slice(0, 120) || null,
     kilometer,
     location_label: [geo.label || locationQuery, direction ? 'sentido ' + direction : ''].filter(Boolean).join(' · '),
     latitude: geo.latitude,
@@ -314,7 +323,7 @@ async function cycle() {
   try {
     const candidates = [];
     for (const feed of FEEDS) {
-      const response = await fetch(feed, { headers:{ 'User-Agent':'Mozilla/5.0 (Zero Vial worker)' } });
+      const response = await fetch(feed, { headers:{ 'User-Agent':'Mozilla/5.0 (Zero Vial worker)' }, signal: AbortSignal.timeout(15_000) });
       if (!response.ok) throw new Error('RSS ' + response.status + ' ' + feed);
       const items = parseFeed(await response.text()).slice(0, 40);
       stats.received += items.length;
