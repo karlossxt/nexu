@@ -2544,7 +2544,8 @@ function centralNumericId(value) {
 }
 function centralAlertToUi(row,receivedAt=0) {
   const confidence=Number(row.location_confidence)||0;
-  const severity=row.severity||'medium';\n  const precision=['corrected','verified'].includes(row.location_status)?'punto':confidence>=.92?'punto':confidence>=.82?'carretera':confidence>=.68?'tramo':confidence>=.48?'municipio':'estado';
+  const severity=row.severity||'medium';
+  const precision=['corrected','verified'].includes(row.location_status)?'punto':confidence>=.92?'punto':confidence>=.82?'carretera':confidence>=.68?'tramo':confidence>=.48?'municipio':'estado';
   return {
     id:centralNumericId(row.id||row.external_id), central_id:row.id, external_id:row.external_id,
     lat:Number(row.latitude), lon:Number(row.longitude), category:row.category,
