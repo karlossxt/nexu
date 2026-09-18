@@ -22,10 +22,26 @@ function loadEnv() {
 const ENV = Object.assign(loadEnv(), process.env);
 const GROQ_KEY = ENV.GROQ_API_KEY || '';
 const APP_TOKEN = ENV.APP_TOKEN || '';
+// En producción, exige un token: sin esto, /api/groq queda abierto a cualquiera.
+const IS_PROD = (ENV.NODE_ENV || '').toLowerCase() === 'production' || !!ENV.VERCEL || !!ENV.RENDER;
+if (IS_PROD && !APP_TOKEN) {
+  console.warn('[ADVERTENCIA] APP_TOKEN no está configurado en producción. /api/groq quedará abierto a cualquiera que lo descubra.');
+}
+// Solo confía en x-forwarded-for si corres detrás de un proxy conocido (Vercel/Render lo inyectan
+// de forma confiable en la primera posición); en cualquier otro caso usa la IP del socket, que el
+// cliente no puede falsificar.
+const TRUST_PROXY = !!ENV.VERCEL || !!ENV.RENDER || ENV.TRUST_PROXY === '1';
 const MODELS_ALLOWED = ['openai/gpt-oss-20b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'allam-2-7b', 'meta-llama/llama-prompt-guard-2-86m'];
 const MAX_BODY = 64 * 1024;
 const MAX_PER_MIN = 40;
 const rate = new Map();
+// Limpieza periódica del mapa de rate limit para que no crezca sin límite con tráfico sostenido.
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, cur] of rate) {
+    if (now - cur.t > 60000) rate.delete(ip);
+  }
+}, 5 * 60000).unref();
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -38,8 +54,11 @@ const MIME = {
 };
 
 function remoteIp(req) {
-  const fwd = (req.headers['x-forwarded-for'] || '').split(',')[0].trim();
-  return fwd || req.socket.remoteAddress || 'anon';
+  if (TRUST_PROXY) {
+    const fwd = (req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+    if (fwd) return fwd;
+  }
+  return req.socket.remoteAddress || 'anon';
 }
 
 function rateLimited(ip) {
@@ -85,6 +104,10 @@ const server = http.createServer(async (req, res) => {
     if (!GROQ_KEY) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ error: 'GROQ_API_KEY no configurada en .env' }));
+    }
+    if (IS_PROD && !APP_TOKEN) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: 'APP_TOKEN no configurado en el servidor' }));
     }
     if (APP_TOKEN && req.headers['x-app-token'] !== APP_TOKEN) {
       res.writeHead(403, { 'Content-Type': 'application/json' });
