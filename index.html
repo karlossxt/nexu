@@ -1919,7 +1919,7 @@ async function parseFeedItems(url) {
 }
 
 const SEEN_TTL = 6 * 3600 * 1000; // no reprocesar el mismo título dentro de 6h
-const ALERT_EXPIRE_MS = 8 * 3600 * 1000;
+const ALERT_EXPIRE_MS = 6 * 3600 * 1000;
 const FEED_MAX_AGE_MS = 24 * 3600 * 1000; // nunca convertir noticias de otros días en alertas nuevas
 function isAlertExpired(a) { try { return Date.now() - new Date(a.time).getTime() > ALERT_EXPIRE_MS; } catch(e) { return false; } }
 function isSeen(key) {
@@ -2238,7 +2238,7 @@ function showAlertFocus(a) {
   document.getElementById('focus-title').textContent=a.title || 'Incidente vial';
   document.getElementById('sac-title').textContent=a.title || 'Incidente vial';
   document.getElementById('sac-location').textContent=a.location || 'Ubicación aproximada';
-  document.getElementById('sac-meta').textContent=`${alertSourceLabel(a)} · ${precisionLabel(a)} · ${alertTimingLabel(a)}`;
+  document.getElementById('sac-meta').textContent=`${alertSourceLabel(a)} · ${precisionLabel(a)} · ${reportedTimeLabel(a.time)}`;
   const icon=document.getElementById('sac-icon'); icon.style.background=visual.color; icon.innerHTML=`<i class="fa-solid ${visual.icon}"></i>`;
   banner.classList.add('open'); card.classList.add('open');
 }
@@ -2272,6 +2272,10 @@ function formatRelativeAlertTime(value) {
   if(hours < 24) return `Hace ${hours} h`;
   return new Date(stamp).toLocaleDateString('es-MX', { day:'numeric', month:'short' });
 }
+function reportedTimeLabel(value) {
+  const relative=formatRelativeAlertTime(value);
+  return relative === 'Hora no disponible' ? relative : `Reportado ${relative.toLowerCase()}`;
+}
 function addMarkerToMap(alert) {
   const isSec = alert.category === 'security';
   const expired = isAlertExpired(alert);
@@ -2283,7 +2287,7 @@ function addMarkerToMap(alert) {
   L.circle([alert.lat,alert.lon],{radius,color,weight:1.5,opacity:.7,dashArray:alert.precision==='punto'?null:'5 5',fillColor:color,fillOpacity:alert.precision==='punto'?.06:.12,interactive:true}).bindTooltip(`Área estimada · radio ${estimatedRadiusLabel(alert)}`,{direction:'top'}).addTo(alertAreaLayer);
   const nota = `<div class="location-meta"><span class="precision-chip"><i class="fa-solid fa-location-dot"></i> ${precisionLabel(alert)}</span><span class="distance-chip"><i class="fa-solid fa-circle-dot"></i> Área estimada: ${estimatedRadiusLabel(alert)}</span></div>`;
   const chip = (!isSec && alert.trafico) ? `<div style="margin-top:5px;"><span class="traffic-chip" style="background:${trafficStyle(alert.trafico).bg}; color:${trafficStyle(alert.trafico).color};">${trafficStyle(alert.trafico).label}</span></div>` : '';
-  const stale = expired ? `<div style="margin-top:5px;"><span class="traffic-chip" style="background:rgba(154,160,166,.2); color:#80868b;">🕓 Hace más de 8h</span></div>` : '';
+  const stale = expired ? `<div style="margin-top:5px;"><span class="traffic-chip" style="background:rgba(154,160,166,.2); color:#80868b;">🕓 Hace más de 6h</span></div>` : '';
   m.bindPopup(`
     <div style="max-width:240px;">
       <b>${alert.title}</b><br>
@@ -2303,18 +2307,20 @@ function alertCardHTML(a) {
   return `
     <div class="ac-head">
       <span class="ac-icon" style="--incident:${visual.color}"><i class="fa-solid ${visual.icon}"></i></span>
-      <span class="ac-kind"><b style="color:${visual.color}!important">${visual.label}</b><time datetime="${new Date(a.time).toISOString()}">${formatRelativeAlertTime(a.time)}</time></span>
+      <span class="ac-kind"><b style="color:${visual.color}!important">${visual.label}</b><time datetime="${new Date(a.time).toISOString()}">${reportedTimeLabel(a.time)}</time></span>
       ${a.importante ? '<span class="traffic-chip" style="background:rgba(239,68,68,.12);color:#EF4444">Importante</span>' : ''}
     </div>
     <b class="ac-title">${a.title}</b>
     <div class="ac-location"><i class="fa-solid fa-location-dot"></i><span>${a.location || 'Ubicación aproximada'}</span></div>
-    <div class="ac-tags"><span class="precision-chip"><i class="fa-solid fa-crosshairs"></i> ${precisionLabel(a)}</span>${distanceChip}${trafficChip}${stale}<button class="card-nav" onclick="event.stopPropagation(); navigateToAlert(${a.id})"><i class="fa-solid fa-diamond-turn-right"></i> Ir</button></div>
+    <div class="ac-tags"><span class="precision-chip"><i class="fa-solid fa-crosshairs"></i> ${precisionLabel(a)} · radio ${estimatedRadiusLabel(a)}</span>${distanceChip}${trafficChip}${stale}<button class="card-nav" onclick="event.stopPropagation(); navigateToAlert(${a.id})"><i class="fa-solid fa-diamond-turn-right"></i> Ir</button></div>
     <div class="ac-source"><i class="fa-solid fa-circle-info"></i><span>${alertSourceLabel(a)} · ${alertTimingLabel(a)}</span><span class="ac-actions"><button onclick="event.stopPropagation(); toggleLike(${a.id})" id="btn-heart-${a.id}" class="ac-action${a.liked ? ' liked' : ''}" title="Guardar alerta" aria-label="Guardar alerta"><i class="fa-solid fa-heart"></i></button><button onclick="event.stopPropagation(); shareAlert(${a.id})" class="ac-action share" title="Compartir" aria-label="Compartir alerta"><i class="fa-brands fa-whatsapp"></i></button><button onclick="event.stopPropagation(); removeAlert(${a.id})" class="ac-action delete" title="Eliminar" aria-label="Eliminar alerta"><i class="fa-solid fa-xmark"></i></button></span></div>
   `;
 }
 function makeAlertCard(a) {
   const div = document.createElement('div'); div.className = `alert-card type-${a.category}${isAlertExpired(a) ? ' expired' : ''}`;
   div.innerHTML = alertCardHTML(a);
+  const sourceCopy=div.querySelector('.ac-source span');
+  if(sourceCopy) sourceCopy.textContent=alertSourceLabel(a);
   div.onclick = () => openAlertDetail(a.id);
   return div;
 }
@@ -2369,6 +2375,11 @@ function alertTimingLabel(a) {
   const delay=Math.max(0,Math.round((new Date(a.detected_at).getTime()-new Date(a.time).getTime())/60000));
   return `${published} · detectado ${delay<1?'en menos de 1 min':`${delay} min después`}`;
 }
+function detectionDelayLabel(a) {
+  if(!a.detected_at) return 'Latencia de detección no disponible';
+  const delay=Math.max(0,Math.round((new Date(a.detected_at).getTime()-new Date(a.time).getTime())/60000));
+  return `Detectado ${delay<1?'en menos de 1 min':`${delay} min después de su publicación`}`;
+}
 function toggleLike(id) {
   const a = alerts.find(x => x.id === id); if(!a) return;
   a.liked = !a.liked;
@@ -2384,7 +2395,7 @@ function openAlertDetail(id) {
   document.getElementById('am-loc').textContent = (a.precision && a.precision !== 'punto' ? (a.precision === 'tramo' && a.corridor ? '🛣️ ' + a.corridor + ' · km' : '📍 aprox ' + a.precision) + ' · ' : '') + a.location;
   document.getElementById('am-desc').textContent = a.detail || 'Sin descripción detallada.';
   document.getElementById('am-desc').textContent += (a.state ? '\n📍 Estado: ' + a.state : '');
-  document.getElementById('am-time').textContent = formatAlertTime(a.time);
+  document.getElementById('am-time').textContent = `Reportado: ${formatAlertTime(a.time)} · ${detectionDelayLabel(a)}`;
   document.getElementById('am-source').textContent = alertSourceLabel(a);
   document.getElementById('am-precision').textContent = precisionLabel(a) + (a.km !== null && a.km !== undefined && a.km !== '' ? ' · km ' + a.km : '');
   document.getElementById('am-precision').textContent += ' · área estimada: radio ' + estimatedRadiusLabel(a);
@@ -3393,9 +3404,9 @@ function renderAlertCenter() {
   list.innerHTML=visible.map(a=>{
     const level=alertSeverity(a),meta=sevMeta[level],loc=locationQuality(a),distance=alertDistanceKm(a);
     return `<article class="acn-card" style="--sev:${meta[1]}">
-      <div class="acn-card-top"><span class="acn-badge">${meta[0]}</span><span class="acn-badge" style="--sev:#027A48">Fuente identificada</span>${a.km?`<span class="acn-badge" style="--sev:#1570EF">km ${a.km}</span>`:''}<time><i class="fa-regular fa-clock"></i> ${formatRelativeAlertTime(a.time)}</time></div>
+      <div class="acn-card-top"><span class="acn-badge">${meta[0]}</span><span class="acn-badge" style="--sev:#027A48">Fuente identificada</span>${a.km?`<span class="acn-badge" style="--sev:#1570EF">km ${a.km}</span>`:''}<time><i class="fa-regular fa-clock"></i> ${reportedTimeLabel(a.time)}</time></div>
       <h3>${a.title}</h3><p>${a.detail||'Sin descripción adicional.'}</p>
-      <div class="acn-card-foot"><i class="fa-solid fa-location-dot" style="color:#EF4444"></i><span>${a.location||'Ubicación aproximada'}</span><span class="loc-confidence ${loc.cls}">· ${loc.label} (${Math.round((Number(a.location_confidence)||0)*100)}%)</span>${distance==null?'':`<b>· ${distance<10?distance.toFixed(1):Math.round(distance)} km de ti</b>`}<span class="source">${alertSourceLabel(a)}</span><button class="acn-map" onclick="showCenterAlertOnMap(${a.id})"><i class="fa-solid fa-location-arrow"></i> Ver en mapa</button></div>
+      <div class="acn-card-foot"><i class="fa-solid fa-location-dot" style="color:#EF4444"></i><span>${a.location||'Ubicación aproximada'}</span><span class="loc-confidence ${loc.cls}">· ${loc.label} (${Math.round((Number(a.location_confidence)||0)*100)}%) · radio ${estimatedRadiusLabel(a)}</span>${distance==null?'':`<b>· ${distance<10?distance.toFixed(1):Math.round(distance)} km de ti</b>`}<span class="source">${alertSourceLabel(a)}</span><button class="acn-map" onclick="showCenterAlertOnMap(${a.id})"><i class="fa-solid fa-location-arrow"></i> Ver en mapa</button></div>
     </article>`;
   }).join('');
 }
