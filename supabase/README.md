@@ -16,6 +16,19 @@ El esquema incluye:
 - estado de salud del worker central;
 - políticas RLS para que cada usuario solo pueda consultar y modificar sus propios datos.
 
+### Endurecimiento obligatorio antes de pruebas públicas
+
+Después de crear las tablas, ejecuta `rls_hardening.sql` en **SQL Editor**. La
+migración elimina permisos heredados, vuelve a crear políticas explícitas por
+operación y deja `alerts` y `worker_status` como tablas públicas de sólo lectura.
+El worker de Render conserva escritura porque utiliza `service_role` en el
+servidor.
+
+Después ejecuta `rls_audit.sql`. Verifica que las seis tablas muestren
+`rowsecurity = true`, que ningún rol `anon` tenga escritura y que `profiles`
+sólo conceda actualización sobre `display_name`. No continúes con pruebas
+públicas si la auditoría muestra permisos adicionales.
+
 ## 2. Variables de Vercel
 
 Agrega estas variables al proyecto de Zero Vial:
