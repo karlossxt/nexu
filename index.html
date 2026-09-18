@@ -209,10 +209,23 @@ body.user-mode:not(.dark-mode) .pref-check{ background:#fff; border-color:#D8E1E
 .landing-mode.user{ border:none; background:linear-gradient(105deg,#FFC02E,#FF9600); color:#101214; box-shadow:0 9px 25px rgba(255,176,0,.2); }
 .landing-mode.full{ border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.08); color:#fff; }
 .landing-mode small{ display:block; margin-top:3px; font-size:10px; font-weight:500; opacity:.75; }
-.audience-picker{ display:grid; grid-template-columns:1fr 1fr; gap:9px; max-width:560px; margin:0 auto 12px; }
-.audience-choice{ min-height:58px; display:flex; align-items:center; justify-content:center; gap:8px; color:#DDE7F0; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.14); border-radius:12px; box-shadow:none; }
-.audience-choice.active{ color:#111318; background:linear-gradient(105deg,#7DDFF1,#19C7E8); border-color:transparent; }
-.audience-choice small{ display:block; font-size:9px; opacity:.72; }
+.audience-gate{ display:none; position:fixed; inset:0; z-index:24000; align-items:center; justify-content:center; padding:20px; overflow:auto; background:radial-gradient(circle at 15% 20%,rgba(25,199,232,.14),transparent 30%),radial-gradient(circle at 85% 80%,rgba(255,176,0,.14),transparent 28%),#05070A; }
+.audience-gate.open{ display:flex; }
+.audience-gate-card{ width:min(760px,100%); padding:30px; border:1px solid rgba(255,255,255,.14); border-radius:24px; color:#EEF4FA; background:linear-gradient(145deg,rgba(17,25,35,.98),rgba(5,8,12,.98)); box-shadow:0 30px 90px rgba(0,0,0,.62); text-align:center; }
+.audience-gate-mark{ width:58px; height:58px; display:grid; place-items:center; margin:0 auto 14px; border-radius:18px; color:#061116; background:linear-gradient(145deg,#7DDFF1,#19C7E8); font-size:23px; }
+.audience-gate-card h2{ margin:0 0 7px; font-size:25px; }
+.audience-gate-card>p{ margin:0 auto 22px; max-width:560px; color:#9EABB8; font-size:13px; line-height:1.55; }
+.audience-picker{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.audience-choice{ min-height:190px; padding:22px; display:flex; flex-direction:column; align-items:flex-start; text-align:left; gap:10px; color:#DDE7F0; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.14); border-radius:18px; box-shadow:none; }
+.audience-choice:hover{ transform:translateY(-2px); border-color:rgba(125,223,241,.55); background:rgba(255,255,255,.07); }
+.audience-choice>i{ width:42px; height:42px; display:grid; place-items:center; border-radius:12px; color:#061116; background:#7DDFF1; font-size:18px; }
+.audience-choice.company>i{ background:#FFB000; }
+.audience-choice b{ font-size:17px; }
+.audience-choice small{ display:block; margin-top:5px; color:#98A7B6; font-size:11px; font-weight:500; line-height:1.45; }
+.audience-choice em{ margin-top:auto; color:#7DDFF1; font-size:10px; font-style:normal; font-weight:800; letter-spacing:.04em; }
+.audience-choice.company em{ color:#FFC44D; }
+.audience-later{ width:auto; margin:17px auto 0; padding:7px 12px; color:#95A3B1; background:transparent; border:0; box-shadow:none; font-size:11px; }
+.audience-later:hover{ color:#fff; box-shadow:none; }
 .company-only{ display:none!important; }
 body.company-audience .company-only{ display:flex!important; }
 body.user-mode .feature-soon{ display:none!important; }
@@ -848,6 +861,9 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
   .landing-logo{ width:min(260px,92%); height:160px; }
   .landing-fields,.landing-auth-actions{ grid-template-columns:1fr; }
   .landing-access{ padding:11px; }
+  .audience-gate-card{ padding:24px 16px; }
+  .audience-picker{ grid-template-columns:1fr; }
+  .audience-choice{ min-height:142px; }
   .landing-modes{ grid-template-columns:1fr; }
   .landing-mode{ min-height:54px; }
   .toast-important{ left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom)); max-width:none; }
@@ -871,10 +887,6 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <div class="landing-feat"><i class="fa-solid fa-map-location-dot"></i> Mapa nacional</div>
       <div class="landing-feat"><i class="fa-solid fa-shield-halved"></i> Fuentes identificadas</div>
     </div>
-    <div class="audience-picker" aria-label="Selecciona cómo usarás Zero Vial">
-      <button id="audience-traveler" class="audience-choice active" onclick="setAudience('traveler')"><i class="fa-solid fa-car-side"></i><span>Viajero<small>Mapa, alertas y clima</small></span></button>
-      <button id="audience-company" class="audience-choice" onclick="setAudience('company')"><i class="fa-solid fa-building"></i><span>Empresa<small>Análisis y herramientas operativas</small></span></button>
-    </div>
     <div class="landing-access">
       <div class="landing-fields">
         <input id="landing-email" type="email" autocomplete="email" placeholder="Correo electrónico">
@@ -890,6 +902,23 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <button class="landing-guest" onclick="enterAsGuest()"><i class="fa-solid fa-compass"></i> Explorar como invitado<small>No necesitas registrarte para las pruebas</small></button>
     </div>
     <div class="landing-foot">Personaliza tus alertas después de iniciar sesión · <a href="/acerca.html">Conoce Zero Vial</a> · <a href="/ayuda.html">Ayuda</a> · <a href="/servicios.html">Servicios</a> · <a href="/terminos.html">Términos</a> · <a href="/privacidad.html">Privacidad</a></div>
+  </div>
+</div>
+
+<div id="audience-gate" class="audience-gate" role="dialog" aria-modal="true" aria-labelledby="audience-gate-title">
+  <div class="audience-gate-card">
+    <div class="audience-gate-mark"><i class="fa-solid fa-road"></i></div>
+    <h2 id="audience-gate-title">¿Cómo usarás Zero Vial?</h2>
+    <p>Te mostraremos primero las herramientas que realmente necesitas. Podrás cambiar esta elección cuando quieras.</p>
+    <div class="audience-picker">
+      <button class="audience-choice" onclick="chooseAudience('traveler')">
+        <i class="fa-solid fa-car-side"></i><span><b>Uso personal</b><small>Consulta el mapa, alertas, clima y condiciones para tomar mejores decisiones en tus trayectos.</small></span><em>ENTRAR COMO VIAJERO →</em>
+      </button>
+      <button class="audience-choice company" onclick="chooseAudience('company')">
+        <i class="fa-solid fa-building"></i><span><b>Uso empresarial</b><small>Accede a análisis, reportes y herramientas operativas. Las funciones en desarrollo quedan agrupadas.</small></span><em>ENTRAR COMO EMPRESA →</em>
+      </button>
+    </div>
+    <button class="audience-later" onclick="chooseAudience('traveler')">Decidir después · usar vista personal</button>
   </div>
 </div>
 
@@ -1735,7 +1764,7 @@ window.onload = function() {
   uxResponsive();
   hncTick();
   setInterval(hncTick, 1000);
-  setAudience(localStorage.getItem('zero_vial_audience') || 'traveler', true);
+  document.body.classList.remove('company-audience');
   log("Sistema Zero Vial listo.");
   setTimeout(autoBoot, 400);
 };
@@ -2730,11 +2759,12 @@ async function landingAuth(mode) {
   if(mode==='register'&&!result.data.session) return landingMessage('Cuenta creada. Revisa tu correo para confirmarla y después inicia sesión.');
   zeroVialUser=result.data.user; setGuestMode(false); updateAccountButton();
   await Promise.all([loadUserRole(),loadUserPreferences()]);
-  enterPlatform('user');
+  continueAfterAuthentication();
 }
 async function enterAsGuest() {
   setGuestMode(true);
   await loadUserPreferences();
+  setAudience('traveler',true);
   enterPlatform('user');
 }
 async function requestLandingRecovery() {
@@ -2761,8 +2791,10 @@ async function submitAuth() {
   if(authMode==='register'&&!result.data.session) return authMessage('Cuenta creada. Revisa tu correo para confirmarla.');
   zeroVialUser=result.data.user; setGuestMode(false); updateAccountButton(); authMessage('Sesión iniciada correctamente.');
   await Promise.all([loadUserRole(),loadUserPreferences()]);
+  closeModal('auth-modal');
+  continueAfterAuthentication();
 }
-async function logoutZeroVial() { if(supabaseClient) await supabaseClient.auth.signOut(); zeroVialUser=null; zeroVialRole='user'; applyRoleAccess(); updateAccountButton(); closeModal('auth-modal'); }
+async function logoutZeroVial() { if(supabaseClient) await supabaseClient.auth.signOut(); zeroVialUser=null; zeroVialRole='user'; setGuestMode(false); applyRoleAccess(); updateAccountButton(); closeModal('auth-modal'); document.getElementById('audience-gate')?.classList.remove('open'); sessionStorage.removeItem('steele_entered'); const landing=document.getElementById('landing'); if(landing) landing.style.display='flex'; }
 async function requestPasswordRecovery(emailOverride='',messageFn=authMessage) {
   if(!supabaseClient) return messageFn('Supabase todavía no está configurado.',true);
   const email=(emailOverride||document.getElementById('auth-email').value).trim().toLowerCase();
@@ -2804,7 +2836,7 @@ async function completePasswordRecovery() {
   history.replaceState(null,'',window.location.pathname+window.location.search);
   recoveryMessage('Contraseña actualizada. Ya puedes continuar con tu cuenta.');
   setGuestMode(false);
-  setTimeout(()=>{ closeModal('recovery-modal'); updateAccountButton(); enterPlatform('user'); },1400);
+  setTimeout(()=>{ closeModal('recovery-modal'); updateAccountButton(); continueAfterAuthentication(); },1400);
 }
 function prefMessage(message,error=false) {
   const box=document.getElementById('pref-message'); if(!box) return;
@@ -2886,20 +2918,30 @@ const onboardingSteps=[
   {icon:'sliders',title:'Personaliza después',copy:'Guarda tus preferencias al iniciar sesión. Las herramientas empresariales aparecen sólo en la vista Empresa.'}
 ];
 let onboardingStep=0;
+function audienceStorageKey() {
+  return zeroVialUser?.id ? `zero_vial_audience_${zeroVialUser.id}` : 'zero_vial_audience';
+}
 function setAudience(value,quiet=false) {
   const audience=value==='company'?'company':'traveler';
   document.body.classList.toggle('company-audience',audience==='company');
-  localStorage.setItem('zero_vial_audience',audience);
-  document.getElementById('audience-traveler')?.classList.toggle('active',audience==='traveler');
-  document.getElementById('audience-company')?.classList.toggle('active',audience==='company');
+  localStorage.setItem(audienceStorageKey(),audience);
   const top=document.getElementById('audience-top');
   if(top) top.innerHTML=audience==='company'?'<i class="fa-solid fa-building"></i><span>Empresa</span>':'<i class="fa-solid fa-car-side"></i><span>Viajero</span>';
-  if(!quiet&&audience==='company') landingMessage('La vista Empresa organiza análisis y herramientas operativas. Algunas funciones siguen en desarrollo.');
+  if(!quiet&&audience==='company') trafficMessage('Vista Empresa activada. Las herramientas en desarrollo están agrupadas en “Lo que viene”.');
+}
+function continueAfterAuthentication() {
+  const saved=localStorage.getItem(audienceStorageKey());
+  const landing=document.getElementById('landing'); if(landing) landing.style.display='none';
+  if(saved==='traveler'||saved==='company') { setAudience(saved,true); return enterPlatform('user'); }
+  document.getElementById('audience-gate')?.classList.add('open');
+}
+function chooseAudience(value) {
+  setAudience(value,true);
+  document.getElementById('audience-gate')?.classList.remove('open');
+  enterPlatform('user');
 }
 function toggleAudience() {
-  const company=document.body.classList.contains('company-audience');
-  setAudience(company?'traveler':'company',true);
-  trafficMessage(company?'Vista Viajero activada.':'Vista Empresa activada; las funciones en desarrollo están agrupadas en “Lo que viene”.');
+  document.getElementById('audience-gate')?.classList.add('open');
 }
 function renderOnboarding() {
   const step=onboardingSteps[onboardingStep];
