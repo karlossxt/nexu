@@ -65,3 +65,59 @@ where table_schema = 'public'
   and table_name = 'profiles'
   and grantee = 'authenticated'
 order by column_name, privilege_type;
+
+-- Resultado resumido. Todas las filas deben devolver PASS.
+select 'anon_write_access' as check_name,
+  case when exists (
+    select 1
+    from information_schema.role_table_grants
+    where table_schema = 'public'
+      and grantee = 'anon'
+      and privilege_type in ('INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER')
+      and table_name in ('alerts','profiles','alert_preferences','worker_status','location_corrections','push_subscriptions')
+  ) or exists (
+    select 1
+    from information_schema.column_privileges
+    where table_schema = 'public'
+      and grantee = 'anon'
+      and privilege_type in ('INSERT','UPDATE','REFERENCES')
+      and table_name in ('alerts','profiles','alert_preferences','worker_status','location_corrections','push_subscriptions')
+  ) then 'FAIL' else 'PASS' end as result
+union all
+select 'public_feed_write_access' as check_name,
+  case when exists (
+    select 1
+    from information_schema.role_table_grants
+    where table_schema = 'public'
+      and table_name in ('alerts','worker_status')
+      and grantee in ('anon','authenticated')
+      and privilege_type <> 'SELECT'
+  ) or exists (
+    select 1
+    from information_schema.column_privileges
+    where table_schema = 'public'
+      and table_name in ('alerts','worker_status')
+      and grantee in ('anon','authenticated')
+      and privilege_type in ('INSERT','UPDATE','REFERENCES')
+  ) then 'FAIL' else 'PASS' end as result
+union all
+select 'profile_sensitive_columns' as check_name,
+  case when exists (
+    select 1
+    from information_schema.column_privileges
+    where table_schema = 'public'
+      and table_name = 'profiles'
+      and grantee in ('anon','authenticated')
+      and privilege_type in ('INSERT','UPDATE','REFERENCES')
+      and column_name <> 'display_name'
+  ) then 'FAIL' else 'PASS' end as result
+union all
+select 'rls_enabled' as check_name,
+  case when exists (
+    select 1
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public'
+      and c.relname in ('alerts','profiles','alert_preferences','worker_status','location_corrections','push_subscriptions')
+      and not c.relrowsecurity
+  ) then 'FAIL' else 'PASS' end as result;
