@@ -20,6 +20,32 @@ revoke all on table public.worker_status from anon, authenticated;
 revoke all on table public.location_corrections from anon, authenticated;
 revoke all on table public.push_subscriptions from anon, authenticated;
 
+-- REVOKE sobre la tabla no siempre elimina concesiones antiguas hechas sobre
+-- columnas individuales. Se limpian SELECT/INSERT/UPDATE/REFERENCES columna por
+-- columna antes de devolver únicamente los permisos mínimos definidos abajo.
+do $$
+declare
+  target_table text;
+  target_columns text;
+begin
+  foreach target_table in array array[
+    'alerts','profiles','alert_preferences','worker_status',
+    'location_corrections','push_subscriptions'
+  ] loop
+    select string_agg(format('%I', column_name), ', ' order by ordinal_position)
+      into target_columns
+    from information_schema.columns
+    where table_schema = 'public' and table_name = target_table;
+
+    if target_columns is not null then
+      execute format('revoke select (%s) on table public.%I from anon, authenticated', target_columns, target_table);
+      execute format('revoke insert (%s) on table public.%I from anon, authenticated', target_columns, target_table);
+      execute format('revoke update (%s) on table public.%I from anon, authenticated', target_columns, target_table);
+      execute format('revoke references (%s) on table public.%I from anon, authenticated', target_columns, target_table);
+    end if;
+  end loop;
+end $$;
+
 -- Feed público: el navegador sólo lee; Render escribe con service_role.
 drop policy if exists "alerts readable by everyone" on public.alerts;
 drop policy if exists "alerts_public_read" on public.alerts;
