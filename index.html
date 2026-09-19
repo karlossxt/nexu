@@ -191,19 +191,29 @@ button:focus-visible, [role="button"]:focus-visible, .alert-card:focus-visible, 
 .landing-feat{ background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:13px 8px; color:#EAF0F5; font-size:12px; font-weight:700; }
 .landing-feat i{ color:var(--brand-amber); margin-right:6px; }
 .landing-feat:nth-child(even) i{ color:var(--brand-cyan); }
-.landing-access{ max-width:560px; margin:0 auto; padding:14px; border:1px solid rgba(255,255,255,.11); border-radius:15px; background:rgba(255,255,255,.035); }
-.landing-fields{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
-.landing-fields input{ height:44px; margin:0; border-color:rgba(255,255,255,.14); border-radius:9px; background:#11161D; color:#fff; }
-.landing-auth-actions{ display:grid; grid-template-columns:1.15fr .85fr; gap:9px; margin-top:10px; }
-.landing-auth-actions button{ min-height:48px; border-radius:10px; }
-.landing-login{ color:#111318; background:linear-gradient(105deg,#FFC02E,#FF9600); box-shadow:0 9px 25px rgba(255,176,0,.18); }
-.landing-register{ color:#fff; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.23); }
+.landing-access{ max-width:560px; margin:0 auto; padding:16px; border:1px solid rgba(255,255,255,.11); border-radius:15px; background:rgba(255,255,255,.035); }
+.landing-guest{ width:100%; min-height:52px; margin:0; padding:10px 14px; color:#fff; background:linear-gradient(105deg,#2679DE,#2563C8); border:1px solid rgba(125,223,241,.32); border-radius:10px; box-shadow:0 10px 28px rgba(37,99,200,.24); font-size:14px; font-weight:800; }
+.landing-guest:hover{ color:#fff; filter:brightness(1.08); box-shadow:0 12px 30px rgba(37,99,200,.3); }
+.landing-guest small{ display:block; margin-top:3px; color:#C8D8EB; font-size:9px; font-weight:500; }
+.landing-divider{ display:flex; align-items:center; gap:10px; margin:14px 0 12px; color:#788797; font-size:10px; }
+.landing-divider:before,.landing-divider:after{ content:""; flex:1; height:1px; background:rgba(255,255,255,.1); }
+.landing-tabs{ display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:4px; margin-bottom:13px; border:1px solid rgba(255,255,255,.1); border-radius:11px; background:rgba(0,0,0,.22); }
+.landing-tab{ min-height:38px; padding:7px 10px; color:#97A7B7; background:transparent; border:0; border-radius:8px; box-shadow:none; font-size:11px; }
+.landing-tab:hover{ box-shadow:none; color:#fff; }
+.landing-tab.active{ color:#0B1118; background:linear-gradient(105deg,#7DDFF1,#19C7E8); font-weight:800; }
+.landing-fields{ display:grid; grid-template-columns:1fr; gap:10px; text-align:left; }
+.landing-field-label{ display:block; margin:0 0 5px; color:#C7D2DD; font-size:10px; font-weight:700; }
+.landing-fields input{ width:100%; height:44px; margin:0; border-color:rgba(255,255,255,.14); border-radius:9px; background:#11161D; color:#fff; }
+.landing-password-wrap{ position:relative; }
+.landing-password-wrap input{ padding-right:45px; }
+.landing-password-toggle{ position:absolute; top:50%; right:6px; transform:translateY(-50%); width:34px; height:34px; padding:0; display:grid; place-items:center; color:#91A0AF; background:transparent; border:0; box-shadow:none; }
+.landing-password-toggle:hover{ color:#fff; box-shadow:none; }
+.landing-submit{ width:100%; min-height:48px; margin-top:11px; border-radius:10px; color:#111318; background:linear-gradient(105deg,#FFC02E,#FF9600); box-shadow:0 9px 25px rgba(255,176,0,.18); font-weight:800; }
+.landing-consent{ display:none; gap:8px; align-items:flex-start; text-align:left; margin-top:10px; color:#A9BAD0; font-size:10px; line-height:1.45; }
+.landing-consent input{ width:auto; margin-top:2px; }
 .landing-recovery{ width:auto; margin:8px auto 0; padding:3px 6px; color:#7DDFF1; background:transparent; border:0; box-shadow:none; font-size:10px; }
 .landing-recovery:hover{ box-shadow:none; text-decoration:underline; }
 .landing-message{ display:none; margin-top:9px; padding:8px 10px; border-radius:8px; font-size:11px; line-height:1.4; background:rgba(255,255,255,.05); color:#B8C4CF; }
-.landing-guest{ width:auto; margin:11px auto 0; padding:7px 12px; color:#AAB6C2; background:transparent; border:0; box-shadow:none; font-size:11px; }
-.landing-guest:hover{ color:#fff; box-shadow:none; }
-.landing-guest small{ display:block; margin-top:2px; color:#718091; font-size:9px; font-weight:500; }
 .landing-modes{ display:grid; grid-template-columns:1fr; gap:10px; max-width:430px; margin:0 auto; }
 .landing-mode{ width:100%; min-height:60px; padding:11px 8px; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; transition:transform .15s,filter .15s,box-shadow .15s; }
 .landing-mode:hover{ transform:translateY(-2px); filter:brightness(1.08); }
@@ -889,18 +899,22 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <div class="landing-feat"><i class="fa-solid fa-shield-halved"></i> Fuentes identificadas</div>
     </div>
     <div class="landing-access">
-      <div class="landing-fields">
-        <input id="landing-email" type="email" autocomplete="email" placeholder="Correo electrónico">
-        <input id="landing-password" type="password" autocomplete="current-password" minlength="6" placeholder="Contraseña">
-      </div>
-      <div class="landing-auth-actions">
-        <button class="landing-login" onclick="landingAuth('login')"><i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión</button>
-        <button class="landing-register" onclick="landingAuth('register')"><i class="fa-solid fa-user-plus"></i> Crear cuenta</button>
-      </div>
-      <label class="landing-consent" style="display:flex;gap:8px;align-items:flex-start;text-align:left;font-size:10px;color:#A9BAD0;line-height:1.45;margin-top:8px;"><input id="landing-consent" type="checkbox" style="width:auto;margin-top:2px;"> <span>Al crear una cuenta acepto los <a href="/terminos.html" target="_blank">Términos</a> y el <a href="/privacidad.html" target="_blank">Aviso de Privacidad</a>.</span></label>
-      <button class="landing-recovery" onclick="requestLandingRecovery()">¿Olvidaste tu contraseña?</button>
-      <div id="landing-message" class="landing-message"></div>
       <button class="landing-guest" onclick="enterAsGuest()"><i class="fa-solid fa-compass"></i> Explorar como invitado<small>No necesitas registrarte para las pruebas</small></button>
+      <div class="landing-divider"><span>o continúa con tu cuenta</span></div>
+      <div class="landing-tabs" role="tablist" aria-label="Acceso a Zero Vial">
+        <button id="landing-login-tab" class="landing-tab active" type="button" role="tab" aria-selected="true" aria-controls="landing-auth-form" onclick="setLandingAuthMode('login')">Iniciar sesión</button>
+        <button id="landing-register-tab" class="landing-tab" type="button" role="tab" aria-selected="false" aria-controls="landing-auth-form" onclick="setLandingAuthMode('register')">Crear cuenta</button>
+      </div>
+      <form id="landing-auth-form" onsubmit="event.preventDefault();landingAuth()" novalidate>
+        <div class="landing-fields">
+          <div><label class="landing-field-label" for="landing-email">Correo electrónico</label><input id="landing-email" type="email" autocomplete="email" placeholder="nombre@correo.com" required></div>
+          <div><label class="landing-field-label" for="landing-password">Contraseña</label><div class="landing-password-wrap"><input id="landing-password" type="password" autocomplete="current-password" minlength="6" placeholder="Mínimo 6 caracteres" required><button class="landing-password-toggle" type="button" onclick="toggleLandingPassword()" aria-label="Mostrar contraseña" aria-pressed="false"><i class="fa-solid fa-eye"></i></button></div></div>
+        </div>
+        <label id="landing-consent-row" class="landing-consent"><input id="landing-consent" type="checkbox"> <span>Al crear una cuenta acepto los <a href="/terminos.html" target="_blank" rel="noopener">Términos</a> y el <a href="/privacidad.html" target="_blank" rel="noopener">Aviso de Privacidad</a>.</span></label>
+        <button id="landing-submit" class="landing-submit" type="submit"><i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión</button>
+      </form>
+      <button id="landing-recovery" class="landing-recovery" onclick="requestLandingRecovery()">¿Olvidaste tu contraseña?</button>
+      <div id="landing-message" class="landing-message" role="status" aria-live="polite"></div>
     </div>
     <div class="landing-foot">Personaliza tus alertas después de iniciar sesión · <a href="/acerca.html">Conoce Zero Vial</a> · <a href="/ayuda.html">Ayuda</a> · <a href="/servicios.html">Servicios</a> · <a href="/terminos.html">Términos</a> · <a href="/privacidad.html">Privacidad</a></div>
   </div>
@@ -1622,6 +1636,7 @@ let ucTypesInstance = null;
 let supabaseClient = null;
 let zeroVialUser = null;
 let authMode = 'login';
+let landingAuthMode = 'login';
 let zeroVialRole = 'user';
 let zeroVialGuest = false;
 let centralWorkerHealthy = false;
@@ -2806,21 +2821,45 @@ function landingMessage(message,error=false) {
   const box=document.getElementById('landing-message'); if(!box) return;
   box.style.display='block'; box.style.color=error?'#FF9E9E':'#8BE3B7'; box.textContent=message;
 }
+function setLandingAuthMode(mode) {
+  landingAuthMode=mode==='register'?'register':'login';
+  const login=document.getElementById('landing-login-tab'),register=document.getElementById('landing-register-tab');
+  login?.classList.toggle('active',landingAuthMode==='login');
+  register?.classList.toggle('active',landingAuthMode==='register');
+  login?.setAttribute('aria-selected',landingAuthMode==='login'?'true':'false');
+  register?.setAttribute('aria-selected',landingAuthMode==='register'?'true':'false');
+  const consent=document.getElementById('landing-consent-row'); if(consent) consent.style.display=landingAuthMode==='register'?'flex':'none';
+  const recovery=document.getElementById('landing-recovery'); if(recovery) recovery.style.display=landingAuthMode==='login'?'block':'none';
+  const password=document.getElementById('landing-password'); if(password) password.autocomplete=landingAuthMode==='login'?'current-password':'new-password';
+  const submit=document.getElementById('landing-submit');
+  if(submit) submit.innerHTML=landingAuthMode==='login'?'<i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión':'<i class="fa-solid fa-user-plus"></i> Crear cuenta';
+}
+function toggleLandingPassword() {
+  const input=document.getElementById('landing-password'),button=document.querySelector('.landing-password-toggle');
+  if(!input||!button) return;
+  const visible=input.type==='text'; input.type=visible?'password':'text';
+  button.setAttribute('aria-label',visible?'Mostrar contraseña':'Ocultar contraseña');
+  button.setAttribute('aria-pressed',visible?'false':'true');
+  button.innerHTML=`<i class="fa-solid ${visible?'fa-eye':'fa-eye-slash'}"></i>`;
+}
 function setGuestMode(on) {
   zeroVialGuest=!!on;
   document.body.classList.toggle('guest-mode',zeroVialGuest);
   if(zeroVialGuest) sessionStorage.setItem('zero_vial_guest','1'); else sessionStorage.removeItem('zero_vial_guest');
 }
-async function landingAuth(mode) {
+async function landingAuth(requestedMode) {
+  const mode=requestedMode==='register'||requestedMode==='login'?requestedMode:landingAuthMode;
   if(!supabaseClient) return landingMessage('La conexión está iniciando. Espera unos segundos e inténtalo nuevamente.',true);
   const email=document.getElementById('landing-email').value.trim().toLowerCase();
   const password=document.getElementById('landing-password').value;
   if(!email||!email.includes('@')||password.length<6) return landingMessage('Ingresa un correo válido y una contraseña de al menos 6 caracteres.',true);
   if(mode==='register'&&!document.getElementById('landing-consent')?.checked) return landingMessage('Acepta los Términos y el Aviso de Privacidad para crear tu cuenta.',true);
   landingMessage(mode==='register'?'Creando tu cuenta…':'Iniciando sesión…');
+  const submit=document.getElementById('landing-submit'); if(submit) submit.disabled=true;
   const result=mode==='register'
     ? await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin+'/'}})
     : await supabaseClient.auth.signInWithPassword({email,password});
+  if(submit) submit.disabled=false;
   if(result.error) return landingMessage(authErrorSpanish(result.error),true);
   if(mode==='register'&&!result.data.session) return landingMessage('Cuenta creada. Revisa tu correo para confirmarla y después inicia sesión.');
   zeroVialUser=result.data.user; setGuestMode(false); updateAccountButton();
@@ -2830,8 +2869,7 @@ async function landingAuth(mode) {
 async function enterAsGuest() {
   setGuestMode(true);
   await loadUserPreferences();
-  setAudience('traveler',true);
-  enterPlatform('user');
+  continueAfterAuthentication();
 }
 async function requestLandingRecovery() {
   const email=document.getElementById('landing-email').value.trim().toLowerCase();
@@ -4081,6 +4119,7 @@ function enhanceAccessibility() {
   });
 }
 enhanceAccessibility();
+setLandingAuthMode('login');
 </script>
 </body>
 </html>
