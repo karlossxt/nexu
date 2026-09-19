@@ -2625,7 +2625,7 @@ function applyFilter(keyword) {
   document.querySelectorAll('#state-grid button').forEach(btn => btn.style.color = btn.textContent === keyword ? '#fff' : '');
   renderRiskPoints(keyword); }
 async function detectModels() { try { const res = await fetch('/api/groq?action=models'); const data = await res.json(); const select = document.getElementById('modelSelect'); const rsel = document.getElementById('reportModelSelect'); const saved = rsel ? rsel.value : ''; select.innerHTML = ''; if(rsel){ rsel.innerHTML=''; const o0=document.createElement('option'); o0.value=''; o0.text='(igual que alertas)'; rsel.appendChild(o0); } const preferred = ['openai/gpt-oss-20b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'allam-2-7b']; const models = (data.data || []).map(x => (typeof x === 'string' ? x : x.id)); const addOpt = (id, target) => { const o = document.createElement('option'); o.value = id; o.text = id; target.appendChild(o); }; preferred.forEach(p => { if(models.includes(p)) { addOpt(p, select); if(rsel) addOpt(p, rsel); } }); models.forEach(id => { if(!preferred.includes(id)) { addOpt(id, select); if(rsel) addOpt(id, rsel); } }); if(rsel && saved) rsel.value = saved; if(select.options.length === 0) log("Sin modelos disponibles", 'warn'); else { log(`✅ Modelos cargados (${select.options.length}).`, 'success'); saveConfig(); } } catch(e) { log(`Error detección (necesitas servidor)`,'err'); } }
-function calculateRoute() { const o = document.getElementById('routeOrigin').value; const d = document.getElementById('routeDest').value; if(!o || !d) return; if(routeControl) { map.removeControl(routeControl); routeControl = null; } Promise.all([ fetch(LINKS.nominatim.replace('{q}', encodeURIComponent(o + ', Mexico'))).then(r=>r.json()), fetch(LINKS.nominatim.replace('{q}', encodeURIComponent(d + ', Mexico'))).then(r=>r.json()) ]).then(res => { if(!res[0][0] || !res[1][0]) return; routeControl = L.Routing.control({ waypoints: [L.latLng(res[0][0].lat, res[0][0].lon), L.latLng(res[1][0].lat, res[1][0].lon)], router: L.Routing.osrmv1({ serviceUrl: LINKS.osrm }), lineOptions: { styles: [{color: '#b388ff', opacity: 0.8, weight: 6}] }, createMarker: ()=>null, addWaypoints: false, fitSelectedRoutes: true }).addTo(map); routeControl.on('routesfound', e => { activeRoute = e.routes[0]; const stats = `${(activeRoute.summary.totalDistance/1000).toFixed(1)} km | ${(activeRoute.summary.totalTime/60).toFixed(0)} min`; document.getElementById('routeStats').innerText = stats; const rb = document.getElementById('routeBoxStats'); if(rb) rb.innerText = stats; updateRouteAlerts(activeRoute.coordinates); }); }); }
+function calculateRoute() { const o = document.getElementById('routeOrigin').value; const d = document.getElementById('routeDest').value; if(!o || !d) return; if(routeControl) { map.removeControl(routeControl); routeControl = null; } if(routeLineLayer) routeLineLayer.clearLayers(); Promise.all([ fetch(LINKS.nominatim.replace('{q}', encodeURIComponent(o + ', Mexico'))).then(r=>r.json()), fetch(LINKS.nominatim.replace('{q}', encodeURIComponent(d + ', Mexico'))).then(r=>r.json()) ]).then(res => { if(!res[0][0] || !res[1][0]) return; routeControl = L.Routing.control({ waypoints: [L.latLng(res[0][0].lat, res[0][0].lon), L.latLng(res[1][0].lat, res[1][0].lon)], router: L.Routing.osrmv1({ serviceUrl: LINKS.osrm }), lineOptions: { styles: [{color: '#b388ff', opacity: 0.8, weight: 6}] }, createMarker: ()=>null, addWaypoints: false, fitSelectedRoutes: true }).addTo(map); routeControl.on('routesfound', e => { activeRoute = e.routes[0]; const stats = `${(activeRoute.summary.totalDistance/1000).toFixed(1)} km | ${(activeRoute.summary.totalTime/60).toFixed(0)} min`; document.getElementById('routeStats').innerText = stats; const rb = document.getElementById('routeBoxStats'); if(rb) rb.innerText = stats; updateRouteAlerts(activeRoute.coordinates); }); }); }
 
 const ROUTE_BUFFER_KM = 8;
 function haversineKm(lat1, lon1, lat2, lon2) { const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180, a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2; return 2*R*Math.asin(Math.sqrt(a)); }
@@ -3977,6 +3977,7 @@ function copyItinerary() {
 }
 function traceRouteOnMap() {
   const r = routeOptions[routeSel]; if(!r) return;
+  if(routeControl) { map.removeControl(routeControl); routeControl = null; }
   routeLineLayer.clearLayers();
   const poly = L.polyline(r.coord, { color: '#2563EB', weight: 5, opacity: .85 }).addTo(routeLineLayer);
   map.fitBounds(poly.getBounds(), { padding: [70, 70] });
@@ -4011,7 +4012,13 @@ function clearUserRoute() {
 }
 function swapRouteEndpoints() {
   const oi=document.getElementById('rm-origin'), di=document.getElementById('rm-dest'); if(!oi || !di) return;
-  const tmp=oi.value; oi.value=di.value; di.value=tmp; routeOriginCoords=null; routeOptions=[];
+  // Si el origen venía de GPS, su texto puede no ser una dirección real ("Mi ubicación actual").
+  // Movida al campo de destino, esa cadena no se puede geocodificar. Avisamos y no la movemos.
+  if(routeOriginCoords) {
+    alert('El origen actual usa tu ubicación GPS y no se puede mover a destino. Escribe el destino manualmente si quieres invertir el trayecto.');
+    return;
+  }
+  const tmp=oi.value; oi.value=di.value; di.value=tmp; routeOptions=[];
   const cards=document.getElementById('route-cards'); if(cards) cards.innerHTML='<div style="color:#6B7280;font-size:12px;">Pulsa <b>Buscar rutas</b> para calcular el trayecto invertido.</div>';
 }
 function useCurrentLocationForRoute() {
