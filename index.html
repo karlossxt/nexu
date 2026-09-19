@@ -185,6 +185,7 @@ body.user-mode:not(.dark-mode) .pref-check{ background:#fff; border-color:#D8E1E
 .landing-brand{ color:#fff; font-size:34px; letter-spacing:2px; margin:4px 0; }
 .landing-brand span{ color:#f9ab00; }
 .sr-only{ position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important; }
+button:focus-visible, [role="button"]:focus-visible, .alert-card:focus-visible, .rm-card:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{ outline:3px solid #38BDF8!important; outline-offset:3px!important; }
 .landing-sub{ color:#AEB9C5; margin:3px auto 20px; max-width:600px; font-size:15px; line-height:1.55; }
 .landing-feats{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:22px; }
 .landing-feat{ background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:13px 8px; color:#EAF0F5; font-size:12px; font-weight:700; }
@@ -947,12 +948,12 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
   <div class="nav-item" onclick="switchPanel('road')"><div class="nav-icon"><i class="fa-solid fa-triangle-exclamation"></i></div><span class="nav-label">Alertas Viales</span></div>
   <div class="nav-item" onclick="switchPanel('security')"><div class="nav-icon"><i class="fa-solid fa-shield-cat"></i></div><span class="nav-label">Seguridad</span></div>
   
-  <div class="nav-item feature-soon" onclick="showComingSoon('Planificador de rutas')"><div class="nav-icon"><i class="fa-solid fa-route"></i></div><span class="nav-label">Rutas · Próximamente</span></div>
+  <div class="nav-item" onclick="openRouteModal()"><div class="nav-icon"><i class="fa-solid fa-route"></i></div><span class="nav-label">Rutas</span></div>
   <div class="nav-item company-only" onclick="switchPanel('analysis')"><div class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div><span class="nav-label">IA Análisis</span></div>
   <div class="nav-separator"></div>
   
   <div class="nav-item" onclick="switchPanel('directory')"><div class="nav-icon"><i class="fa-solid fa-address-book"></i></div><span class="nav-label">Directorio</span></div>
-  <div class="nav-item company-only" onclick="switchPanel('admin')"><div class="nav-icon"><i class="fa-solid fa-address-card"></i></div><span class="nav-label">Gestión Personal</span></div>
+  <div class="nav-item company-only feature-soon" onclick="showComingSoon('Gestión Personal')"><div class="nav-icon"><i class="fa-solid fa-address-card"></i></div><span class="nav-label">Gestión Personal · En desarrollo</span></div>
   <div class="nav-item company-only" onclick="switchPanel('reports')"><div class="nav-icon"><i class="fa-solid fa-file-contract"></i></div><span class="nav-label">Reportes</span></div>
   
   <div style="flex:1"></div>
@@ -976,7 +977,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <button class="nt-btn" onclick="openDirModal()"><i class="fa-solid fa-phone-volume"></i><span>Directorio</span></button>
       <button class="nt-btn feature-soon" onclick="showComingSoon('Grupos de operación')"><i class="fa-solid fa-comments"></i><span>Grupos</span></button>
     </nav>
-    <div id="circula" onclick="openHncModal()" title="Ver detalles del Hoy No Circula">
+    <div id="circula" role="button" tabindex="0" aria-label="Ver detalles del programa Hoy No Circula" onclick="openHncModal()" onkeydown="activateWithKeyboard(event, openHncModal)" title="Ver detalles del Hoy No Circula">
       <span class="hnc-dot" id="circula-dot"></span>
       <span id="circula-msg"></span>
       <span id="circula-count" class="hnc-count"></span>
@@ -984,7 +985,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
     </div>
     <div class="nt-actions">
       <button id="audience-top" class="nt-btn audience-top" onclick="toggleAudience()" title="Cambiar tipo de experiencia"><i class="fa-solid fa-car-side"></i><span>Viajero</span></button>
-      <button class="nt-btn" onclick="toggleTheme()" title="Cambiar tema"><i class="fa-solid fa-circle-half-stroke"></i></button>
+      <button class="nt-btn" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar modo claro u oscuro"><i class="fa-solid fa-circle-half-stroke"></i></button>
       <button id="account-button" class="nt-btn nt-login" onclick="openAuthModal()"><i class="fa-solid fa-circle-user"></i><span>Iniciar sesión</span></button>
       <button class="nt-btn active" onclick="openEntryModal()"><i class="fa-solid fa-plus"></i><span>Reportar</span></button>
     </div>
@@ -996,7 +997,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
     <button class="fb-action" onclick="centerFocusedAlert()"><i class="fa-solid fa-crosshairs"></i> Centrar</button>
     <button class="fb-close" onclick="clearAlertFocus()" aria-label="Cerrar incidente enfocado">×</button>
   </section>
-  <section id="selected-alert-card" class="selected-alert-card">
+  <section id="selected-alert-card" class="selected-alert-card" aria-live="polite" aria-atomic="true">
     <span id="sac-icon" class="sac-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
     <span class="sac-copy"><b id="sac-title">—</b><span id="sac-location">—</span><small id="sac-meta">—</small></span>
     <span class="sac-actions"><button onclick="openFocusedDetail()"><i class="fa-solid fa-circle-info"></i> Detalle</button><button class="btn-outline" onclick="navigateFocusedAlert()"><i class="fa-solid fa-diamond-turn-right"></i> Cómo llegar</button><button class="btn-outline" onclick="shareFocusedAlert()" aria-label="Compartir alerta"><i class="fa-solid fa-share-nodes"></i></button></span>
@@ -1009,8 +1010,8 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
     <div class="panel-header">
       <div class="panel-title"><i class="fa-solid fa-server"></i> Sistema Central</div>
       <div style="display:flex; gap:5px;">
-        <button onclick="toggleTheme()" class="btn-outline" style="width:auto; padding:5px 10px;"><i class="fa-solid fa-moon"></i> / <i class="fa-solid fa-sun"></i></button>
-        <button onclick="togglePanel()" class="btn-outline" style="width:auto; padding:5px 10px;" title="Minimizar"><i class="fa-solid fa-window-minimize"></i></button>
+        <button onclick="toggleTheme()" class="btn-outline" style="width:auto; padding:5px 10px;" aria-label="Cambiar modo claro u oscuro"><i class="fa-solid fa-moon"></i> / <i class="fa-solid fa-sun"></i></button>
+        <button onclick="togglePanel()" class="btn-outline" style="width:auto; padding:5px 10px;" title="Minimizar" aria-label="Minimizar panel central"><i class="fa-solid fa-window-minimize"></i></button>
       </div>
     </div>
     <div class="panel-body">
@@ -1019,7 +1020,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <label>Modelo IA (alertas)</label>
       <div style="display:flex; gap:5px; margin-bottom:12px;">
         <select id="modelSelect" onchange="saveConfig()" style="margin-bottom:0; flex:1;"><option value="">(Pulsa Detectar)</option></select>
-        <button onclick="detectModels()" style="width:auto; background:var(--text-muted); color:#fff;"><i class="fa-solid fa-rotate"></i></button>
+        <button onclick="detectModels()" style="width:auto; background:var(--text-muted); color:#fff;" aria-label="Detectar modelos de inteligencia artificial"><i class="fa-solid fa-rotate"></i></button>
       </div>
       <label>Modelo IA (reportes)</label>
       <div style="display:flex; gap:5px; margin-bottom:12px;">
@@ -1035,7 +1036,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       </div>
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:20px;">
         <input type="checkbox" id="soundToggle" onchange="saveSound()" style="width:auto; margin:0;" checked />
-        <label style="margin:0;">🔔 Sonido para alertas importantes</label>
+        <label for="soundToggle" style="margin:0;">🔔 Sonido para alertas importantes</label>
       </div>
 
       <hr style="border-color:var(--border);">
@@ -1089,7 +1090,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
     </div>
   </div>
   <div id="panel-analysis" class="panel-container"><div class="panel-header"><div class="panel-title" style="color:#b388ff">IA Supervisor</div></div><div class="panel-body"><button onclick="generateRiskReport()" style="background:#6200ea; color:#fff;">Analizar Riesgos</button><div id="aiReport" class="ai-box" style="margin-top:15px;">Esperando ruta...</div></div></div>
-  <div id="panel-admin" class="panel-container"><div class="panel-header"><div class="panel-title">Gestión Personal</div></div><div class="panel-body"><label>Nuevo Empleado</label><input placeholder="Nombre"><button class="btn-outline" style="width:100%;">Registrar</button></div></div>
+  <div id="panel-admin" class="panel-container"><div class="panel-header"><div class="panel-title">Gestión Personal</div></div><div class="panel-body"><div style="font-size:13px;line-height:1.55;color:var(--text-muted);">Módulo en desarrollo. Aquí podrás administrar personal, permisos y seguimiento únicamente con consentimiento.</div><button class="btn-outline" style="width:100%;margin-top:12px;" onclick="showComingSoon('Gestión Personal')">Conocer lo que viene</button></div></div>
   <div id="panel-reports" class="panel-container"><div class="panel-header"><div class="panel-title">Reportes</div></div><div class="panel-body"><button onclick="reportCard()" style="margin-bottom:10px;"><i class="fa-solid fa-download"></i> Generar reporte del día</button><button onclick="downloadReportCSV()" class="btn-outline" style="margin-bottom:10px;"><i class="fa-solid fa-file-csv"></i> Descargar CSV</button><button onclick="downloadReportHTML()" class="btn-outline" style="margin-bottom:20px;"><i class="fa-solid fa-file-lines"></i> Descargar HTML</button><label>Administración de datos</label><button onclick="confirmClearAlerts()" class="btn-danger"><i class="fa-solid fa-trash-can"></i> Eliminar todas las alertas</button></div></div>
   
   <div id="panel-monitor" class="panel-container">
@@ -1097,13 +1098,13 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
     <div class="panel-body">
       <div id="requests-area"></div>
       <div style="font-size:11px; font-weight:bold; color:var(--text-muted); margin:10px 0 5px 0;">PERSONAL ACTIVO</div>
-      <div class="unit-card"><div class="unit-header"><span class="unit-title">🚗 Juan Pérez</span><span class="unit-status status-ok"></span></div><div class="unit-actions"><button class="btn-mini" onclick="map.setView([19.43, -99.19], 14)">Ver</button></div></div>
+      <div class="unit-card"><div class="unit-header"><span class="unit-title">Seguimiento de personal</span></div><div style="font-size:11px;color:var(--text-muted);margin-top:6px;">En desarrollo · no se muestran ubicaciones simuladas.</div></div>
     </div>
   </div>
 
   <!-- PANEL IZQUIERDO: CONTROL Y FILTROS -->
   <aside id="panel-left" class="u-panel">
-    <div class="pl-topbar"><button class="pc-btn" onclick="toggleLeft()" title="Colapsar panel"><i class="fa-solid fa-angles-left"></i></button></div>
+    <div class="pl-topbar"><button class="pc-btn" onclick="toggleLeft()" title="Colapsar panel" aria-label="Colapsar panel izquierdo"><i class="fa-solid fa-angles-left"></i></button></div>
     <div class="pl-content">
       <div class="pl-head">
         <div class="pl-btns">
@@ -1113,7 +1114,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
         <div class="pl-status">
           <span id="ub-status"><i class="fa-solid fa-circle-notch fa-spin"></i> Arrancando...</span>
           <span class="pl-clock"><span id="ub-time">--:--</span> · <span id="ub-date">—</span></span>
-          <button class="pl-gear operator-access" onclick="toggleOperator()" title="Centro de Operaciones"><i class="fa-solid fa-user-gear"></i></button>
+          <button class="pl-gear operator-access" onclick="toggleOperator()" title="Centro de Operaciones" aria-label="Abrir Centro de Operaciones"><i class="fa-solid fa-user-gear"></i></button>
         </div>
       </div>
       <div class="pl-section">ESTADO GLOBAL</div>
@@ -1125,9 +1126,9 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       </div>
       <div class="pl-section"><i class="fa-solid fa-layer-group"></i> CAPAS DEL MAPA</div>
       <div class="pl-filters">
-        <div class="uf-row"><span class="dot" style="background:#F97316;color:#F97316;"></span><span>Viales</span><span class="uf-count" id="nc-road">0</span><label class="switch"><input type="checkbox" checked onchange="setNF('road', this.checked)"><span class="slider" style="--sw:#F97316"></span></label></div>
-        <div class="uf-row"><span class="dot" style="background:#EF4444;color:#EF4444;"></span><span>Seguridad</span><span class="uf-count" id="nc-sec">0</span><label class="switch"><input type="checkbox" checked onchange="setNF('security', this.checked)"><span class="slider" style="--sw:#EF4444"></span></label></div>
-        <div class="uf-row blockage-filter"><span class="dot" style="background:#E11D48;color:#E11D48;"></span><span>Solo bloqueos</span><span class="uf-count" id="nc-blockages">0</span><label class="switch"><input id="nf-blockages" type="checkbox" onchange="setBlockagesOnly(this.checked)"><span class="slider" style="--sw:#E11D48"></span></label></div>
+        <div class="uf-row"><span class="dot" style="background:#F97316;color:#F97316;"></span><span>Viales</span><span class="uf-count" id="nc-road">0</span><label class="switch"><input type="checkbox" aria-label="Mostrar incidencias viales" checked onchange="setNF('road', this.checked)"><span class="slider" style="--sw:#F97316"></span></label></div>
+        <div class="uf-row"><span class="dot" style="background:#EF4444;color:#EF4444;"></span><span>Seguridad</span><span class="uf-count" id="nc-sec">0</span><label class="switch"><input type="checkbox" aria-label="Mostrar incidencias de seguridad" checked onchange="setNF('security', this.checked)"><span class="slider" style="--sw:#EF4444"></span></label></div>
+        <div class="uf-row blockage-filter"><span class="dot" style="background:#E11D48;color:#E11D48;"></span><span>Solo bloqueos</span><span class="uf-count" id="nc-blockages">0</span><label class="switch"><input id="nf-blockages" type="checkbox" aria-label="Mostrar solamente bloqueos" onchange="setBlockagesOnly(this.checked)"><span class="slider" style="--sw:#E11D48"></span></label></div>
         <div class="uf-row feature-soon" onclick="showComingSoon('Zonas rojas')"><span class="dot" style="background:#DC2626;color:#DC2626;"></span><span>Zonas rojas</span><span class="soon-badge">Próximamente</span><label class="switch"><input type="checkbox" disabled><span class="slider" style="--sw:#DC2626"></span></label></div>
         <div class="uf-row feature-soon" onclick="showComingSoon('Riesgos viales')"><span class="dot" style="background:#F59E0B;color:#F59E0B;"></span><span>Riesgos viales</span><span class="soon-badge">Próximamente</span><label class="switch"><input type="checkbox" disabled><span class="slider" style="--sw:#F59E0B"></span></label></div>
       </div>
@@ -1145,7 +1146,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       </div>
       <div class="pl-section">LO QUE VIENE</div>
       <div class="future-tools">
-        <button class="future-tool" onclick="showComingSoon('Planificador de rutas')"><span class="ft-icon"><i class="fa-solid fa-route"></i></span><span><b>Planificador de rutas</b><small>Trayectos con incidencias cercanas</small></span><span class="soon-badge">En desarrollo</span></button>
+        <button class="future-tool" onclick="openRouteModal()"><span class="ft-icon"><i class="fa-solid fa-route"></i></span><span><b>Planificador de rutas</b><small>Compara trayectos e incidencias cercanas</small></span><span class="soon-badge">Disponible</span></button>
         <button class="future-tool" onclick="showComingSoon('Seguimiento de unidades GPS')"><span class="ft-icon"><i class="fa-solid fa-satellite-dish"></i></span><span><b>Unidades GPS en vivo</b><small>Ubicación y estado de vehículos</small></span><span class="soon-badge">Próximamente</span></button>
         <button class="future-tool" onclick="showComingSoon('Grupos de operación')"><span class="ft-icon"><i class="fa-solid fa-comments"></i></span><span><b>Grupos de operación</b><small>Comunicación por empresa o recorrido</small></span><span class="soon-badge">Próximamente</span></button>
         <button class="future-tool" onclick="showComingSoon('Cuentas y equipos')"><span class="ft-icon"><i class="fa-solid fa-users-gear"></i></span><span><b>Cuentas y equipos</b><small>Usuarios, roles y preferencias</small></span><span class="soon-badge">Próximamente</span></button>
@@ -1157,11 +1158,11 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       </div>
     </div>
     <div class="u-rail">
-      <button onclick="toggleLeft()" title="Expandir panel"><i class="fa-solid fa-angles-right"></i></button>
-      <button onclick="openDirModal()" title="Emergencias"><i class="fa-solid fa-tower-broadcast"></i></button>
-      <button class="feature-soon" onclick="showComingSoon('Planificador de rutas')" title="Rutas · Próximamente"><i class="fa-solid fa-route"></i></button>
-      <button onclick="openEntryModal()" title="Ingresar alerta"><i class="fa-solid fa-plus"></i></button>
-      <button class="operator-access" onclick="toggleOperator()" title="Centro de Operaciones"><i class="fa-solid fa-user-gear"></i></button>
+      <button onclick="toggleLeft()" title="Expandir panel" aria-label="Expandir panel izquierdo"><i class="fa-solid fa-angles-right"></i></button>
+      <button onclick="openDirModal()" title="Emergencias" aria-label="Abrir directorio de emergencias"><i class="fa-solid fa-tower-broadcast"></i></button>
+      <button onclick="openRouteModal()" title="Planificador de rutas" aria-label="Abrir planificador de rutas"><i class="fa-solid fa-route"></i></button>
+      <button onclick="openEntryModal()" title="Ingresar alerta" aria-label="Ingresar una alerta"><i class="fa-solid fa-plus"></i></button>
+      <button class="operator-access" onclick="toggleOperator()" title="Centro de Operaciones" aria-label="Abrir Centro de Operaciones"><i class="fa-solid fa-user-gear"></i></button>
     </div>
   </aside>
 
@@ -1216,7 +1217,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <button onclick="switchPR('feed')" title="Feed"><i class="fa-solid fa-bolt"></i></button>
       <button onclick="switchPR('ris')" title="Radar Vial"><i class="fa-solid fa-chart-pie"></i></button>
       <button onclick="switchPR('reportes')" title="Reportes"><i class="fa-solid fa-file-contract"></i></button>
-      <button class="feature-soon" onclick="showComingSoon('Planificador de rutas')" title="Rutas · Próximamente"><i class="fa-solid fa-route"></i></button>
+      <button onclick="openRouteModal()" title="Planificador de rutas" aria-label="Abrir planificador de rutas"><i class="fa-solid fa-route"></i></button>
     </div>
   </aside>
 
@@ -1229,7 +1230,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
           <p>Monitoreo meteorológico de autopistas alimentado por Open-Meteo.</p>
         </div>
         <div class="wm-head-right">
-          <button onclick="weatherRefresh()" class="w-pill" title="Actualizar ahora"><i class="fa-solid fa-rotate"></i></button>
+          <button onclick="weatherRefresh()" class="w-pill" title="Actualizar ahora" aria-label="Actualizar condiciones meteorológicas"><i class="fa-solid fa-rotate"></i></button>
           <button class="m-x" onclick="closeWeatherModal()">✕</button>
         </div>
       </div>
@@ -1371,6 +1372,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
           <button class="rm-qbtn" onclick="setQuick(3, this)">Monterrey → CDMX</button>
         </div>
         <div class="rm-cards" id="route-cards"><div style="color:#6B7280; font-size:12px;">Ingresa origen y destino para comparar hasta 3 opciones reales.</div></div>
+        <div style="font-size:10px;line-height:1.45;color:#6B7280;margin:8px 0;">El nivel de riesgo es una estimación basada en alertas disponibles y puede contener ubicaciones aproximadas. Verifica indicaciones oficiales antes de viajar.</div>
         <div class="rm-alerts">
           <div class="rm-alerts-title">⚠ ALERTAS CERCA DE TU RUTA</div>
           <div id="routeModalAlerts" style="max-height:18vh; overflow-y:auto;"></div>
@@ -1550,6 +1552,18 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
 /* =========================================
    SISTEMA ZERO VIAL v21.1
    ========================================= */
+
+function escapeHtml(value) {
+  return String(value == null ? '' : value).replace(/[&<>'"]/g, char => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;'
+  }[char]));
+}
+
+function csvCell(value) {
+  let text = String(value == null ? '' : value);
+  if(/^\s*[=+\-@]/.test(text)) text = "'" + text;
+  return '"' + text.replace(/"/g, '""') + '"';
+}
 
 /* =========================================
    CONFIGURACIÓN CENTRAL DE LINKS
@@ -2225,13 +2239,24 @@ async function processAlert(key, text, sourceName='Fuente RSS', publishedAt='') 
 }
 
 function removeAlert(id) { alerts = alerts.filter(a => a.id !== id); markers.clearLayers(); alertAreaLayer.clearLayers(); alerts.forEach(a => addMarkerToMap(a)); updateLists(); persistAlerts(); }
+function looksLikePersonalReporter(sourceName) {
+  const source = String(sourceName || '').replace(/^@/, '').replace(/[_-]+/g, ' ').trim();
+  if(!source) return false;
+  const institutional = /\b(capufe|guardia|nacional|c5|ovial|ssc|protecci[oó]n civil|polic[ií]a|fiscal[ií]a|gobierno|secretar[ií]a|municipio|ayuntamiento|autopista|carreteras?|tr[aá]nsito|vialidad|noticias?|diario|peri[oó]dico|radio|televisi[oó]n|tv|fm|am|prensa|informativo|comunicaci[oó]n|agencia|red|alerta|reporte|monitor|conagua|cruz roja|bomberos|universal|milenio|reforma|exc[eé]lsior|heraldo|jornada)\b/i;
+  if(institutional.test(source) || /\.[a-z]{2,}$/i.test(source)) return false;
+  const words = source.split(/\s+/).filter(Boolean);
+  const connectors = /^(de|del|la|las|los|y)$/i;
+  const nameParts = words.filter(word => !connectors.test(word));
+  return words.length >= 2 && words.length <= 5 && nameParts.length >= 2 && words.every(word => connectors.test(word) || /^[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÜÑáéíóúüñ'.]+$/.test(word));
+}
 function alertSourceLabel(a) {
   if(a.source_type === 'community') {
-    if(a.verification_status === 'verified') return 'Comunidad · Verificado';
-    if(a.verification_status === 'corroborated') return 'Comunidad · Coincidente';
-    return 'Reporte ciudadano · Sin verificar';
+    if(a.verification_status === 'verified') return 'Reportado por usuario · Verificado';
+    if(a.verification_status === 'corroborated') return 'Reportado por usuario · Coincidente';
+    return 'Reportado por usuario · Sin verificar';
   }
   if(a.source_type === 'operator') return 'Operador Zero Vial';
+  if(looksLikePersonalReporter(a.source_name)) return 'Reportado por usuario';
   return 'Fuente: ' + (a.source_name || 'Zero Vial');
 }
 function precisionLabel(a) {
@@ -2305,12 +2330,18 @@ function reportedTimeLabel(value) {
   const relative=formatRelativeAlertTime(value);
   return relative === 'Hora no disponible' ? relative : `Reportado ${relative.toLowerCase()}`;
 }
+function activateWithKeyboard(event, action) {
+  if(event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  action();
+}
 function addMarkerToMap(alert) {
   const isSec = alert.category === 'security';
   const expired = isAlertExpired(alert);
   const visual = incidentVisual(alert); const color=visual.color;
   const icon = L.divIcon({ className: 'incident-pin-wrap', html: `<div class="incident-pin${alert.importante?' important':''}${expired?' expired':''}" style="--pin:${color}" title="${visual.label}"><i class="fa-solid ${visual.icon}"></i></div>`, iconSize: [44, 44], iconAnchor: [19, 44], popupAnchor: [0, -42] });
-  const m = L.marker([alert.lat, alert.lon], {icon});
+  const markerLabel = `${visual.label}: ${alert.title || 'Incidente'}; ${alert.location || 'ubicación aproximada'}`;
+  const m = L.marker([alert.lat, alert.lon], {icon, keyboard:true, title:markerLabel, alt:markerLabel});
   m.on('click',()=>showAlertFocus(alert));
   const radius=estimatedRadiusMeters(alert);
   L.circle([alert.lat,alert.lon],{radius,color,weight:1.5,opacity:.7,dashArray:alert.precision==='punto'?null:'5 5',fillColor:color,fillOpacity:alert.precision==='punto'?.06:.12,interactive:true}).bindTooltip(`Área estimada · radio ${estimatedRadiusLabel(alert)}`,{direction:'top'}).addTo(alertAreaLayer);
@@ -2319,9 +2350,9 @@ function addMarkerToMap(alert) {
   const stale = expired ? `<div style="margin-top:5px;"><span class="traffic-chip" style="background:rgba(154,160,166,.2); color:#80868b;">🕓 Hace más de 6h</span></div>` : '';
   m.bindPopup(`
     <div style="max-width:240px;">
-      <b>${alert.title}</b><br>
-      <span style="color:#5f6368;font-size:12px;">${alert.location}</span>${nota}${chip}${stale}
-      <div class="alert-source"><i class="fa-solid fa-circle-info"></i> ${alertSourceLabel(alert)}</div>
+      <b>${escapeHtml(alert.title)}</b><br>
+      <span style="color:#5f6368;font-size:12px;">${escapeHtml(alert.location)}</span>${nota}${chip}${stale}
+      <div class="alert-source"><i class="fa-solid fa-circle-info"></i> ${escapeHtml(alertSourceLabel(alert))}</div>
       <br><div style="display:flex;gap:6px;"><button onclick="openAlertDetail(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:none;border-radius:6px;background:#1976d2;color:#fff;cursor:pointer;font-size:12px;font-weight:600;">Ver detalle</button><button onclick="navigateToAlert(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:1px solid #2563EB;border-radius:6px;background:transparent;color:#60A5FA;cursor:pointer;font-size:12px;font-weight:600;">Cómo llegar</button></div>
     </div>`);
   m.category = alert.category; markers.addLayer(m);
@@ -2340,18 +2371,24 @@ function alertCardHTML(a) {
       <span class="ac-kind"><b style="color:${visual.color}!important">${visual.label}</b><time datetime="${new Date(a.time).toISOString()}">${reportedTimeLabel(a.time)}</time></span>
       ${a.importante ? '<span class="traffic-chip" style="background:rgba(239,68,68,.12);color:#EF4444">Importante</span>' : ''}
     </div>
-    <b class="ac-title">${a.title}</b>
-    <div class="ac-location"><i class="fa-solid fa-location-dot"></i><span>${a.location || 'Ubicación aproximada'}</span></div>
+    <b class="ac-title">${escapeHtml(a.title)}</b>
+    <div class="ac-location"><i class="fa-solid fa-location-dot"></i><span>${escapeHtml(a.location || 'Ubicación aproximada')}</span></div>
     <div class="ac-tags"><span class="precision-chip"><i class="fa-solid fa-crosshairs"></i> ${precisionLabel(a)} · radio ${estimatedRadiusLabel(a)}</span>${distanceChip}${trafficChip}${syncChip}${stale}<button class="card-nav" onclick="event.stopPropagation(); navigateToAlert(${a.id})"><i class="fa-solid fa-diamond-turn-right"></i> Ir</button></div>
     <div class="ac-source"><i class="fa-solid fa-circle-info"></i><span>${alertSourceLabel(a)} · ${alertTimingLabel(a)}</span><span class="ac-actions"><button onclick="event.stopPropagation(); toggleLike(${a.id})" id="btn-heart-${a.id}" class="ac-action${a.liked ? ' liked' : ''}" title="Guardar alerta" aria-label="Guardar alerta"><i class="fa-solid fa-heart"></i></button><button onclick="event.stopPropagation(); shareAlert(${a.id})" class="ac-action share" title="Compartir" aria-label="Compartir alerta"><i class="fa-brands fa-whatsapp"></i></button><button onclick="event.stopPropagation(); removeAlert(${a.id})" class="ac-action delete" title="Eliminar" aria-label="Eliminar alerta"><i class="fa-solid fa-xmark"></i></button></span></div>
   `;
 }
 function makeAlertCard(a) {
   const div = document.createElement('div'); div.className = `alert-card type-${a.category}${isAlertExpired(a) ? ' expired' : ''}`;
+  div.setAttribute('role', 'article');
+  div.setAttribute('tabindex', '0');
+  div.setAttribute('aria-label', `Alerta: ${a.title || 'Incidente'}; ${a.location || 'ubicación aproximada'}. Presiona Enter para abrir el detalle`);
   div.innerHTML = alertCardHTML(a);
   const sourceCopy=div.querySelector('.ac-source span');
   if(sourceCopy) sourceCopy.textContent=alertSourceLabel(a);
   div.onclick = () => openAlertDetail(a.id);
+  div.onkeydown = event => {
+    if(event.target === div) activateWithKeyboard(event, () => openAlertDetail(a.id));
+  };
   return div;
 }
 function updateLists() {
@@ -2592,7 +2629,7 @@ function updateRouteAlerts(coords) {
   const html = routeNearAlerts.length
     ? routeNearAlerts.map(a => {
         const color = a.category === 'security' ? '#d93025' : trafficStyle(a.trafico || 'moderado').color;
-        return `<div class="route-alert-item" onclick="openAlertDetail(${a.id})"><div class="ra-dot" style="background:${color}"></div><div class="ra-info"><b>${a.title}</b><span>${a.location} · a ${a.distKm.toFixed(1)} km</span></div></div>`;
+        return `<div class="route-alert-item" onclick="openAlertDetail(${a.id})"><div class="ra-dot" style="background:${color}"></div><div class="ra-info"><b>${escapeHtml(a.title)}</b><span>${escapeHtml(a.location)} · a ${a.distKm.toFixed(1)} km</span></div></div>`;
       }).join('')
     : `<div style="font-size:12px;color:var(--success);">✅ Sin alertas en un radio de ${ROUTE_BUFFER_KM} km de la ruta.</div>`;
   if(box) box.innerHTML = html; if(rbox) rbox.innerHTML = html; if(mbox) mbox.innerHTML = html;
@@ -3111,8 +3148,14 @@ function hncRemind(msg) {
   playAlertTone();
   const t = document.createElement('div');
   t.className = 'toast-important';
+  t.setAttribute('role', 'alert');
+  t.setAttribute('aria-live', 'assertive');
+  t.setAttribute('aria-atomic', 'true');
+  t.setAttribute('tabindex', '0');
+  t.setAttribute('aria-label', `Hoy No Circula: ${msg}. Abrir detalles`);
   t.innerHTML = `<b>🚗 HOY NO CIRCULA</b><div style="font-size:12px;">${msg}</div>`;
   t.onclick = () => { t.remove(); openHncModal(); };
+  t.onkeydown = event => activateWithKeyboard(event, () => { t.remove(); openHncModal(); });
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 15000);
   try {
@@ -3173,7 +3216,6 @@ function reportCard() {
 }
 function closeReport() { document.getElementById('report-modal').style.display = 'none'; }
 document.getElementById('report-modal') && document.getElementById('report-modal').addEventListener('click', e => { if(e.target === e.currentTarget) closeReport(); });
-function csvCell(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
 function downloadReportCSV() {
   const rows = [['hora','categoria','trafico','importante','titulo','ubicacion','estado','lat','lon']];
   [...reportAlerts()].sort((a,b) => b.time - a.time).forEach(a => rows.push([
@@ -3191,7 +3233,7 @@ function downloadReportHTML() {
   const imps = data.filter(a => a.importante).length;
   const stops = data.filter(a => a.category === 'road' && a.trafico === 'detenido').length;
   const rows = [...data].sort((a,b) => b.time - a.time).map(a =>
-    `<tr><td>${formatAlertTime(a.time)}</td><td>${a.category === 'security' ? 'Seguridad' : 'Vial'}</td><td>${a.trafico || '-'}</td><td>${a.importante ? '⚠' : '—'}</td><td>${a.title || ''}</td><td>${a.location || ''}</td><td>${a.state || ''}</td></tr>`
+    `<tr><td>${escapeHtml(formatAlertTime(a.time))}</td><td>${a.category === 'security' ? 'Seguridad' : 'Vial'}</td><td>${escapeHtml(a.trafico || '-')}</td><td>${a.importante ? '⚠' : '—'}</td><td>${escapeHtml(a.title || '')}</td><td>${escapeHtml(a.location || '')}</td><td>${escapeHtml(a.state || '')}</td></tr>`
   ).join('');
   const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Zero Vial · Reporte</title><style>
     body{font-family:Segoe UI,Arial,sans-serif;margin:28px;color:#222}
@@ -3204,7 +3246,7 @@ function downloadReportHTML() {
     th,td{border:1px solid #d5dbe3;padding:6px 8px;text-align:left}
     th{background:#eef1f5}@media print{body{margin:8mm}}
     </style></head><body>
-    <h1>ZERO VIAL</h1><h2>Reporte generado: ${hoy}</h2>
+    <h1>ZERO VIAL</h1><h2>Reporte generado: ${escapeHtml(hoy)}</h2>
     <div class="stats">
       <div class="card"><b>${roads}</b><span>Viales</span></div>
       <div class="card"><b>${secs}</b><span>Seguridad</span></div>
@@ -3247,8 +3289,14 @@ function playAlertTone() {
 function showImportantToast(a) {
   const t = document.createElement('div');
   t.className = 'toast-important';
-  t.innerHTML = `<b>🚨 Alerta importante</b><div>${a.title}</div><div style="font-size:11px;opacity:.8">${a.location}</div>`;
+  t.setAttribute('role', 'alert');
+  t.setAttribute('aria-live', 'assertive');
+  t.setAttribute('aria-atomic', 'true');
+  t.setAttribute('tabindex', '0');
+  t.setAttribute('aria-label', `Alerta importante: ${a.title || 'Incidente'}; ${a.location || 'ubicación aproximada'}. Abrir detalle`);
+  t.innerHTML = `<b>🚨 Alerta importante</b><div>${escapeHtml(a.title)}</div><div style="font-size:11px;opacity:.8">${escapeHtml(a.location)}</div>`;
   t.onclick = () => { t.remove(); openAlertDetail(a.id); };
+  t.onkeydown = event => activateWithKeyboard(event, () => { t.remove(); openAlertDetail(a.id); });
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 9000);
 }
@@ -3782,7 +3830,7 @@ async function riskAI() {
   const prompt = `Eres analista vial en México. Según estos tramos con su índice de riesgo calculado (0-100), explica en español SECO (máx 3 líneas, tono de alerta responsable) cuál es el tramo de mayor riesgo, por qué, y una recomendación concreta de manejo. Datos: ${ctx}`;
   const r = await consultGroq(prompt);
   if(!r) { out.innerHTML = '<div style="font-size:12px; color:#f87171;">⚠ No se pudo obtener el resumen IA. Intenta de nuevo.</div>'; return; }
-  out.innerHTML = `<div style="background:#0d1320; border:1px solid #1f2937; border-left:3px solid var(--ris); border-radius:8px; padding:12px; font-size:12px; color:#d1d5db; line-height:1.5;">${r.replace(/\n/g, '<br>')}</div>`;
+  out.innerHTML = `<div style="background:#0d1320; border:1px solid #1f2937; border-left:3px solid var(--ris); border-radius:8px; padding:12px; font-size:12px; color:#d1d5db; line-height:1.5;">${escapeHtml(r).replace(/\n/g, '<br>')}</div>`;
 }
 function riskGo(i) { weatherGoMap(i); }
 
@@ -3790,7 +3838,7 @@ function riskGo(i) { weatherGoMap(i); }
 const QUICK_ROUTES = [['Ciudad de México', 'Querétaro'], ['Ciudad de México', 'Puebla'], ['Ciudad de México', 'Guadalajara'], ['Monterrey', 'Ciudad de México']];
 let routeSel = 0; let routeOptions = [];
 let routeOriginCoords = null;
-function openRouteModal() { showComingSoon('Planificador de rutas'); }
+function openRouteModal() { openRouteModalPreview(); }
 function openRouteModalPreview() {
   const cards = document.getElementById('route-cards');
   if(cards && !routeOptions.length) cards.innerHTML = '<div style="color:#6B7280; font-size:12px;">Escribe origen y destino, después pulsa <b>Buscar rutas</b>.</div>';
@@ -3855,9 +3903,14 @@ function renderRouteCards() {
     const risk = routeRiskSummary(r.coord);
     const card = document.createElement('div');
     card.className = 'rm-card' + (i === routeSel ? ' selected' : '');
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-pressed', i === routeSel ? 'true' : 'false');
+    card.setAttribute('aria-label', `Seleccionar ${r.label}, ${km.toFixed(1)} kilómetros, ${min} minutos, riesgo ${risk.level}`);
     card.onclick = () => { routeSel = i; renderRouteCards(); };
+    card.onkeydown = event => activateWithKeyboard(event, () => { routeSel = i; renderRouteCards(); });
     card.innerHTML = `<div class="rm-badges"><span class="rm-tag">${r.label}</span><span class="rm-tag sec" style="color:${risk.color};border-color:${risk.color}"><i class="fa-solid fa-triangle-exclamation"></i> Riesgo ${risk.level}</span></div>
-      <div class="rm-name">${o} → ${d}</div>
+      <div class="rm-name">${escapeHtml(o)} → ${escapeHtml(d)}</div>
       <div class="rm-divider"></div>
       <div class="rm-cols">
         <div class="rm-col"><b>${km.toFixed(1)} km</b><span>Distancia</span></div>
@@ -3966,7 +4019,7 @@ function gpsTrack() {
     const accuracy=Math.round(pos.coords.accuracy || 0);
     setGpsUi('active', accuracy ? `Precisión aproximada: ${accuracy} m` : 'Alertas cercanas disponibles');
     const stopBtn = `<button onclick="stopGps()" style="margin:4px 0 0 4px; padding:5px 10px; border:none; border-radius:6px; background:#1E293B; color:#9CA3AF; cursor:pointer; font-size:11px;"><i class="fa-solid fa-xmark"></i> Detener</button>`;
-    map.openPopup(`<b style="color:#2563EB"><i class="fa-solid fa-location-crosshairs"></i> Tu ubicación</b><br><button onclick="showComingSoon('Planificador de rutas')" style="margin-top:8px; width:100%; padding:7px 10px; border:1px solid #F59E0B; border-radius:6px; background:rgba(245,158,11,.12); color:#D97706; cursor:pointer; font-size:12px; font-weight:700;"><i class="fa-solid fa-hourglass-half"></i> Rutas · Próximamente</button>${stopBtn}`, [myPosition.lat, myPosition.lon]);
+    map.openPopup(`<b style="color:#2563EB"><i class="fa-solid fa-location-crosshairs"></i> Tu ubicación</b><br><button onclick="map.closePopup();traceFromHere()" style="margin-top:8px; width:100%; padding:7px 10px; border:1px solid #2563EB; border-radius:6px; background:rgba(37,99,235,.12); color:#60A5FA; cursor:pointer; font-size:12px; font-weight:700;"><i class="fa-solid fa-route"></i> Planear ruta desde aquí</button>${stopBtn}`, [myPosition.lat, myPosition.lon]);
     map.setView([myPosition.lat, myPosition.lon], 14);
     rebuildU();
   };
@@ -4012,6 +4065,22 @@ function confirmClearAlerts() {
   persistAlerts();
   log('🧹 Alertas limpiadas.', 'info');
 }
+
+function enhanceAccessibility() {
+  document.querySelectorAll('button[title]:not([aria-label])').forEach(button => {
+    const visibleText = (button.textContent || '').replace(/\s+/g, ' ').trim();
+    if(!visibleText) button.setAttribute('aria-label', button.getAttribute('title'));
+  });
+  document.querySelectorAll('button i, [role="button"] i').forEach(icon => icon.setAttribute('aria-hidden', 'true'));
+  document.querySelectorAll('select[title]:not([aria-label])').forEach(select => select.setAttribute('aria-label', select.getAttribute('title')));
+  document.querySelectorAll('.m-x:not([aria-label]), .am-x:not([aria-label])').forEach(button => button.setAttribute('aria-label', 'Cerrar ventana'));
+  document.querySelectorAll('.pr-tab[onclick], .nav-item[onclick]').forEach(control => {
+    control.setAttribute('role', control.classList.contains('pr-tab') ? 'tab' : 'button');
+    control.setAttribute('tabindex', '0');
+    control.addEventListener('keydown', event => activateWithKeyboard(event, () => control.click()));
+  });
+}
+enhanceAccessibility();
 </script>
 </body>
 </html>
