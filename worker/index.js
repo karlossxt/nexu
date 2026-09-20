@@ -14,6 +14,8 @@ const SUPABASE_URL = env.SUPABASE_URL.replace(/\/$/, '');
 const SUPABASE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
 const GROQ_KEY = env.GROQ_API_KEY;
 const GROQ_MODEL = env.GROQ_MODEL || 'openai/gpt-oss-20b';
+const GEMINI_KEY = env.GEMINI_API_KEY || '';
+const GEMINI_MODEL = env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
 const GEOAPIFY_KEY = env.GEOAPIFY_API_KEY || '';
 const GOOGLE_KEY = env.GOOGLE_MAPS_API_KEY || '';
 const POLL_MS = Math.max(60_000, Number(env.WORKER_INTERVAL_MS) || 60_000);
@@ -28,6 +30,7 @@ if (!FEEDS.length) FEEDS.push(DEFAULT_FEED);
 const processedIds = new Map();
 let groqCooldownUntil = 0;
 let aiNextAllowedAt = 0;
+let lastAiProvider = 'none';
 
 class GroqRateLimitError extends Error {
   constructor(message, retryAfterMs) {
@@ -161,8 +164,22 @@ async function alreadyExists(externalId) {
   return Array.isArray(rows) && rows.length > 0;
 }
 
-async function classify(text) {
-  const prompt = `Clasifica esta noticia. Rechaza si no es un incidente vial o de seguridad relacionado con calles, carreteras o movilidad en México, o si no incluye una ubicación útil. Una balacera, delito o emergencia dentro de una escuela, vivienda o inmueble sin afectación vial debe marcarse como irrelevante. Extrae el sentido de circulación cuando aparezca (por ejemplo: hacia Querétaro o dirección CDMX). Convierte kilómetros con formato 66+500 a 66.5. No inventes datos. Si rechazas usa valido=false, categoria=irrelevant y cadenas vacías cuando no exista el dato. Resume el hecho sin agregar información. TEXTO: ${text.slice(0, 800)}`;
+const GEMINI_ALERT_SCHEMA = {
+  type:'OBJECT',
+  properties:{
+    valido:{type:'BOOLEAN'}, ubicacion:{type:'STRING',nullable:true}, carretera:{type:'STRING',nullable:true},
+    kilometro:{type:'NUMBER',nullable:true}, municipio:{type:'STRING',nullable:true}, estado:{type:'STRING',nullable:true},
+    categoria:{type:'STRING',enum:['road','security','irrelevant']}, severidad:{type:'STRING',enum:['critical','high','medium','low']},
+    resumen:{type:'STRING',nullable:true}, detail:{type:'STRING',nullable:true}, sentido:{type:'STRING',nullable:true}
+  },
+  required:['valido','ubicacion','carretera','kilometro','municipio','estado','categoria','severidad','resumen','detail','sentido']
+};
+
+function classificationPrompt(text) {
+  return `Clasifica esta noticia. Rechaza si no es un incidente vial o de seguridad relacionado con calles, carreteras o movilidad en México, o si no incluye una ubicación útil. Una balacera, delito o emergencia dentro de una escuela, vivienda o inmueble sin afectación vial debe marcarse como irrelevante. Extrae el sentido de circulación cuando aparezca (por ejemplo: hacia Querétaro o dirección CDMX). Convierte kilómetros con formato 66+500 a 66.5. No inventes datos. Si rechazas usa valido=false, categoria=irrelevant y cadenas vacías cuando no exista el dato. Resume el hecho sin agregar información. TEXTO: ${text.slice(0, 800)}`;
+}
+
+async function classifyWithGroq(prompt) {
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + GROQ_KEY, 'Content-Type': 'application/json' },
@@ -225,6 +242,46 @@ async function classify(text) {
   } catch (error) {
     throw new Error('Groq devolvió JSON inválido: ' + error.message);
   }
+}
+
+async function classifyWithGemini(prompt) {
+  const url = new URL(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`);
+  url.searchParams.set('key', GEMINI_KEY);
+  const response = await fetch(url, {
+    method:'POST', headers:{'Content-Type':'application/json'}, signal:AbortSignal.timeout(20_000),
+    body:JSON.stringify({
+      systemInstruction:{parts:[{text:'Eres un analista de seguridad vial y logística en México. Devuelve únicamente datos sustentados por el texto.'}]},
+      contents:[{role:'user',parts:[{text:prompt}]}],
+      generationConfig:{temperature:.1,maxOutputTokens:700,responseMimeType:'application/json',responseSchema:GEMINI_ALERT_SCHEMA}
+    })
+  });
+  const rawBody=await response.text();
+  if(!response.ok) throw new Error('Gemini '+response.status+': '+rawBody.slice(0,250));
+  let body;
+  try { body=JSON.parse(rawBody); } catch { throw new Error('Gemini devolvió una respuesta no JSON'); }
+  const raw=String(body.candidates?.[0]?.content?.parts?.map(part=>part.text||'').join('')||'').trim();
+  if(!raw) throw new Error('Gemini devolvió una respuesta vacía');
+  try { return JSON.parse(raw); } catch(error) { throw new Error('Gemini devolvió JSON inválido: '+error.message); }
+}
+
+async function classify(text) {
+  const prompt=classificationPrompt(text);
+  if(Date.now()>=groqCooldownUntil) {
+    try {
+      const result=await classifyWithGroq(prompt);
+      lastAiProvider='groq';
+      return result;
+    } catch(error) {
+      if(error instanceof GroqRateLimitError) groqCooldownUntil=Date.now()+Math.max(60_000,error.retryAfterMs)+15_000;
+      if(!GEMINI_KEY) throw error;
+      log('warn','Groq no disponible; usando Gemini',{reason:error.message.slice(0,120)});
+    }
+  } else if(!GEMINI_KEY) {
+    throw new GroqRateLimitError('Groq continúa en pausa',groqCooldownUntil-Date.now());
+  }
+  const result=await classifyWithGemini(prompt);
+  lastAiProvider='gemini';
+  return result;
 }
 
 async function geocode(query, expectedState, precision = 'zone') {
@@ -375,7 +432,7 @@ async function health(values) {
 
 async function cycle() {
   const started = new Date().toISOString();
-  const stats = { received:0, relevant:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, ai_cooldown_seconds:0, ai_budget_wait_seconds:0, ai_max_per_hour:AI_MAX_PER_HOUR, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0 };
+  const stats = { received:0, relevant:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, groq_used:0, gemini_used:0, ai_cooldown_seconds:0, ai_budget_wait_seconds:0, ai_max_per_hour:AI_MAX_PER_HOUR, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0 };
   await health({ status:'running', last_started_at:started, last_error:null });
   try {
     const candidates = [];
@@ -409,7 +466,7 @@ async function cycle() {
       if (pending.length >= MAX_AI_PER_CYCLE) break;
     }
     for (const { item, feed } of pending) {
-      if (Date.now() < groqCooldownUntil) {
+      if (Date.now() < groqCooldownUntil && !GEMINI_KEY) {
         stats.ai_cooldown_seconds = Math.ceil((groqCooldownUntil - Date.now()) / 1000);
         break;
       }
@@ -422,6 +479,7 @@ async function cycle() {
       aiNextAllowedAt = Date.now() + AI_MIN_INTERVAL_MS;
       try {
         const result = await processItem(item, feed);
+        if(lastAiProvider==='gemini') stats.gemini_used++; else if(lastAiProvider==='groq') stats.groq_used++;
         if (result === 'inserted') stats.inserted++;
         else if (result === 'no_location') stats.no_location++;
         else if (result === 'duplicate') stats.duplicates++;
@@ -458,7 +516,7 @@ async function cycle() {
 }
 
 async function main() {
-  log('info','Worker Zero Vial iniciado',{ feeds:FEEDS.length, interval_ms:POLL_MS, model:GROQ_MODEL, ai_max_per_hour:AI_MAX_PER_HOUR, ai_min_interval_ms:AI_MIN_INTERVAL_MS });
+  log('info','Worker Zero Vial iniciado',{ feeds:FEEDS.length, interval_ms:POLL_MS, model:GROQ_MODEL, gemini_model:GEMINI_KEY?GEMINI_MODEL:null, ai_max_per_hour:AI_MAX_PER_HOUR, ai_min_interval_ms:AI_MIN_INTERVAL_MS });
   await cycle();
   if (env.WORKER_ONCE === '1') return;
   while (true) {
