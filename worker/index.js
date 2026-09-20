@@ -213,15 +213,15 @@ const GEMINI_ALERT_SCHEMA = {
   type:'OBJECT',
   properties:{
     valido:{type:'BOOLEAN'}, ubicacion:{type:'STRING',nullable:true}, carretera:{type:'STRING',nullable:true},
-    kilometro:{type:'NUMBER',nullable:true}, municipio:{type:'STRING',nullable:true}, estado:{type:'STRING',nullable:true},
+    kilometro:{type:'NUMBER',nullable:true}, referencia:{type:'STRING',nullable:true}, municipio:{type:'STRING',nullable:true}, estado:{type:'STRING',nullable:true},
     categoria:{type:'STRING',enum:['road','security','irrelevant']}, severidad:{type:'STRING',enum:['critical','high','medium','low']},
     resumen:{type:'STRING',nullable:true}, detail:{type:'STRING',nullable:true}, sentido:{type:'STRING',nullable:true}
   },
-  required:['valido','ubicacion','carretera','kilometro','municipio','estado','categoria','severidad','resumen','detail','sentido']
+  required:['valido','ubicacion','carretera','kilometro','referencia','municipio','estado','categoria','severidad','resumen','detail','sentido']
 };
 
 function classificationPrompt(text) {
-  return `Clasifica esta noticia. Rechaza si no es un incidente vial o de seguridad relacionado con calles, carreteras o movilidad en México, o si no incluye una ubicación útil. Una balacera, delito o emergencia dentro de una escuela, vivienda o inmueble sin afectación vial debe marcarse como irrelevante. Extrae el sentido de circulación cuando aparezca (por ejemplo: hacia Querétaro o dirección CDMX). Convierte kilómetros con formato 66+500 a 66.5. No inventes datos. Si rechazas usa valido=false, categoria=irrelevant y cadenas vacías cuando no exista el dato. Resume el hecho sin agregar información. TEXTO: ${text.slice(0, 800)}`;
+  return `Clasifica esta noticia. Rechaza si no es un incidente vial o de seguridad relacionado con calles, carreteras o movilidad en México, o si no incluye una ubicación útil. Una balacera, delito o emergencia dentro de una escuela, vivienda o inmueble sin afectación vial debe marcarse como irrelevante. Extrae el sentido de circulación cuando aparezca (por ejemplo: hacia Querétaro o dirección CDMX). Extrae también una referencia física explícita si aparece: caseta, plaza de cobro, entronque, puente, distribuidor vial, localidad, colonia o punto conocido cercano. Convierte kilómetros con formato 66+500 a 66.5. No inventes datos ni coordenadas. Si rechazas usa valido=false, categoria=irrelevant y cadenas vacías cuando no exista el dato. Resume el hecho sin agregar información. TEXTO: ${text.slice(0, 800)}`;
 }
 
 async function classifyWithGroq(prompt) {
@@ -246,6 +246,7 @@ async function classifyWithGroq(prompt) {
               ubicacion: { type: ['string', 'null'] },
               carretera: { type: ['string', 'null'] },
               kilometro: { type: ['number', 'null'] },
+              referencia: { type: ['string', 'null'] },
               municipio: { type: ['string', 'null'] },
               estado: { type: ['string', 'null'] },
               categoria: { type: 'string', enum: ['road', 'security', 'irrelevant'] },
@@ -254,7 +255,7 @@ async function classifyWithGroq(prompt) {
               detail: { type: ['string', 'null'] },
               sentido: { type: ['string', 'null'] }
             },
-            required: ['valido', 'ubicacion', 'carretera', 'kilometro', 'municipio', 'estado', 'categoria', 'severidad', 'resumen', 'detail', 'sentido']
+            required: ['valido', 'ubicacion', 'carretera', 'kilometro', 'referencia', 'municipio', 'estado', 'categoria', 'severidad', 'resumen', 'detail', 'sentido']
           }
         }
       },
@@ -330,7 +331,7 @@ async function classify(text) {
 }
 
 async function geocode(query, expectedState, precision = 'zone') {
-  const confidenceCaps = { exact:.97, kilometer:.9, road:.82, zone:.7, municipality:.58, state:.38 };
+  const confidenceCaps = { exact:.97, reference:.92, kilometer:.9, road:.82, zone:.7, municipality:.58, state:.38 };
   const cap = confidenceCaps[precision] || .7;
   if (GEOAPIFY_KEY) {
     const url = new URL('https://api.geoapify.com/v1/geocode/search');
@@ -426,13 +427,15 @@ async function processItem(item, feed) {
   if (title.length < 8 || detail.length < 15) return 'rejected';
   const kilometer = normalizedKilometer(ai.kilometro, item.title + ' ' + item.body);
   const direction = clean(ai.sentido);
+  const reference = clean(ai.referencia);
   const locationParts = ai.carretera
-    ? [ai.carretera, kilometer != null ? 'km ' + kilometer : '', ai.municipio, ai.estado]
+    ? [ai.carretera, kilometer != null ? 'km ' + kilometer : '', reference, ai.municipio, ai.estado]
     : [ai.ubicacion, ai.municipio, ai.estado];
   const locationQuery = [...new Set(locationParts.map(clean).filter(Boolean))].join(', ');
   if (locationQuery.length < 4) return 'no_location';
   const locationQueries = [
-    { query:locationQuery, precision:ai.carretera && kilometer != null ? 'kilometer' : ai.carretera ? 'road' : 'zone' },
+    { query:locationQuery, precision:ai.carretera && kilometer != null ? 'kilometer' : ai.carretera && reference ? 'reference' : ai.carretera ? 'road' : 'zone' },
+    { query:[reference, ai.carretera, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:reference && ai.carretera ? 'reference' : 'zone' },
     { query:[ai.ubicacion, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'zone' },
     { query:[ai.carretera, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'road' },
     { query:[ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'municipality' },
@@ -456,7 +459,7 @@ async function processItem(item, feed) {
     municipality: clean(ai.municipio) || null,
     road: clean(ai.carretera) || null,
     kilometer,
-    location_label: [geo.label || locationQuery, direction ? 'sentido ' + direction : ''].filter(Boolean).join(' · '),
+    location_label: [geo.label || locationQuery, reference ? 'ref. ' + reference : '', direction ? 'sentido ' + direction : ''].filter(Boolean).join(' · '),
     latitude: geo.latitude,
     longitude: geo.longitude,
     location_confidence: geo.confidence,
