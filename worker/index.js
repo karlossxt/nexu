@@ -14,6 +14,7 @@ const SUPABASE_URL = env.SUPABASE_URL.replace(/\/$/, '');
 const SUPABASE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
 const GROQ_KEY = env.GROQ_API_KEY;
 const GROQ_MODEL = env.GROQ_MODEL || 'openai/gpt-oss-20b';
+const GEOAPIFY_KEY = env.GEOAPIFY_API_KEY || '';
 const GOOGLE_KEY = env.GOOGLE_MAPS_API_KEY || '';
 const POLL_MS = Math.max(60_000, Number(env.WORKER_INTERVAL_MS) || 60_000);
 const MAX_AGE_MS = Math.max(1, Number(env.ALERT_MAX_AGE_HOURS) || 24) * 3600_000;
@@ -23,14 +24,6 @@ const FEEDS = [env.RSS_PRI, env.RSS_SEC].map(x => String(x || '').trim()).filter
 const DEFAULT_FEED = 'https://news.google.com/rss/search?q=accidente+OR+bloqueo+OR+asalto+carretera+mexico&hl=es-419&gl=MX&ceid=MX:es-419';
 if (!FEEDS.length) FEEDS.push(DEFAULT_FEED);
 const processedIds = new Map();
-// Purga entradas vencidas cada 30 min; sin esto el mapa crece sin límite en un worker
-// de larga duración (meses corriendo en Render).
-setInterval(() => {
-  const now = Date.now();
-  for (const [id, expiresAt] of processedIds) {
-    if (expiresAt <= now) processedIds.delete(id);
-  }
-}, 30 * 60_000).unref();
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const log = (level, message, data) => console.log(JSON.stringify({ time: new Date().toISOString(), level, message, ...(data || {}) }));
@@ -135,7 +128,6 @@ async function classify(text) {
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + GROQ_KEY, 'Content-Type': 'application/json' },
-    signal: AbortSignal.timeout(20_000),
     body: JSON.stringify({
       model: GROQ_MODEL,
       temperature: 0.1,
@@ -197,6 +189,30 @@ async function classify(text) {
 async function geocode(query, expectedState, precision = 'zone') {
   const confidenceCaps = { exact:.97, kilometer:.9, road:.82, zone:.7, municipality:.58, state:.38 };
   const cap = confidenceCaps[precision] || .7;
+  if (GEOAPIFY_KEY) {
+    const url = new URL('https://api.geoapify.com/v1/geocode/search');
+    url.searchParams.set('text', query);
+    url.searchParams.set('filter', 'countrycode:mx');
+    url.searchParams.set('bias', 'countrycode:mx');
+    url.searchParams.set('format', 'json');
+    url.searchParams.set('lang', 'es');
+    url.searchParams.set('limit', '1');
+    url.searchParams.set('apiKey', GEOAPIFY_KEY);
+    try {
+      const response = await fetch(url, { headers:{ Accept:'application/json' } });
+      const body = await response.json();
+      const result = body.results?.[0];
+      if (response.ok && result) {
+        const lat=Number(result.lat), lon=Number(result.lon), resolvedState=result.state || '';
+        if (!inMexico(lat, lon) || !stateMatches(expectedState, resolvedState)) throw new Error('resultado fuera del estado o territorio esperado');
+        const rankConfidence=Number(result.rank?.confidence);
+        const confidence=Math.min(cap, Number.isFinite(rankConfidence) ? rankConfidence : .62);
+        return { latitude:lat, longitude:lon, label:result.formatted || query, confidence, status:confidence >= .82 ? 'automatic' : 'approximate', precision };
+      }
+    } catch (error) {
+      log('warn', 'Geoapify no pudo geocodificar; usando respaldo', { query, error:error.message });
+    }
+  }
   if (GOOGLE_KEY) {
     const url = new URL('https://maps.googleapis.com/maps/api/geocode/json');
     url.searchParams.set('address', query);
@@ -283,19 +299,19 @@ async function processItem(item, feed) {
   for (const candidate of locationQueries) {
     geo = await geocode(candidate.query, ai.estado, candidate.precision);
     if (geo) break;
-    if (!GOOGLE_KEY) await sleep(1100);
+    if (!GEOAPIFY_KEY && !GOOGLE_KEY) await sleep(1100);
   }
   if (!geo || !Number.isFinite(geo.latitude) || !Number.isFinite(geo.longitude)) return 'no_location';
   const eventAt = item.published_at && Date.now() - new Date(item.published_at).getTime() <= MAX_AGE_MS ? item.published_at : new Date().toISOString();
   const row = {
     external_id: externalId,
-    title: title.slice(0, 200),
-    detail: detail.slice(0, 600),
+    title,
+    detail,
     category: ai.categoria,
     severity: ['critical','high','medium','low'].includes(ai.severidad) ? ai.severidad : 'medium',
-    state: clean(ai.estado).slice(0, 80) || null,
-    municipality: clean(ai.municipio).slice(0, 80) || null,
-    road: clean(ai.carretera).slice(0, 120) || null,
+    state: clean(ai.estado) || null,
+    municipality: clean(ai.municipio) || null,
+    road: clean(ai.carretera) || null,
     kilometer,
     location_label: [geo.label || locationQuery, direction ? 'sentido ' + direction : ''].filter(Boolean).join(' · '),
     latitude: geo.latitude,
@@ -323,7 +339,7 @@ async function cycle() {
   try {
     const candidates = [];
     for (const feed of FEEDS) {
-      const response = await fetch(feed, { headers:{ 'User-Agent':'Mozilla/5.0 (Zero Vial worker)' }, signal: AbortSignal.timeout(15_000) });
+      const response = await fetch(feed, { headers:{ 'User-Agent':'Mozilla/5.0 (Zero Vial worker)' } });
       if (!response.ok) throw new Error('RSS ' + response.status + ' ' + feed);
       const items = parseFeed(await response.text()).slice(0, 40);
       stats.received += items.length;
