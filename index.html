@@ -891,6 +891,34 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
   .feed-tools{ grid-template-columns:1fr; }
   .feed-sort{ width:100%; }
 }
+
+/* === MOBILE APP SHELL · FASE 1 === */
+.mobile-app-nav{display:none}
+@media (max-width:700px){
+  body.user-mode{height:100dvh;min-height:100dvh;display:block;padding-bottom:calc(64px + env(safe-area-inset-bottom));box-sizing:border-box}
+  body.user-mode .main-content{height:calc(100dvh - 64px - env(safe-area-inset-bottom));min-height:0}
+  body.user-mode #map{height:100%;width:100%}
+  .mobile-app-nav{position:fixed;left:0;right:0;bottom:0;height:64px;padding:0 max(6px,env(safe-area-inset-right)) env(safe-area-inset-bottom) max(6px,env(safe-area-inset-left));box-sizing:content-box;background:rgba(5,7,10,.96);border-top:1px solid rgba(148,163,184,.22);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);z-index:12000;align-items:stretch;justify-content:space-around}
+  body.user-mode .mobile-app-nav{display:flex}
+  .mobile-app-nav button{appearance:none;border:0;background:transparent;color:#94A3B8;box-shadow:none;margin:0;padding:7px 4px 5px;width:20%;min-width:0;min-height:56px;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:700 10px/1 'Inter',sans-serif;touch-action:manipulation}
+  .mobile-app-nav button i{font-size:19px;line-height:1}
+  .mobile-app-nav button:active,.mobile-app-nav button.active{color:#60A5FA;background:rgba(37,99,235,.10)}
+  body.user-mode:not(.dark-mode) .mobile-app-nav{background:rgba(255,255,255,.96);border-top-color:#D8E1EC}
+  body.user-mode:not(.dark-mode) .mobile-app-nav button{color:#64748B}
+  body.user-mode:not(.dark-mode) .mobile-app-nav button:active,body.user-mode:not(.dark-mode) .mobile-app-nav button.active{color:#2563EB}
+  body.user-mode .selected-alert-card,body.user-mode.left-rail .selected-alert-card,body.user-mode.right-rail .selected-alert-card{bottom:calc(76px + env(safe-area-inset-bottom))}
+  body.user-mode #panel-right{max-height:calc(100dvh - 154px - env(safe-area-inset-bottom))}
+  body.user-mode:not(.right-rail) #panel-right{bottom:calc(64px + env(safe-area-inset-bottom));max-height:none}
+  body.user-mode .leaflet-bottom.leaflet-left .nv-maptools{margin-bottom:calc(14px + env(safe-area-inset-bottom))}
+  body.user-mode .leaflet-control-zoom a{width:42px;height:42px;line-height:42px;font-size:20px}
+  .focus-banner{max-width:calc(100vw - 20px);box-sizing:border-box}
+  #guest-banner{max-width:calc(100vw - 20px);box-sizing:border-box}
+  .u-modal-card{width:100%;box-sizing:border-box}
+}
+@media (max-width:380px){
+  .mobile-app-nav button{font-size:9px}
+  .mobile-app-nav button i{font-size:18px}
+}
 </style>
 </head>
 <body>
@@ -1013,6 +1041,13 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <button class="nt-btn active" onclick="openEntryModal()"><i class="fa-solid fa-plus"></i><span>Reportar</span></button>
     </div>
   </header>
+  <nav class="mobile-app-nav" aria-label="Navegación móvil">
+  <button type="button" class="active" onclick="clearAlertFocus();document.body.classList.add('right-rail')" aria-label="Mapa"><i class="fa-solid fa-map-location-dot"></i><span>Mapa</span></button>
+  <button type="button" onclick="openAlertCenter()" aria-label="Alertas"><i class="fa-solid fa-triangle-exclamation"></i><span>Alertas</span></button>
+  <button type="button" onclick="openRouteModal()" aria-label="Ruta"><i class="fa-solid fa-route"></i><span>Ruta</span></button>
+  <button type="button" onclick="document.body.classList.remove('right-rail');switchPR('ris')" aria-label="Radar vial"><i class="fa-solid fa-chart-line"></i><span>Radar</span></button>
+  <button type="button" onclick="openAuthModal()" aria-label="Perfil"><i class="fa-solid fa-circle-user"></i><span>Perfil</span></button>
+</nav>
   <div id="guest-banner"><i class="fa-solid fa-circle-info"></i><span>Modo invitado: tus preferencias sólo se guardan en este dispositivo.</span><button onclick="openAuthModal()"><i class="fa-solid fa-user-plus"></i> Crear cuenta</button></div>
   <section id="focus-banner" class="focus-banner" aria-live="polite">
     <span class="fb-icon"><i class="fa-solid fa-location-crosshairs"></i></span>
