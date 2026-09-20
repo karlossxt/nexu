@@ -1,6 +1,7 @@
 'use strict';
 
 const { createHash } = require('crypto');
+const RED_VIAL = require('./red-vial');
 
 const env = process.env;
 const REQUIRED = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'GROQ_API_KEY'];
@@ -415,8 +416,88 @@ function geoDistanceKm(aLat, aLon, bLat, bLon) {
   return 2 * r * Math.asin(Math.sqrt(x));
 }
 
+function roadKey(value) {
+  return norm(value).replace(/\b(autopista|carretera|federal|mexico|mex)\b/g, ' ').replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function findRoadCorridor(road) {
+  const raw = norm(road);
+  const key = roadKey(road);
+  if (!raw || !key) return null;
+  let best = null;
+  for (const corridor of RED_VIAL) {
+    const names = [corridor.name, ...(corridor.aliases || [])];
+    for (const name of names) {
+      const candidateRaw = norm(name);
+      const candidateKey = roadKey(name);
+      let score = 0;
+      if (raw === candidateRaw) score = 100;
+      else if (key === candidateKey) score = 95;
+      else if (candidateRaw && (raw.includes(candidateRaw) || candidateRaw.includes(raw))) score = 88;
+      else if (candidateKey && key.length >= 3 && (key.includes(candidateKey) || candidateKey.includes(key))) score = 82;
+      if (score && (!best || score > best.score)) best = { corridor, score, matched:name };
+    }
+  }
+  return best && best.score >= 82 ? best : null;
+}
+
+function pointAtRoadKilometer(corridor, kilometer) {
+  const km = Number(kilometer);
+  const start = Number(corridor?.kmStart), end = Number(corridor?.kmEnd);
+  const pts = corridor?.pts || [];
+  if (!Number.isFinite(km) || !Number.isFinite(start) || !Number.isFinite(end) || end <= start || pts.length < 2) return null;
+  if (km < start || km > end) return null;
+  const segments = [];
+  let total = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const length = geoDistanceKm(pts[i-1][0], pts[i-1][1], pts[i][0], pts[i][1]);
+    segments.push(length);
+    total += length;
+  }
+  if (!(total > 0)) return null;
+  const target = ((km - start) / (end - start)) * total;
+  let walked = 0;
+  for (let i = 0; i < segments.length; i++) {
+    const next = walked + segments[i];
+    if (target <= next || i === segments.length - 1) {
+      const ratio = segments[i] > 0 ? Math.max(0, Math.min(1, (target - walked) / segments[i])) : 0;
+      const a = pts[i], b = pts[i+1];
+      return {
+        latitude:a[0] + (b[0] - a[0]) * ratio,
+        longitude:a[1] + (b[1] - a[1]) * ratio,
+        route_distance_km:target
+      };
+    }
+    walked = next;
+  }
+  return null;
+}
+
+function resolveStaticRoadKilometer(road, kilometer) {
+  if (!road || kilometer == null) return null;
+  const match = findRoadCorridor(road);
+  if (!match) return null;
+  const point = pointAtRoadKilometer(match.corridor, kilometer);
+  if (!point || !inMexico(point.latitude, point.longitude)) return null;
+  return {
+    latitude:point.latitude,
+    longitude:point.longitude,
+    label:`${match.corridor.name} · km ${kilometer}`,
+    confidence:match.score >= 95 ? .94 : .9,
+    status:'automatic',
+    precision:'kilometer_static',
+    corridor:match.corridor.badge,
+    matched_alias:match.matched
+  };
+}
+
 async function resolveRoadLocation(ai, kilometer, reference) {
   if (!ai.carretera) return null;
+  const staticKm = resolveStaticRoadKilometer(ai.carretera, kilometer);
+  if (staticKm) {
+    log('info','Kilómetro resuelto con RED_VIAL',{ road:ai.carretera, kilometer, corridor:staticKm.corridor, confidence:staticKm.confidence });
+    return staticKm;
+  }
   const candidates = [];
   const queries = [
     { query:[reference, ai.carretera, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'reference' },
