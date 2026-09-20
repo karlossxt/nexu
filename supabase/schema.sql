@@ -94,6 +94,25 @@ create table if not exists public.worker_status (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.ingest_queue (
+  external_id text primary key,
+  item jsonb not null,
+  feed_url text,
+  priority integer not null default 0,
+  published_at timestamptz not null,
+  status text not null default 'pending' check (status in ('pending','processing','retry','completed','failed')),
+  attempts integer not null default 0 check (attempts >= 0),
+  next_attempt_at timestamptz not null default now(),
+  processing_started_at timestamptz,
+  completed_at timestamptz,
+  last_error text,
+  enqueued_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists ingest_queue_ready_idx
+on public.ingest_queue (status, next_attempt_at, priority desc, published_at desc);
+
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
@@ -116,6 +135,7 @@ alter table public.location_corrections enable row level security;
 alter table public.alert_preferences enable row level security;
 alter table public.push_subscriptions enable row level security;
 alter table public.worker_status enable row level security;
+alter table public.ingest_queue enable row level security;
 
 drop policy if exists "alerts readable by everyone" on public.alerts;
 create policy "alerts readable by everyone" on public.alerts for select using (true);
@@ -126,6 +146,9 @@ drop policy if exists "worker status readable by everyone" on public.worker_stat
 create policy "worker status readable by everyone" on public.worker_status for select using (true);
 revoke insert, update, delete on public.worker_status from anon, authenticated;
 grant select on public.worker_status to anon, authenticated;
+
+-- Cola interna: sólo el worker con service_role puede verla o modificarla.
+revoke all on public.ingest_queue from anon, authenticated;
 
 drop policy if exists "users read own profile" on public.profiles;
 create policy "users read own profile" on public.profiles for select using (auth.uid() = id);
