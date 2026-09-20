@@ -332,7 +332,7 @@ async function classify(text) {
 }
 
 async function geocode(query, expectedState, precision = 'zone') {
-  const confidenceCaps = { exact:.97, reference:.92, kilometer:.9, road:.82, zone:.7, municipality:.58, state:.38 };
+  const confidenceCaps = { exact:.97, intersection:.94, reference:.92, kilometer:.9, road:.82, zone:.7, municipality:.58, state:.38 };
   const cap = confidenceCaps[precision] || .7;
   if (GEOAPIFY_KEY) {
     const url = new URL('https://api.geoapify.com/v1/geocode/search');
@@ -523,6 +523,49 @@ async function resolveRoadLocation(ai, kilometer, reference) {
   return candidates[0];
 }
 
+function intersectionParts(value) {
+  const text = clean(value);
+  if (!text) return null;
+  const patterns = [
+    /^(.+?)\s+(?:esquina(?:\s+con)?|cruce(?:\s+con)?|intersecci[oó]n(?:\s+con)?|y)\s+(.+)$/i,
+    /^(.+?)\s+(?:con)\s+(.+)$/i
+  ];
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (!match) continue;
+    const a = clean(match[1]), b = clean(match[2]);
+    if (a.length >= 3 && b.length >= 3) return [a,b];
+  }
+  return null;
+}
+
+function urbanIntersection(ai) {
+  const candidates = [ai.ubicacion, ai.referencia].map(clean).filter(Boolean);
+  for (const candidate of candidates) {
+    const parts = intersectionParts(candidate);
+    if (parts) return parts;
+  }
+  return null;
+}
+
+async function resolveUrbanIntersection(ai) {
+  if (ai.carretera) return null;
+  const streets = urbanIntersection(ai);
+  if (!streets) return null;
+  const context = [ai.municipio, ai.estado].map(clean).filter(Boolean);
+  const variants = [
+    [streets[0] + ' & ' + streets[1], ...context].join(', '),
+    [streets[0] + ' y ' + streets[1], ...context].join(', ')
+  ];
+  for (const query of variants) {
+    const geo = await geocode(query, ai.estado, 'intersection');
+    if (!geo) continue;
+    // No elevamos artificialmente la confianza: conservamos la evidencia del proveedor.
+    return { ...geo, precision:'intersection', status:geo.confidence >= .82 ? 'automatic' : 'approximate' };
+  }
+  return null;
+}
+
 function sourceName(item, feed) {
   const raw = clean(item.source);
   const key = norm(raw);
@@ -558,6 +601,10 @@ async function processItem(item, feed) {
     { query:clean(ai.estado), precision:'state' }
   ].filter(x => x.query.length >= 4).filter((x,index,list) => list.findIndex(y => y.query === x.query) === index).slice(0, 4);
   let geo = await resolveRoadLocation(ai, kilometer, reference);
+  if (!geo) {
+    geo = await resolveUrbanIntersection(ai);
+    if (geo) log('info','Intersección urbana resuelta',{ location:clean(ai.ubicacion), municipality:clean(ai.municipio), state:clean(ai.estado), confidence:geo.confidence });
+  }
   if (!geo) {
     for (const candidate of locationQueries) {
       geo = await geocode(candidate.query, ai.estado, candidate.precision);
