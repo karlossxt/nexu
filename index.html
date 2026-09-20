@@ -644,6 +644,15 @@ body.dark-mode .acn-rank-bar{ background:#263244; }
 .rm-fields{ display:flex; gap:8px; }
 .rm-field{ flex:1; }
 .rm-field label{ display:flex; align-items:center; gap:6px; margin:0 0 6px; }
+.rm-input-wrap{ position:relative; }
+.geo-suggestions{ display:none; position:absolute; z-index:10020; top:calc(100% + 4px); left:0; right:0; max-height:230px; overflow-y:auto; background:#0C1017; border:1px solid #334155; border-radius:9px; box-shadow:0 14px 34px rgba(0,0,0,.42); }
+.geo-suggestions.open{ display:block; }
+.geo-option{ width:100%; margin:0; padding:10px 12px; background:transparent; color:#E5E7EB; border:0; border-bottom:1px solid #1E293B; border-radius:0; text-align:left; font-size:12px; font-weight:500; line-height:1.35; }
+.geo-option:last-child{ border-bottom:0; }
+.geo-option:hover,.geo-option:focus-visible{ background:rgba(37,99,235,.18); outline:2px solid #38BDF8; outline-offset:-2px; }
+.geo-empty{ padding:10px 12px; color:#9CA3AF; font-size:11px; }
+body.user-mode:not(.dark-mode) .geo-suggestions{ background:#FFFFFF; border-color:#D8E1EC; }
+body.user-mode:not(.dark-mode) .geo-option{ color:#172033; border-color:#E5E7EB; }
 .rm-dot-o{ color:#10B981; } .rm-dot-d{ color:#EF4444; }
 .rm-quick{ display:flex; gap:6px; flex-wrap:wrap; margin:14px 0; }
 .rm-qbtn{ padding:6px 10px; border-radius:14px; background:#131822; color:#9CA3AF; font-size:11px; border:none; cursor:pointer; width:auto; }
@@ -1364,11 +1373,11 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
         <div class="rm-fields">
           <div class="rm-field">
             <label><span class="rm-dot-o"><i class="fa-solid fa-circle-dot"></i></span> Origen</label>
-            <input id="rm-origin" placeholder="Ciudad de México" />
+            <div class="rm-input-wrap"><input id="rm-origin" placeholder="Ciudad de México" autocomplete="off" aria-autocomplete="list" aria-controls="rm-origin-suggestions" aria-expanded="false" /><div id="rm-origin-suggestions" class="geo-suggestions" role="listbox" aria-label="Sugerencias de origen"></div></div>
           </div>
           <div class="rm-field">
             <label><span class="rm-dot-d"><i class="fa-solid fa-location-dot"></i></span> Destino</label>
-            <input id="rm-dest" placeholder="Querétaro" />
+            <div class="rm-input-wrap"><input id="rm-dest" placeholder="Querétaro" autocomplete="off" aria-autocomplete="list" aria-controls="rm-dest-suggestions" aria-expanded="false" /><div id="rm-dest-suggestions" class="geo-suggestions" role="listbox" aria-label="Sugerencias de destino"></div></div>
           </div>
         </div>
         <div class="rm-location-actions">
@@ -2103,6 +2112,25 @@ function cleanGeoQuery(q) {
     return c ? c : q;
 }
 
+async function requestGeocoder(params = {}) {
+    const query = new URLSearchParams(params);
+    const response = await fetch(`/api/geocode?${query.toString()}`, { cache: 'no-store' });
+    if(!response.ok) throw new Error(`geocoder_${response.status}`);
+    return response.json();
+}
+
+async function geocodeRoutePoint(label) {
+    const data = await requestGeocoder({ mode:'search', q:label });
+    const lat = Number(data.lat), lon = Number(data.lon);
+    if(!Number.isFinite(lat) || !Number.isFinite(lon)) throw new Error('coordenadas_invalidas');
+    return { lat, lon, label:data.formatted_address || label, provider:data.provider || 'geocoder' };
+}
+
+async function reverseGeocodePoint(lat, lon) {
+    const data = await requestGeocoder({ mode:'reverse', lat:String(lat), lon:String(lon) });
+    return data.formatted_address || 'Mi ubicación actual';
+}
+
 async function geocodeBest(place, options = {}) {
     const cleaned = cleanGeoQuery(place);
     const candidates = [place, cleaned].filter((v, i, a) => a.indexOf(v) === i);
@@ -2625,7 +2653,16 @@ function applyFilter(keyword) {
   document.querySelectorAll('#state-grid button').forEach(btn => btn.style.color = btn.textContent === keyword ? '#fff' : '');
   renderRiskPoints(keyword); }
 async function detectModels() { try { const res = await fetch('/api/groq?action=models'); const data = await res.json(); const select = document.getElementById('modelSelect'); const rsel = document.getElementById('reportModelSelect'); const saved = rsel ? rsel.value : ''; select.innerHTML = ''; if(rsel){ rsel.innerHTML=''; const o0=document.createElement('option'); o0.value=''; o0.text='(igual que alertas)'; rsel.appendChild(o0); } const preferred = ['openai/gpt-oss-20b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'allam-2-7b']; const models = (data.data || []).map(x => (typeof x === 'string' ? x : x.id)); const addOpt = (id, target) => { const o = document.createElement('option'); o.value = id; o.text = id; target.appendChild(o); }; preferred.forEach(p => { if(models.includes(p)) { addOpt(p, select); if(rsel) addOpt(p, rsel); } }); models.forEach(id => { if(!preferred.includes(id)) { addOpt(id, select); if(rsel) addOpt(id, rsel); } }); if(rsel && saved) rsel.value = saved; if(select.options.length === 0) log("Sin modelos disponibles", 'warn'); else { log(`✅ Modelos cargados (${select.options.length}).`, 'success'); saveConfig(); } } catch(e) { log(`Error detección (necesitas servidor)`,'err'); } }
-function calculateRoute() { const o = document.getElementById('routeOrigin').value; const d = document.getElementById('routeDest').value; if(!o || !d) return; if(routeControl) { map.removeControl(routeControl); routeControl = null; } if(routeLineLayer) routeLineLayer.clearLayers(); Promise.all([ fetch(LINKS.nominatim.replace('{q}', encodeURIComponent(o + ', Mexico'))).then(r=>r.json()), fetch(LINKS.nominatim.replace('{q}', encodeURIComponent(d + ', Mexico'))).then(r=>r.json()) ]).then(res => { if(!res[0][0] || !res[1][0]) return; routeControl = L.Routing.control({ waypoints: [L.latLng(res[0][0].lat, res[0][0].lon), L.latLng(res[1][0].lat, res[1][0].lon)], router: L.Routing.osrmv1({ serviceUrl: LINKS.osrm }), lineOptions: { styles: [{color: '#b388ff', opacity: 0.8, weight: 6}] }, createMarker: ()=>null, addWaypoints: false, fitSelectedRoutes: true }).addTo(map); routeControl.on('routesfound', e => { activeRoute = e.routes[0]; const stats = `${(activeRoute.summary.totalDistance/1000).toFixed(1)} km | ${(activeRoute.summary.totalTime/60).toFixed(0)} min`; document.getElementById('routeStats').innerText = stats; const rb = document.getElementById('routeBoxStats'); if(rb) rb.innerText = stats; updateRouteAlerts(activeRoute.coordinates); }); }); }
+async function calculateRoute() {
+  const o=document.getElementById('routeOrigin').value.trim(), d=document.getElementById('routeDest').value.trim();
+  if(!o || !d) return;
+  if(routeControl) { map.removeControl(routeControl); routeControl=null; }
+  try {
+    const [origin,destination]=await Promise.all([geocodeRoutePoint(o),geocodeRoutePoint(d)]);
+    routeControl=L.Routing.control({ waypoints:[L.latLng(origin.lat,origin.lon),L.latLng(destination.lat,destination.lon)], router:L.Routing.osrmv1({serviceUrl:LINKS.osrm}), lineOptions:{styles:[{color:'#b388ff',opacity:.8,weight:6}]}, createMarker:()=>null, addWaypoints:false, fitSelectedRoutes:true }).addTo(map);
+    routeControl.on('routesfound',e=>{ activeRoute=e.routes[0]; const stats=`${(activeRoute.summary.totalDistance/1000).toFixed(1)} km | ${(activeRoute.summary.totalTime/60).toFixed(0)} min`; document.getElementById('routeStats').innerText=stats; const rb=document.getElementById('routeBoxStats'); if(rb) rb.innerText=stats; updateRouteAlerts(activeRoute.coordinates); });
+  } catch(e) { log('No pudimos localizar el origen o destino. Agrega municipio y estado.', 'error'); }
+}
 
 const ROUTE_BUFFER_KM = 8;
 function haversineKm(lat1, lon1, lat2, lon2) { const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180, a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2; return 2*R*Math.asin(Math.sqrt(a)); }
@@ -3876,6 +3913,59 @@ function riskGo(i) { weatherGoMap(i); }
 const QUICK_ROUTES = [['Ciudad de México', 'Querétaro'], ['Ciudad de México', 'Puebla'], ['Ciudad de México', 'Guadalajara'], ['Monterrey', 'Ciudad de México']];
 let routeSel = 0; let routeOptions = [];
 let routeOriginCoords = null;
+let routeDestinationCoords = null;
+const routeAutocompleteTimers = {};
+
+function closeRouteSuggestions(inputId) {
+  const input=document.getElementById(inputId), box=document.getElementById(`${inputId}-suggestions`);
+  if(box) { box.classList.remove('open'); box.innerHTML=''; }
+  if(input) input.setAttribute('aria-expanded','false');
+}
+function setRoutePoint(inputId, item) {
+  const input=document.getElementById(inputId);
+  if(input) input.value=item.formatted_address || '';
+  const point={lat:Number(item.lat),lon:Number(item.lon)};
+  if(inputId==='rm-origin') routeOriginCoords=point; else routeDestinationCoords=point;
+  closeRouteSuggestions(inputId);
+}
+async function showRouteSuggestions(inputId) {
+  const input=document.getElementById(inputId), box=document.getElementById(`${inputId}-suggestions`);
+  if(!input || !box) return;
+  const value=input.value.trim();
+  if(value.length<3) { closeRouteSuggestions(inputId); return; }
+  box.innerHTML='<div class="geo-empty"><i class="fa-solid fa-spinner fa-spin"></i> Buscando en México…</div>';
+  box.classList.add('open'); input.setAttribute('aria-expanded','true');
+  try {
+    const data=await requestGeocoder({mode:'autocomplete',q:value});
+    const results=Array.isArray(data.results)?data.results:[];
+    if(input.value.trim()!==value) return;
+    box.innerHTML='';
+    if(!results.length) { box.innerHTML='<div class="geo-empty">Sin coincidencias. Agrega municipio o estado.</div>'; return; }
+    results.forEach(item=>{
+      const button=document.createElement('button');
+      button.type='button'; button.className='geo-option'; button.setAttribute('role','option');
+      button.textContent=item.formatted_address || 'Ubicación';
+      button.onclick=()=>setRoutePoint(inputId,item);
+      box.appendChild(button);
+    });
+  } catch(e) {
+    box.innerHTML='<div class="geo-empty">No pudimos cargar sugerencias. Aún puedes buscar la ruta.</div>';
+  }
+}
+function bindRouteAutocomplete(inputId) {
+  const input=document.getElementById(inputId); if(!input || input.dataset.geoBound) return;
+  input.dataset.geoBound='1';
+  input.addEventListener('input',()=>{
+    if(inputId==='rm-origin') routeOriginCoords=null; else routeDestinationCoords=null;
+    clearTimeout(routeAutocompleteTimers[inputId]);
+    routeAutocompleteTimers[inputId]=setTimeout(()=>showRouteSuggestions(inputId),500);
+  });
+  input.addEventListener('keydown',event=>{
+    if(event.key==='Escape') closeRouteSuggestions(inputId);
+    if(event.key==='ArrowDown') { const first=document.querySelector(`#${inputId}-suggestions .geo-option`); if(first){event.preventDefault();first.focus();} }
+  });
+  input.addEventListener('blur',()=>setTimeout(()=>closeRouteSuggestions(inputId),180));
+}
 function openRouteModal() { openRouteModalPreview(); }
 function openRouteModalPreview() {
   const cards = document.getElementById('route-cards');
@@ -3883,6 +3973,7 @@ function openRouteModalPreview() {
   const ra = document.getElementById('routeModalAlerts');
   if(ra && !activeRoute) ra.innerHTML = '<div style="font-size:12px; color:var(--text-muted);">Las alertas aparecerán al seleccionar una ruta.</div>';
   document.querySelectorAll('.rm-qbtn').forEach(b => b.classList.remove('active'));
+  bindRouteAutocomplete('rm-origin'); bindRouteAutocomplete('rm-dest');
   openModal('route-modal');
 }
 function setQuick(i, el) {
@@ -3890,7 +3981,7 @@ function setQuick(i, el) {
   if(el) el.classList.add('active');
   const [o, d] = QUICK_ROUTES[i] || [];
   const oi = document.getElementById('rm-origin'), di = document.getElementById('rm-dest');
-  routeOriginCoords = null;
+  routeOriginCoords = null; routeDestinationCoords = null;
   if(oi) oi.value = o; if(di) di.value = d;
   calcUserRoute();
 }
@@ -3902,12 +3993,13 @@ async function calcUserRoute() {
   cards.innerHTML = '<div style="color:#9CA3AF; font-size:12px;"><i class="fa-solid fa-spinner fa-spin"></i> Calculando alternativas reales...</div>';
   try {
     const res = await Promise.all([
-      routeOriginCoords ? Promise.resolve([{ lat:routeOriginCoords.lat, lon:routeOriginCoords.lon }]) : fetch(LINKS.nominatim.replace('{q}', encodeURIComponent(o + ', Mexico'))).then(r => r.json()),
-      fetch(LINKS.nominatim.replace('{q}', encodeURIComponent(d + ', Mexico'))).then(r => r.json())
+      routeOriginCoords ? Promise.resolve(routeOriginCoords) : geocodeRoutePoint(o),
+      routeDestinationCoords ? Promise.resolve(routeDestinationCoords) : geocodeRoutePoint(d)
     ]);
-    if(!res[0][0] || !res[1][0]) { cards.innerHTML = '<div style="color:#EF4444; font-size:12px;">No se localizaron origen/destino.</div>'; return; }
-    const or = res[0][0].lon + ',' + res[0][0].lat;
-    const dr = res[1][0].lon + ',' + res[1][0].lat;
+    routeOriginCoords={lat:Number(res[0].lat),lon:Number(res[0].lon)};
+    routeDestinationCoords={lat:Number(res[1].lat),lon:Number(res[1].lon)};
+    const or = routeOriginCoords.lon + ',' + routeOriginCoords.lat;
+    const dr = routeDestinationCoords.lon + ',' + routeDestinationCoords.lat;
     const lr = await fetch(`${LINKS.osrm}/driving/${or};${dr}?alternatives=3&overview=full&geometries=geojson&steps=false`).then(r => r.json());
     if(!lr.routes || !lr.routes.length) { cards.innerHTML = '<div style="color:#EF4444; font-size:12px;">Sin ruta disponible para ese origen/destino.</div>'; return; }
     routeOptions = lr.routes.map((rr, idx) => ({
@@ -3977,7 +4069,6 @@ function copyItinerary() {
 }
 function traceRouteOnMap() {
   const r = routeOptions[routeSel]; if(!r) return;
-  if(routeControl) { map.removeControl(routeControl); routeControl = null; }
   routeLineLayer.clearLayers();
   const poly = L.polyline(r.coord, { color: '#2563EB', weight: 5, opacity: .85 }).addTo(routeLineLayer);
   map.fitBounds(poly.getBounds(), { padding: [70, 70] });
@@ -3997,7 +4088,7 @@ function showSelectedRoute() {
 function clearUserRoute() {
   if(routeControl) { map.removeControl(routeControl); routeControl = null; }
   routeLineLayer.clearLayers();
-  activeRoute = null; routeOptions = []; routeSel = 0; routeNearAlerts = []; routeOriginCoords = null;
+  activeRoute = null; routeOptions = []; routeSel = 0; routeNearAlerts = []; routeOriginCoords = null; routeDestinationCoords = null;
   const oi = document.getElementById('rm-origin'), di = document.getElementById('rm-dest');
   if(oi) oi.value = ''; if(di) di.value = '';
   const cards = document.getElementById('route-cards');
@@ -4012,13 +4103,8 @@ function clearUserRoute() {
 }
 function swapRouteEndpoints() {
   const oi=document.getElementById('rm-origin'), di=document.getElementById('rm-dest'); if(!oi || !di) return;
-  // Si el origen venía de GPS, su texto puede no ser una dirección real ("Mi ubicación actual").
-  // Movida al campo de destino, esa cadena no se puede geocodificar. Avisamos y no la movemos.
-  if(routeOriginCoords) {
-    alert('El origen actual usa tu ubicación GPS y no se puede mover a destino. Escribe el destino manualmente si quieres invertir el trayecto.');
-    return;
-  }
-  const tmp=oi.value; oi.value=di.value; di.value=tmp; routeOptions=[];
+  const tmp=oi.value; oi.value=di.value; di.value=tmp;
+  const tmpCoords=routeOriginCoords; routeOriginCoords=routeDestinationCoords; routeDestinationCoords=tmpCoords; routeOptions=[];
   const cards=document.getElementById('route-cards'); if(cards) cards.innerHTML='<div style="color:#6B7280;font-size:12px;">Pulsa <b>Buscar rutas</b> para calcular el trayecto invertido.</div>';
 }
 function useCurrentLocationForRoute() {
@@ -4028,7 +4114,7 @@ function useCurrentLocationForRoute() {
   navigator.geolocation.getCurrentPosition(async pos => {
     routeOriginCoords={lat:pos.coords.latitude,lon:pos.coords.longitude};
     let label='Mi ubicación actual';
-    try { const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${routeOriginCoords.lat}&lon=${routeOriginCoords.lon}`,{headers:{'Accept-Language':'es'}}); const d=await r.json(); if(d?.display_name) label=d.display_name.split(',').slice(0,3).join(',').trim(); } catch(e) {}
+    try { label=await reverseGeocodePoint(routeOriginCoords.lat,routeOriginCoords.lon); } catch(e) {}
     if(input) input.value=label;
     if(btn) { btn.disabled=false; btn.innerHTML='<i class="fa-solid fa-location-crosshairs"></i> Ubicación aplicada'; }
   }, () => { if(btn) { btn.disabled=false; btn.innerHTML='<i class="fa-solid fa-location-crosshairs"></i> Reintentar ubicación'; } }, {enableHighAccuracy:true,timeout:10000,maximumAge:60000});
@@ -4085,11 +4171,10 @@ function stopGps() {
 async function traceFromHere() {
   if(!myPosition) return;
   map.closePopup();
+  routeOriginCoords = { lat:myPosition.lat, lon:myPosition.lon };
   let origin = myPosition.lat.toFixed(4) + ', ' + myPosition.lon.toFixed(4);
   try {
-    const r = await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + myPosition.lat + '&lon=' + myPosition.lon, { headers: { 'Accept-Language': 'es' } });
-    const d = await r.json();
-    if(d && d.display_name) origin = d.display_name.split(',').slice(0, 3).join(',').trim();
+    origin = await reverseGeocodePoint(myPosition.lat,myPosition.lon);
   } catch(e) {}
   const inp = document.getElementById('rm-origin'); if(inp) inp.value = origin;
   openRouteModal();
