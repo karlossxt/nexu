@@ -2668,6 +2668,7 @@ const ROUTE_BUFFER_KM = 8;
 function haversineKm(lat1, lon1, lat2, lon2) { const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180, a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2; return 2*R*Math.asin(Math.sqrt(a)); }
 function pointToSegmentKm(lat, lon, aLat, aLon, bLat, bLon) { const R=6371, toRad=v=>v*Math.PI/180, lat0=(lat+aLat+bLat)/3; const x=toRad(lon)*Math.cos(toRad(lat0))*R, y=toRad(lat)*R; const ax=toRad(aLon)*Math.cos(toRad(lat0))*R, ay=toRad(aLat)*R; const bx=toRad(bLon)*Math.cos(toRad(lat0))*R, by=toRad(bLat)*R; const dx=bx-ax, dy=by-ay; const t=(dx===0&&dy===0)?0:Math.max(0, Math.min(1, ((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy))); return Math.hypot(x-(ax+t*dx), y-(ay+t*dy)); }
 function distToPolylineKm(lat, lon, coords) { let best=Infinity; for(let i=0;i<coords.length-1;i++){ const d=pointToSegmentKm(lat, lon, coords[i].lat, coords[i].lng, coords[i+1].lat, coords[i+1].lng); if(d<best) best=d; } return best===Infinity? null : best; }
+function recentRouteAlerts() { return alerts.filter(a => !isAlertExpired(a)); }
 function updateRouteAlerts(coords) {
   const box = document.getElementById('routeAlerts'); const rbox = document.getElementById('routeBoxAlerts');
   const mbox = document.getElementById('routeModalAlerts');
@@ -2676,14 +2677,14 @@ function updateRouteAlerts(coords) {
   const defMsg = '<div style="font-size:12px;color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Analizando entorno...</div>';
   if(box) box.innerHTML = defMsg; if(rbox) rbox.innerHTML = defMsg; if(mbox) mbox.innerHTML = defMsg;
   if(!coords || !coords.length) { if(box) box.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Sin datos de ruta.</div>'; if(rbox) rbox.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Sin datos de ruta.</div>'; if(mbox) mbox.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Sin datos de ruta.</div>'; return; }
-  alerts.forEach(a => { const d = distToPolylineKm(a.lat, a.lon, coords); if(d !== null && d <= ROUTE_BUFFER_KM) routeNearAlerts.push(Object.assign({}, a, { distKm: d })); });
+  recentRouteAlerts().forEach(a => { const d = distToPolylineKm(a.lat, a.lon, coords); if(d !== null && d <= ROUTE_BUFFER_KM) routeNearAlerts.push(Object.assign({}, a, { distKm: d })); });
   routeNearAlerts.sort((x,y) => x.distKm - y.distKm);
   const html = routeNearAlerts.length
     ? routeNearAlerts.map(a => {
         const color = a.category === 'security' ? '#d93025' : trafficStyle(a.trafico || 'moderado').color;
         return `<div class="route-alert-item" onclick="openAlertDetail(${a.id})"><div class="ra-dot" style="background:${color}"></div><div class="ra-info"><b>${escapeHtml(a.title)}</b><span>${escapeHtml(a.location)} · a ${a.distKm.toFixed(1)} km</span></div></div>`;
       }).join('')
-    : `<div style="font-size:12px;color:var(--success);">✅ Sin alertas en un radio de ${ROUTE_BUFFER_KM} km de la ruta.</div>`;
+    : `<div style="font-size:12px;color:var(--success);">✅ Sin alertas de las últimas 6 horas en un radio de ${ROUTE_BUFFER_KM} km de la ruta.</div>`;
   if(box) box.innerHTML = html; if(rbox) rbox.innerHTML = html; if(mbox) mbox.innerHTML = html;
 }
 async function applyServerConfig() {
@@ -4016,7 +4017,7 @@ async function calcUserRoute() {
 }
 function routeRiskSummary(coords) {
   let alertsNear = 0, important = 0, redZones = 0, roadRisks = 0;
-  alerts.forEach(a => { const dist=distToPolylineKm(a.lat,a.lon,coords); if(dist!==null && dist<=ROUTE_BUFFER_KM){ alertsNear++; if(a.importante) important++; } });
+  recentRouteAlerts().forEach(a => { const dist=distToPolylineKm(a.lat,a.lon,coords); if(dist!==null && dist<=ROUTE_BUFFER_KM){ alertsNear++; if(a.importante) important++; } });
   criticalPoints.forEach(p => { const dist=distToPolylineKm(p.lat,p.lon,coords); if(dist!==null && dist<=ROUTE_BUFFER_KM){ if(riskPointType(p)==='red_zone') redZones++; else roadRisks++; } });
   const score = alertsNear * 2 + important * 4 + redZones * 5 + roadRisks * 3;
   const level = score >= 18 ? 'Crítico' : score >= 10 ? 'Alto' : score >= 4 ? 'Medio' : 'Bajo';
@@ -4052,7 +4053,7 @@ function renderRouteCards() {
 }
 function nearAlertsForRoute(coords) {
   const list = [];
-  alerts.forEach(a => { const dist = distToPolylineKm(a.lat, a.lon, coords); if(dist !== null && dist <= ROUTE_BUFFER_KM) list.push({ title: a.title, location: a.location, categoria: a.category, km: dist }); });
+  recentRouteAlerts().forEach(a => { const dist = distToPolylineKm(a.lat, a.lon, coords); if(dist !== null && dist <= ROUTE_BUFFER_KM) list.push({ title: a.title, location: a.location, categoria: a.category, km: dist }); });
   list.sort((x, y) => x.km - y.km);
   return list;
 }
