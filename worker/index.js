@@ -24,6 +24,7 @@ const MAX_AI_PER_CYCLE = Math.max(1, Number(env.MAX_AI_PER_CYCLE) || 6);
 const AI_DELAY_MS = Math.max(5_000, Number(env.AI_DELAY_MS) || 10_000);
 const AI_MAX_PER_HOUR = Math.max(1, Math.min(60, Number(env.AI_MAX_PER_HOUR) || 8));
 const AI_MIN_INTERVAL_MS = Math.ceil(3600_000 / AI_MAX_PER_HOUR);
+const QUEUE_MAX_ATTEMPTS = Math.max(1, Number(env.QUEUE_MAX_ATTEMPTS) || 5);
 const FEEDS = [env.RSS_PRI, env.RSS_SEC].map(x => String(x || '').trim()).filter(Boolean);
 const DEFAULT_FEED = 'https://news.google.com/rss/search?q=accidente+OR+bloqueo+OR+asalto+carretera+mexico&hl=es-419&gl=MX&ceid=MX:es-419';
 if (!FEEDS.length) FEEDS.push(DEFAULT_FEED);
@@ -162,6 +163,50 @@ async function sb(path, options = {}) {
 async function alreadyExists(externalId) {
   const rows = await sb('alerts?external_id=eq.' + encodeURIComponent(externalId) + '&select=id&limit=1');
   return Array.isArray(rows) && rows.length > 0;
+}
+
+async function enqueueCandidate(item, feed, priority) {
+  const externalId = hash(item.url || item.title + '|' + item.published_at);
+  await sb('ingest_queue?on_conflict=external_id', {
+    method:'POST',
+    headers:{ Prefer:'resolution=ignore-duplicates,return=minimal' },
+    body:JSON.stringify({
+      external_id:externalId,
+      item,
+      feed_url:feed,
+      priority,
+      published_at:item.published_at || new Date().toISOString()
+    })
+  });
+  return externalId;
+}
+
+async function recoverStaleQueue() {
+  const staleBefore = new Date(Date.now() - 15 * 60_000).toISOString();
+  await sb(`ingest_queue?status=eq.processing&processing_started_at=lt.${encodeURIComponent(staleBefore)}`, {
+    method:'PATCH',
+    headers:{ Prefer:'return=minimal' },
+    body:JSON.stringify({ status:'retry', next_attempt_at:new Date().toISOString(), processing_started_at:null, last_error:'Procesamiento interrumpido; recuperado automáticamente' })
+  });
+}
+
+async function queuedItems(limit) {
+  const now = new Date().toISOString();
+  const oldestAllowed = new Date(Date.now() - MAX_AGE_MS).toISOString();
+  return await sb(`ingest_queue?select=external_id,item,feed_url,priority,published_at,attempts,enqueued_at&status=in.(pending,retry)&next_attempt_at=lte.${encodeURIComponent(now)}&published_at=gte.${encodeURIComponent(oldestAllowed)}&order=priority.desc,published_at.desc&limit=${limit}`) || [];
+}
+
+async function updateQueue(externalId, values) {
+  await sb('ingest_queue?external_id=eq.' + encodeURIComponent(externalId), {
+    method:'PATCH', headers:{ Prefer:'return=minimal' }, body:JSON.stringify({ ...values, updated_at:new Date().toISOString() })
+  });
+}
+
+async function queueMetrics() {
+  const rows = await sb('ingest_queue?select=status,enqueued_at&status=in.(pending,retry,processing,failed)&order=enqueued_at.asc&limit=1000') || [];
+  const pending = rows.filter(row => ['pending','retry','processing'].includes(row.status));
+  const oldest = pending[0]?.enqueued_at ? Math.max(0, Math.round((Date.now() - new Date(pending[0].enqueued_at).getTime()) / 60_000)) : 0;
+  return { queue_pending:pending.length, queue_failed:rows.filter(row => row.status === 'failed').length, queue_oldest_min:oldest };
 }
 
 const GEMINI_ALERT_SCHEMA = {
@@ -432,7 +477,7 @@ async function health(values) {
 
 async function cycle() {
   const started = new Date().toISOString();
-  const stats = { received:0, relevant:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, groq_used:0, gemini_used:0, ai_cooldown_seconds:0, ai_budget_wait_seconds:0, ai_max_per_hour:AI_MAX_PER_HOUR, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0 };
+  const stats = { received:0, relevant:0, queued_new:0, queue_pending:0, queue_failed:0, queue_oldest_min:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, groq_used:0, gemini_used:0, ai_cooldown_seconds:0, ai_budget_wait_seconds:0, ai_max_per_hour:AI_MAX_PER_HOUR, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0 };
   await health({ status:'running', last_started_at:started, last_error:null });
   try {
     const candidates = [];
@@ -456,16 +501,20 @@ async function cycle() {
     }
     const unique = new Map(candidates.map(x => [x.item.url || x.item.title, x]));
     const prioritized = [...unique.values()].sort((a,b) => incidentPriority(b.item) - incidentPriority(a.item));
-    const pending = [];
-    for (const candidate of prioritized) {
-      const { item } = candidate;
+    for (const { item, feed } of prioritized) {
       const externalId = hash(item.url || item.title + '|' + item.published_at);
       if (seenRecently(externalId)) { stats.duplicates++; continue; }
       if (await alreadyExists(externalId)) { stats.duplicates++; continue; }
-      pending.push(candidate);
-      if (pending.length >= MAX_AI_PER_CYCLE) break;
+      await enqueueCandidate(item, feed, incidentPriority(item));
+      markProcessed(externalId);
+      stats.queued_new++;
     }
-    for (const { item, feed } of pending) {
+    await recoverStaleQueue();
+    const pending = await queuedItems(MAX_AI_PER_CYCLE);
+    for (const queued of pending) {
+      const item = queued.item || {};
+      const feed = queued.feed_url || '';
+      const externalId = queued.external_id;
       if (Date.now() < groqCooldownUntil && !GEMINI_KEY) {
         stats.ai_cooldown_seconds = Math.ceil((groqCooldownUntil - Date.now()) / 1000);
         break;
@@ -474,9 +523,9 @@ async function cycle() {
         stats.ai_budget_wait_seconds = Math.ceil((aiNextAllowedAt - Date.now()) / 1000);
         break;
       }
-      const externalId = hash(item.url || item.title + '|' + item.published_at);
       stats.analyzed++;
       aiNextAllowedAt = Date.now() + AI_MIN_INTERVAL_MS;
+      await updateQueue(externalId, { status:'processing', processing_started_at:new Date().toISOString() });
       try {
         const result = await processItem(item, feed);
         if(lastAiProvider==='gemini') stats.gemini_used++; else if(lastAiProvider==='groq') stats.groq_used++;
@@ -484,22 +533,33 @@ async function cycle() {
         else if (result === 'no_location') stats.no_location++;
         else if (result === 'duplicate') stats.duplicates++;
         else stats.rejected++;
-        markProcessed(externalId);
+        await updateQueue(externalId, { status:'completed', completed_at:new Date().toISOString(), processing_started_at:null, last_error:null });
       } catch (error) {
         if (error instanceof GroqRateLimitError) {
           const waitMs = Math.max(60_000, error.retryAfterMs) + 15_000;
           groqCooldownUntil = Date.now() + waitMs;
           stats.rate_limited++;
           stats.ai_cooldown_seconds = Math.ceil(waitMs / 1000);
+          await updateQueue(externalId, { status:'retry', next_attempt_at:new Date(groqCooldownUntil).toISOString(), processing_started_at:null, last_error:error.message.slice(0,1000) });
           log('warn','Groq limitado; se pausa el análisis sin descartar noticias',{ retry_in_seconds:stats.ai_cooldown_seconds });
           break;
         }
         stats.errors++;
-        markProcessed(externalId, 15 * 60_000);
+        const attempts = Number(queued.attempts || 0) + 1;
+        const failed = attempts >= QUEUE_MAX_ATTEMPTS;
+        const retryDelay = Math.min(6 * 3600_000, 15 * 60_000 * (2 ** Math.max(0, attempts - 1)));
+        await updateQueue(externalId, {
+          status:failed ? 'failed' : 'retry',
+          attempts,
+          next_attempt_at:new Date(Date.now() + retryDelay).toISOString(),
+          processing_started_at:null,
+          last_error:error.message.slice(0,1000)
+        });
         log('error','Error procesando noticia',{ title:item.title.slice(0,80), error:error.message });
       }
       await sleep(AI_DELAY_MS);
     }
+    Object.assign(stats, await queueMetrics());
     const located=stats.inserted+stats.no_location;
     stats.location_success_rate_pct=located?Math.round((stats.inserted/located)*100):0;
     await health({
