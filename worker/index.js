@@ -119,18 +119,37 @@ function parseFeed(raw) {
 }
 
 const MX = ['mexico','cdmx','ciudad de mexico','estado de mexico','edomex','aguascalientes','baja california','campeche','chiapas','chihuahua','coahuila','colima','durango','guanajuato','guerrero','hidalgo','jalisco','michoacan','morelos','nayarit','nuevo leon','oaxaca','puebla','queretaro','quintana roo','san luis potosi','sinaloa','sonora','tabasco','tamaulipas','tlaxcala','veracruz','yucatan','zacatecas','guadalajara','monterrey','leon','toluca','pachuca','morelia'];
-const INCIDENT = ['carretera','autopista','choque','accidente','volcadura','incendio','derrumbe','deslave','bloqueo','cierre','caseta','puente','inundacion','carril','trafico','trailer','asalto','balacera','manifestacion','operativo','km '];
+const INCIDENT = ['carretera','autopista','choque','accidente','volcadura','derrapado','atropellado','carambola','incendio','derrumbe','deslave','bloqueo','cierre','caseta','puente','inundacion','encharcamiento','socavon','carril','trafico','trailer','asalto','balacera','disparos','ataque armado','manifestacion','operativo','robo de vehiculo','km '];
 const FOREIGN = ['venezuela','ecuador','espana','chile','argentina','colombia','peru','bolivia','honduras','guatemala','estados unidos','ucrania','israel','palestina'];
-const PROMOTIONAL = ['vacante','bolsa de trabajo','oportunidad laboral','postulate','postúlate','envia tu cv','envía tu cv','contratacion','contratación','patrocinadores','siguiente paso en tu carrera','inscripciones abiertas','promocion','promoción','descuento','venta de boletos'];
+const PROMOTIONAL = ['vacante','bolsa de trabajo','oportunidad laboral','postulate','postúlate','envia tu cv','envía tu cv','contratacion','contratación','patrocinadores','siguiente paso en tu carrera','inscripciones abiertas','promocion','promoción','descuento','venta de boletos','siguenos','síguenos','unete a nuestro canal','únete a nuestro canal','canal de whatsapp','pacto contra la extorsion','pacto contra la extorsión'];
+const LOCATION_SIGNAL = ['carretera','autopista','avenida',' av ','calzada','periferico','periférico','libramiento','boulevard','bulevar','calle','cruce','esquina','a la altura','colonia','alcaldia','alcaldía','municipio','entronque','caseta','puente','km ','kilometro','kilómetro'];
+const IMPACT_SIGNAL = ['cierre total','cierre parcial','cierre de circulacion','cierre de circulación','bloqueo','bloqueada','bloqueado','interrumpido el paso','ambos sentidos','afectacion vial','afectación vial','precaucion vial','precaución vial','servicios de emergencia','transito lento','tránsito lento','reduccion de carriles','reducción de carriles'];
+const LOW_VALUE = ['convivio','por sus medios','foto fotografia','photo photography'];
 
-function relevant(item) {
+function relevanceScore(item) {
   const text = norm(item.title + ' ' + item.body);
-  if (item.title.length < 8 || item.body.length < 15) return false;
+  if (item.title.length < 8 || item.body.length < 15) return { score:-99, incident:0, location:0, impact:0, mx:false, foreign:false, promotional:false };
+  const incident = INCIDENT.filter(x => text.includes(norm(x))).length;
+  const location = LOCATION_SIGNAL.filter(x => text.includes(norm(x))).length;
+  const impact = IMPACT_SIGNAL.filter(x => text.includes(norm(x))).length;
   const mx = MX.some(x => text.includes(x));
-  const incident = INCIDENT.filter(x => text.includes(x)).length;
   const foreign = FOREIGN.some(x => text.includes(x));
   const promotional = PROMOTIONAL.some(x => text.includes(norm(x)));
-  return !promotional && incident >= 1 && (mx || incident >= 2) && !(foreign && !mx);
+  const lowValue = LOW_VALUE.some(x => text.includes(norm(x)));
+  let score = incident * 3 + Math.min(location, 3) * 2 + Math.min(impact, 2) * 3;
+  if (mx) score += 2;
+  if (foreign && !mx) score -= 8;
+  if (promotional) score -= 12;
+  if (lowValue && impact === 0) score -= 4;
+  // Una incidencia clara con ubicación explícita puede pasar aunque no mencione México:
+  // p. ej. publicaciones locales de OVIAL o JaliscoRojo.
+  return { score, incident, location, impact, mx, foreign, promotional };
+}
+
+function relevant(item) {
+  const r = relevanceScore(item);
+  if (r.promotional || (r.foreign && !r.mx)) return false;
+  return r.incident >= 1 && r.score >= 5 && (r.mx || r.location >= 1 || r.impact >= 1 || r.incident >= 2);
 }
 
 function incidentPriority(item) {
