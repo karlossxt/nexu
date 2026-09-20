@@ -20,11 +20,14 @@ const POLL_MS = Math.max(60_000, Number(env.WORKER_INTERVAL_MS) || 60_000);
 const MAX_AGE_MS = Math.max(1, Number(env.ALERT_MAX_AGE_HOURS) || 24) * 3600_000;
 const MAX_AI_PER_CYCLE = Math.max(1, Number(env.MAX_AI_PER_CYCLE) || 6);
 const AI_DELAY_MS = Math.max(5_000, Number(env.AI_DELAY_MS) || 10_000);
+const AI_MAX_PER_HOUR = Math.max(1, Math.min(60, Number(env.AI_MAX_PER_HOUR) || 8));
+const AI_MIN_INTERVAL_MS = Math.ceil(3600_000 / AI_MAX_PER_HOUR);
 const FEEDS = [env.RSS_PRI, env.RSS_SEC].map(x => String(x || '').trim()).filter(Boolean);
 const DEFAULT_FEED = 'https://news.google.com/rss/search?q=accidente+OR+bloqueo+OR+asalto+carretera+mexico&hl=es-419&gl=MX&ceid=MX:es-419';
 if (!FEEDS.length) FEEDS.push(DEFAULT_FEED);
 const processedIds = new Map();
 let groqCooldownUntil = 0;
+let aiNextAllowedAt = 0;
 
 class GroqRateLimitError extends Error {
   constructor(message, retryAfterMs) {
@@ -123,6 +126,19 @@ function relevant(item) {
   const foreign = FOREIGN.some(x => text.includes(x));
   const promotional = PROMOTIONAL.some(x => text.includes(norm(x)));
   return !promotional && incident >= 1 && (mx || incident >= 2) && !(foreign && !mx);
+}
+
+function incidentPriority(item) {
+  const text = norm(`${item.title} ${item.body}`);
+  const source = norm(item.source);
+  let score = 0;
+  if (/capufe|guardia nacional|proteccion civil|secretaria de seguridad|c5\b/.test(`${source} ${text}`)) score += 8;
+  if (/cierre total|cierre de circulacion|bloqueo|balacera|asalto|ataque armado|enfrentamiento/.test(text)) score += 7;
+  if (/accidente|choque|volcadura|incendio|derrumbe|deslave|inundacion/.test(text)) score += 5;
+  if (/autopista|carretera|km\s*\d|caseta/.test(text)) score += 3;
+  const published = item.published_at ? new Date(item.published_at).getTime() : 0;
+  if (Number.isFinite(published) && Date.now() - published < 90 * 60_000) score += 3;
+  return score;
 }
 
 async function sb(path, options = {}) {
@@ -359,7 +375,7 @@ async function health(values) {
 
 async function cycle() {
   const started = new Date().toISOString();
-  const stats = { received:0, relevant:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, ai_cooldown_seconds:0, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0 };
+  const stats = { received:0, relevant:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, ai_cooldown_seconds:0, ai_budget_wait_seconds:0, ai_max_per_hour:AI_MAX_PER_HOUR, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0 };
   await health({ status:'running', last_started_at:started, last_error:null });
   try {
     const candidates = [];
@@ -382,8 +398,9 @@ async function cycle() {
       stats.max_source_delay_min=Math.round(Math.max(...delays));
     }
     const unique = new Map(candidates.map(x => [x.item.url || x.item.title, x]));
+    const prioritized = [...unique.values()].sort((a,b) => incidentPriority(b.item) - incidentPriority(a.item));
     const pending = [];
-    for (const candidate of unique.values()) {
+    for (const candidate of prioritized) {
       const { item } = candidate;
       const externalId = hash(item.url || item.title + '|' + item.published_at);
       if (seenRecently(externalId)) { stats.duplicates++; continue; }
@@ -396,8 +413,13 @@ async function cycle() {
         stats.ai_cooldown_seconds = Math.ceil((groqCooldownUntil - Date.now()) / 1000);
         break;
       }
+      if (Date.now() < aiNextAllowedAt) {
+        stats.ai_budget_wait_seconds = Math.ceil((aiNextAllowedAt - Date.now()) / 1000);
+        break;
+      }
       const externalId = hash(item.url || item.title + '|' + item.published_at);
       stats.analyzed++;
+      aiNextAllowedAt = Date.now() + AI_MIN_INTERVAL_MS;
       try {
         const result = await processItem(item, feed);
         if (result === 'inserted') stats.inserted++;
@@ -436,7 +458,7 @@ async function cycle() {
 }
 
 async function main() {
-  log('info','Worker Zero Vial iniciado',{ feeds:FEEDS.length, interval_ms:POLL_MS, model:GROQ_MODEL });
+  log('info','Worker Zero Vial iniciado',{ feeds:FEEDS.length, interval_ms:POLL_MS, model:GROQ_MODEL, ai_max_per_hour:AI_MAX_PER_HOUR, ai_min_interval_ms:AI_MIN_INTERVAL_MS });
   await cycle();
   if (env.WORKER_ONCE === '1') return;
   while (true) {
