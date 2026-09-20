@@ -407,6 +407,41 @@ async function geocode(query, expectedState, precision = 'zone') {
   return { latitude:lat, longitude:lon, label:result.display_name, confidence:Math.min(cap,base), status:'approximate', precision };
 }
 
+function geoDistanceKm(aLat, aLon, bLat, bLon) {
+  const r = 6371;
+  const dLat = (bLat - aLat) * Math.PI / 180;
+  const dLon = (bLon - aLon) * Math.PI / 180;
+  const x = Math.sin(dLat/2) ** 2 + Math.cos(aLat*Math.PI/180) * Math.cos(bLat*Math.PI/180) * Math.sin(dLon/2) ** 2;
+  return 2 * r * Math.asin(Math.sqrt(x));
+}
+
+async function resolveRoadLocation(ai, kilometer, reference) {
+  if (!ai.carretera) return null;
+  const candidates = [];
+  const queries = [
+    { query:[reference, ai.carretera, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'reference' },
+    { query:[ai.carretera, kilometer != null ? 'km ' + kilometer : '', reference, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'kilometer' },
+    { query:[ai.carretera, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'road' }
+  ].filter(x => x.query.length >= 4).filter((x,i,a) => a.findIndex(y => y.query === x.query) === i);
+  for (const candidate of queries) {
+    const result = await geocode(candidate.query, ai.estado, candidate.precision);
+    if (result) candidates.push(result);
+    if (!GEOAPIFY_KEY && !GOOGLE_KEY) await sleep(1100);
+  }
+  if (!candidates.length) return null;
+  if (reference && candidates.length >= 2) {
+    const ref = candidates[0];
+    const near = candidates.filter(x => geoDistanceKm(ref.latitude, ref.longitude, x.latitude, x.longitude) <= 25);
+    if (near.length) {
+      near.sort((a,b) => b.confidence - a.confidence);
+      const best = near[0];
+      return { ...best, confidence:Math.min(.95, Math.max(best.confidence,.88)), status:'automatic', precision:'reference' };
+    }
+  }
+  candidates.sort((a,b) => b.confidence - a.confidence);
+  return candidates[0];
+}
+
 function sourceName(item, feed) {
   const raw = clean(item.source);
   const key = norm(raw);
@@ -441,11 +476,13 @@ async function processItem(item, feed) {
     { query:[ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'municipality' },
     { query:clean(ai.estado), precision:'state' }
   ].filter(x => x.query.length >= 4).filter((x,index,list) => list.findIndex(y => y.query === x.query) === index).slice(0, 4);
-  let geo = null;
-  for (const candidate of locationQueries) {
-    geo = await geocode(candidate.query, ai.estado, candidate.precision);
-    if (geo) break;
-    if (!GEOAPIFY_KEY && !GOOGLE_KEY) await sleep(1100);
+  let geo = await resolveRoadLocation(ai, kilometer, reference);
+  if (!geo) {
+    for (const candidate of locationQueries) {
+      geo = await geocode(candidate.query, ai.estado, candidate.precision);
+      if (geo) break;
+      if (!GEOAPIFY_KEY && !GOOGLE_KEY) await sleep(1100);
+    }
   }
   if (!geo || !Number.isFinite(geo.latitude) || !Number.isFinite(geo.longitude)) return 'no_location';
   const eventAt = item.published_at && Date.now() - new Date(item.published_at).getTime() <= MAX_AGE_MS ? item.published_at : new Date().toISOString();
