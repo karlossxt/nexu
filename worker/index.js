@@ -24,6 +24,15 @@ const FEEDS = [env.RSS_PRI, env.RSS_SEC].map(x => String(x || '').trim()).filter
 const DEFAULT_FEED = 'https://news.google.com/rss/search?q=accidente+OR+bloqueo+OR+asalto+carretera+mexico&hl=es-419&gl=MX&ceid=MX:es-419';
 if (!FEEDS.length) FEEDS.push(DEFAULT_FEED);
 const processedIds = new Map();
+let groqCooldownUntil = 0;
+
+class GroqRateLimitError extends Error {
+  constructor(message, retryAfterMs) {
+    super(message);
+    this.name = 'GroqRateLimitError';
+    this.retryAfterMs = retryAfterMs;
+  }
+}
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const log = (level, message, data) => console.log(JSON.stringify({ time: new Date().toISOString(), level, message, ...(data || {}) }));
@@ -35,6 +44,17 @@ const markProcessed = (id, ttl = MAX_AGE_MS) => processedIds.set(id, Date.now() 
 const tag = (regex, text) => (text.match(regex) || [,''])[1];
 const decode = value => clean(String(value || '').replace(/<!\[CDATA\[|\]\]>/g, '').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"').replace(/&#0?39;|&apos;/gi, "'").replace(/&nbsp;/gi, ' '));
 const inMexico = (lat, lon) => Number.isFinite(lat) && Number.isFinite(lon) && lat >= 14.3 && lat <= 32.8 && lon >= -118.5 && lon <= -86.4;
+
+function retryDelayMs(response, body) {
+  const headerSeconds = Number(response.headers?.get?.('retry-after'));
+  if (Number.isFinite(headerSeconds) && headerSeconds > 0) return Math.ceil(headerSeconds * 1000);
+  const match = String(body || '').match(/try again in\s+(?:(\d+(?:\.\d+)?)m)?\s*(?:(\d+(?:\.\d+)?)s)?/i);
+  if (match) {
+    const milliseconds = ((Number(match[1]) || 0) * 60 + (Number(match[2]) || 0)) * 1000;
+    if (milliseconds > 0) return Math.ceil(milliseconds);
+  }
+  return 10 * 60_000;
+}
 
 function stateKey(value) {
   const key = norm(value).replace(/\b(estado de|state of)\b/g, '').replace(/\s+/g, ' ').trim();
@@ -93,6 +113,7 @@ function parseFeed(raw) {
 const MX = ['mexico','cdmx','ciudad de mexico','estado de mexico','edomex','aguascalientes','baja california','campeche','chiapas','chihuahua','coahuila','colima','durango','guanajuato','guerrero','hidalgo','jalisco','michoacan','morelos','nayarit','nuevo leon','oaxaca','puebla','queretaro','quintana roo','san luis potosi','sinaloa','sonora','tabasco','tamaulipas','tlaxcala','veracruz','yucatan','zacatecas','guadalajara','monterrey','leon','toluca','pachuca','morelia'];
 const INCIDENT = ['carretera','autopista','choque','accidente','volcadura','incendio','derrumbe','deslave','bloqueo','cierre','caseta','puente','inundacion','carril','trafico','trailer','asalto','balacera','manifestacion','operativo','km '];
 const FOREIGN = ['venezuela','ecuador','espana','chile','argentina','colombia','peru','bolivia','honduras','guatemala','estados unidos','ucrania','israel','palestina'];
+const PROMOTIONAL = ['vacante','bolsa de trabajo','oportunidad laboral','postulate','postúlate','envia tu cv','envía tu cv','contratacion','contratación','patrocinadores','siguiente paso en tu carrera','inscripciones abiertas','promocion','promoción','descuento','venta de boletos'];
 
 function relevant(item) {
   const text = norm(item.title + ' ' + item.body);
@@ -100,7 +121,8 @@ function relevant(item) {
   const mx = MX.some(x => text.includes(x));
   const incident = INCIDENT.filter(x => text.includes(x)).length;
   const foreign = FOREIGN.some(x => text.includes(x));
-  return incident >= 1 && (mx || incident >= 2) && !(foreign && !mx);
+  const promotional = PROMOTIONAL.some(x => text.includes(norm(x)));
+  return !promotional && incident >= 1 && (mx || incident >= 2) && !(foreign && !mx);
 }
 
 async function sb(path, options = {}) {
@@ -165,6 +187,9 @@ async function classify(text) {
     })
   });
   const responseText = await response.text();
+  if (response.status === 429) {
+    throw new GroqRateLimitError('Groq alcanzó su límite temporal', retryDelayMs(response, responseText));
+  }
   if (!response.ok) throw new Error('Groq ' + response.status + ': ' + responseText.slice(0, 250));
   let data;
   try {
@@ -334,7 +359,7 @@ async function health(values) {
 
 async function cycle() {
   const started = new Date().toISOString();
-  const stats = { received:0, relevant:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0 };
+  const stats = { received:0, relevant:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, ai_cooldown_seconds:0, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0 };
   await health({ status:'running', last_started_at:started, last_error:null });
   try {
     const candidates = [];
@@ -367,6 +392,10 @@ async function cycle() {
       if (pending.length >= MAX_AI_PER_CYCLE) break;
     }
     for (const { item, feed } of pending) {
+      if (Date.now() < groqCooldownUntil) {
+        stats.ai_cooldown_seconds = Math.ceil((groqCooldownUntil - Date.now()) / 1000);
+        break;
+      }
       const externalId = hash(item.url || item.title + '|' + item.published_at);
       stats.analyzed++;
       try {
@@ -377,6 +406,14 @@ async function cycle() {
         else stats.rejected++;
         markProcessed(externalId);
       } catch (error) {
+        if (error instanceof GroqRateLimitError) {
+          const waitMs = Math.max(60_000, error.retryAfterMs) + 15_000;
+          groqCooldownUntil = Date.now() + waitMs;
+          stats.rate_limited++;
+          stats.ai_cooldown_seconds = Math.ceil(waitMs / 1000);
+          log('warn','Groq limitado; se pausa el análisis sin descartar noticias',{ retry_in_seconds:stats.ai_cooldown_seconds });
+          break;
+        }
         stats.errors++;
         markProcessed(externalId, 15 * 60_000);
         log('error','Error procesando noticia',{ title:item.title.slice(0,80), error:error.message });
