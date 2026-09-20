@@ -1,7 +1,7 @@
-// Geocodificación segura para Zero Vial.
-// GOOGLE_MAPS_API_KEY vive únicamente en Vercel; nunca llega al navegador.
+// Geocodificacion segura para Zero Vial.
+// Las llaves viven unicamente en Vercel y nunca llegan al navegador.
 
-const MAX_PER_MIN = 30;
+const MAX_PER_MIN = 40;
 const CACHE_TTL = 6 * 60 * 60 * 1000;
 const rate = new Map();
 const cache = new Map();
@@ -10,112 +10,167 @@ function remoteIp(req) {
   const fwd = (req.headers['x-forwarded-for'] || '').split(',')[0].trim();
   return fwd || (req.socket && req.socket.remoteAddress) || 'anon';
 }
-
 function rateLimited(ip) {
   const now = Date.now();
   const cur = rate.get(ip) || { n: 0, t: now };
   if (now - cur.t > 60000) { cur.n = 0; cur.t = now; }
-  cur.n += 1; rate.set(ip, cur);
+  cur.n += 1;
+  rate.set(ip, cur);
   return cur.n > MAX_PER_MIN;
 }
-
-function confidenceFor(result) {
-  const kind = result && result.geometry && result.geometry.location_type;
-  let score = ({ ROOFTOP: 0.97, RANGE_INTERPOLATED: 0.90, GEOMETRIC_CENTER: 0.82, APPROXIMATE: 0.55 }[kind] || 0.50);
-  if (result && result.partial_match) score -= 0.20;
-  return Math.max(0.20, score);
+function clean(value, max = 240) {
+  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
-
 function normalizeState(value) {
   const key = String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const aliases = {
-    cdmx: 'ciudaddemexico', distritofederal: 'ciudaddemexico',
-    edomex: 'mexico', estadodemexico: 'mexico',
-    nuevoleon: 'nuevoleon', sanluispotosi: 'sanluispotosi',
-    michoacan: 'michoacan', queretaro: 'queretaro'
-  };
+  const aliases = { cdmx: 'ciudaddemexico', distritofederal: 'ciudaddemexico', edomex: 'mexico', estadodemexico: 'mexico' };
   return aliases[key] || key;
 }
-
+function stateMatches(expected, resolved) {
+  return !expected || !resolved || normalizeState(expected) === normalizeState(resolved);
+}
 function pruneCache() {
   if (cache.size < 500) return;
   const now = Date.now();
   for (const [key, value] of cache) if (now - value.time > CACHE_TTL) cache.delete(key);
   if (cache.size >= 500) cache.delete(cache.keys().next().value);
 }
+function sendCached(res, cacheKey, data) {
+  pruneCache();
+  cache.set(cacheKey, { time: Date.now(), data });
+  res.setHeader('Cache-Control', 'public, s-maxage=21600, stale-while-revalidate=86400');
+  return res.status(200).json(data);
+}
+function geoapifyConfidence(result) {
+  const value = Number(result && result.rank && result.rank.confidence);
+  return Number.isFinite(value) ? Math.max(.2, Math.min(.99, value)) : .62;
+}
+function normalizeGeoapify(result) {
+  return {
+    lat: Number(result.lat), lon: Number(result.lon), provider: 'geoapify',
+    formatted_address: result.formatted || result.address_line2 || result.address_line1 || '',
+    resolved_state: result.state || '',
+    confidence: Number(geoapifyConfidence(result).toFixed(2)),
+    location_type: result.result_type || result.category || 'APPROXIMATE',
+    road_snapped: false
+  };
+}
+async function requestGeoapify({ mode, query, lat, lon, limit, key }) {
+  const endpoint = mode === 'reverse' ? 'reverse' : (mode === 'autocomplete' ? 'autocomplete' : 'search');
+  const url = new URL(`https://api.geoapify.com/v1/geocode/${endpoint}`);
+  if (mode === 'reverse') {
+    url.searchParams.set('lat', String(lat));
+    url.searchParams.set('lon', String(lon));
+  } else {
+    url.searchParams.set('text', query);
+    url.searchParams.set('filter', 'countrycode:mx');
+    url.searchParams.set('bias', 'countrycode:mx');
+  }
+  url.searchParams.set('format', 'json');
+  url.searchParams.set('lang', 'es');
+  url.searchParams.set('limit', String(limit));
+  url.searchParams.set('apiKey', key);
+  const response = await fetch(url, { headers: { Accept: 'application/json' } });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(`geoapify_${response.status}`);
+  return Array.isArray(body.results) ? body.results : [];
+}
+function googleConfidence(result) {
+  const kind = result && result.geometry && result.geometry.location_type;
+  let score = ({ ROOFTOP: .97, RANGE_INTERPOLATED: .9, GEOMETRIC_CENTER: .82, APPROXIMATE: .55 }[kind] || .5);
+  if (result && result.partial_match) score -= .2;
+  return Math.max(.2, score);
+}
+async function requestGoogle(query, key) {
+  const url = new URL('https://maps.googleapis.com/maps/api/geocode/json');
+  url.searchParams.set('address', query);
+  url.searchParams.set('components', 'country:MX');
+  url.searchParams.set('language', 'es');
+  url.searchParams.set('region', 'mx');
+  url.searchParams.set('key', key);
+  const response = await fetch(url, { headers: { Accept: 'application/json' } });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || body.status === 'REQUEST_DENIED') throw new Error(`google_${body.status || response.status}`);
+  const result = body.results && body.results[0];
+  if (!result) return null;
+  const state = (result.address_components || []).find(c => (c.types || []).includes('administrative_area_level_1'));
+  return {
+    lat: Number(result.geometry.location.lat), lon: Number(result.geometry.location.lng),
+    provider: 'google', formatted_address: result.formatted_address || query,
+    resolved_state: state && state.long_name || '',
+    confidence: Number(googleConfidence(result).toFixed(2)),
+    location_type: result.geometry.location_type || 'APPROXIMATE', road_snapped: false
+  };
+}
+async function snapGoogleRoad(result, key) {
+  if (!result || result.confidence < .75) return result;
+  const url = new URL('https://roads.googleapis.com/v1/nearestRoads');
+  url.searchParams.set('points', `${result.lat},${result.lon}`);
+  url.searchParams.set('key', key);
+  const response = await fetch(url, { headers:{ Accept:'application/json' } });
+  if (!response.ok) return result;
+  const body = await response.json().catch(() => ({}));
+  const point = body.snappedPoints && body.snappedPoints[0];
+  if (!point || !point.location) return result;
+  return { ...result, lat:Number(point.location.latitude), lon:Number(point.location.longitude), road_snapped:true, confidence:Math.max(result.confidence,.86) };
+}
 
 module.exports = async (req, res) => {
-  res.setHeader('Cache-Control', 'no-store');
-  if (req.method !== 'GET') return res.status(405).json({ error: 'método no permitido' });
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (req.method !== 'GET') return res.status(405).json({ error: 'metodo_no_permitido' });
+  if (rateLimited(remoteIp(req))) return res.status(429).json({ error: 'demasiadas_peticiones' });
 
-  const key = String(process.env.GOOGLE_MAPS_API_KEY || '').trim();
-  const appToken = String(process.env.APP_TOKEN || '');
-  if (req.query && req.query.check === '1') return res.status(200).json({ available: !!key, provider: key ? 'google' : 'fallback' });
-  if (!key) return res.status(503).json({ error: 'google_no_configurado', fallback: true });
-  if (appToken && req.headers['x-app-token'] !== appToken) return res.status(403).json({ error: 'token de acceso requerido' });
-  if (rateLimited(remoteIp(req))) return res.status(429).json({ error: 'demasiadas peticiones' });
+  const geoapifyKey = clean(process.env.GEOAPIFY_API_KEY, 200);
+  const googleKey = clean(process.env.GOOGLE_MAPS_API_KEY, 200);
+  const requestedMode = clean(req.query && req.query.mode, 20);
+  const mode = ['search', 'autocomplete', 'reverse'].includes(requestedMode) ? requestedMode : 'search';
 
-  const query = String((req.query && req.query.q) || '').replace(/\s+/g, ' ').trim();
-  const expectedState = String((req.query && req.query.state) || '').replace(/\s+/g, ' ').trim();
-  const snap = String((req.query && req.query.snap) || '') === '1';
-  if (query.length < 3 || query.length > 240) return res.status(400).json({ error: 'consulta inválida' });
+  if (req.query && req.query.check === '1') {
+    return res.status(200).json({ available: !!(geoapifyKey || googleKey), provider: geoapifyKey ? 'geoapify' : (googleKey ? 'google' : 'none') });
+  }
+  if (!geoapifyKey && !googleKey) return res.status(503).json({ error: 'geocodificador_no_configurado' });
 
-  const cacheKey = `${snap ? '1' : '0'}:${query.toLowerCase()}`;
+  const query = clean(req.query && req.query.q);
+  const expectedState = clean(req.query && req.query.state, 80);
+  const snap = clean(req.query && req.query.snap, 2) === '1';
+  const lat = Number(req.query && req.query.lat);
+  const lon = Number(req.query && req.query.lon);
+  const limit = mode === 'autocomplete' ? 5 : 1;
+  if (mode === 'reverse') {
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < 14 || lat > 33.5 || lon < -119 || lon > -86) {
+      return res.status(400).json({ error: 'coordenadas_invalidas' });
+    }
+  } else if (query.length < 3 || query.length > 240) {
+    return res.status(400).json({ error: 'consulta_invalida' });
+  }
+
+  const cacheKey = mode === 'reverse' ? `reverse:${lat.toFixed(5)},${lon.toFixed(5)}` : `${mode}:${snap ? 'snap' : 'plain'}:${query.toLowerCase()}:${normalizeState(expectedState)}`;
   const hit = cache.get(cacheKey);
   if (hit && Date.now() - hit.time < CACHE_TTL) return res.status(200).json({ ...hit.data, cached: true });
 
   try {
-    const geoUrl = new URL('https://maps.googleapis.com/maps/api/geocode/json');
-    geoUrl.searchParams.set('address', query);
-    geoUrl.searchParams.set('components', 'country:MX');
-    geoUrl.searchParams.set('language', 'es');
-    geoUrl.searchParams.set('region', 'mx');
-    geoUrl.searchParams.set('key', key);
-    const upstream = await fetch(geoUrl, { headers: { Accept: 'application/json' } });
-    const body = await upstream.json();
-    if (!upstream.ok || body.status === 'REQUEST_DENIED') return res.status(502).json({ error: 'google_rechazado', providerStatus: body.status });
-    const result = body.results && body.results[0];
-    if (!result) return res.status(404).json({ error: 'sin_resultados', providerStatus: body.status });
-    const stateComponent = (result.address_components || []).find(c => (c.types || []).includes('administrative_area_level_1'));
-    const resolvedState = stateComponent && stateComponent.long_name || '';
-    if (expectedState && resolvedState && normalizeState(expectedState) !== normalizeState(resolvedState)) {
-      return res.status(409).json({ error: 'estado_no_coincide', expected_state: expectedState, resolved_state: resolvedState });
+    // Las correcciones de alertas conservan el ajuste a carretera de Google.
+    if (mode === 'search' && snap && googleKey) {
+      let result = await requestGoogle(query, googleKey);
+      if (!result || !stateMatches(expectedState, result.resolved_state)) return res.status(404).json({ error:'sin_resultados' });
+      result = await snapGoogleRoad(result, googleKey);
+      return sendCached(res, cacheKey, result);
     }
-
-    let lat = Number(result.geometry.location.lat);
-    let lon = Number(result.geometry.location.lng);
-    let confidence = confidenceFor(result);
-    let roadSnapped = false;
-
-    // No ajustar resultados muy aproximados: podría elegir una carretera equivocada.
-    if (snap && confidence >= 0.75) {
-      const roadsUrl = new URL('https://roads.googleapis.com/v1/nearestRoads');
-      roadsUrl.searchParams.set('points', `${lat},${lon}`);
-      roadsUrl.searchParams.set('key', key);
-      const roadsResponse = await fetch(roadsUrl, { headers: { Accept: 'application/json' } });
-      if (roadsResponse.ok) {
-        const roads = await roadsResponse.json();
-        const point = roads.snappedPoints && roads.snappedPoints[0];
-        if (point && point.location) {
-          lat = Number(point.location.latitude); lon = Number(point.location.longitude);
-          roadSnapped = true; confidence = Math.max(confidence, 0.86);
-        }
+    if (geoapifyKey) {
+      const raw = await requestGeoapify({ mode, query, lat, lon, limit, key: geoapifyKey });
+      const results = raw.map(normalizeGeoapify)
+        .filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lon))
+        .filter(item => stateMatches(expectedState, item.resolved_state));
+      if (results.length) {
+        const data = mode === 'autocomplete' ? { provider: 'geoapify', results } : results[0];
+        return sendCached(res, cacheKey, data);
       }
     }
-
-    const data = {
-      lat, lon,
-      provider: 'google',
-      formatted_address: result.formatted_address || query,
-      location_type: result.geometry.location_type || 'APPROXIMATE',
-      partial_match: !!result.partial_match,
-      resolved_state: resolvedState,
-      road_snapped: roadSnapped,
-      confidence: Number(confidence.toFixed(2))
-    };
-    pruneCache(); cache.set(cacheKey, { time: Date.now(), data });
-    return res.status(200).json(data);
+    if (mode !== 'search') return res.status(503).json({ error: 'modo_requiere_geoapify' });
+    const result = await requestGoogle(query, googleKey);
+    if (!result || !stateMatches(expectedState, result.resolved_state)) return res.status(404).json({ error: 'sin_resultados' });
+    return sendCached(res, cacheKey, result);
   } catch (error) {
-    return res.status(502).json({ error: 'proveedor_no_disponible', fallback: true });
+    return res.status(502).json({ error: 'proveedor_no_disponible' });
   }
 };
