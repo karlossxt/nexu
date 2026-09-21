@@ -967,6 +967,34 @@ body.user-mode .pr-gps{padding:7px 9px}
  body.user-mode .pl-actions{padding-top:6px;padding-bottom:6px}
 }
 
+/* === ZERO VIAL · FASE 3 MAPA + HEADER === */
+body.user-mode .nv-topbar{top:8px;left:10px;right:10px;height:54px;padding:6px 9px;gap:9px;border-radius:14px;background:rgba(3,22,41,.94);border-color:rgba(67,132,194,.38);box-shadow:0 8px 24px rgba(0,10,28,.28)}
+body.user-mode .u-panel,body.user-mode #panel-left,body.user-mode.left-rail #panel-left{top:72px}
+body.user-mode .nt-brand{min-width:166px;gap:8px}
+body.user-mode .nt-logo{width:35px;height:35px;border-radius:9px}
+body.user-mode .nt-btn{min-height:36px;padding:7px 10px;border-radius:10px}
+body.user-mode .nt-actions{gap:5px}
+body.user-mode #circula{max-width:300px;padding:6px 9px;border-radius:10px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+body.user-mode #circula.ok{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.38)}
+body.user-mode #circula.no{background:rgba(239,68,68,.09);border-color:rgba(239,68,68,.4)}
+body.user-mode .nv-maptools{gap:3px;padding:4px;border-radius:14px;background:rgba(3,22,41,.92);border-color:rgba(67,132,194,.38);box-shadow:0 8px 22px rgba(0,10,28,.28)}
+body.user-mode .nv-mtbtn{width:40px;height:40px;border-radius:10px;color:#9CB4CB}
+body.user-mode .nv-mtbtn.active{background:#1478FF;border-color:#3290FF;box-shadow:0 5px 14px rgba(20,120,255,.3)}
+body.user-mode .traffic-legend{bottom:18px;padding:7px 11px;border-radius:18px;background:rgba(3,22,41,.92);border-color:rgba(67,132,194,.4);box-shadow:0 8px 20px rgba(0,10,28,.3)}
+body.user-mode .incident-pin{width:36px;height:36px;border-width:2px;border-radius:13px 13px 13px 4px;box-shadow:0 6px 18px rgba(0,10,28,.4)}
+body.user-mode .incident-pin i{font-size:14px}
+body.user-mode .marker-cluster-small,body.user-mode .marker-cluster-medium,body.user-mode .marker-cluster-large{background:rgba(20,120,255,.2)}
+body.user-mode .marker-cluster-small div,body.user-mode .marker-cluster-medium div,body.user-mode .marker-cluster-large div{background:#1478FF;color:#fff;font-weight:800;box-shadow:0 0 0 4px rgba(20,120,255,.16)}
+body.user-mode .leaflet-control-zoom{border:1px solid rgba(67,132,194,.38)!important;border-radius:12px!important;overflow:hidden;box-shadow:0 8px 20px rgba(0,10,28,.24)!important}
+body.user-mode .leaflet-control-zoom a{background:rgba(3,22,41,.92);color:#B8CBE0;border-color:rgba(67,132,194,.25);width:38px;height:38px;line-height:38px}
+body.user-mode .leaflet-control-zoom a:hover{background:rgba(20,120,255,.16);color:#fff}
+body.user-mode .leaflet-control-attribution{opacity:.42}
+@media (min-width:701px) and (max-width:1180px){
+ body.user-mode .nt-brand{min-width:135px}
+ body.user-mode .nt-btn{padding-left:8px;padding-right:8px}
+ body.user-mode #circula{max-width:230px}
+}
+
 /* === MOBILE APP SHELL · FASE 1 === */
 .mobile-app-nav{display:none}
 @media (max-width:700px){
