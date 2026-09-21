@@ -77,6 +77,15 @@ function stateMatches(expected, resolved) {
   return a === b || a.includes(b) || b.includes(a);
 }
 
+function usableMunicipality(municipality, state) {
+  const value = clean(municipality);
+  if (!value) return '';
+  // En CDMX, "Ciudad de México/CDMX/Distrito Federal" describe la entidad, no una alcaldía.
+  // Mantenerlo como municipio hace que los geocodificadores tiendan al centro de la ciudad.
+  if (stateKey(value) === 'cdmx' && stateKey(state) === 'cdmx') return '';
+  return value;
+}
+
 function normalizedKilometer(value, text) {
   const source = `${value ?? ''} ${text || ''}`;
   const plus = source.match(/(?:km|kil[oó]metro)?\s*[:.]?\s*(\d{1,4})\s*\+\s*(\d{1,3})/i);
@@ -242,7 +251,7 @@ const GEMINI_ALERT_SCHEMA = {
 };
 
 function classificationPrompt(text) {
-  return `Clasifica esta noticia. Rechaza si no es un incidente vial o de seguridad relacionado con calles, carreteras o movilidad en México, o si no incluye una ubicación útil. Una balacera, delito o emergencia dentro de una escuela, vivienda o inmueble sin afectación vial debe marcarse como irrelevante. Extrae el sentido de circulación cuando aparezca (por ejemplo: hacia Querétaro o dirección CDMX). Extrae también una referencia física explícita si aparece: caseta, plaza de cobro, entronque, puente, distribuidor vial, localidad, colonia o punto conocido cercano. Convierte kilómetros con formato 66+500 a 66.5. No inventes datos ni coordenadas. Si rechazas usa valido=false, categoria=irrelevant y cadenas vacías cuando no exista el dato. Resume el hecho sin agregar información. TEXTO: ${text.slice(0, 800)}`;
+  return `Clasifica esta noticia. Rechaza si no es un incidente vial o de seguridad relacionado con calles, carreteras o movilidad en México, o si no incluye una ubicación útil. Una balacera, delito o emergencia dentro de una escuela, vivienda o inmueble sin afectación vial debe marcarse como irrelevante. Extrae el sentido de circulación cuando aparezca (por ejemplo: hacia Querétaro o dirección CDMX). Extrae también una referencia física explícita si aparece: caseta, plaza de cobro, entronque, puente, distribuidor vial, localidad, colonia o punto conocido cercano. Si la ubicación expresa un cruce o tramo entre dos vialidades (por ejemplo "Av. 608 hasta Av. 412", "entre X y Y", "esquina con" o "cruce con"), conserva ambas vialidades en ubicacion. Convierte kilómetros con formato 66+500 a 66.5. No inventes datos ni coordenadas. Si rechazas usa valido=false, categoria=irrelevant y cadenas vacías cuando no exista el dato. Resume el hecho sin agregar información. TEXTO: ${text.slice(0, 800)}`;
 }
 
 async function classifyWithGroq(prompt) {
@@ -588,15 +597,27 @@ async function resolveRoadLocation(ai, kilometer, reference) {
 function intersectionParts(value) {
   const text = clean(value);
   if (!text) return null;
+
+  // Algunas fuentes entregan ubicación + contexto separados por comas.
+  // Probamos primero cada segmento para evitar que "Ciudad de México, CDMX"
+  // termine formando parte del nombre de una vialidad.
+  const candidates = [text, ...text.split(/[,;|]/).map(clean).filter(Boolean)];
   const patterns = [
-    /^(.+?)\s+(?:esquina(?:\s+con)?|cruce(?:\s+con)?|intersecci[oó]n(?:\s+con)?|y)\s+(.+)$/i,
-    /^(.+?)\s+(?:con)\s+(.+)$/i
+    /^entre\s+(.+?)\s+y\s+(.+)$/i,
+    /^desde\s+(.+?)\s+hasta\s+(.+)$/i,
+    /^(.+?)\s+(?:hasta|esquina(?:\s+con)?|cruce(?:\s+con)?|intersecci[oó]n(?:\s+con)?|con|y)\s+(.+)$/i
   ];
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (!match) continue;
-    const a = clean(match[1]), b = clean(match[2]);
-    if (a.length >= 3 && b.length >= 3) return [a,b];
+
+  for (const candidate of candidates) {
+    for (const pattern of patterns) {
+      const match = candidate.match(pattern);
+      if (!match) continue;
+      const a = clean(match[1]), b = clean(match[2]);
+      if (a.length < 3 || b.length < 3) continue;
+      // Evita devolver dos veces la misma vialidad cuando la fuente repite el inicio del tramo.
+      if (norm(a) === norm(b)) continue;
+      return [a,b];
+    }
   }
   return null;
 }
@@ -614,7 +635,8 @@ async function resolveUrbanIntersection(ai) {
   if (ai.carretera) return null;
   const streets = urbanIntersection(ai);
   if (!streets) return null;
-  const context = [ai.municipio, ai.estado].map(clean).filter(Boolean);
+  const municipality = usableMunicipality(ai.municipio, ai.estado);
+  const context = [municipality, ai.estado].map(clean).filter(Boolean);
   const variants = [
     [streets[0] + ' & ' + streets[1], ...context].join(', '),
     [streets[0] + ' y ' + streets[1], ...context].join(', ')
@@ -649,25 +671,36 @@ async function processItem(item, feed) {
   const kilometer = normalizedKilometer(ai.kilometro, item.title + ' ' + item.body);
   const direction = clean(ai.sentido);
   const reference = clean(ai.referencia);
+  const municipality = usableMunicipality(ai.municipio, ai.estado);
+  const explicitIntersection = !ai.carretera ? urbanIntersection(ai) : null;
   const locationParts = ai.carretera
-    ? [ai.carretera, kilometer != null ? 'km ' + kilometer : '', reference, ai.municipio, ai.estado]
-    : [ai.ubicacion, ai.municipio, ai.estado];
+    ? [ai.carretera, kilometer != null ? 'km ' + kilometer : '', reference, municipality, ai.estado]
+    : [ai.ubicacion, municipality, ai.estado];
   const locationQuery = [...new Set(locationParts.map(clean).filter(Boolean))].join(', ');
   if (locationQuery.length < 4) return 'no_location';
   const locationQueries = [
     { query:locationQuery, precision:ai.carretera && kilometer != null ? 'kilometer' : ai.carretera && reference ? 'reference' : ai.carretera ? 'road' : 'zone' },
-    { query:[reference, ai.carretera, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:reference && ai.carretera ? 'reference' : 'zone' },
-    { query:[ai.ubicacion, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'zone' },
-    { query:[ai.carretera, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'road' },
-    { query:[ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'municipality' },
+    { query:[reference, ai.carretera, municipality, ai.estado].map(clean).filter(Boolean).join(', '), precision:reference && ai.carretera ? 'reference' : 'zone' },
+    { query:[ai.ubicacion, municipality, ai.estado].map(clean).filter(Boolean).join(', '), precision:'zone' },
+    { query:[ai.carretera, municipality, ai.estado].map(clean).filter(Boolean).join(', '), precision:'road' },
+    { query:municipality ? [municipality, ai.estado].map(clean).filter(Boolean).join(', ') : '', precision:'municipality' },
     { query:clean(ai.estado), precision:'state' }
   ].filter(x => x.query.length >= 4).filter((x,index,list) => list.findIndex(y => y.query === x.query) === index).slice(0, 4);
   let geo = resolveTollReference(reference);
   if (geo) log('info','Caseta resuelta con CASETAS',{ reference, matched:geo.matched_reference, score:geo.match_score, confidence:geo.confidence });
   if (!geo) geo = await resolveRoadLocation(ai, kilometer, reference);
   if (!geo) {
-    geo = await resolveUrbanIntersection(ai);
-    if (geo) log('info','Intersección urbana resuelta',{ location:clean(ai.ubicacion), municipality:clean(ai.municipio), state:clean(ai.estado), confidence:geo.confidence });
+    geo = await resolveUrbanIntersection({ ...ai, municipio:municipality });
+    if (geo) log('info','Intersección urbana resuelta',{ location:clean(ai.ubicacion), municipality, state:clean(ai.estado), confidence:geo.confidence });
+  }
+  if (!geo && explicitIntersection) {
+    log('warn','Intersección explícita sin resolución; se evita fallback municipal/estatal',{
+      streets:explicitIntersection,
+      municipality,
+      state:clean(ai.estado),
+      location:clean(ai.ubicacion)
+    });
+    return 'no_location';
   }
   if (!geo) {
     for (const candidate of locationQueries) {
@@ -685,7 +718,7 @@ async function processItem(item, feed) {
     category: ai.categoria,
     severity: ['critical','high','medium','low'].includes(ai.severidad) ? ai.severidad : 'medium',
     state: clean(ai.estado) || null,
-    municipality: clean(ai.municipio) || null,
+    municipality: municipality || null,
     road: clean(ai.carretera) || null,
     kilometer,
     location_label: [geo.label || locationQuery, reference ? 'ref. ' + reference : '', direction ? 'sentido ' + direction : ''].filter(Boolean).join(' · '),
