@@ -35,12 +35,17 @@ create table if not exists public.alerts (
   latitude double precision,
   longitude double precision,
   location_confidence numeric check (location_confidence between 0 and 1),
+  location_precision text,
   location_status text not null default 'automatic' check (location_status in ('automatic','approximate','corrected','verified')),
   source_name text,
   source_url text,
   event_at timestamptz not null,
   created_at timestamptz not null default now()
 );
+
+-- Migración segura para instalaciones existentes: conserva el tipo de resolución geográfica
+-- separado de location_confidence para no inferir precisión sólo por un número.
+alter table public.alerts add column if not exists location_precision text;
 
 create table if not exists public.location_corrections (
   id uuid primary key default gen_random_uuid(),
