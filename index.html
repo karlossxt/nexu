@@ -3036,7 +3036,10 @@ function centralAlertToUi(row,receivedAt=0) {
     state:row.state||'', precision, location_precision:row.location_precision||null,
     location_confidence:confidence, location_provider:'central', road_snapped:false,
     time:new Date(row.event_at), published_at:row.event_at, detected_at:row.created_at||null, received_at:receivedAt,
-    trafico:row.category==='road'?(severity==='critical'?'detenido':severity==='high'?'moderado':'fluido'):null,
+    event_type:row.event_type||null, traffic_status:row.traffic_status||null,
+    trafico:row.category==='road'
+      ? ({flowing:'fluido',restored:'fluido',slow:'moderado',partial:'moderado',blocked:'detenido',closed:'detenido'}[row.traffic_status] || (severity==='critical'?'detenido':severity==='high'?'moderado':'fluido'))
+      : null,
     importante:['critical','high'].includes(severity), source_type:'media', source_name:row.source_name||'Fuente verificada',
     source_url:row.source_url||'', verification_status:row.location_status==='verified'?'verified':'automatic', liked:false
   };
@@ -3734,7 +3737,11 @@ const nfState = { road:true, security:true, blockagesOnly:false, redZone:false, 
 let uType = 'all'; let uState = ''; let uRange = 3; let uSort = 'recent';
 function setNF(kind, on) { nfState[kind] = !!on; rebuildU(); }
 function isBlockageAlert(a) {
+  const status=String(a?.traffic_status||'').toLowerCase();
+  if(['blocked','closed'].includes(status)) return true;
+  if(['flowing','restored','slow','partial'].includes(status)) return false;
   const text = `${a?.title || ''} ${a?.detail || ''}`.toLowerCase();
+  if(/tr[aá]nsito fluido|tr[aá]fico fluido|circulaci[oó]n normal|v[ií]a libre|se restablec|reabiert/.test(text)) return false;
   return /bloqueo|cierre|cerrad[ao]|sin paso|manifestantes|manifestaci[oó]n|protesta|toma de caseta|interrupci[oó]n/.test(text);
 }
 function setBlockagesOnly(on) {
