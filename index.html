@@ -16,9 +16,9 @@
 <meta name="twitter:title" content="Zero Vial — Panorama vial de México" />
 <meta name="twitter:description" content="Consulta incidencias viales y de seguridad en México, actualizadas periódicamente." />
 <meta name="twitter:image" content="https://www.zero-vial.com.mx/zero-logo.png" />
-<link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
-<link rel="icon" type="image/png" sizes="256x256" href="/favicon-256.png" />
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<link rel="icon" type="image/svg+xml" href="/zero-mark-v2.svg?v=2" />
+<link rel="alternate icon" type="image/png" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/zero-mark-v2.svg?v=2" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Zero Vial","url":"https://www.zero-vial.com.mx/","applicationCategory":"TravelApplication","operatingSystem":"Web","description":"Panorama de incidencias viales y de seguridad en las carreteras de México, actualizado periódicamente."}</script>
 
 <!-- Leaflet & Plugins -->
@@ -183,9 +183,9 @@ body.user-mode:not(.dark-mode) .pref-check{ background:#fff; border-color:#D8E1E
 #landing-card:before{ content:""; position:absolute; left:0; right:0; top:0; height:3px; background:linear-gradient(90deg,transparent,var(--brand-cyan) 28%,#fff 50%,var(--brand-amber) 72%,transparent); }
 .landing-kicker{ display:inline-flex; align-items:center; gap:8px; color:#D7E0E8; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.045); padding:7px 12px; border-radius:20px; font-size:10px; font-weight:800; letter-spacing:.13em; text-transform:uppercase; }
 .landing-kicker i{ color:var(--brand-cyan); }
-.landing-logo{ display:block; width:min(650px,94%); height:250px; margin:-4px auto -12px; object-fit:contain; object-position:center; background:#000; mix-blend-mode:screen; }
-.landing-brand{ color:#fff; font-size:34px; letter-spacing:2px; margin:4px 0; }
-.landing-brand span{ color:#f9ab00; }
+.landing-logo{ display:block; width:142px; height:142px; margin:14px auto 8px; object-fit:contain; object-position:center; background:#000; border-radius:24px; box-shadow:0 16px 38px rgba(20,120,255,.22); }
+.landing-brand{ color:#fff; font-size:34px; letter-spacing:2px; margin:4px 0 10px; text-align:center; font-weight:900; }
+.landing-brand span{ color:#19C7E8; }
 .sr-only{ position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important; }
 button:focus-visible, [role="button"]:focus-visible, .alert-card:focus-visible, .rm-card:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{ outline:3px solid #38BDF8!important; outline-offset:3px!important; }
 .landing-sub{ color:#AEB9C5; margin:3px auto 20px; max-width:600px; font-size:15px; line-height:1.55; }
@@ -1084,7 +1084,8 @@ body.user-mode:not(.dark-mode) .casetas-filter{color:#067647;background:#ECFDF3;
 <div id="landing">
   <div id="landing-card">
     <div class="landing-kicker"><i class="fa-solid fa-map-location-dot"></i> Panorama vial de México</div>
-    <img class="landing-logo" src="/zero-logo.png" alt="Zero Vial">
+    <img class="landing-logo" src="/zero-mark-v2.svg?v=2" alt="Logotipo de Zero Vial">
+    <div class="landing-brand" aria-hidden="true">ZERO <span>VIAL</span></div>
     <h1 class="sr-only">Zero Vial</h1>
     <p class="landing-sub">Un vistazo confiable a lo que ocurre en las carreteras de México, con incidencias verificables y actualización periódica.</p>
     <div class="landing-feats">
