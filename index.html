@@ -32,6 +32,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/casetas-data.js" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -1042,6 +1043,12 @@ body.user-mode.dark-mode .future-tool b,body.user-mode.dark-mode .future-tool sm
   #alert-center-modal .diag-grid,#alert-center-modal .acn-analytics,#alert-center-modal .acn-list{max-width:100%;box-sizing:border-box}
 }
 
+/* === CAPA CASETAS === */
+.toll-marker{width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:#16A34A;color:#fff;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);font-size:11px}
+.toll-popup b{display:block;margin-bottom:3px}.toll-popup small{color:#64748B}
+.casetas-filter{grid-column:1/-1}
+body.user-mode:not(.dark-mode) .casetas-filter{color:#067647;background:#ECFDF3;border-color:#ABEFC6}
+
 /* === MOBILE APP SHELL · FASE 1 === */
 .mobile-app-nav{display:none}
 @media (max-width:700px){
@@ -1339,6 +1346,7 @@ body.user-mode.dark-mode .future-tool b,body.user-mode.dark-mode .future-tool sm
         <div class="uf-row"><span class="dot" style="background:#F97316;color:#F97316;"></span><span>Viales</span><span class="uf-count" id="nc-road">0</span><label class="switch"><input type="checkbox" aria-label="Mostrar incidencias viales" checked onchange="setNF('road', this.checked)"><span class="slider" style="--sw:#F97316"></span></label></div>
         <div class="uf-row"><span class="dot" style="background:#EF4444;color:#EF4444;"></span><span>Seguridad</span><span class="uf-count" id="nc-sec">0</span><label class="switch"><input type="checkbox" aria-label="Mostrar incidencias de seguridad" checked onchange="setNF('security', this.checked)"><span class="slider" style="--sw:#EF4444"></span></label></div>
         <div class="uf-row blockage-filter"><span class="dot" style="background:#E11D48;color:#E11D48;"></span><span>Solo bloqueos</span><span class="uf-count" id="nc-blockages">0</span><label class="switch"><input id="nf-blockages" type="checkbox" aria-label="Mostrar solamente bloqueos" onchange="setBlockagesOnly(this.checked)"><span class="slider" style="--sw:#E11D48"></span></label></div>
+        <div class="uf-row casetas-filter"><span class="dot" style="background:#16A34A;color:#16A34A;"></span><span>Casetas</span><span class="uf-count" id="nc-casetas">290</span><label class="switch"><input id="nf-casetas" type="checkbox" aria-label="Mostrar casetas de cobro" onchange="toggleCasetas(this.checked)"><span class="slider" style="--sw:#16A34A"></span></label></div>
       </div>
       <div class="pl-section">JURISDICCIÓN</div>
       <div class="pl-dropdowns">
@@ -1819,6 +1827,8 @@ let risLayer = L.layerGroup();
 let routeControl = null;
 let trafficLayer = null;
 let trafficEnabled = false;
+let casetasLayer = L.markerClusterGroup({ disableClusteringAtZoom: 13, maxClusterRadius: 42 });
+let casetasEnabled = false;
 let feedInterval = null;
 let ageInterval = null;
 let processingQueue = []; 
@@ -1875,6 +1885,32 @@ L.Control.MapTools = L.Control.extend({ options: { position: 'bottomleft' }, onA
 map.addLayer(alertAreaLayer); map.addLayer(markers); map.addLayer(staticLayer);
 let routeLineLayer = L.layerGroup(); map.addLayer(routeLineLayer);
 new L.Control.MapTools().addTo(map);
+
+function buildCasetasLayer() {
+  if(casetasLayer.getLayers().length) return;
+  const data=Array.isArray(window.ZERO_VIAL_CASETAS)?window.ZERO_VIAL_CASETAS:[];
+  const icon=L.divIcon({className:'',html:'<span class="toll-marker"><i class="fa-solid fa-road-barrier"></i></span>',iconSize:[24,24],iconAnchor:[12,12],popupAnchor:[0,-12]});
+  data.forEach(toll => {
+    const lat=Number(toll.lat), lon=Number(toll.lon);
+    if(!Number.isFinite(lat)||!Number.isFinite(lon)) return;
+    L.marker([lat,lon],{icon,title:toll.name||'Caseta de cobro'})
+      .bindPopup('<div class="toll-popup"><b><i class="fa-solid fa-road-barrier"></i> '+escapeHtml(toll.name||'Caseta de cobro')+'</b><small>Referencia geográfica · OSM/Overpass</small></div>')
+      .addTo(casetasLayer);
+  });
+  const count=document.getElementById('nc-casetas'); if(count) count.textContent=String(data.length);
+}
+function toggleCasetas(force) {
+  const next=typeof force==='boolean'?force:!casetasEnabled;
+  if(next) {
+    buildCasetasLayer();
+    if(!casetasLayer.getLayers().length) { trafficMessage('El catálogo de casetas todavía no está disponible.',true); return; }
+    map.addLayer(casetasLayer);
+  } else if(map.hasLayer(casetasLayer)) map.removeLayer(casetasLayer);
+  casetasEnabled=next;
+  const input=document.getElementById('nf-casetas'); if(input) input.checked=next;
+  localStorage.setItem('nv_casetas',next?'1':'0');
+}
+setTimeout(()=>{ if(localStorage.getItem('nv_casetas')==='1') toggleCasetas(true); },100);
 
 function setBaseMap(mode) {
   baseMapMode = mode === 'satellite' ? 'satellite' : 'streets';
