@@ -503,7 +503,8 @@ function resolveStaticRoadKilometer(road, kilometer) {
     latitude:point.latitude,
     longitude:point.longitude,
     label:`${match.corridor.name} · km ${kilometer}`,
-    confidence:match.score >= 95 ? .94 : .9,
+    // RED_VIAL interpola el km sobre la geometría del corredor: útil, pero no equivale a un punto físico exacto.
+    confidence:match.score >= 95 ? .90 : .86,
     status:'automatic',
     precision:'kilometer_static',
     corridor:match.corridor.badge,
@@ -691,6 +692,7 @@ async function processItem(item, feed) {
     latitude: geo.latitude,
     longitude: geo.longitude,
     location_confidence: geo.confidence,
+    location_precision: geo.precision || null,
     location_status: geo.status,
     source_name: sourceName(item, feed),
     source_url: item.url || null,
