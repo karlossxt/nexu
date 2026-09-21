@@ -2553,6 +2553,9 @@ function alertSourceLabel(a) {
   return 'Fuente: ' + (a.source_name || 'Zero Vial');
 }
 function precisionLabel(a) {
+  if(a.location_precision === 'toll_reference') return 'Referencia de caseta';
+  if(a.location_precision === 'kilometer_static') return 'Kilómetro estimado en corredor';
+  if(a.location_precision === 'intersection') return 'Intersección localizada';
   if(a.precision === 'carretera') return 'Ajustado a carretera';
   if(a.precision === 'kilometro') return 'Kilómetro calculado';
   if(a.precision === 'punto') return 'Punto localizado';
@@ -2576,7 +2579,10 @@ function referenceChipHTML(a) {
   return ref ? `<span class="reference-chip"><i class="fa-solid fa-road-barrier"></i> Referencia: ${escapeHtml(ref)}</span>` : '';
 }
 function estimatedRadiusMeters(a) {
-  return ({ punto:200, carretera:350, kilometro:500, tramo:2500, zona:3000, municipio:6000, estado:15000 }[a.precision] || 3000);
+  if(a.location_precision === 'toll_reference') return 200;
+  if(a.location_precision === 'kilometer_static') return 500;
+  if(a.location_precision === 'intersection') return 250;
+  return ({ punto:200, carretera:500, kilometro:500, tramo:2500, zona:3000, municipio:6000, estado:15000 }[a.precision] || 3000);
 }
 function estimatedRadiusLabel(a) {
   const meters=estimatedRadiusMeters(a);
@@ -3005,15 +3011,28 @@ function centralNumericId(value) {
   for(let i=0;i<text.length;i++){ h^=text.charCodeAt(i); h=Math.imul(h,16777619); }
   return Math.abs(h>>>0)||1;
 }
+function centralPrecisionToUi(rawPrecision,status,confidence) {
+  if(['corrected','verified'].includes(status)) return 'punto';
+  const raw=String(rawPrecision||'').toLowerCase();
+  if(['exact','toll_reference'].includes(raw)) return 'punto';
+  if(['kilometer_static','kilometer'].includes(raw)) return 'kilometro';
+  if(raw==='intersection') return 'punto';
+  if(['reference','road'].includes(raw)) return 'carretera';
+  if(raw==='zone') return 'zona';
+  if(raw==='municipality') return 'municipio';
+  if(raw==='state') return 'estado';
+  // Compatibilidad con alertas antiguas que aún no tienen location_precision.
+  return confidence>=.92?'punto':confidence>=.82?'carretera':confidence>=.68?'tramo':confidence>=.48?'municipio':'estado';
+}
 function centralAlertToUi(row,receivedAt=0) {
   const confidence=Number(row.location_confidence)||0;
   const severity=row.severity||'medium';
-  const precision=['corrected','verified'].includes(row.location_status)?'punto':confidence>=.92?'punto':confidence>=.82?'carretera':confidence>=.68?'tramo':confidence>=.48?'municipio':'estado';
+  const precision=centralPrecisionToUi(row.location_precision,row.location_status,confidence);
   return {
     id:centralNumericId(row.id||row.external_id), central_id:row.id, external_id:row.external_id,
     lat:Number(row.latitude), lon:Number(row.longitude), category:row.category,
     title:row.title, detail:row.detail||row.title, location:row.location_label||[row.road,row.municipality,row.state].filter(Boolean).join(', '),
-    state:row.state||'', precision,
+    state:row.state||'', precision, location_precision:row.location_precision||null,
     location_confidence:confidence, location_provider:'central', road_snapped:false,
     time:new Date(row.event_at), published_at:row.event_at, detected_at:row.created_at||null, received_at:receivedAt,
     trafico:row.category==='road'?(severity==='critical'?'detenido':severity==='high'?'moderado':'fluido'):null,
