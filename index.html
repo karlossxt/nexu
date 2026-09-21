@@ -915,6 +915,58 @@ body.user-mode .pl-actions{border-top-color:rgba(53,121,188,.25)}
 body.user-mode .pa-main{background:transparent;border:1px solid rgba(86,143,199,.4);box-shadow:none;color:#9FB4CA}
 body.user-mode .pa-main:hover{color:#fff;border-color:#1478FF;background:rgba(20,120,255,.1)}
 
+/* === ZERO VIAL · FASE 2 COMPACTA === */
+body.user-mode #panel-left,body.user-mode #panel-right{overflow:hidden}
+body.user-mode .pl-content,body.user-mode .pr-body{overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(91,145,197,.55) transparent}
+body.user-mode .pl-content::-webkit-scrollbar,body.user-mode .pr-body::-webkit-scrollbar{width:6px}
+body.user-mode .pl-content::-webkit-scrollbar-track,body.user-mode .pr-body::-webkit-scrollbar-track{background:transparent}
+body.user-mode .pl-content::-webkit-scrollbar-thumb,body.user-mode .pr-body::-webkit-scrollbar-thumb{background:rgba(91,145,197,.48);border-radius:8px}
+body.user-mode .pl-content>*{min-width:0;max-width:100%;box-sizing:border-box}
+body.user-mode .pl-head{padding:0 12px}
+body.user-mode .pl-btns{gap:7px;margin-top:8px}
+body.user-mode .ph-btn{padding:8px 4px;min-width:0}
+body.user-mode .pl-status{margin:9px 0 0;gap:5px;flex-wrap:wrap}
+body.user-mode .pl-clock{font-size:9px}
+body.user-mode .pl-section{padding:11px 12px 5px}
+body.user-mode .pl-grid{gap:7px;padding:0 12px 6px}
+body.user-mode .pc-card{padding:9px 10px;min-width:0}
+body.user-mode .pc-card b{font-size:24px}
+body.user-mode .pl-filters{padding:0 12px;gap:6px}
+body.user-mode .uf-row{min-width:0;padding:7px}
+body.user-mode .pl-dropdowns{padding:0 12px}
+body.user-mode .pl-dropdowns select{margin-bottom:6px;padding-top:9px;padding-bottom:9px}
+body.user-mode .future-tools{padding:0 12px 7px}
+body.user-mode .future-tool{grid-template-columns:31px minmax(0,1fr) auto;padding:7px 8px}
+body.user-mode .future-tool .ft-icon{width:29px;height:29px}
+body.user-mode .future-tool small{white-space:normal}
+body.user-mode .pl-actions{padding:8px 12px}
+body.user-mode .pa-main{padding:9px}
+body.user-mode #feed-list{gap:7px}
+body.user-mode .pr-sec{padding:10px}
+body.user-mode .feed-tools{margin-bottom:9px}
+body.user-mode .alert-card{padding:9px 10px;border-radius:10px;box-shadow:none}
+body.user-mode .alert-card:hover{transform:none}
+body.user-mode .ac-head{grid-template-columns:30px 1fr auto;gap:7px;margin-bottom:6px}
+body.user-mode .ac-icon{width:30px;height:30px;border-radius:9px;font-size:13px}
+body.user-mode .ac-kind b{font-size:8.5px}
+body.user-mode .ac-kind time{font-size:8.5px;margin-top:2px}
+body.user-mode .ac-title{font-size:11.5px;line-height:1.28;margin-bottom:4px}
+body.user-mode .ac-location{font-size:9.5px;line-height:1.25}
+body.user-mode .ac-tags{gap:4px;margin-top:6px;padding-top:6px}
+body.user-mode .ac-source{margin-top:6px;font-size:8.5px}
+body.user-mode .ac-action{width:25px;height:25px}
+body.user-mode .pr-foot{padding:9px 10px}
+body.user-mode .pr-gps{padding:7px 9px}
+@media (min-width:701px) and (max-height:820px){
+ body.user-mode .pl-section{padding-top:8px}
+ body.user-mode .pl-grid{padding-bottom:3px}
+ body.user-mode .pc-card{padding:7px 9px}
+ body.user-mode .pc-card b{font-size:22px}
+ body.user-mode .uf-row{min-height:36px}
+ body.user-mode .future-tool{padding:6px 8px}
+ body.user-mode .pl-actions{padding-top:6px;padding-bottom:6px}
+}
+
 /* === MOBILE APP SHELL · FASE 1 === */
 .mobile-app-nav{display:none}
 @media (max-width:700px){
