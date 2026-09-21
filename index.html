@@ -950,6 +950,8 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
         <label id="landing-consent-row" class="landing-consent"><input id="landing-consent" type="checkbox"> <span>Al crear una cuenta acepto los <a href="/terminos.html" target="_blank" rel="noopener">Términos</a> y el <a href="/privacidad.html" target="_blank" rel="noopener">Aviso de Privacidad</a>.</span></label>
         <button id="landing-submit" class="landing-submit" type="submit"><i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión</button>
       </form>
+      <div class="landing-divider"><span>o continúa con</span></div>
+      <button type="button" class="landing-guest" onclick="signInWithGoogle()" style="min-height:46px"><i class="fa-brands fa-google"></i> Continuar con Google</button>
       <button id="landing-recovery" class="landing-recovery" onclick="requestLandingRecovery()">¿Olvidaste tu contraseña?</button>
       <div id="landing-message" class="landing-message" role="status" aria-live="polite"></div>
     </div>
