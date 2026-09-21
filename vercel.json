@@ -4,6 +4,7 @@
     { "src": "*.html", "use": "@vercel/static" },
     { "src": "casetas-data.js", "use": "@vercel/static" },
     { "src": "*.png", "use": "@vercel/static" },
+    { "src": "*.svg", "use": "@vercel/static" },
     { "src": "robots.txt", "use": "@vercel/static" },
     { "src": "sitemap.xml", "use": "@vercel/static" },
     { "src": "api/*.js", "use": "@vercel/node" }
