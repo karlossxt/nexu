@@ -1559,6 +1559,10 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
       <label id="auth-consent-row" style="display:none;gap:8px;align-items:flex-start;font-size:11px;line-height:1.45;"><input id="auth-consent" type="checkbox" style="width:auto;margin:2px 0 0;"> <span>Al crear una cuenta acepto los <a href="/terminos.html" target="_blank">Términos</a> y el <a href="/privacidad.html" target="_blank">Aviso de Privacidad</a>.</span></label>
       <button id="auth-forgot" class="auth-link" onclick="requestPasswordRecovery()">¿Olvidaste tu contraseña?</button>
       <button id="auth-submit" onclick="submitAuth()"><i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión</button>
+      <div id="auth-social" style="margin-top:10px">
+        <div style="display:flex;align-items:center;gap:9px;margin:10px 0;color:var(--text-muted);font-size:10px"><span style="height:1px;background:var(--border);flex:1"></span><span>o continúa con</span><span style="height:1px;background:var(--border);flex:1"></span></div>
+        <button type="button" class="btn-outline" onclick="signInWithGoogle()" style="width:100%;min-height:42px"><i class="fa-brands fa-google"></i> Continuar con Google</button>
+      </div>
       <div id="auth-message" class="correction-preview" style="display:none;margin-top:10px"></div>
       <button id="auth-preferences" class="btn-outline" onclick="openPreferences()" style="display:none;margin-top:9px"><i class="fa-solid fa-sliders"></i> Mis preferencias</button>
       <button id="auth-operations" class="btn-outline operator-access" onclick="closeModal('auth-modal');toggleOperator()" style="margin-top:9px"><i class="fa-solid fa-shield-halved"></i> Centro de Operaciones</button>
@@ -2954,6 +2958,15 @@ function openAuthModal() {
   document.getElementById('auth-forgot').style.display=!zeroVialUser&&authMode==='login'?'block':'none';
   document.getElementById('auth-message').style.display='none';
   if(!supabaseClient) authMessage('La conexión con Supabase está preparada, pero falta configurar la clave pública en Vercel.',true);
+}
+async function signInWithGoogle() {
+  if(!supabaseClient) return authMessage('Supabase todavía no está configurado en Vercel.',true);
+  authMessage('Abriendo inicio de sesión con Google…');
+  const { error } = await supabaseClient.auth.signInWithOAuth({
+    provider:'google',
+    options:{ redirectTo: window.location.origin + '/' }
+  });
+  if(error) authMessage(authErrorSpanish(error),true);
 }
 async function submitAuth() {
   if(!supabaseClient) return authMessage('Supabase todavía no está configurado en Vercel.',true);
