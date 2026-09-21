@@ -2743,11 +2743,20 @@ async function initSupabase(config) {
   if(!config.url||!config.anonKey||!window.supabase?.createClient) return;
   supabaseClient=window.supabase.createClient(config.url,config.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   const {data}=await supabaseClient.auth.getSession(); zeroVialUser=data?.session?.user||null; updateAccountButton();
-  if(zeroVialUser) await Promise.all([loadUserRole(),loadUserPreferences()]);
+  if(zeroVialUser) {
+    setGuestMode(false);
+    await Promise.all([loadUserRole(),loadUserPreferences()]);
+    continueAfterAuthentication();
+  }
   supabaseClient.auth.onAuthStateChange((event,session)=>{
     zeroVialUser=session?.user||null; updateAccountButton();
-    if(zeroVialUser) setTimeout(()=>{ loadUserRole(); loadUserPreferences(); },0);
-    else { zeroVialRole='user'; applyRoleAccess(); }
+    if(zeroVialUser) {
+      setGuestMode(false);
+      setTimeout(async ()=>{
+        await Promise.all([loadUserRole(),loadUserPreferences()]);
+        if(event==='SIGNED_IN') continueAfterAuthentication();
+      },0);
+    } else { zeroVialRole='user'; applyRoleAccess(); }
     if(event==='PASSWORD_RECOVERY') setTimeout(openRecoveryModal,0);
   });
   if(window.location.hash.includes('type=recovery')) setTimeout(openRecoveryModal,0);
