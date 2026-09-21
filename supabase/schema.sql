@@ -27,6 +27,8 @@ create table if not exists public.alerts (
   detail text,
   category text not null check (category in ('road','security')),
   severity text not null default 'medium' check (severity in ('critical','high','medium','low')),
+  event_type text,
+  traffic_status text,
   state text,
   municipality text,
   road text,
@@ -46,6 +48,8 @@ create table if not exists public.alerts (
 -- Migración segura para instalaciones existentes: conserva el tipo de resolución geográfica
 -- separado de location_confidence para no inferir precisión sólo por un número.
 alter table public.alerts add column if not exists location_precision text;
+alter table public.alerts add column if not exists event_type text;
+alter table public.alerts add column if not exists traffic_status text;
 
 create table if not exists public.location_corrections (
   id uuid primary key default gen_random_uuid(),
