@@ -1030,6 +1030,18 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a:hover{background:#1478FF;
 body.user-mode:not(.dark-mode) .traffic-legend{background:rgba(7,31,52,.94);border-color:rgba(82,142,194,.45);color:#EAF4FC}
 body.user-mode.dark-mode .future-tool b,body.user-mode.dark-mode .future-tool small{color:inherit}
 
+/* === FIX MÓVIL · CENTRO DE ALERTAS === */
+@media (max-width:700px){
+  body.alert-center-open{overflow:hidden;overscroll-behavior:none}
+  #alert-center-modal.alert-center{position:fixed;inset:0;width:100vw;height:100dvh;max-height:100dvh;padding:0;overflow:hidden;align-items:stretch;justify-content:stretch;z-index:14000;touch-action:pan-y}
+  #alert-center-modal .alert-center-shell{height:100dvh;min-height:0;max-height:100dvh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:calc(18px + env(safe-area-inset-bottom));box-sizing:border-box}
+  #alert-center-modal .acn-header{top:0;padding:12px 14px;padding-top:calc(12px + env(safe-area-inset-top));z-index:5}
+  #alert-center-modal .acn-close{flex:0 0 42px;width:42px;height:42px}
+  #alert-center-modal .acn-toolbar{padding:10px 14px;gap:7px}
+  #alert-center-modal .acn-toolbar input,#alert-center-modal .acn-toolbar select{width:100%;min-width:0;box-sizing:border-box}
+  #alert-center-modal .diag-grid,#alert-center-modal .acn-analytics,#alert-center-modal .acn-list{max-width:100%;box-sizing:border-box}
+}
+
 /* === MOBILE APP SHELL · FASE 1 === */
 .mobile-app-nav{display:none}
 @media (max-width:700px){
@@ -3805,12 +3817,27 @@ function renderAlertCenter() {
     </article>`;
   }).join('');
 }
-function openAlertCenter(){ buildAlertCenterStates(); renderAlertCenter(); openModal('alert-center-modal'); }
-function closeAlertCenter(){ closeModal('alert-center-modal'); }
+function openAlertCenter(){
+  buildAlertCenterStates();
+  renderAlertCenter();
+  document.body.classList.add('alert-center-open');
+  openModal('alert-center-modal');
+  const shell=document.querySelector('#alert-center-modal .alert-center-shell');
+  if(shell) shell.scrollTop=0;
+}
+function closeAlertCenter(){
+  closeModal('alert-center-modal');
+  document.body.classList.remove('alert-center-open');
+}
 function showCenterAlertOnMap(id){ const a=alerts.find(x=>x.id===id); if(!a)return; closeAlertCenter(); showAlertFocus(a); map.setView([a.lat,a.lon],Math.max(map.getZoom(),14)); }
 function openModal(id) { const m = document.getElementById(id); if(m) m.classList.add('open'); }
 function closeModal(id) { const m = document.getElementById(id); if(m) m.classList.remove('open'); }
-document.querySelectorAll('.u-modal').forEach(m => m.addEventListener('click', ev => { if(ev.target === m) m.classList.remove('open'); }));
+document.querySelectorAll('.u-modal').forEach(m => m.addEventListener('click', ev => {
+  if(ev.target === m) {
+    m.classList.remove('open');
+    if(m.id==='alert-center-modal') document.body.classList.remove('alert-center-open');
+  }
+}));
 
 // === INGRESAR ALERTA (MANUAL) ===
 function buildEntryStates() {
