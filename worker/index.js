@@ -2,6 +2,7 @@
 
 const { createHash } = require('crypto');
 const RED_VIAL = require('./red-vial');
+const CASETAS = require('./casetas');
 
 const env = process.env;
 const REQUIRED = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'GROQ_API_KEY'];
@@ -510,6 +511,47 @@ function resolveStaticRoadKilometer(road, kilometer) {
   };
 }
 
+function tollKey(value) {
+  return norm(value)
+    .replace(/\b(caseta|casetas|plaza|plazas|cobro|peaje|de|del|la|el|nro|no|numero|km)\b/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function tollMatchScore(reference, name) {
+  const a=tollKey(reference), b=tollKey(name);
+  if (!a || !b) return 0;
+  if (a===b) return 100;
+  if (a.length>=5 && b.includes(a)) return 96;
+  if (b.length>=5 && a.includes(b)) return 94;
+  const aa=new Set(a.split(' ').filter(x=>x.length>2));
+  const bb=new Set(b.split(' ').filter(x=>x.length>2));
+  if (!aa.size || !bb.size) return 0;
+  const common=[...aa].filter(x=>bb.has(x)).length;
+  return Math.round((common/Math.max(aa.size,bb.size))*90);
+}
+
+function resolveTollReference(reference) {
+  if (!reference || !/(caseta|plaza\s+de\s+cobro|peaje)/i.test(reference)) return null;
+  let best=null;
+  for (const toll of CASETAS) {
+    const score=tollMatchScore(reference,toll.name);
+    if (!best || score>best.score) best={toll,score};
+  }
+  if (!best || best.score<82) return null;
+  return {
+    latitude:Number(best.toll.lat),
+    longitude:Number(best.toll.lon),
+    label:best.toll.name,
+    confidence:best.score>=94 ? .96 : .9,
+    status:'automatic',
+    precision:'toll_reference',
+    matched_reference:best.toll.name,
+    match_score:best.score
+  };
+}
+
 async function resolveRoadLocation(ai, kilometer, reference) {
   if (!ai.carretera) return null;
   const staticKm = resolveStaticRoadKilometer(ai.carretera, kilometer);
@@ -619,7 +661,9 @@ async function processItem(item, feed) {
     { query:[ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'municipality' },
     { query:clean(ai.estado), precision:'state' }
   ].filter(x => x.query.length >= 4).filter((x,index,list) => list.findIndex(y => y.query === x.query) === index).slice(0, 4);
-  let geo = await resolveRoadLocation(ai, kilometer, reference);
+  let geo = resolveTollReference(reference);
+  if (geo) log('info','Caseta resuelta con CASETAS',{ reference, matched:geo.matched_reference, score:geo.match_score, confidence:geo.confidence });
+  if (!geo) geo = await resolveRoadLocation(ai, kilometer, reference);
   if (!geo) {
     geo = await resolveUrbanIntersection(ai);
     if (geo) log('info','Intersección urbana resuelta',{ location:clean(ai.ubicacion), municipality:clean(ai.municipio), state:clean(ai.estado), confidence:geo.confidence });
