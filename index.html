@@ -3511,7 +3511,16 @@ function refreshCounters() {
   const sec = requestedAlerts.filter(a => a.category === 'security').length;
   const imp = requestedAlerts.filter(a => a.importante).length;
   const sessionAlerts = requestedAlerts.filter(a => Number(a.received_at || a.id || 0) >= zeroVialSessionStartedAt);
-  const blockages = alerts.filter(isBlockageAlert).length;
+  // El contador de bloqueos debe respetar los mismos filtros activos
+  // (estado, periodo, categorías, severidad, radio y búsqueda), pero sin
+  // depender del propio switch "Solo bloqueos".
+  const blockages = alerts.filter(a => {
+    const blockagesOnly = nfState.blockagesOnly;
+    nfState.blockagesOnly = false;
+    const matches = matchesFilters(a);
+    nfState.blockagesOnly = blockagesOnly;
+    return matches && isBlockageAlert(a);
+  }).length;
   const redZones = criticalPoints.filter(p => riskPointType(p) === 'red_zone').length;
   const roadRisks = criticalPoints.filter(p => riskPointType(p) === 'road_risk').length;
   const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
