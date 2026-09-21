@@ -1844,6 +1844,34 @@ let authMode = 'login';
 let landingAuthMode = 'login';
 let zeroVialRole = 'user';
 let zeroVialGuest = false;
+const ZERO_VIAL_CANONICAL_ORIGIN = 'https://www.zero-vial.com.mx';
+
+function enforceCanonicalOrigin() {
+  if(window.location.hostname === 'zero-vial.com.mx') {
+    window.location.replace(ZERO_VIAL_CANONICAL_ORIGIN + window.location.pathname + window.location.search + window.location.hash);
+    return true;
+  }
+  return false;
+}
+function oauthReturnError() {
+  const params=new URLSearchParams(window.location.search);
+  const code=params.get('error_code')||'';
+  const error=params.get('error')||'';
+  const description=params.get('error_description')||'';
+  if(!error && !code) return null;
+  return {
+    code,
+    error,
+    description,
+    expired: code==='bad_oauth_state' || /oauth state has expired|state.*expired/i.test(description)
+  };
+}
+function cleanOAuthErrorUrl() {
+  const url=new URL(window.location.href);
+  ['error','error_code','error_description','error_uri'].forEach(key=>url.searchParams.delete(key));
+  history.replaceState({},document.title,url.pathname+(url.searchParams.toString()?'?'+url.searchParams.toString():'')+url.hash);
+}
+
 let centralWorkerHealthy = false;
 let centralWorkerState = 'unknown';
 let centralWorkerLastSuccess = null;
@@ -2927,6 +2955,7 @@ function updateRouteAlerts(coords) {
   if(box) box.innerHTML = html; if(rbox) rbox.innerHTML = html; if(mbox) mbox.innerHTML = html;
 }
 async function applyServerConfig() {
+  if(enforceCanonicalOrigin()) return;
   try {
     const res = await fetch('/api/config');
     if(!res.ok) return;
@@ -2941,7 +2970,17 @@ async function applyServerConfig() {
 async function initSupabase(config) {
   if(!config.url||!config.anonKey||!window.supabase?.createClient) return;
   supabaseClient=window.supabase.createClient(config.url,config.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  const oauthError=oauthReturnError();
   const {data}=await supabaseClient.auth.getSession(); zeroVialUser=data?.session?.user||null; updateAccountButton();
+  if(oauthError) {
+    cleanOAuthErrorUrl();
+    if(!zeroVialUser) {
+      const message=oauthError.expired
+        ? 'La sesión de Google expiró. Inicia sesión nuevamente.'
+        : 'No fue posible completar el inicio de sesión con Google. Intenta nuevamente.';
+      landingMessage(message,true);
+    }
+  }
   if(zeroVialUser) {
     setGuestMode(false);
     await Promise.all([loadUserRole(),loadUserPreferences()]);
@@ -3143,7 +3182,7 @@ async function landingAuth(requestedMode) {
   landingMessage(mode==='register'?'Creando tu cuenta…':'Iniciando sesión…');
   const submit=document.getElementById('landing-submit'); if(submit) submit.disabled=true;
   const result=mode==='register'
-    ? await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin+'/'}})
+    ? await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:ZERO_VIAL_CANONICAL_ORIGIN+'/'}})
     : await supabaseClient.auth.signInWithPassword({email,password});
   if(submit) submit.disabled=false;
   if(result.error) return landingMessage(authErrorSpanish(result.error),true);
@@ -3174,7 +3213,7 @@ async function signInWithGoogle() {
   authMessage('Abriendo inicio de sesión con Google…');
   const { error } = await supabaseClient.auth.signInWithOAuth({
     provider:'google',
-    options:{ redirectTo: window.location.origin + '/' }
+    options:{ redirectTo: ZERO_VIAL_CANONICAL_ORIGIN + '/' }
   });
   if(error) authMessage(authErrorSpanish(error),true);
 }
@@ -3203,7 +3242,7 @@ async function requestPasswordRecovery(emailOverride='',messageFn=authMessage) {
   if(remaining>0) return messageFn('Espera '+remaining+' segundos antes de solicitar otro correo.',true);
   const button=document.getElementById('auth-forgot'); button.disabled=true; button.textContent='Enviando…';
   localStorage.setItem('zero_vial_recovery_sent',String(Date.now()));
-  const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+'/'});
+  const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:ZERO_VIAL_CANONICAL_ORIGIN+'/'});
   button.disabled=false; button.textContent='¿Olvidaste tu contraseña?';
   if(error) return messageFn(authErrorSpanish(error),true);
   messageFn('Te enviamos un enlace. Revisa también spam y promociones.');
