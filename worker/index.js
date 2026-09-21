@@ -245,13 +245,15 @@ const GEMINI_ALERT_SCHEMA = {
     valido:{type:'BOOLEAN'}, ubicacion:{type:'STRING',nullable:true}, carretera:{type:'STRING',nullable:true},
     kilometro:{type:'NUMBER',nullable:true}, referencia:{type:'STRING',nullable:true}, municipio:{type:'STRING',nullable:true}, estado:{type:'STRING',nullable:true},
     categoria:{type:'STRING',enum:['road','security','irrelevant']}, severidad:{type:'STRING',enum:['critical','high','medium','low']},
+    event_type:{type:'STRING',enum:['traffic_update','crash','closure','blockage','protest','road_hazard','security_incident','emergency','other']},
+    traffic_status:{type:'STRING',enum:['flowing','slow','partial','blocked','closed','restored','unknown']},
     resumen:{type:'STRING',nullable:true}, detail:{type:'STRING',nullable:true}, sentido:{type:'STRING',nullable:true}
   },
-  required:['valido','ubicacion','carretera','kilometro','referencia','municipio','estado','categoria','severidad','resumen','detail','sentido']
+  required:['valido','ubicacion','carretera','kilometro','referencia','municipio','estado','categoria','severidad','event_type','traffic_status','resumen','detail','sentido']
 };
 
 function classificationPrompt(text) {
-  return `Clasifica esta noticia. Rechaza si no es un incidente vial o de seguridad relacionado con calles, carreteras o movilidad en México, o si no incluye una ubicación útil. Una balacera, delito o emergencia dentro de una escuela, vivienda o inmueble sin afectación vial debe marcarse como irrelevante. Extrae el sentido de circulación cuando aparezca (por ejemplo: hacia Querétaro o dirección CDMX). Extrae también una referencia física explícita si aparece: caseta, plaza de cobro, entronque, puente, distribuidor vial, localidad, colonia o punto conocido cercano. Si la ubicación expresa un cruce o tramo entre dos vialidades (por ejemplo "Av. 608 hasta Av. 412", "entre X y Y", "esquina con" o "cruce con"), conserva ambas vialidades en ubicacion. Convierte kilómetros con formato 66+500 a 66.5. No inventes datos ni coordenadas. Si rechazas usa valido=false, categoria=irrelevant y cadenas vacías cuando no exista el dato. Resume el hecho sin agregar información. TEXTO: ${text.slice(0, 800)}`;
+  return `Clasifica esta noticia. Rechaza si no es un incidente vial o de seguridad relacionado con calles, carreteras o movilidad en México, o si no incluye una ubicación útil. Una balacera, delito o emergencia dentro de una escuela, vivienda o inmueble sin afectación vial debe marcarse como irrelevante. Distingue el TIPO DE EVENTO de su ESTADO VIAL ACTUAL. event_type describe qué ocurrió; traffic_status describe cómo está la circulación AHORA. Si el texto actual dice "tránsito fluido", "circulación normal", "vía libre", "se restablece", "reabierta" o equivalente, usa flowing/restored aunque se mencione un bloqueo o cierre previo. Usa blocked/closed únicamente cuando el texto indique que la afectación sigue activa; partial para cierre/reducción parcial; slow para tránsito lento. Extrae el sentido de circulación cuando aparezca (por ejemplo: hacia Querétaro o dirección CDMX). Extrae también una referencia física explícita si aparece: caseta, plaza de cobro, entronque, puente, distribuidor vial, localidad, colonia o punto conocido cercano. Si la ubicación expresa un cruce o tramo entre dos vialidades (por ejemplo "Av. 608 hasta Av. 412", "entre X y Y", "esquina con" o "cruce con"), conserva ambas vialidades en ubicacion. Convierte kilómetros con formato 66+500 a 66.5. No inventes datos ni coordenadas. Si rechazas usa valido=false, categoria=irrelevant y cadenas vacías cuando no exista el dato. Resume el hecho sin agregar información. TEXTO: ${text.slice(0, 800)}`;
 }
 
 async function classifyWithGroq(prompt) {
@@ -281,11 +283,13 @@ async function classifyWithGroq(prompt) {
               estado: { type: ['string', 'null'] },
               categoria: { type: 'string', enum: ['road', 'security', 'irrelevant'] },
               severidad: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },
+              event_type: { type:'string', enum:['traffic_update','crash','closure','blockage','protest','road_hazard','security_incident','emergency','other'] },
+              traffic_status: { type:'string', enum:['flowing','slow','partial','blocked','closed','restored','unknown'] },
               resumen: { type: ['string', 'null'] },
               detail: { type: ['string', 'null'] },
               sentido: { type: ['string', 'null'] }
             },
-            required: ['valido', 'ubicacion', 'carretera', 'kilometro', 'referencia', 'municipio', 'estado', 'categoria', 'severidad', 'resumen', 'detail', 'sentido']
+            required: ['valido', 'ubicacion', 'carretera', 'kilometro', 'referencia', 'municipio', 'estado', 'categoria', 'severidad', 'event_type', 'traffic_status', 'resumen', 'detail', 'sentido']
           }
         }
       },
@@ -360,6 +364,47 @@ async function classify(text) {
   return result;
 }
 
+function normalizedTrafficStatus(ai, sourceText) {
+  const title=norm(ai?.resumen || '');
+  const detail=norm(ai?.detail || '');
+  const source=norm(sourceText || '');
+  const current=[title,detail].filter(Boolean).join(' ');
+  const restored=/transito fluido|trafico fluido|circulacion normal|circulacion fluida|via libre|vialidad libre|se restablec|restablecida|restablecido|reabiert|normalizada/.test(title)
+    || /se restablec|via libre|reabiert|circulacion normal/.test(current);
+  if(restored) return /restablec|reabiert|normalizada|via libre/.test(current) ? 'restored' : 'flowing';
+  if(/cierre total|bloqueo total|sin paso|circulacion cerrada|vialidad cerrada|permanece cerrad|continua cerrad/.test(current)) return 'closed';
+  if(/bloqueo|bloqueada|bloqueado|interrumpido el paso|manifestantes mantienen|continua el bloqueo/.test(current)) return 'blocked';
+  if(/cierre parcial|reduccion de carriles|reducción de carriles|un carril|paso parcial/.test(current)) return 'partial';
+  if(/transito lento|tránsito lento|carga vehicular|trafico lento|tráfico lento/.test(current)) return 'slow';
+  const declared=String(ai?.traffic_status||'').toLowerCase();
+  return ['flowing','slow','partial','blocked','closed','restored','unknown'].includes(declared) ? declared : 'unknown';
+}
+
+function locationTerms(value) {
+  const ignored=new Set(['avenida','av','calle','carretera','autopista','circuito','interior','eje','norte','sur','este','oeste','de','del','la','las','los','y','con','hasta']);
+  return norm(value).split(/[^a-z0-9]+/).filter(x=>x && !ignored.has(x) && (x.length>=3 || /^\d+$/.test(x)));
+}
+
+function candidateMatchesIntersection(query,label) {
+  const first=clean(query).split(',')[0];
+  const parts=first.split(/\s+(?:&|y|con|hasta)\s+/i).map(clean).filter(Boolean);
+  if(parts.length<2) return true;
+  const hay=new Set(locationTerms(label));
+  return parts.slice(0,2).every(part => locationTerms(part).some(token=>hay.has(token)));
+}
+
+function geocodeCandidateScore(query,label,stateOk,baseConfidence,precision) {
+  if(!stateOk) return -999;
+  let score=Math.round((Number(baseConfidence)||0)*50);
+  const qTerms=locationTerms(query), lTerms=new Set(locationTerms(label));
+  score+=qTerms.filter(t=>lTerms.has(t)).length*8;
+  if(precision==='intersection') {
+    if(!candidateMatchesIntersection(query,label)) return -999;
+    score+=30;
+  }
+  return score;
+}
+
 async function geocode(query, expectedState, precision = 'zone') {
   const confidenceCaps = { exact:.97, intersection:.94, reference:.92, kilometer:.9, road:.82, zone:.7, municipality:.58, state:.38 };
   const cap = confidenceCaps[precision] || .7;
@@ -370,18 +415,25 @@ async function geocode(query, expectedState, precision = 'zone') {
     url.searchParams.set('bias', 'countrycode:mx');
     url.searchParams.set('format', 'json');
     url.searchParams.set('lang', 'es');
-    url.searchParams.set('limit', '1');
+    url.searchParams.set('limit', '5');
     url.searchParams.set('apiKey', GEOAPIFY_KEY);
     try {
       const response = await fetch(url, { headers:{ Accept:'application/json' } });
       const body = await response.json();
-      const result = body.results?.[0];
-      if (response.ok && result) {
-        const lat=Number(result.lat), lon=Number(result.lon), resolvedState=result.state || '';
-        if (!inMexico(lat, lon) || !stateMatches(expectedState, resolvedState)) throw new Error('resultado fuera del estado o territorio esperado');
-        const rankConfidence=Number(result.rank?.confidence);
-        const confidence=Math.min(cap, Number.isFinite(rankConfidence) ? rankConfidence : .62);
-        return { latitude:lat, longitude:lon, label:result.formatted || query, confidence, status:confidence >= .82 ? 'automatic' : 'approximate', precision };
+      if (response.ok && Array.isArray(body.results) && body.results.length) {
+        const ranked=body.results.map(result=>{
+          const lat=Number(result.lat), lon=Number(result.lon), resolvedState=result.state || '';
+          if(!inMexico(lat,lon)) return null;
+          const rankConfidence=Number(result.rank?.confidence);
+          const confidence=Math.min(cap, Number.isFinite(rankConfidence) ? rankConfidence : .62);
+          const label=result.formatted || query;
+          const score=geocodeCandidateScore(query,label,stateMatches(expectedState,resolvedState),confidence,precision);
+          return score>-900 ? { latitude:lat, longitude:lon, label, confidence, status:confidence >= .82 ? 'automatic' : 'approximate', precision, score } : null;
+        }).filter(Boolean).sort((a,b)=>b.score-a.score);
+        if(ranked.length) {
+          const best=ranked[0]; delete best.score; return best;
+        }
+        if(precision==='intersection') throw new Error('ningún candidato coincide con ambas vialidades');
       }
     } catch (error) {
       log('warn', 'Geoapify no pudo geocodificar; usando respaldo', { query, error:error.message });
@@ -399,15 +451,20 @@ async function geocode(query, expectedState, precision = 'zone') {
       const raw = await response.text();
       if (response.ok && /^\s*[\[{]/.test(raw)) {
         const body = JSON.parse(raw);
-        const result = body.results?.[0];
-        if (result) {
-          const country = result.address_components?.find(x => x.types?.includes('country'))?.short_name || '';
-          const resolvedState = result.address_components?.find(x => x.types?.includes('administrative_area_level_1'))?.long_name || '';
-          const lat = Number(result.geometry.location.lat), lon = Number(result.geometry.location.lng);
-          if ((country && country !== 'MX') || !inMexico(lat, lon) || !stateMatches(expectedState, resolvedState)) throw new Error('resultado fuera del estado o territorio esperado');
-          const type = result.geometry?.location_type || 'APPROXIMATE';
-          const confidence = Math.min(cap, ({ ROOFTOP:.97, RANGE_INTERPOLATED:.9, GEOMETRIC_CENTER:.82, APPROXIMATE:.55 })[type] || .5);
-          return { latitude:lat, longitude:lon, label:result.formatted_address, confidence, status:confidence >= .82 ? 'automatic' : 'approximate', precision };
+        if (Array.isArray(body.results) && body.results.length) {
+          const ranked=body.results.map(result=>{
+            const country=result.address_components?.find(x=>x.types?.includes('country'))?.short_name || '';
+            const resolvedState=result.address_components?.find(x=>x.types?.includes('administrative_area_level_1'))?.long_name || '';
+            const lat=Number(result.geometry.location.lat), lon=Number(result.geometry.location.lng);
+            if((country && country!=='MX') || !inMexico(lat,lon)) return null;
+            const type=result.geometry?.location_type || 'APPROXIMATE';
+            const confidence=Math.min(cap,({ROOFTOP:.97,RANGE_INTERPOLATED:.9,GEOMETRIC_CENTER:.82,APPROXIMATE:.55})[type]||.5);
+            const label=result.formatted_address || query;
+            const score=geocodeCandidateScore(query,label,stateMatches(expectedState,resolvedState),confidence,precision);
+            return score>-900 ? {latitude:lat,longitude:lon,label,confidence,status:confidence>=.82?'automatic':'approximate',precision,score} : null;
+          }).filter(Boolean).sort((a,b)=>b.score-a.score);
+          if(ranked.length){const best=ranked[0]; delete best.score; return best;}
+          if(precision==='intersection') throw new Error('ningún candidato coincide con ambas vialidades');
         }
       }
     } catch (error) {
@@ -671,6 +728,8 @@ async function processItem(item, feed) {
   const kilometer = normalizedKilometer(ai.kilometro, item.title + ' ' + item.body);
   const direction = clean(ai.sentido);
   const reference = clean(ai.referencia);
+  const trafficStatus = normalizedTrafficStatus(ai, item.title + ' ' + item.body);
+  const eventType = ['traffic_update','crash','closure','blockage','protest','road_hazard','security_incident','emergency','other'].includes(String(ai.event_type||'').toLowerCase()) ? String(ai.event_type).toLowerCase() : 'other';
   const municipality = usableMunicipality(ai.municipio, ai.estado);
   const explicitIntersection = !ai.carretera ? urbanIntersection(ai) : null;
   const locationParts = ai.carretera
@@ -717,6 +776,8 @@ async function processItem(item, feed) {
     detail,
     category: ai.categoria,
     severity: ['critical','high','medium','low'].includes(ai.severidad) ? ai.severidad : 'medium',
+    event_type: eventType,
+    traffic_status: ai.categoria === 'road' ? trafficStatus : 'unknown',
     state: clean(ai.estado) || null,
     municipality: municipality || null,
     road: clean(ai.carretera) || null,
