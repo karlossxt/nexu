@@ -89,6 +89,7 @@ async function fetchBox(box, { apiKey, signal } = {}) {
     headers:{
       Accept:'application/json',
       'TomTom-Api-Key':apiKey,
+      'TomTom-Api-Version':'2',
       Attributes:DEFAULT_ATTRIBUTES
     }
   });
