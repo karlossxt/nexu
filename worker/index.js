@@ -3,6 +3,7 @@
 const { createHash } = require('crypto');
 const RED_VIAL = require('./red-vial');
 const CASETAS = require('./casetas');
+const TOMTOM_TRAFFIC = require('./tomtom-traffic');
 
 const env = process.env;
 const REQUIRED = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'GROQ_API_KEY'];
@@ -837,9 +838,31 @@ async function health(values) {
 
 async function cycle() {
   const started = new Date().toISOString();
-  const stats = { received:0, relevant:0, queued_new:0, queue_pending:0, queue_failed:0, queue_oldest_min:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, groq_used:0, gemini_used:0, ai_cooldown_seconds:0, ai_budget_wait_seconds:0, ai_max_per_hour:AI_MAX_PER_HOUR, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0 };
+  const stats = { received:0, relevant:0, queued_new:0, queue_pending:0, queue_failed:0, queue_oldest_min:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, groq_used:0, gemini_used:0, ai_cooldown_seconds:0, ai_budget_wait_seconds:0, ai_max_per_hour:AI_MAX_PER_HOUR, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0, tomtom_enabled:false, tomtom_received:0, tomtom_boxes:0, tomtom_errors:0 };
   await health({ status:'running', last_started_at:started, last_error:null });
   try {
+    const tomtom = await TOMTOM_TRAFFIC.fetchShadowIncidents(env);
+    stats.tomtom_enabled = !!tomtom.enabled;
+    stats.tomtom_received = tomtom.incidents.length;
+    stats.tomtom_boxes = tomtom.boxes;
+    stats.tomtom_errors = tomtom.errors.length;
+    if (tomtom.enabled) {
+      log(tomtom.errors.length ? 'warn' : 'info','TomTom Traffic modo sombra',{
+        incidents:tomtom.incidents.length,
+        boxes:tomtom.boxes,
+        errors:tomtom.errors,
+        sample:tomtom.incidents.slice(0,3).map(x=>({
+          id:x.id,
+          category:x.icon_category,
+          description:x.description,
+          from:x.from,
+          to:x.to,
+          lat:x.latitude,
+          lon:x.longitude
+        }))
+      });
+    }
+
     const candidates = [];
     for (const feed of FEEDS) {
       const response = await fetch(feed, { headers:{ 'User-Agent':'Mozilla/5.0 (Zero Vial worker)' } });
