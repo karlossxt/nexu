@@ -221,6 +221,22 @@ async function recoverStaleQueue() {
   });
 }
 
+async function purgeExpiredQueue() {
+  const oldestAllowed = new Date(Date.now() - MAX_AGE_MS).toISOString();
+  const removed = await sb(
+    `ingest_queue?select=external_id&status=in.(pending,retry,processing)&published_at=lt.${encodeURIComponent(oldestAllowed)}`,
+    {
+      method:'DELETE',
+      headers:{ Prefer:'return=representation' }
+    }
+  ) || [];
+  const count = Array.isArray(removed) ? removed.length : 0;
+  if (count) {
+    log('info','Cola vencida depurada',{ removed:count, max_age_hours:Math.round(MAX_AGE_MS/3600000) });
+  }
+  return count;
+}
+
 async function queuedItems(limit) {
   const now = new Date().toISOString();
   const oldestAllowed = new Date(Date.now() - MAX_AGE_MS).toISOString();
@@ -811,7 +827,7 @@ async function health(values) {
 
 async function cycle() {
   const started = new Date().toISOString();
-  const stats = { received:0, relevant:0, queued_new:0, queue_pending:0, queue_failed:0, queue_oldest_min:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, groq_used:0, gemini_used:0, ai_cooldown_seconds:0, ai_budget_wait_seconds:0, ai_max_per_hour:AI_MAX_PER_HOUR, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0, tomtom_enabled:false, tomtom_received:0, tomtom_boxes:0, tomtom_errors:0 };
+  const stats = { received:0, relevant:0, queued_new:0, queue_pending:0, queue_failed:0, queue_oldest_min:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, groq_used:0, gemini_used:0, ai_cooldown_seconds:0, ai_budget_wait_seconds:0, ai_max_per_hour:AI_MAX_PER_HOUR, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0, tomtom_enabled:false, tomtom_received:0, tomtom_boxes:0, tomtom_errors:0, queue_expired_removed:0 };
   await health({ status:'running', last_started_at:started, last_error:null });
   try {
     const tomtom = await TOMTOM_TRAFFIC.fetchShadowIncidents(env);
@@ -836,6 +852,8 @@ async function cycle() {
         }))
       });
     }
+
+    stats.queue_expired_removed = await purgeExpiredQueue();
 
     const candidates = [];
     for (const feed of FEEDS) {
