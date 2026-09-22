@@ -81,18 +81,49 @@ function operationalValue(incident) {
   return 'low';
 }
 
+function incidentClusterKey(incident) {
+  const category=incident.category || classifyIncident(incident);
+  const normalizeRoad=value => clean(value).toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,' ').trim();
+  const roads=[normalizeRoad(incident.from),normalizeRoad(incident.to)].filter(Boolean).sort();
+  const lat=Number(incident.latitude), lon=Number(incident.longitude);
+  const point=(Number.isFinite(lat)&&Number.isFinite(lon)) ? `${lat.toFixed(4)},${lon.toFixed(4)}` : '';
+  if (roads.length) return [category,roads.join('|'),point].join('::');
+  return [category,point,clean(incident.description).toLowerCase()].join('::');
+}
+
+function collapseOperationalDuplicates(incidents) {
+  const unique=new Map();
+  for (const incident of incidents || []) {
+    const key=incidentClusterKey(incident);
+    if (!unique.has(key)) unique.set(key,incident);
+  }
+  return [...unique.values()];
+}
+
 function summarizeIncidents(incidents) {
   const counts={ road_closed:0, accident:0, broken_vehicle:0, road_works:0, weather:0, road_hazard:0, jam:0, other:0 };
   const value={ high:0, medium:0, low:0 };
-  const highValue=[];
   for (const incident of incidents || []) {
     const category=incident.category || classifyIncident(incident);
     counts[category]=(counts[category] || 0)+1;
     const level=incident.operational_value || operationalValue({ ...incident, category });
     value[level]=(value[level] || 0)+1;
-    if (level === 'high') highValue.push(incident);
   }
-  return { counts, operational_value:value, high_value:highValue };
+
+  const operationalCandidates=collapseOperationalDuplicates(
+    (incidents || []).filter(incident => ['high','medium'].includes(incident.operational_value || operationalValue(incident)))
+  );
+  const highValue=operationalCandidates.filter(incident => (incident.operational_value || operationalValue(incident)) === 'high');
+
+  return {
+    counts,
+    operational_value:value,
+    high_value:highValue,
+    operational_candidates:operationalCandidates.length,
+    collapsed_duplicates:Math.max(0,(incidents || []).filter(incident => ['high','medium'].includes(incident.operational_value || operationalValue(incident))).length-operationalCandidates.length)
+  };
 }
 
 function normalizeIncident(incident) {
@@ -186,5 +217,7 @@ module.exports={
   classifyIncident,
   operationalValue,
   summarizeIncidents,
+  incidentClusterKey,
+  collapseOperationalDuplicates,
   fetchShadowIncidents
 };
