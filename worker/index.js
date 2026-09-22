@@ -689,7 +689,6 @@ function urbanIntersection(ai) {
 }
 
 async function resolveUrbanIntersection(ai) {
-  if (ai.carretera) return null;
   const streets = urbanIntersection(ai);
   if (!streets) return null;
   const municipality = usableMunicipality(ai.municipio, ai.estado);
@@ -731,7 +730,7 @@ async function processItem(item, feed) {
   const trafficStatus = normalizedTrafficStatus(ai, item.title + ' ' + item.body);
   const eventType = ['traffic_update','crash','closure','blockage','protest','road_hazard','security_incident','emergency','other'].includes(String(ai.event_type||'').toLowerCase()) ? String(ai.event_type).toLowerCase() : 'other';
   const municipality = usableMunicipality(ai.municipio, ai.estado);
-  const explicitIntersection = !ai.carretera ? urbanIntersection(ai) : null;
+  const explicitIntersection = urbanIntersection(ai);
   const locationParts = ai.carretera
     ? [ai.carretera, kilometer != null ? 'km ' + kilometer : '', reference, municipality, ai.estado]
     : [ai.ubicacion, municipality, ai.estado];
@@ -747,11 +746,36 @@ async function processItem(item, feed) {
   ].filter(x => x.query.length >= 4).filter((x,index,list) => list.findIndex(y => y.query === x.query) === index).slice(0, 4);
   let geo = resolveTollReference(reference);
   if (geo) log('info','Caseta resuelta con CASETAS',{ reference, matched:geo.matched_reference, score:geo.match_score, confidence:geo.confidence });
-  if (!geo) geo = await resolveRoadLocation(ai, kilometer, reference);
-  if (!geo) {
+
+  // Si la fuente da dos vialidades explícitas y no hay km fiable, resolver primero el cruce.
+  // Esto evita que una avenida urbana mal clasificada como "carretera" termine en el centro
+  // de la ciudad o en un punto genérico de la vialidad.
+  if (!geo && explicitIntersection && kilometer == null) {
     geo = await resolveUrbanIntersection({ ...ai, municipio:municipality });
-    if (geo) log('info','Intersección urbana resuelta',{ location:clean(ai.ubicacion), municipality, state:clean(ai.estado), confidence:geo.confidence });
+    if (geo) log('info','Intersección urbana resuelta',{
+      location:clean(ai.ubicacion),
+      streets:explicitIntersection,
+      municipality,
+      state:clean(ai.estado),
+      confidence:geo.confidence
+    });
   }
+
+  if (!geo) geo = await resolveRoadLocation(ai, kilometer, reference);
+
+  // Si existe un km, el corredor tiene prioridad. Si RED_VIAL/geocoder vial no resolvió,
+  // todavía permitimos usar un cruce explícito como respaldo.
+  if (!geo && explicitIntersection) {
+    geo = await resolveUrbanIntersection({ ...ai, municipio:municipality });
+    if (geo) log('info','Intersección urbana resuelta como respaldo',{
+      location:clean(ai.ubicacion),
+      streets:explicitIntersection,
+      municipality,
+      state:clean(ai.estado),
+      confidence:geo.confidence
+    });
+  }
+
   if (!geo && explicitIntersection) {
     log('warn','Intersección explícita sin resolución; se evita fallback municipal/estatal',{
       streets:explicitIntersection,
