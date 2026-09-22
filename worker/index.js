@@ -827,7 +827,7 @@ async function health(values) {
 
 async function cycle() {
   const started = new Date().toISOString();
-  const stats = { received:0, relevant:0, queued_new:0, queue_pending:0, queue_failed:0, queue_oldest_min:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, groq_used:0, gemini_used:0, ai_cooldown_seconds:0, ai_budget_wait_seconds:0, ai_max_per_hour:AI_MAX_PER_HOUR, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0, tomtom_enabled:false, tomtom_received:0, tomtom_boxes:0, tomtom_errors:0, tomtom_high_value:0, tomtom_medium_value:0, tomtom_low_value:0, tomtom_categories:{}, queue_expired_removed:0 };
+  const stats = { received:0, relevant:0, queued_new:0, queue_pending:0, queue_failed:0, queue_oldest_min:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, groq_used:0, gemini_used:0, ai_cooldown_seconds:0, ai_budget_wait_seconds:0, ai_max_per_hour:AI_MAX_PER_HOUR, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0, tomtom_enabled:false, tomtom_received:0, tomtom_boxes:0, tomtom_errors:0, tomtom_high_value:0, tomtom_medium_value:0, tomtom_low_value:0, tomtom_operational_candidates:0, tomtom_collapsed_duplicates:0, tomtom_categories:{}, queue_expired_removed:0 };
   await health({ status:'running', last_started_at:started, last_error:null });
   try {
     const tomtom = await TOMTOM_TRAFFIC.fetchShadowIncidents(env);
@@ -839,6 +839,8 @@ async function cycle() {
     stats.tomtom_high_value = tomtom.summary?.operational_value?.high || 0;
     stats.tomtom_medium_value = tomtom.summary?.operational_value?.medium || 0;
     stats.tomtom_low_value = tomtom.summary?.operational_value?.low || 0;
+    stats.tomtom_operational_candidates = tomtom.summary?.operational_candidates || 0;
+    stats.tomtom_collapsed_duplicates = tomtom.summary?.collapsed_duplicates || 0;
     if (tomtom.enabled) {
       log(tomtom.errors.length ? 'warn' : 'info','TomTom Traffic modo sombra',{
         incidents:tomtom.incidents.length,
@@ -847,6 +849,8 @@ async function cycle() {
         used_default_box:!!tomtom.used_default_box,
         categories:tomtom.summary?.counts || {},
         operational_value:tomtom.summary?.operational_value || {},
+        operational_candidates:tomtom.summary?.operational_candidates || 0,
+        collapsed_duplicates:tomtom.summary?.collapsed_duplicates || 0,
         high_value_sample:(tomtom.summary?.high_value || []).slice(0,5).map(x=>({
           id:x.id,
           category:x.category,
