@@ -100,8 +100,12 @@ async function fetchBox(box, { apiKey, signal } = {}) {
 
 async function fetchShadowIncidents(env = process.env) {
   if (!enabled(env)) return { enabled:false, incidents:[], boxes:0, errors:[] };
-  const boxes=parseBboxes(env.TOMTOM_BBOXES);
-  if (!boxes.length) return { enabled:true, incidents:[], boxes:0, errors:['TOMTOM_BBOXES no configurado'] };
+  let boxes=parseBboxes(env.TOMTOM_BBOXES);
+  let usedDefaultBox=false;
+  if (!boxes.length) {
+    boxes=parseBboxes('-99.36,19.18,-98.94,19.60');
+    usedDefaultBox=true;
+  }
 
   const apiKey=clean(env.TOMTOM_API_KEY);
   const incidents=[];
@@ -123,7 +127,7 @@ async function fetchShadowIncidents(env = process.env) {
     const key=incident.id || [incident.description,incident.latitude,incident.longitude].join('|');
     if (!unique.has(key)) unique.set(key,incident);
   }
-  return { enabled:true, incidents:[...unique.values()], boxes:boxes.length, errors };
+  return { enabled:true, incidents:[...unique.values()], boxes:boxes.length, errors, used_default_box:usedDefaultBox };
 }
 
 module.exports={
