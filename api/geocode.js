@@ -2,20 +2,51 @@
 // Las llaves viven unicamente en Vercel y nunca llegan al navegador.
 
 const MAX_PER_MIN = 40;
+const GLOBAL_MAX_PER_MIN = 320;
 const CACHE_TTL = 6 * 60 * 60 * 1000;
 const rate = new Map();
 const cache = new Map();
+let globalRate = { n:0, t:Date.now() };
 
+function validIp(value) {
+  const ip=String(value||'').trim().replace(/^::ffff:/,'');
+  if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(ip)) {
+    return ip.split('.').every(part=>Number(part)>=0 && Number(part)<=255) ? ip : '';
+  }
+  return /^[0-9a-f:]{2,45}$/i.test(ip) && ip.includes(':') ? ip.toLowerCase() : '';
+}
 function remoteIp(req) {
-  const fwd = (req.headers['x-forwarded-for'] || '').split(',')[0].trim();
-  return fwd || (req.socket && req.socket.remoteAddress) || 'anon';
+  // Vercel documenta x-vercel-forwarded-for como equivalente a la IP pública
+  // y más estable cuando existe un proxy delante del deployment.
+  const candidates = [
+    req.headers['x-vercel-forwarded-for'],
+    req.headers['x-forwarded-for'],
+    req.headers['x-real-ip'],
+    req.socket && req.socket.remoteAddress
+  ];
+  for (const raw of candidates) {
+    const first=String(raw||'').split(',')[0].trim();
+    const ip=validIp(first);
+    if (ip) return ip;
+  }
+  return 'anon';
 }
 function rateLimited(ip) {
   const now = Date.now();
-  const cur = rate.get(ip) || { n: 0, t: now };
-  if (now - cur.t > 60000) { cur.n = 0; cur.t = now; }
+  if (now - globalRate.t > 60000) globalRate={n:0,t:now};
+  globalRate.n += 1;
+  if (globalRate.n > GLOBAL_MAX_PER_MIN) return true;
+
+  const cur = rate.get(ip) || { n:0, t:now };
+  if (now - cur.t > 60000) { cur.n=0; cur.t=now; }
   cur.n += 1;
   rate.set(ip, cur);
+
+  // Evita crecimiento ilimitado del Map en instancias calientes.
+  if (rate.size > 2000) {
+    for (const [key,value] of rate) if (now - value.t > 120000) rate.delete(key);
+    if (rate.size > 2000) rate.delete(rate.keys().next().value);
+  }
   return cur.n > MAX_PER_MIN;
 }
 function clean(value, max = 240) {
@@ -118,7 +149,11 @@ async function snapGoogleRoad(result, key) {
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   if (req.method !== 'GET') return res.status(405).json({ error: 'metodo_no_permitido' });
-  if (rateLimited(remoteIp(req))) return res.status(429).json({ error: 'demasiadas_peticiones' });
+  if (rateLimited(remoteIp(req))) {
+    res.setHeader('Retry-After','60');
+    res.setHeader('Cache-Control','no-store');
+    return res.status(429).json({ error:'demasiadas_peticiones' });
+  }
 
   const geoapifyKey = clean(process.env.GEOAPIFY_API_KEY, 200);
   const googleKey = clean(process.env.GOOGLE_MAPS_API_KEY, 200);
