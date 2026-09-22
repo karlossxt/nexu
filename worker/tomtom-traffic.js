@@ -52,12 +52,55 @@ function centroid(geometry) {
   return { lon:sum[0]/points.length, lat:sum[1]/points.length };
 }
 
+function classifyIncident(incident) {
+  const icon=clean(incident && incident.icon_category).toLowerCase();
+  const description=clean(incident && incident.description).toLowerCase();
+  const text=`${icon} ${description}`;
+
+  if (/roadclosed|road closed|closed road|cierre|cerrad/.test(text)) return 'road_closed';
+  if (/accident|collision|crash|choque|colisi[oó]n|accidente/.test(text)) return 'accident';
+  if (/broken|vehicle breakdown|aver[ií]a|veh[ií]culo detenido/.test(text)) return 'broken_vehicle';
+  if (/roadworks|road works|construction|obras|trabajos/.test(text)) return 'road_works';
+  if (/weather|flood|fog|ice|snow|rain|inund|niebla|hielo|nieve|lluv/.test(text)) return 'weather';
+  if (/hazard|danger|obstacle|debris|object on road|peligro|obst[aá]culo/.test(text)) return 'road_hazard';
+  if (/jam|slow traffic|heavy traffic|congestion|tr[aá]fico lento|congesti[oó]n/.test(text)) return 'jam';
+  return 'other';
+}
+
+function operationalValue(incident) {
+  const category=incident.category || classifyIncident(incident);
+  if (['road_closed','accident','broken_vehicle','road_hazard','weather'].includes(category)) return 'high';
+  if (category === 'road_works') {
+    const text=clean(incident.description).toLowerCase();
+    return /closed|closure|lane|cerrad|cierre|carril/.test(text) ? 'high' : 'medium';
+  }
+  if (category === 'jam') {
+    const delay=Number(incident.delay_seconds);
+    return Number.isFinite(delay) && delay >= 600 ? 'medium' : 'low';
+  }
+  return 'low';
+}
+
+function summarizeIncidents(incidents) {
+  const counts={ road_closed:0, accident:0, broken_vehicle:0, road_works:0, weather:0, road_hazard:0, jam:0, other:0 };
+  const value={ high:0, medium:0, low:0 };
+  const highValue=[];
+  for (const incident of incidents || []) {
+    const category=incident.category || classifyIncident(incident);
+    counts[category]=(counts[category] || 0)+1;
+    const level=incident.operational_value || operationalValue({ ...incident, category });
+    value[level]=(value[level] || 0)+1;
+    if (level === 'high') highValue.push(incident);
+  }
+  return { counts, operational_value:value, high_value:highValue };
+}
+
 function normalizeIncident(incident) {
   const p=incident && incident.properties || {};
   const events=Array.isArray(p.events) ? p.events : [];
   const descriptions=events.map(e=>clean(e && e.description)).filter(Boolean);
   const point=centroid(incident && incident.geometry);
-  return {
+  const base = {
     id: clean(p.id),
     type: clean(incident && incident.type),
     icon_category: p.iconCategory ?? null,
@@ -76,6 +119,9 @@ function normalizeIncident(incident) {
     latitude: point && point.lat,
     longitude: point && point.lon
   };
+  base.category=classifyIncident(base);
+  base.operational_value=operationalValue(base);
+  return base;
 }
 
 async function fetchBox(box, { apiKey, signal } = {}) {
@@ -128,12 +174,17 @@ async function fetchShadowIncidents(env = process.env) {
     const key=incident.id || [incident.description,incident.latitude,incident.longitude].join('|');
     if (!unique.has(key)) unique.set(key,incident);
   }
-  return { enabled:true, incidents:[...unique.values()], boxes:boxes.length, errors, used_default_box:usedDefaultBox };
+  const normalized=[...unique.values()];
+  const summary=summarizeIncidents(normalized);
+  return { enabled:true, incidents:normalized, boxes:boxes.length, errors, used_default_box:usedDefaultBox, summary };
 }
 
 module.exports={
   enabled,
   parseBboxes,
   normalizeIncident,
+  classifyIncident,
+  operationalValue,
+  summarizeIncidents,
   fetchShadowIncidents
 };
