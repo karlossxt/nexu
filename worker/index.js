@@ -266,36 +266,9 @@ async function classifyWithGroq(prompt) {
       temperature: 0.1,
       reasoning_effort: 'low',
       max_completion_tokens: 700,
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: 'alerta_vial',
-          strict: true,
-          schema: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              valido: { type: 'boolean' },
-              ubicacion: { type: ['string', 'null'] },
-              carretera: { type: ['string', 'null'] },
-              kilometro: { type: ['number', 'null'] },
-              referencia: { type: ['string', 'null'] },
-              municipio: { type: ['string', 'null'] },
-              estado: { type: ['string', 'null'] },
-              categoria: { type: 'string', enum: ['road', 'security', 'irrelevant'] },
-              severidad: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },
-              event_type: { type:'string', enum:['traffic_update','crash','closure','blockage','protest','road_hazard','security_incident','emergency','other'] },
-              traffic_status: { type:'string', enum:['flowing','slow','partial','blocked','closed','restored','unknown'] },
-              resumen: { type: ['string', 'null'] },
-              detail: { type: ['string', 'null'] },
-              sentido: { type: ['string', 'null'] }
-            },
-            required: ['valido', 'ubicacion', 'carretera', 'kilometro', 'referencia', 'municipio', 'estado', 'categoria', 'severidad', 'event_type', 'traffic_status', 'resumen', 'detail', 'sentido']
-          }
-        }
-      },
+      response_format: { type: 'json_object' },
       messages: [
-      { role: 'system', content: 'Eres analista de seguridad vial y logística en México.' },
+      { role: 'system', content: 'Eres analista de seguridad vial y logística en México. Devuelve únicamente un objeto JSON válido con todas las claves solicitadas.' },
       { role: 'user', content: prompt }
       ]
     })
@@ -329,7 +302,7 @@ async function classifyWithGemini(prompt) {
   const url = new URL(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`);
   url.searchParams.set('key', GEMINI_KEY);
   const response = await fetch(url, {
-    method:'POST', headers:{'Content-Type':'application/json'}, signal:AbortSignal.timeout(20_000),
+    method:'POST', headers:{'Content-Type':'application/json'}, signal:AbortSignal.timeout(35_000),
     body:JSON.stringify({
       systemInstruction:{parts:[{text:'Eres un analista de seguridad vial y logística en México. Devuelve únicamente datos sustentados por el texto.'}]},
       contents:[{role:'user',parts:[{text:prompt}]}],
@@ -851,6 +824,7 @@ async function cycle() {
         incidents:tomtom.incidents.length,
         boxes:tomtom.boxes,
         errors:tomtom.errors,
+        used_default_box:!!tomtom.used_default_box,
         sample:tomtom.incidents.slice(0,3).map(x=>({
           id:x.id,
           category:x.icon_category,
