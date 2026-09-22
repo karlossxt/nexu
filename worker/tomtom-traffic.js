@@ -14,7 +14,7 @@
  */
 
 const DEFAULT_ATTRIBUTES =
-  'incidents(type,geometry(type,coordinates),properties(id,iconCategory,magnitudeOfDelay,events(description,code,iconCategory),startTime,endTime,from,to,length,delay,roadNumbers,timeValidity,probabilityOfOccurrence,numberOfReports,lastReportTime))';
+  'incidents(type,geometry(type,coordinates),properties(id,iconCategory,magnitudeOfDelay,events(description,code,iconCategory),startTime,endTime,from,to,lengthInMeters,delayInSeconds,roadNumbers,timeValidity,probabilityOfOccurrence,numberOfReports,lastReportTime))';
 
 function clean(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
@@ -66,8 +66,8 @@ function normalizeIncident(incident) {
     from: clean(p.from),
     to: clean(p.to),
     road_numbers: Array.isArray(p.roadNumbers) ? p.roadNumbers.map(clean).filter(Boolean) : [],
-    delay_seconds: Number.isFinite(Number(p.delay)) ? Number(p.delay) : null,
-    length_m: Number.isFinite(Number(p.length)) ? Number(p.length) : null,
+    delay_seconds: Number.isFinite(Number(p.delayInSeconds)) ? Number(p.delayInSeconds) : null,
+    length_m: Number.isFinite(Number(p.lengthInMeters)) ? Number(p.lengthInMeters) : null,
     start_time: p.startTime || null,
     end_time: p.endTime || null,
     last_report_time: p.lastReportTime || null,
