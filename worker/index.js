@@ -270,7 +270,7 @@ const GEMINI_ALERT_SCHEMA = {
 };
 
 function classificationPrompt(text) {
-  return `Clasifica esta noticia. Rechaza si no es un incidente vial o de seguridad relacionado con calles, carreteras o movilidad en México, o si no incluye una ubicación útil. Una balacera, delito o emergencia dentro de una escuela, vivienda o inmueble sin afectación vial debe marcarse como irrelevante. Distingue el TIPO DE EVENTO de su ESTADO VIAL ACTUAL. event_type describe qué ocurrió; traffic_status describe cómo está la circulación AHORA. Si el texto actual dice "tránsito fluido", "circulación normal", "vía libre", "se restablece", "reabierta" o equivalente, usa flowing/restored aunque se mencione un bloqueo o cierre previo. Usa blocked/closed únicamente cuando el texto indique que la afectación sigue activa; partial para cierre/reducción parcial; slow para tránsito lento. Extrae el sentido de circulación cuando aparezca (por ejemplo: hacia Querétaro o dirección CDMX). Extrae también una referencia física explícita si aparece: caseta, plaza de cobro, entronque, puente, distribuidor vial, localidad, colonia o punto conocido cercano. Si la ubicación expresa un cruce o tramo entre dos vialidades (por ejemplo "Av. 608 hasta Av. 412", "entre X y Y", "esquina con", "cruce con" o "Rep. de Cuba a la altura de Héroes del 57"), conserva ambas vialidades en ubicacion; no reduzcas la ubicación a una sola calle. Convierte kilómetros con formato 66+500 a 66.5. No inventes datos ni coordenadas. Si rechazas usa valido=false, categoria=irrelevant y cadenas vacías cuando no exista el dato. Resume el hecho sin agregar información. TEXTO: ${text.slice(0, 800)}`;
+  return `Clasifica esta noticia. Rechaza si no es un incidente vial o de seguridad relacionado con calles, carreteras o movilidad en México, o si no incluye una ubicación útil. Una balacera, delito o emergencia dentro de una escuela, vivienda o inmueble sin afectación vial debe marcarse como irrelevante. Distingue el TIPO DE EVENTO de su ESTADO VIAL ACTUAL. event_type describe qué ocurrió; traffic_status describe cómo está la circulación AHORA. Si el texto actual dice "tránsito fluido", "circulación normal", "vía libre", "se restablece", "reabierta" o equivalente, usa flowing/restored aunque se mencione un bloqueo o cierre previo. Usa blocked/closed únicamente cuando el texto indique que la afectación sigue activa; partial para cierre/reducción parcial; slow para tránsito lento. Extrae el sentido de circulación cuando aparezca (por ejemplo: hacia Querétaro o dirección CDMX). Extrae también una referencia física explícita si aparece: caseta, plaza de cobro, entronque, puente, distribuidor vial, localidad, colonia o punto conocido cercano. Si la ubicación expresa un cruce o tramo entre dos vialidades (por ejemplo "Av. 608 hasta Av. 412", "entre X y Y", "esquina con", "cruce con" o "Rep. de Cuba a la altura de Héroes del 57"), conserva ambas vialidades en ubicacion; no reduzcas la ubicación a una sola calle. Convierte kilómetros con formato 66+500 a 66.5. No inventes datos ni coordenadas. Si rechazas usa valido=false, categoria=irrelevant y cadenas vacías cuando no exista el dato. Para resumen: escribe un titular operativo corto de 10 a 14 palabras, indicando qué ocurrió y el lugar principal. Para detail: amplía con carriles afectados, sentido, km, referencia, impacto o estado actual de circulación cuando esos datos existan; no repitas literalmente el resumen ni empieces detail copiando el resumen. Resume el hecho sin agregar información. TEXTO: ${text.slice(0, 800)}`;
 }
 
 async function classifyWithGroq(prompt) {
@@ -808,13 +808,28 @@ function sourceName(item, feed) {
   try { return new URL(feed).hostname.replace(/^www\./, ''); } catch { return 'Fuente RSS'; }
 }
 
+function normalizeAlertCopy(summary, detail) {
+  const title=clean(summary);
+  let body=clean(detail);
+  if (!title || !body) return { title, detail:body };
+
+  const titleNorm=norm(title).replace(/[.!?:;]+$/g,'').trim();
+  const bodyNorm=norm(body);
+  if (titleNorm && bodyNorm.startsWith(titleNorm)) {
+    body=body.slice(title.length).replace(/^[\s\-–—:;,.]+/,'').trim();
+  }
+  if (!body || norm(body)===titleNorm) body='';
+  return { title, detail:body };
+}
+
 async function processItem(item, feed) {
   const externalId = hash(item.url || item.title + '|' + item.published_at);
   if (await alreadyExists(externalId)) return 'duplicate';
   const ai = await classify((item.title + '. ' + item.body).slice(0, 1400));
   if (!ai?.valido || !['road','security'].includes(ai.categoria)) return 'rejected';
-  const title = clean(ai.resumen);
-  const detail = clean(ai.detail);
+  const copy = normalizeAlertCopy(ai.resumen, ai.detail);
+  const title = copy.title;
+  const detail = copy.detail;
   if (title.length < 8 || detail.length < 15) return 'rejected';
   const kilometer = normalizedKilometer(ai.kilometro, item.title + ' ' + item.body);
   const direction = clean(ai.sentido);
