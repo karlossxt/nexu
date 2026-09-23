@@ -383,6 +383,22 @@ function candidateMatchesIntersection(query,label) {
   return parts.slice(0,2).every(part => locationTerms(part).some(token=>hay.has(token)));
 }
 
+function requiresRoadPrecision(precision) {
+  return ['intersection','reference','kilometer','road'].includes(precision);
+}
+
+function googleLocationTypeAllowed(type, precision) {
+  if (!requiresRoadPrecision(precision)) return true;
+  return !['APPROXIMATE','GEOMETRIC_CENTER'].includes(String(type || '').toUpperCase());
+}
+
+function geoapifyLocationTypeAllowed(result, precision) {
+  if (!requiresRoadPrecision(precision)) return true;
+  const type=norm(result?.result_type || result?.category || '');
+  if (!type) return false;
+  return !/(state|county|city|municipality|district|postcode|suburb|neighbourhood|administrative)/.test(type);
+}
+
 function geocodeCandidateScore(query,label,stateOk,baseConfidence,precision) {
   if(!stateOk) return -999;
   let score=Math.round((Number(baseConfidence)||0)*50);
@@ -396,7 +412,7 @@ function geocodeCandidateScore(query,label,stateOk,baseConfidence,precision) {
 }
 
 async function geocode(query, expectedState, precision = 'zone') {
-  const confidenceCaps = { exact:.97, intersection:.94, reference:.92, kilometer:.9, road:.82, zone:.7, municipality:.58, state:.38 };
+  const confidenceCaps = { exact:.97, intersection:.90, reference:.86, kilometer:.84, road:.78, zone:.68, municipality:.56, state:.36 };
   const cap = confidenceCaps[precision] || .7;
   if (GEOAPIFY_KEY) {
     const url = new URL('https://api.geoapify.com/v1/geocode/search');
@@ -414,11 +430,16 @@ async function geocode(query, expectedState, precision = 'zone') {
         const ranked=body.results.map(result=>{
           const lat=Number(result.lat), lon=Number(result.lon), resolvedState=result.state || '';
           if(!inMexico(lat,lon)) return null;
+          if(!geoapifyLocationTypeAllowed(result,precision)) return null;
           const rankConfidence=Number(result.rank?.confidence);
           const confidence=Math.min(cap, Number.isFinite(rankConfidence) ? rankConfidence : .62);
           const label=result.formatted || query;
           const score=geocodeCandidateScore(query,label,stateMatches(expectedState,resolvedState),confidence,precision);
-          return score>-900 ? { latitude:lat, longitude:lon, label, confidence, status:confidence >= .82 ? 'automatic' : 'approximate', precision, score } : null;
+          return score>-900 ? {
+            latitude:lat, longitude:lon, label, confidence,
+            status:confidence >= .82 ? 'automatic' : 'approximate',
+            precision, location_type:result.result_type || result.category || null, provider:'geoapify', score
+          } : null;
         }).filter(Boolean).sort((a,b)=>b.score-a.score);
         if(ranked.length) {
           const best=ranked[0]; delete best.score; return best;
@@ -448,10 +469,15 @@ async function geocode(query, expectedState, precision = 'zone') {
             const lat=Number(result.geometry.location.lat), lon=Number(result.geometry.location.lng);
             if((country && country!=='MX') || !inMexico(lat,lon)) return null;
             const type=result.geometry?.location_type || 'APPROXIMATE';
-            const confidence=Math.min(cap,({ROOFTOP:.97,RANGE_INTERPOLATED:.9,GEOMETRIC_CENTER:.82,APPROXIMATE:.55})[type]||.5);
+            if(!googleLocationTypeAllowed(type,precision)) return null;
+            const confidence=Math.min(cap,({ROOFTOP:.97,RANGE_INTERPOLATED:.9,GEOMETRIC_CENTER:.62,APPROXIMATE:.45})[type]||.45);
             const label=result.formatted_address || query;
             const score=geocodeCandidateScore(query,label,stateMatches(expectedState,resolvedState),confidence,precision);
-            return score>-900 ? {latitude:lat,longitude:lon,label,confidence,status:confidence>=.82?'automatic':'approximate',precision,score} : null;
+            return score>-900 ? {
+              latitude:lat,longitude:lon,label,confidence,
+              status:confidence>=.82?'automatic':'approximate',
+              precision,location_type:type,provider:'google',score
+            } : null;
           }).filter(Boolean).sort((a,b)=>b.score-a.score);
           if(ranked.length){const best=ranked[0]; delete best.score; return best;}
           if(precision==='intersection') throw new Error('ningún candidato coincide con ambas vialidades');
@@ -480,8 +506,14 @@ async function geocode(query, expectedState, precision = 'zone') {
   const lat = Number(result.lat), lon = Number(result.lon);
   if (result.address?.country_code && result.address.country_code !== 'mx') return null;
   if (!inMexico(lat, lon) || !stateMatches(expectedState, resolved)) return null;
-  const base = ['motorway','trunk','primary','secondary','road'].includes(result.type) ? .72 : result.type === 'administrative' ? .5 : .62;
-  return { latitude:lat, longitude:lon, label:result.display_name, confidence:Math.min(cap,base), status:'approximate', precision };
+  const roadTypes=['motorway','trunk','primary','secondary','tertiary','road','unclassified','residential'];
+  if (requiresRoadPrecision(precision) && !roadTypes.includes(result.type)) return null;
+  const base = roadTypes.includes(result.type) ? .70 : result.type === 'administrative' ? .48 : .58;
+  return {
+    latitude:lat, longitude:lon, label:result.display_name,
+    confidence:Math.min(cap,base), status:'approximate', precision,
+    location_type:result.type || null, provider:'nominatim'
+  };
 }
 
 function geoDistanceKm(aLat, aLon, bLat, bLon) {
@@ -784,8 +816,19 @@ async function processItem(item, feed) {
     });
     return 'no_location';
   }
+  const requiresSpecificRoadLocation = !!clean(ai.carretera) || kilometer != null || !!reference;
+  if (!geo && requiresSpecificRoadLocation) {
+    log('warn','Ubicación vial específica sin resolución fiable; se evita fallback municipal/estatal',{
+      road:clean(ai.carretera),
+      kilometer,
+      reference,
+      municipality,
+      state:clean(ai.estado)
+    });
+    return 'no_location';
+  }
   if (!geo) {
-    for (const candidate of locationQueries) {
+    for (const candidate of locationQueries.filter(x=>['zone','municipality','state'].includes(x.precision))) {
       geo = await geocode(candidate.query, ai.estado, candidate.precision);
       if (geo) break;
       if (!GEOAPIFY_KEY && !GOOGLE_KEY) await sleep(1100);
