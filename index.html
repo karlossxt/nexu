@@ -2698,8 +2698,6 @@ function makeAlertCard(a) {
   div.setAttribute('tabindex', '0');
   div.setAttribute('aria-label', `Alerta: ${a.title || 'Incidente'}; ${a.location || 'ubicación aproximada'}. Presiona Enter para abrir el detalle`);
   div.innerHTML = alertCardHTML(a);
-  const sourceCopy=div.querySelector('.ac-source span');
-  if(sourceCopy) sourceCopy.textContent=alertSourceLabel(a);
   div.onclick = () => openAlertDetail(a.id);
   div.onkeydown = event => {
     if(event.target === div) activateWithKeyboard(event, () => openAlertDetail(a.id));
@@ -3908,6 +3906,17 @@ function toggleAlertCenterAnalytics(button) {
   const label=button.querySelector('span'); if(label) label.textContent=open?'Ocultar gráficas':'Mostrar gráficas';
   if(open) requestAnimationFrame(()=>Object.values(chartInstances).forEach(chart=>chart?.resize?.()));
 }
+function alertDetailDisplay(a) {
+  const title=String(a?.title || '').trim();
+  let detail=String(a?.detail || '').trim();
+  if (!detail) return 'Sin descripción adicional.';
+  const normalize=value=>normAcc(String(value || '')).replace(/[.!?:;]+$/g,'').trim();
+  const t=normalize(title), d=normalize(detail);
+  if (t && d.startsWith(t)) detail=detail.slice(title.length).replace(/^[\s\-–—:;,.]+/,'').trim();
+  if (!detail || normalize(detail)===t) return 'Sin descripción adicional.';
+  return detail;
+}
+
 function renderAlertCenter() {
   const list=document.getElementById('acn-list'); if(!list) return;
   buildAlertCenterStates(); renderDiagnostics();
@@ -3932,8 +3941,8 @@ function renderAlertCenter() {
     const level=alertSeverity(a),meta=sevMeta[level],loc=locationQuality(a),distance=alertDistanceKm(a);
     return `<article class="acn-card" style="--sev:${meta[1]}">
       <div class="acn-card-top"><span class="acn-badge">${meta[0]}</span><span class="acn-badge" style="--sev:#027A48">Fuente identificada</span>${a.km?`<span class="acn-badge" style="--sev:#1570EF">km ${a.km}</span>`:''}<time><i class="fa-regular fa-clock"></i> ${reportedTimeLabel(a.time)}</time></div>
-      <h3>${a.title}</h3><p>${a.detail||'Sin descripción adicional.'}</p>
-      <div class="acn-card-foot"><i class="fa-solid fa-location-dot" style="color:#EF4444"></i><span>${a.location||'Ubicación aproximada'}</span><span class="loc-confidence ${loc.cls}">· ${loc.label} (${Math.round((Number(a.location_confidence)||0)*100)}%) · radio ${estimatedRadiusLabel(a)}</span>${distance==null?'':`<b>· ${distance<10?distance.toFixed(1):Math.round(distance)} km de ti</b>`}<span class="source">${alertSourceLabel(a)}</span><button class="acn-map" onclick="showCenterAlertOnMap(${a.id})"><i class="fa-solid fa-location-arrow"></i> Ver en mapa</button></div>
+      <h3>${escapeHtml(a.title || 'Incidente')}</h3><p>${escapeHtml(alertDetailDisplay(a))}</p>
+      <div class="acn-card-foot"><i class="fa-solid fa-location-dot" style="color:#EF4444"></i><span>${escapeHtml(a.location||'Ubicación aproximada')}</span><span class="loc-confidence ${loc.cls}">· ${loc.label} (${Math.round((Number(a.location_confidence)||0)*100)}%) · radio ${estimatedRadiusLabel(a)}</span>${distance==null?'':`<b>· ${distance<10?distance.toFixed(1):Math.round(distance)} km de ti</b>`}<span class="source">${escapeHtml(alertSourceLabel(a))}</span><button class="acn-map" onclick="showCenterAlertOnMap(${a.id})"><i class="fa-solid fa-location-arrow"></i> Ver en mapa</button></div>
     </article>`;
   }).join('');
 }
