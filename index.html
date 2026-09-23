@@ -2217,7 +2217,8 @@ async function parseFeedItems(url) {
             const rawDate = it.published_at || it.pubDate || it.pub_date || it.isoDate || it.date || it.published || it.updated || it.created_at || '';
             const parsedDate = rawDate && new Date(rawDate);
             const published_at = parsedDate && Number.isFinite(parsedDate.getTime()) ? parsedDate.toISOString() : '';
-            if(title && String(content).trim().length >= 15) items.push({ title, content_text: content, source_name: inferSourceName(it, url), published_at });
+            const source_url = String(it.url || it.link || it.guid || it.source_url || '').trim();
+            if(title && String(content).trim().length >= 15) items.push({ title, content_text: content, source_name: inferSourceName(it, url), source_url, published_at });
         });
     } else {
         const doc = new DOMParser().parseFromString(trimmed, 'text/xml');
@@ -2230,7 +2231,10 @@ async function parseFeedItems(url) {
             const dateNode = Array.from(node.children).find(el => ['pubDate','date','published','updated'].includes(el.localName));
             const parsedDate = dateNode?.textContent && new Date(dateNode.textContent);
             const published_at = parsedDate && Number.isFinite(parsedDate.getTime()) ? parsedDate.toISOString() : '';
-            if(title && desc.trim().length >= 15) items.push({ title, content_text: desc, source_name: inferSourceName({ title, source_name: source }, url), published_at });
+            const linkNode = node.querySelector('link');
+            const guidNode = node.querySelector('guid');
+            const source_url = (linkNode?.textContent || guidNode?.textContent || '').trim();
+            if(title && desc.trim().length >= 15) items.push({ title, content_text: desc, source_name: inferSourceName({ title, source_name: source }, url), source_url, published_at });
         });
     }
     return items;
@@ -2290,7 +2294,7 @@ async function fetchCycles(pri, sec) {
         if(!feedIsRelevant(text)) { skippedNoise++; continue; }
         if(!uniqueItems.has(item.title) && !isSeen(item.title)) {
             uniqueItems.add(item.title);
-            processingQueue.push({ key: item.title, text, sourceName: inferSourceName(item), publishedAt: publishedAt && Number.isFinite(publishedAt.getTime()) ? publishedAt.toISOString() : '' });
+            processingQueue.push({ key: item.title, text, sourceName: inferSourceName(item), sourceUrl: item.source_url || '', publishedAt: publishedAt && Number.isFinite(publishedAt.getTime()) ? publishedAt.toISOString() : '' });
             added++;
         }
     }
@@ -2310,7 +2314,7 @@ async function fetchCycles(pri, sec) {
 async function processQueue() {
     if(processingQueue.length === 0) { isProcessing = false; return; }
     isProcessing = true; const job = processingQueue.shift();
-    try { await processAlert(job.key, job.text, job.sourceName, job.publishedAt); } catch(e) { log(`❌ Cola: ${String((e && e.message) || e)}`, 'warn'); unsee(job.key); }
+    try { await processAlert(job.key, job.text, job.sourceName, job.publishedAt, job.sourceUrl); } catch(e) { log(`❌ Cola: ${String((e && e.message) || e)}`, 'warn'); unsee(job.key); }
     setTimeout(processQueue, 4500); 
 }
 
@@ -2479,7 +2483,7 @@ function geocodeCorridor(text) {
   if(!p) return null;
   return { lat: p.lat, lon: p.lon, km: km, prec: km !== null ? 'kilometro' : 'tramo', corridor: c.name, confidence: km !== null ? 0.90 : 0.66, provider: 'red_vial' };
 }
-async function processAlert(key, text, sourceName='Fuente RSS', publishedAt='') {
+async function processAlert(key, text, sourceName='Fuente RSS', publishedAt='', sourceUrl='') {
   const prompt = `Clasifica este texto. Rechaza si no es un incidente en México o no tiene ubicación clara. Extrae literalmente carretera, kilómetro, sentido, cruce/caseta/entronque y municipio cuando existan; usa cadena vacía si no aparecen. Categoría: road=accidente/cierre/congestión; security=asalto/bloqueo/balacera/manifestación/operativo. importante=true solo con riesgo alto. trafico: fluido, moderado o detenido para road; null para security. No inventes datos. Devuelve solo JSON válido: {"valido":false,"ubicacion":"","referencia":"","carretera":"","kilometro":"","sentido":"","municipio":"","estado":"","categoria":"road","resumen":"","trafico":null,"detail":"","importante":false}. resumen corto; detail fiel, máximo 280 caracteres. TEXTO: ${text}`;
   diagAdd('ia');
   const rawResponse = await consultGroq(prompt, null, 320);
@@ -2525,7 +2529,7 @@ async function processAlert(key, text, sourceName='Fuente RSS', publishedAt='') 
     const sourceDate = publishedAt && new Date(publishedAt);
     const alertTime = sourceDate && Number.isFinite(sourceDate.getTime()) ? sourceDate : new Date();
     const locationLabel = [data.carretera, (cc?.km ?? data.kilometro) ? 'km ' + (cc?.km ?? data.kilometro) : '', data.referencia || data.ubicacion, data.municipio, estado].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(', ');
-    const alertObj = { id: Date.now(), lat: loc.lat, lon: loc.lon, category: data.categoria, title: data.resumen, location: locationLabel || data.ubicacion || data.referencia || data.municipio || estado, state: estado, precision: loc.prec, corridor: loc.corridor || null, km: cc?.km ?? data.kilometro ?? null, direction: data.sentido || '', reference: data.referencia || '', location_confidence: loc.confidence || 0.5, location_provider: loc.provider || 'local', road_snapped: !!loc.roadSnapped, time: alertTime, published_at: alertTime.toISOString(), trafico: data.trafico || null, detail: data.detail.slice(0, 280), importante: !!data.importante, source_type: 'media', source_name: sourceName || 'Fuente RSS', verification_status: 'verified', sync_pending: true, local_feed_key: key, liked: false };
+    const alertObj = { id: Date.now(), lat: loc.lat, lon: loc.lon, category: data.categoria, title: data.resumen, location: locationLabel || data.ubicacion || data.referencia || data.municipio || estado, state: estado, precision: loc.prec, corridor: loc.corridor || null, km: cc?.km ?? data.kilometro ?? null, direction: data.sentido || '', reference: data.referencia || '', location_confidence: loc.confidence || 0.5, location_provider: loc.provider || 'local', road_snapped: !!loc.roadSnapped, time: alertTime, published_at: alertTime.toISOString(), trafico: data.trafico || null, detail: data.detail.slice(0, 280), importante: !!data.importante, source_type: 'media', source_name: sourceName || 'Fuente RSS', source_url: sourceUrl || '', verification_status: 'verified', sync_pending: true, sync_since: Date.now(), local_feed_key: key, liked: false };
     alerts.push(alertObj); diagAdd('accepted'); addMarkerToMap(alertObj); updateLists(); persistAlerts(); log(`✅ ALERTA [${data.categoria}]${loc.prec !== 'punto' ? ' (aprox: ' + loc.prec + ')' : ''}: ${data.resumen} @ ${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}`, 'success');
     if(data.importante) notifyImportant(alertObj);
     if(processingQueue.length === 0 && !document.getElementById('panel-ris').classList.contains('active')) map.panTo([loc.lat, loc.lon]);
@@ -2677,7 +2681,8 @@ function alertCardHTML(a) {
   const visual = incidentVisual(a);
   const trafficChip = a.category === 'road' && a.trafico ? `<span class="traffic-chip" style="background:${t.bg}; color:${t.color};">${t.label}</span>` : '';
   const stale = isAlertExpired(a) ? `<span class="traffic-chip" style="background:rgba(154,160,166,.2); color:#80868b;">Alerta anterior</span>` : '';
-  const syncChip = a.sync_pending ? `<span class="traffic-chip" style="background:rgba(14,165,233,.12);color:#0284C7"><i class="fa-solid fa-rotate"></i> Pendiente de sincronización</span>` : '';
+  const syncAge=Date.now()-Number(a.sync_since||new Date(a.time).getTime()||0);
+  const syncChip = a.sync_pending && syncAge >= 0 && syncAge <= 60*60*1000 ? `<span class="traffic-chip" style="background:rgba(14,165,233,.12);color:#0284C7"><i class="fa-solid fa-rotate"></i> Pendiente de sincronización</span>` : '';
   const distance = alertDistanceKm(a);
   const distanceChip = distance === null ? '' : `<span class="distance-chip"><i class="fa-solid fa-route"></i> ${distance < 10 ? distance.toFixed(1) : Math.round(distance)} km</span>`;
   return `
@@ -3084,8 +3089,11 @@ function alertWordOverlap(left,right) {
 function alertsLikelySame(local,central) {
   if(local.central_id||local.category!==central.category) return false;
   if(local.external_id&&central.external_id&&local.external_id===central.external_id) return true;
+  const localUrl=String(local.source_url||'').trim();
+  const centralUrl=String(central.source_url||'').trim();
+  if(localUrl&&centralUrl&&localUrl===centralUrl) return true;
   const localTime=new Date(local.time).getTime(),centralTime=new Date(central.time).getTime();
-  if(!Number.isFinite(localTime)||!Number.isFinite(centralTime)||Math.abs(localTime-centralTime)>3*3600*1000) return false;
+  if(!Number.isFinite(localTime)||!Number.isFinite(centralTime)||Math.abs(localTime-centralTime)>6*3600*1000) return false;
   const titleScore=alertWordOverlap(`${local.title} ${local.detail||''}`,`${central.title} ${central.detail||''}`);
   const locationScore=alertWordOverlap(`${local.location||''} ${local.state||''}`,`${central.location||''} ${central.state||''}`);
   const sameSource=normAcc(local.source_name)===normAcc(central.source_name);
@@ -3107,7 +3115,16 @@ async function loadCentralAlerts() {
     return {...current,liked:!!matched.liked,sync_pending:false};
   });
   remainingLocal.forEach(alert=>{
-    if(alert.source_type==='media') alert.sync_pending=true;
+    if(alert.source_type!=='media') return;
+    const since=Number(alert.sync_since||new Date(alert.time).getTime()||0);
+    const age=Date.now()-since;
+    if(age>=0&&age<=60*60*1000) {
+      alert.sync_pending=true;
+      if(!alert.sync_since) alert.sync_since=since||Date.now();
+    } else {
+      alert.sync_pending=false;
+      alert.verification_status=alert.verification_status||'verified';
+    }
   });
   alerts=[...remainingLocal,...mergedCentral];
   persistAlerts(); updateLists(); rebuildU();
