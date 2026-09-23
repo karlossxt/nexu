@@ -411,6 +411,63 @@ function geocodeCandidateScore(query,label,stateOk,baseConfidence,precision) {
   return score;
 }
 
+async function snapRoadCandidate(candidate, precision) {
+  if (!GOOGLE_KEY || !candidate || !['road','kilometer','reference'].includes(precision)) return candidate;
+  const lat=Number(candidate.latitude), lon=Number(candidate.longitude);
+  if (!inMexico(lat,lon)) return candidate;
+
+  const url=new URL('https://roads.googleapis.com/v1/nearestRoads');
+  url.searchParams.set('points', `${lat},${lon}`);
+  url.searchParams.set('key', GOOGLE_KEY);
+
+  try {
+    const response=await fetch(url,{headers:{Accept:'application/json'}});
+    const raw=await response.text();
+    if (!response.ok || !/^\s*[\[{]/.test(raw)) {
+      log('warn','Google Roads no pudo hacer snap',{ precision, status:response.status, label:candidate.label });
+      return candidate;
+    }
+    const body=JSON.parse(raw);
+    const point=body.snappedPoints?.[0]?.location;
+    if (!point) return candidate;
+
+    const snappedLat=Number(point.latitude), snappedLon=Number(point.longitude);
+    if (!inMexico(snappedLat,snappedLon)) return candidate;
+
+    const distanceKm=geoDistanceKm(lat,lon,snappedLat,snappedLon);
+    const maxDistanceKm=precision==='road' ? 1.5 : .75;
+    if (!Number.isFinite(distanceKm) || distanceKm>maxDistanceKm) {
+      log('warn','Snap vial descartado por distancia',{
+        precision,
+        distance_m:Number.isFinite(distanceKm)?Math.round(distanceKm*1000):null,
+        max_m:Math.round(maxDistanceKm*1000),
+        label:candidate.label
+      });
+      return candidate;
+    }
+
+    const snapped={
+      ...candidate,
+      latitude:snappedLat,
+      longitude:snappedLon,
+      road_snapped:true,
+      snap_distance_m:Math.round(distanceKm*1000),
+      provider:`${candidate.provider || 'geocoder'}+google_roads`,
+      status:candidate.confidence>=.82?'automatic':'approximate'
+    };
+    log('info','Google Roads snap aplicado',{
+      precision,
+      distance_m:snapped.snap_distance_m,
+      provider:candidate.provider || 'geocoder',
+      label:candidate.label
+    });
+    return snapped;
+  } catch (error) {
+    log('warn','Google Roads no disponible; se conserva geocodificación validada',{ precision, error:error.message });
+    return candidate;
+  }
+}
+
 async function geocode(query, expectedState, precision = 'zone') {
   const confidenceCaps = { exact:.97, intersection:.90, reference:.86, kilometer:.84, road:.78, zone:.68, municipality:.56, state:.36 };
   const cap = confidenceCaps[precision] || .7;
@@ -442,7 +499,8 @@ async function geocode(query, expectedState, precision = 'zone') {
           } : null;
         }).filter(Boolean).sort((a,b)=>b.score-a.score);
         if(ranked.length) {
-          const best=ranked[0]; delete best.score; return best;
+          const best=ranked[0]; delete best.score;
+          return await snapRoadCandidate(best,precision);
         }
         if(precision==='intersection') throw new Error('ningún candidato coincide con ambas vialidades');
       }
@@ -479,7 +537,10 @@ async function geocode(query, expectedState, precision = 'zone') {
               precision,location_type:type,provider:'google',score
             } : null;
           }).filter(Boolean).sort((a,b)=>b.score-a.score);
-          if(ranked.length){const best=ranked[0]; delete best.score; return best;}
+          if(ranked.length){
+            const best=ranked[0]; delete best.score;
+            return await snapRoadCandidate(best,precision);
+          }
           if(precision==='intersection') throw new Error('ningún candidato coincide con ambas vialidades');
         }
       }
@@ -509,11 +570,11 @@ async function geocode(query, expectedState, precision = 'zone') {
   const roadTypes=['motorway','trunk','primary','secondary','tertiary','road','unclassified','residential'];
   if (requiresRoadPrecision(precision) && !roadTypes.includes(result.type)) return null;
   const base = roadTypes.includes(result.type) ? .70 : result.type === 'administrative' ? .48 : .58;
-  return {
+  return await snapRoadCandidate({
     latitude:lat, longitude:lon, label:result.display_name,
     confidence:Math.min(cap,base), status:'approximate', precision,
     location_type:result.type || null, provider:'nominatim'
-  };
+  },precision);
 }
 
 function geoDistanceKm(aLat, aLon, bLat, bLon) {
