@@ -196,6 +196,70 @@ async function alreadyExists(externalId) {
   return Array.isArray(rows) && rows.length > 0;
 }
 
+function dedupeTokens(value) {
+  const stop=new Set(['para','por','con','sin','desde','hasta','sobre','entre','tras','ante','del','las','los','una','uno','unos','unas','que','esta','este','esto','como','más','mas','km','kilometro','kilómetro','carretera','autopista','avenida','calle']);
+  return new Set(norm(value).split(/[^a-z0-9]+/).filter(token=>token.length>=3 && !stop.has(token)));
+}
+
+function textSimilarity(a,b) {
+  const aa=dedupeTokens(a), bb=dedupeTokens(b);
+  if (!aa.size || !bb.size) return 0;
+  let common=0;
+  for (const token of aa) if (bb.has(token)) common++;
+  return common / Math.max(aa.size,bb.size);
+}
+
+function roadSimilarity(a,b) {
+  const aa=roadKey(a), bb=roadKey(b);
+  if (!aa || !bb) return false;
+  return aa===bb || aa.includes(bb) || bb.includes(aa);
+}
+
+async function findSpatialDuplicate(row) {
+  const eventTime=new Date(row.event_at || Date.now()).getTime();
+  const since=new Date(eventTime - 2*3600_000).toISOString();
+  const until=new Date(eventTime + 30*60_000).toISOString();
+  const path='alerts?select=id,title,detail,event_type,category,road,kilometer,latitude,longitude,source_name,event_at,location_label'
+    +'&category=eq.'+encodeURIComponent(row.category)
+    +'&event_at=gte.'+encodeURIComponent(since)
+    +'&event_at=lte.'+encodeURIComponent(until)
+    +'&order=event_at.desc&limit=80';
+  const recent=await sb(path) || [];
+  for (const existing of recent) {
+    const lat=Number(existing.latitude), lon=Number(existing.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+    const distanceKm=geoDistanceKm(row.latitude,row.longitude,lat,lon);
+    if (!Number.isFinite(distanceKm) || distanceKm>1.5) continue;
+
+    const sameEvent=!!row.event_type && !!existing.event_type && row.event_type===existing.event_type;
+    const sameRoad=roadSimilarity(row.road,existing.road);
+    const kmA=Number(row.kilometer), kmB=Number(existing.kilometer);
+    const sameKm=Number.isFinite(kmA) && Number.isFinite(kmB) && Math.abs(kmA-kmB)<=1;
+    const similarity=textSimilarity(
+      [row.title,row.detail,row.location_label].filter(Boolean).join(' '),
+      [existing.title,existing.detail,existing.location_label].filter(Boolean).join(' ')
+    );
+
+    let duplicate=false;
+    if (sameEvent && distanceKm<=0.25 && similarity>=0.20) duplicate=true;
+    else if (sameEvent && sameRoad && distanceKm<=1.0 && similarity>=0.30) duplicate=true;
+    else if (sameEvent && sameRoad && sameKm && distanceKm<=1.5) duplicate=true;
+    else if (!existing.event_type && sameRoad && distanceKm<=0.5 && similarity>=0.48) duplicate=true;
+
+    if (duplicate) {
+      return {
+        id:existing.id,
+        distance_m:Math.round(distanceKm*1000),
+        similarity:Number(similarity.toFixed(2)),
+        same_road:sameRoad,
+        same_km:sameKm,
+        source:existing.source_name || null
+      };
+    }
+  }
+  return null;
+}
+
 async function enqueueCandidate(item, feed, priority) {
   const externalId = hash(item.url || item.title + '|' + item.published_at);
   await sb('ingest_queue?on_conflict=external_id', {
@@ -934,6 +998,20 @@ async function processItem(item, feed) {
     source_url: item.url || null,
     event_at: eventAt
   };
+  const spatialDuplicate=await findSpatialDuplicate(row);
+  if (spatialDuplicate) {
+    log('info','Alerta duplicada por proximidad y similitud',{
+      external_id:externalId,
+      existing_id:spatialDuplicate.id,
+      distance_m:spatialDuplicate.distance_m,
+      similarity:spatialDuplicate.similarity,
+      same_road:spatialDuplicate.same_road,
+      same_km:spatialDuplicate.same_km,
+      existing_source:spatialDuplicate.source,
+      new_source:row.source_name
+    });
+    return 'duplicate';
+  }
   await sb('alerts?on_conflict=external_id', { method:'POST', headers:{ Prefer:'resolution=ignore-duplicates,return=minimal' }, body:JSON.stringify(row) });
   return 'inserted';
 }
