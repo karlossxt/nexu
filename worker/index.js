@@ -21,6 +21,7 @@ const GEMINI_KEY = env.GEMINI_API_KEY || '';
 const GEMINI_MODEL = env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
 const GEOAPIFY_KEY = env.GEOAPIFY_API_KEY || '';
 const GOOGLE_KEY = env.GOOGLE_MAPS_API_KEY || '';
+const STRICT_LOCATION_MODE = String(env.STRICT_LOCATION_MODE || 'true').toLowerCase() !== 'false';
 const POLL_MS = Math.max(60_000, Number(env.WORKER_INTERVAL_MS) || 60_000);
 const MAX_AGE_MS = Math.max(1, Number(env.ALERT_MAX_AGE_HOURS) || 24) * 3600_000;
 const MAX_AI_PER_CYCLE = Math.max(1, Number(env.MAX_AI_PER_CYCLE) || 6);
@@ -886,6 +887,71 @@ function normalizeAlertCopy(summary, detail) {
   return { title, detail:body };
 }
 
+function strictLocationDecision(ai, geo, context={}) {
+  if (!STRICT_LOCATION_MODE) return { ok:true, reason:'strict_mode_disabled' };
+  if (!geo || !Number.isFinite(Number(geo.latitude)) || !Number.isFinite(Number(geo.longitude))) {
+    return { ok:false, reason:'missing_coordinates' };
+  }
+
+  const precision=String(geo.precision || '').toLowerCase();
+  const confidence=Number(geo.confidence) || 0;
+  const status=String(geo.status || '').toLowerCase();
+  const provider=String(geo.provider || '').toLowerCase();
+  const locationType=String(geo.location_type || '').toUpperCase();
+  const roadSnapped=!!geo.road_snapped || provider.includes('google_roads');
+  const road=clean(ai?.carretera);
+  const location=clean(ai?.ubicacion);
+  const municipality=clean(context.municipality);
+  const state=clean(ai?.estado);
+  const kilometer=context.kilometer;
+  const explicitIntersection=context.explicitIntersection;
+  const reference=clean(context.reference);
+
+  if (precision==='toll_reference') {
+    return confidence>=.88 ? {ok:true,reason:'trusted_toll'} : {ok:false,reason:'low_confidence_toll'};
+  }
+  if (precision==='kilometer_static') {
+    return confidence>=.84 ? {ok:true,reason:'trusted_red_vial'} : {ok:false,reason:'low_confidence_red_vial'};
+  }
+  if (precision==='intersection') {
+    if (!explicitIntersection) return {ok:false,reason:'intersection_without_two_streets'};
+    if (confidence<.74) return {ok:false,reason:'low_confidence_intersection'};
+    return {ok:true,reason:'trusted_intersection'};
+  }
+
+  if (['kilometer','reference','road'].includes(precision)) {
+    if (!road) return {ok:false,reason:'road_precision_without_road'};
+    if (['APPROXIMATE','GEOMETRIC_CENTER'].includes(locationType)) return {ok:false,reason:'generic_geocoder_location_type'};
+    if (!roadSnapped) return {ok:false,reason:'road_not_snapped'};
+    const minConfidence=precision==='road' ? .68 : .72;
+    if (confidence<minConfidence) return {ok:false,reason:'low_confidence_road'};
+    return {ok:true,reason:'trusted_snapped_road'};
+  }
+
+  // Una ubicación puramente municipal/estatal es demasiado ambigua para un pin operativo.
+  if (['municipality','state'].includes(precision)) {
+    return {ok:false,reason:'administrative_center_only'};
+  }
+
+  if (precision==='zone' || !precision) {
+    // Permitimos zona urbana solo si existe evidencia más específica que municipio/estado.
+    const normalizedLocation=norm(location);
+    const hasStreetSignal=/\b(av\.?|avenida|calle|blvd\.?|boulevard|eje|circuito|periferico|perif[eé]rico|calzada|carretera|autopista|entronque|puente|distribuidor)\b/i.test(location);
+    const isOnlyAdministrative =
+      !location ||
+      norm(location)===norm(municipality) ||
+      norm(location)===norm(state) ||
+      normalizedLocation===norm([municipality,state].filter(Boolean).join(' '));
+    if (isOnlyAdministrative) return {ok:false,reason:'ambiguous_zone'};
+    if (!hasStreetSignal && confidence<.68) return {ok:false,reason:'weak_zone_without_street_signal'};
+    if (confidence<.62) return {ok:false,reason:'low_confidence_zone'};
+    return {ok:true,reason:'trusted_zone'};
+  }
+
+  // Cualquier tipo desconocido se descarta por defecto.
+  return {ok:false,reason:'unknown_location_precision'};
+}
+
 async function processItem(item, feed) {
   const externalId = hash(item.url || item.title + '|' + item.published_at);
   if (await alreadyExists(externalId)) return 'duplicate';
@@ -975,6 +1041,31 @@ async function processItem(item, feed) {
     }
   }
   if (!geo || !Number.isFinite(geo.latitude) || !Number.isFinite(geo.longitude)) return 'no_location';
+
+  const strictDecision=strictLocationDecision(ai,geo,{
+    kilometer,
+    reference,
+    municipality,
+    explicitIntersection
+  });
+  if (!strictDecision.ok) {
+    log('warn','Ubicación descartada por política estricta',{
+      reason:strictDecision.reason,
+      road:clean(ai.carretera),
+      kilometer,
+      reference,
+      municipality,
+      state:clean(ai.estado),
+      precision:geo.precision || null,
+      confidence:Number(geo.confidence)||0,
+      status:geo.status || null,
+      provider:geo.provider || null,
+      location_type:geo.location_type || null,
+      road_snapped:!!geo.road_snapped
+    });
+    return 'no_location';
+  }
+
   const eventAt = item.published_at && Date.now() - new Date(item.published_at).getTime() <= MAX_AGE_MS ? item.published_at : new Date().toISOString();
   const row = {
     external_id: externalId,
