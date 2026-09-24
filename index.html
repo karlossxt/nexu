@@ -2395,7 +2395,7 @@ async function geocodeBest(place, options = {}) {
         try {
             const headers = {}; const token = localStorage.getItem('nv_token');
             if(token) headers['x-app-token'] = token;
-            const secureUrl = `/api/geocode?q=${encodeURIComponent(c)}&snap=${options.snapToRoad ? '1' : '0'}${options.expectedState ? '&state=' + encodeURIComponent(options.expectedState) : ''}`;
+            const secureUrl = `/api/geocode?q=${encodeURIComponent(c)}&snap=${options.snapToRoad ? '1' : '0'}${options.expectedState ? '&state=' + encodeURIComponent(options.expectedState) : ''}${options.expectedRoad ? '&road=' + encodeURIComponent(options.expectedRoad) : ''}`;
             const secureRes = await fetch(secureUrl, { headers, cache: 'no-store' });
             if(secureRes.ok) {
                 const data = await secureRes.json();
@@ -2406,7 +2406,10 @@ async function geocodeBest(place, options = {}) {
                         roadSnapped: !!data.road_snapped, locationType: data.location_type || '',
                         formattedAddress: data.formatted_address || c
                     };
-                    if(options.strictRoad && !result.roadSnapped) continue;
+                    if(options.strictRoad && (!result.roadSnapped || (options.expectedRoad && !data.route_verified))) continue;
+                    result.routeVerified=!!data.route_verified;
+                    result.resolvedRoad=data.resolved_road || '';
+                    result.snapDistanceM=Number(data.snap_distance_m)||null;
                     return result;
                 }
             }
@@ -2524,7 +2527,8 @@ async function processAlert(key, text, sourceName='Fuente RSS', publishedAt='', 
       const g = await geocodeBest(c.q, {
         snapToRoad: data.categoria === 'road' && ['punto','zona'].includes(c.prec),
         expectedState: estado,
-        strictRoad: requiresSpecificRoadLocation && !cc
+        strictRoad: requiresSpecificRoadLocation && !cc,
+        expectedRoad: requiresSpecificRoadLocation ? data.carretera : ''
       });
       if(g) {
         const adjustedConfidence = c.prec === 'estado' ? Math.min(g.confidence,0.38) : c.prec === 'municipio' ? Math.min(g.confidence,0.58) : g.confidence;
