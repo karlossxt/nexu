@@ -2388,7 +2388,9 @@ async function reverseGeocodePoint(lat, lon) {
 
 async function geocodeBest(place, options = {}) {
     const cleaned = cleanGeoQuery(place);
-    const candidates = [place, cleaned].filter((v, i, a) => a.indexOf(v) === i);
+    const candidates = options.strictRoad
+      ? [place]
+      : [place, cleaned].filter((v, i, a) => a.indexOf(v) === i);
     for(const c of candidates) {
         try {
             const headers = {}; const token = localStorage.getItem('nv_token');
@@ -2398,13 +2400,18 @@ async function geocodeBest(place, options = {}) {
             if(secureRes.ok) {
                 const data = await secureRes.json();
                 const lat = Number(data.lat), lon = Number(data.lon);
-                if(Number.isFinite(lat) && Number.isFinite(lon)) return {
-                    lat, lon, provider: data.provider || 'google', confidence: Number(data.confidence) || 0.5,
-                    roadSnapped: !!data.road_snapped, locationType: data.location_type || '',
-                    formattedAddress: data.formatted_address || c
-                };
+                if(Number.isFinite(lat) && Number.isFinite(lon)) {
+                    const result = {
+                        lat, lon, provider: data.provider || 'google', confidence: Number(data.confidence) || 0.5,
+                        roadSnapped: !!data.road_snapped, locationType: data.location_type || '',
+                        formattedAddress: data.formatted_address || c
+                    };
+                    if(options.strictRoad && !result.roadSnapped) continue;
+                    return result;
+                }
             }
         } catch(e) {}
+        if(options.strictRoad) continue;
         try {
             const geoUrl = LINKS.nominatim.replace('{q}', encodeURIComponent(c + ', Mexico'));
             const res = await fetch(geoUrl); const geoData = await res.json();
@@ -2415,6 +2422,7 @@ async function geocodeBest(place, options = {}) {
             }
         } catch(e) {}
     }
+    if(options.strictRoad) return null;
     try {
         const backupUrl = LINKS.photon.replace('{q}', encodeURIComponent(place + ', Mexico'));
         const res2 = await fetch(backupUrl); const data2 = await res2.json();
@@ -2502,20 +2510,30 @@ async function processAlert(key, text, sourceName='Fuente RSS', publishedAt='', 
     let loc = null;
     const cc = geocodeCorridor(text);
     if(cc) { loc = { lat: cc.lat, lon: cc.lon, prec: cc.prec, corridor: cc.corridor, confidence: cc.confidence, provider: cc.provider, roadSnapped: false }; log(`🛣️ Corredor detectado: ${cc.corridor}${cc.km != null ? ' (km ' + cc.km.toFixed(3) + ')' : ''}`, 'info'); }
+    const requiresSpecificRoadLocation = data.categoria === 'road' && !!(String(data.carretera||'').trim() || String(data.kilometro||'').trim() || String(data.referencia||'').trim());
     const exactParts = [data.referencia, data.carretera, data.kilometro ? 'km ' + data.kilometro : '', data.ubicacion, data.municipio, estado].filter(Boolean);
     if(exactParts.length >= 2) candidates.push({ q: [...new Set(exactParts)].join(', '), prec: data.referencia ? 'punto' : 'zona' });
     if(data.ubicacion) candidates.push({ q: data.ubicacion + (data.municipio ? ', ' + data.municipio : '') + (estado ? ', ' + estado : ''), prec: 'zona' });
-    if(data.municipio) candidates.push({ q: data.municipio + (estado ? ', ' + estado : ''), prec: 'municipio' });
-    if(estado) candidates.push({ q: estado + ', Mexico', prec: 'estado' });
+    // Si la alerta habla de carretera/km/referencia, NO degradar a centro de municipio/estado.
+    if(!requiresSpecificRoadLocation && data.municipio) candidates.push({ q: data.municipio + (estado ? ', ' + estado : ''), prec: 'municipio' });
+    if(!requiresSpecificRoadLocation && estado) candidates.push({ q: estado + ', Mexico', prec: 'estado' });
     const seen = new Set();
     for(const c of candidates) {
       if(loc) break;
       if(seen.has(c.q)) continue; seen.add(c.q);
-      const g = await geocodeBest(c.q, { snapToRoad: data.categoria === 'road' && ['punto','zona'].includes(c.prec), expectedState: estado });
+      const g = await geocodeBest(c.q, {
+        snapToRoad: data.categoria === 'road' && ['punto','zona'].includes(c.prec),
+        expectedState: estado,
+        strictRoad: requiresSpecificRoadLocation && !cc
+      });
       if(g) {
         const adjustedConfidence = c.prec === 'estado' ? Math.min(g.confidence,0.38) : c.prec === 'municipio' ? Math.min(g.confidence,0.58) : g.confidence;
         loc = { lat: g.lat, lon: g.lon, prec: g.roadSnapped ? 'carretera' : c.prec, corridor: null, confidence: adjustedConfidence, provider: g.provider, roadSnapped: g.roadSnapped }; break;
       }
+    }
+    if(requiresSpecificRoadLocation && !cc && loc && !loc.roadSnapped) {
+      log(`🚫 Ubicación vial ambigua descartada: ${data.resumen}`, 'warn');
+      diagAdd('noLocation'); return;
     }
     if(!loc) {
       if(data.importante) log(`🚩 Importante sin coordenadas: ${data.resumen} (${estado || 'sin ubicación conocida'})`, 'warn');
