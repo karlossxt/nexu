@@ -37,6 +37,7 @@ let groqCooldownUntil = 0;
 let aiNextAllowedAt = 0;
 let lastAiProvider = 'none';
 let strictLocationRejects = Object.create(null);
+let roadSnapMetrics = { attempted:0, success:0, rejected_distance:0, rejected_road_mismatch:0, reverse_failed:0 };
 
 function noteStrictLocationReject(reason) {
   const key=String(reason || 'unknown');
@@ -482,10 +483,55 @@ function geocodeCandidateScore(query,label,stateOk,baseConfidence,precision) {
   return score;
 }
 
-async function snapRoadCandidate(candidate, precision) {
+function normalizeRoadName(value) {
+  return norm(value)
+    .replace(/\b(carretera|autopista|federal|mexico|mex|ruta|libre|cuota|hacia|sentido|km|kilometro)\b/g,' ')
+    .replace(/[^a-z0-9]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function roadNameTokens(value) {
+  return new Set(normalizeRoadName(value).split(' ').filter(token=>token.length>=2));
+}
+
+function roadMatchesExpected(expected,resolved) {
+  const a=normalizeRoadName(expected), b=normalizeRoadName(resolved);
+  if(!a || !b) return false;
+  if(a===b || a.includes(b) || b.includes(a)) return true;
+  const an=(a.match(/\b\d+[a-z]?\b/g)||[]);
+  const bn=new Set(b.match(/\b\d+[a-z]?\b/g)||[]);
+  if(an.some(token=>bn.has(token))) return true;
+  const aa=roadNameTokens(a), bb=roadNameTokens(b);
+  let common=0;
+  for(const token of aa) if(bb.has(token)) common++;
+  return common>=2 || (common>=1 && Math.min(aa.size,bb.size)<=2);
+}
+
+async function reverseGoogleRoad(lat,lon) {
+  if(!GOOGLE_KEY) return '';
+  const url=new URL('https://maps.googleapis.com/maps/api/geocode/json');
+  url.searchParams.set('latlng',`${lat},${lon}`);
+  url.searchParams.set('language','es');
+  url.searchParams.set('region','mx');
+  url.searchParams.set('key',GOOGLE_KEY);
+  try {
+    const response=await fetch(url,{headers:{Accept:'application/json'}});
+    const body=await response.json().catch(()=>({}));
+    if(!response.ok || body.status==='REQUEST_DENIED') return '';
+    for(const result of body.results || []) {
+      const route=result.address_components?.find(c=>c.types?.includes('route'));
+      if(route?.long_name) return route.long_name;
+    }
+  } catch {}
+  return '';
+}
+
+async function snapRoadCandidate(candidate, precision, expectedRoad='') {
   if (!GOOGLE_KEY || !candidate || !['road','kilometer','reference'].includes(precision)) return candidate;
   const lat=Number(candidate.latitude), lon=Number(candidate.longitude);
   if (!inMexico(lat,lon)) return candidate;
+  roadSnapMetrics.attempted++;
 
   const url=new URL('https://roads.googleapis.com/v1/nearestRoads');
   url.searchParams.set('points', `${lat},${lon}`);
@@ -508,6 +554,7 @@ async function snapRoadCandidate(candidate, precision) {
     const distanceKm=geoDistanceKm(lat,lon,snappedLat,snappedLon);
     const maxDistanceKm=precision==='road' ? 1.5 : .75;
     if (!Number.isFinite(distanceKm) || distanceKm>maxDistanceKm) {
+      roadSnapMetrics.rejected_distance++;
       log('warn','Snap vial descartado por distancia',{
         precision,
         distance_m:Number.isFinite(distanceKm)?Math.round(distanceKm*1000):null,
@@ -517,6 +564,35 @@ async function snapRoadCandidate(candidate, precision) {
       return candidate;
     }
 
+    const expected=clean(expectedRoad);
+    let resolvedRoad='';
+    let routeVerified=false;
+    if(expected) {
+      resolvedRoad=await reverseGoogleRoad(snappedLat,snappedLon);
+      if(!resolvedRoad) {
+        roadSnapMetrics.reverse_failed++;
+        log('warn','Snap vial descartado: reverse geocode sin nombre de vía',{
+          precision,
+          expected_road:expected,
+          distance_m:Math.round(distanceKm*1000),
+          label:candidate.label
+        });
+        return candidate;
+      }
+      routeVerified=roadMatchesExpected(expected,resolvedRoad);
+      if(!routeVerified) {
+        roadSnapMetrics.rejected_road_mismatch++;
+        log('warn','Snap vial descartado por carretera distinta',{
+          precision,
+          expected_road:expected,
+          resolved_road:resolvedRoad,
+          distance_m:Math.round(distanceKm*1000),
+          label:candidate.label
+        });
+        return candidate;
+      }
+    }
+
     const snapped={
       ...candidate,
       latitude:snappedLat,
@@ -524,12 +600,18 @@ async function snapRoadCandidate(candidate, precision) {
       road_snapped:true,
       snap_distance_m:Math.round(distanceKm*1000),
       provider:`${candidate.provider || 'geocoder'}+google_roads`,
-      status:candidate.confidence>=.82?'automatic':'approximate'
+      status:candidate.confidence>=.82?'automatic':'approximate',
+      route_verified:expected ? routeVerified : false,
+      resolved_road:resolvedRoad || null
     };
+    roadSnapMetrics.success++;
     log('info','Google Roads snap aplicado',{
       precision,
       distance_m:snapped.snap_distance_m,
       provider:candidate.provider || 'geocoder',
+      expected_road:expected || null,
+      resolved_road:resolvedRoad || null,
+      route_verified:expected ? routeVerified : false,
       label:candidate.label
     });
     return snapped;
@@ -539,7 +621,7 @@ async function snapRoadCandidate(candidate, precision) {
   }
 }
 
-async function geocode(query, expectedState, precision = 'zone') {
+async function geocode(query, expectedState, precision = 'zone', expectedRoad = '') {
   const confidenceCaps = { exact:.97, intersection:.90, reference:.86, kilometer:.84, road:.78, zone:.68, municipality:.56, state:.36 };
   const cap = confidenceCaps[precision] || .7;
   if (GEOAPIFY_KEY) {
@@ -571,7 +653,7 @@ async function geocode(query, expectedState, precision = 'zone') {
         }).filter(Boolean).sort((a,b)=>b.score-a.score);
         if(ranked.length) {
           const best=ranked[0]; delete best.score;
-          return await snapRoadCandidate(best,precision);
+          return await snapRoadCandidate(best,precision,expectedRoad);
         }
         if(precision==='intersection') throw new Error('ningún candidato coincide con ambas vialidades');
       }
@@ -610,7 +692,7 @@ async function geocode(query, expectedState, precision = 'zone') {
           }).filter(Boolean).sort((a,b)=>b.score-a.score);
           if(ranked.length){
             const best=ranked[0]; delete best.score;
-            return await snapRoadCandidate(best,precision);
+            return await snapRoadCandidate(best,precision,expectedRoad);
           }
           if(precision==='intersection') throw new Error('ningún candidato coincide con ambas vialidades');
         }
@@ -645,7 +727,7 @@ async function geocode(query, expectedState, precision = 'zone') {
     latitude:lat, longitude:lon, label:result.display_name,
     confidence:Math.min(cap,base), status:'approximate', precision,
     location_type:result.type || null, provider:'nominatim'
-  },precision);
+  },precision,expectedRoad);
 }
 
 function geoDistanceKm(aLat, aLon, bLat, bLon) {
@@ -798,7 +880,7 @@ async function resolveRoadLocation(ai, kilometer, reference) {
     { query:[ai.carretera, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'road' }
   ].filter(x => x.query.length >= 4).filter((x,i,a) => a.findIndex(y => y.query === x.query) === i);
   for (const candidate of queries) {
-    const result = await geocode(candidate.query, ai.estado, candidate.precision);
+    const result = await geocode(candidate.query, ai.estado, candidate.precision, ai.carretera);
     if (result) candidates.push(result);
     if (!GEOAPIFY_KEY && !GOOGLE_KEY) await sleep(1100);
   }
@@ -1142,7 +1224,8 @@ async function health(values) {
 async function cycle() {
   const started = new Date().toISOString();
   strictLocationRejects = Object.create(null);
-  const stats = { received:0, relevant:0, queued_new:0, queue_pending:0, queue_failed:0, queue_oldest_min:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, groq_used:0, gemini_used:0, ai_cooldown_seconds:0, ai_budget_wait_seconds:0, ai_max_per_hour:AI_MAX_PER_HOUR, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0, tomtom_enabled:false, tomtom_received:0, tomtom_boxes:0, tomtom_errors:0, tomtom_high_value:0, tomtom_medium_value:0, tomtom_low_value:0, tomtom_operational_candidates:0, tomtom_collapsed_duplicates:0, tomtom_categories:{}, queue_expired_removed:0, strict_location_mode:STRICT_LOCATION_MODE, strict_location_rejections:{} };
+  roadSnapMetrics = { attempted:0, success:0, rejected_distance:0, rejected_road_mismatch:0, reverse_failed:0 };
+  const stats = { received:0, relevant:0, queued_new:0, queue_pending:0, queue_failed:0, queue_oldest_min:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, groq_used:0, gemini_used:0, ai_cooldown_seconds:0, ai_budget_wait_seconds:0, ai_max_per_hour:AI_MAX_PER_HOUR, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0, tomtom_enabled:false, tomtom_received:0, tomtom_boxes:0, tomtom_errors:0, tomtom_high_value:0, tomtom_medium_value:0, tomtom_low_value:0, tomtom_operational_candidates:0, tomtom_collapsed_duplicates:0, tomtom_categories:{}, queue_expired_removed:0, strict_location_mode:STRICT_LOCATION_MODE, strict_location_rejections:{}, road_snap_metrics:{} };
   await health({ status:'running', last_started_at:started, last_error:null });
   try {
     const tomtom = await TOMTOM_TRAFFIC.fetchShadowIncidents(env);
@@ -1273,6 +1356,7 @@ async function cycle() {
     }
     Object.assign(stats, await queueMetrics());
     stats.strict_location_rejections={...strictLocationRejects};
+    stats.road_snap_metrics={...roadSnapMetrics};
     const located=stats.inserted+stats.no_location;
     stats.location_success_rate_pct=located?Math.round((stats.inserted/located)*100):0;
     await health({
