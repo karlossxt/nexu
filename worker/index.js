@@ -732,6 +732,17 @@ function resolveStaticRoadKilometer(road, kilometer) {
   };
 }
 
+function extractExplicitTollReference(text) {
+  const source=clean(text);
+  if (!source) return '';
+
+  const quoted=source.match(/(?:plaza\s+de\s+cobro|caseta(?:\s+de\s+cobro)?|peaje)\s*['"“”‘’]([^'"“”‘’]{2,80})['"“”‘’]/i);
+  if (quoted) return clean(`Plaza de Cobro ${quoted[1]}`);
+
+  const plain=source.match(/(?:plaza\s+de\s+cobro|caseta(?:\s+de\s+cobro)?|peaje)\s+(?:de\s+)?([A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .-]{2,60}?)(?=\s+(?:a\s+la\s+altura|ubicad[ao]|sobre|en\s+el\s+km|km\b|toluca\b|edo\.?\s*m[eé]x|estado\s+de)|[,.;]|$)/i);
+  return plain ? clean(`Plaza de Cobro ${plain[1]}`) : '';
+}
+
 function tollKey(value) {
   return norm(value)
     .replace(/\b(caseta|casetas|plaza|plazas|cobro|peaje|de|del|la|el|nro|no|numero|km)\b/g, ' ')
@@ -969,7 +980,9 @@ async function processItem(item, feed) {
   if (title.length < 8 || detail.length < 15) return 'rejected';
   const kilometer = normalizedKilometer(ai.kilometro, item.title + ' ' + item.body);
   const direction = clean(ai.sentido);
-  const reference = clean(ai.referencia);
+  const sourceText = clean(item.title + ' ' + item.body);
+  const explicitTollReference = extractExplicitTollReference(sourceText);
+  const reference = explicitTollReference || clean(ai.referencia);
   const trafficStatus = normalizedTrafficStatus(ai, item.title + ' ' + item.body);
   const eventType = ['traffic_update','crash','closure','blockage','protest','road_hazard','security_incident','emergency','other'].includes(String(ai.event_type||'').toLowerCase()) ? String(ai.event_type).toLowerCase() : 'other';
   const municipality = usableMunicipality(ai.municipio, ai.estado);
@@ -988,7 +1001,13 @@ async function processItem(item, feed) {
     { query:clean(ai.estado), precision:'state' }
   ].filter(x => x.query.length >= 4).filter((x,index,list) => list.findIndex(y => y.query === x.query) === index).slice(0, 4);
   let geo = resolveTollReference(reference);
-  if (geo) log('info','Caseta resuelta con CASETAS',{ reference, matched:geo.matched_reference, score:geo.match_score, confidence:geo.confidence });
+  if (geo) log('info','Caseta resuelta con CASETAS',{
+    reference,
+    extracted_from_text:!!explicitTollReference,
+    matched:geo.matched_reference,
+    score:geo.match_score,
+    confidence:geo.confidence
+  });
 
   // Si la fuente da dos vialidades explícitas y no hay km fiable, resolver primero el cruce.
   // Esto evita que una avenida urbana mal clasificada como "carretera" termine en el centro
