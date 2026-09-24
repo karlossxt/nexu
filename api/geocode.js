@@ -60,6 +60,53 @@ function normalizeState(value) {
 function stateMatches(expected, resolved) {
   return !expected || !resolved || normalizeState(expected) === normalizeState(resolved);
 }
+
+function normalizeRoad(value) {
+  return String(value || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .replace(/\b(carretera|autopista|federal|mexico|mex|ruta|libre|cuota|hacia|sentido|km|kilometro)\b/g,' ')
+    .replace(/[^a-z0-9]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function roadTokens(value) {
+  return new Set(normalizeRoad(value).split(' ').filter(token => token.length >= 2));
+}
+function roadMatches(expected, resolved) {
+  const a=normalizeRoad(expected), b=normalizeRoad(resolved);
+  if(!a || !b) return false;
+  if(a===b || a.includes(b) || b.includes(a)) return true;
+  const an=(a.match(/\b\d+[a-z]?\b/g)||[]);
+  const bn=new Set(b.match(/\b\d+[a-z]?\b/g)||[]);
+  if(an.some(token=>bn.has(token))) return true;
+  const aa=roadTokens(a), bb=roadTokens(b);
+  let common=0;
+  for(const token of aa) if(bb.has(token)) common++;
+  return common >= 2 || (common >= 1 && Math.min(aa.size,bb.size) <= 2);
+}
+function geoDistanceKm(aLat,aLon,bLat,bLon) {
+  const r=6371;
+  const dLat=(bLat-aLat)*Math.PI/180;
+  const dLon=(bLon-aLon)*Math.PI/180;
+  const x=Math.sin(dLat/2)**2+Math.cos(aLat*Math.PI/180)*Math.cos(bLat*Math.PI/180)*Math.sin(dLon/2)**2;
+  return 2*r*Math.asin(Math.sqrt(x));
+}
+async function reverseGoogleRoad(lat, lon, key) {
+  const url=new URL('https://maps.googleapis.com/maps/api/geocode/json');
+  url.searchParams.set('latlng', `${lat},${lon}`);
+  url.searchParams.set('language','es');
+  url.searchParams.set('region','mx');
+  url.searchParams.set('key',key);
+  const response=await fetch(url,{headers:{Accept:'application/json'}});
+  const body=await response.json().catch(()=>({}));
+  if(!response.ok || body.status==='REQUEST_DENIED') return '';
+  for(const result of body.results || []) {
+    const route=(result.address_components || []).find(c => (c.types || []).includes('route'));
+    if(route?.long_name) return route.long_name;
+  }
+  return '';
+}
 function pruneCache() {
   if (cache.size < 500) return;
   const now = Date.now();
@@ -133,7 +180,7 @@ async function requestGoogle(query, key) {
     location_type: result.geometry.location_type || 'APPROXIMATE', road_snapped: false
   };
 }
-async function snapGoogleRoad(result, key) {
+async function snapGoogleRoad(result, key, options={}) {
   if (!result || result.confidence < .75) return result;
   const url = new URL('https://roads.googleapis.com/v1/nearestRoads');
   url.searchParams.set('points', `${result.lat},${result.lon}`);
@@ -143,7 +190,40 @@ async function snapGoogleRoad(result, key) {
   const body = await response.json().catch(() => ({}));
   const point = body.snappedPoints && body.snappedPoints[0];
   if (!point || !point.location) return result;
-  return { ...result, lat:Number(point.location.latitude), lon:Number(point.location.longitude), road_snapped:true, confidence:Math.max(result.confidence,.86) };
+
+  const snappedLat=Number(point.location.latitude), snappedLon=Number(point.location.longitude);
+  const distanceKm=geoDistanceKm(result.lat,result.lon,snappedLat,snappedLon);
+  const maxDistanceKm=Number(options.maxDistanceKm)||.75;
+  if(!Number.isFinite(distanceKm) || distanceKm>maxDistanceKm) {
+    return { ...result, snap_rejected:'distance', snap_distance_m:Number.isFinite(distanceKm)?Math.round(distanceKm*1000):null };
+  }
+
+  const expectedRoad=clean(options.expectedRoad,120);
+  let resolvedRoad='';
+  let routeVerified=false;
+  if(expectedRoad) {
+    resolvedRoad=await reverseGoogleRoad(snappedLat,snappedLon,key);
+    routeVerified=roadMatches(expectedRoad,resolvedRoad);
+    if(!routeVerified) {
+      return {
+        ...result,
+        snap_rejected:'road_mismatch',
+        snap_distance_m:Math.round(distanceKm*1000),
+        expected_road:expectedRoad,
+        resolved_road:resolvedRoad || null
+      };
+    }
+  }
+
+  return {
+    ...result,
+    lat:snappedLat,
+    lon:snappedLon,
+    road_snapped:true,
+    route_verified:expectedRoad ? routeVerified : false,
+    resolved_road:resolvedRoad || null,
+    snap_distance_m:Math.round(distanceKm*1000)
+  };
 }
 
 module.exports = async (req, res) => {
@@ -167,6 +247,7 @@ module.exports = async (req, res) => {
 
   const query = clean(req.query && req.query.q);
   const expectedState = clean(req.query && req.query.state, 80);
+  const expectedRoad = clean(req.query && req.query.road, 120);
   const snap = clean(req.query && req.query.snap, 2) === '1';
   const lat = Number(req.query && req.query.lat);
   const lon = Number(req.query && req.query.lon);
@@ -179,7 +260,7 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: 'consulta_invalida' });
   }
 
-  const cacheKey = mode === 'reverse' ? `reverse:${lat.toFixed(5)},${lon.toFixed(5)}` : `${mode}:${snap ? 'snap' : 'plain'}:${query.toLowerCase()}:${normalizeState(expectedState)}`;
+  const cacheKey = mode === 'reverse' ? `reverse:${lat.toFixed(5)},${lon.toFixed(5)}` : `${mode}:${snap ? 'snap' : 'plain'}:${query.toLowerCase()}:${normalizeState(expectedState)}:${normalizeRoad(expectedRoad)}`;
   const hit = cache.get(cacheKey);
   if (hit && Date.now() - hit.time < CACHE_TTL) return res.status(200).json({ ...hit.data, cached: true });
 
@@ -188,7 +269,14 @@ module.exports = async (req, res) => {
     if (mode === 'search' && snap && googleKey) {
       let result = await requestGoogle(query, googleKey);
       if (!result || !stateMatches(expectedState, result.resolved_state)) return res.status(404).json({ error:'sin_resultados' });
-      result = await snapGoogleRoad(result, googleKey);
+      result = await snapGoogleRoad(result, googleKey, { expectedRoad, maxDistanceKm:.75 });
+      if(expectedRoad && (!result.road_snapped || !result.route_verified)) {
+        return res.status(404).json({
+          error:'snap_no_confiable',
+          reason:result.snap_rejected || 'road_unverified',
+          distance_m:result.snap_distance_m ?? null
+        });
+      }
       return sendCached(res, cacheKey, result);
     }
     if (geoapifyKey) {
