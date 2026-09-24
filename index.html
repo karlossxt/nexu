@@ -2018,7 +2018,7 @@ window.onload = function() {
   try {
     const savedAlerts = localStorage.getItem('nv_alerts');
     if(savedAlerts) {
-      alerts = (JSON.parse(savedAlerts) || []).filter(a => a && typeof a.lat === 'number' && a.time && String(a.title || '').trim().length >= 8 && String(a.detail || '').trim().length >= 15 && (Date.now() - new Date(a.time).getTime()) < 24*3600*1000).map(a => ({ ...a, source_type: a.source_type || 'system', source_name: inferSourceName({ title: `${a.title || ''} ${a.detail || ''}`, source_name: a.source_name || 'Zero Vial' }), verification_status: a.verification_status || 'verified', importante: !!a.importante }));
+      alerts = (JSON.parse(savedAlerts) || []).filter(a => a && typeof a.lat === 'number' && a.time && String(a.title || '').trim().length >= 8 && String(a.detail || '').trim().length >= 15 && (Date.now() - new Date(a.time).getTime()) < 24*3600*1000).map(a => ({ ...a, source_type: a.source_type || 'system', source_name: inferSourceName({ title: `${a.title || ''} ${a.detail || ''}`, source_name: a.source_name || 'Zero Vial' }), verification_status: a.verification_status || 'verified', importante: !!a.importante })).filter(a => !unsafeLegacyHybridLocation(a));
       alerts.forEach(a => addMarkerToMap(a));
       if(alerts.length) { updateLists(); persistAlerts(); }
     }
@@ -2066,6 +2066,16 @@ function saveConfig() {
 }
 function saveToken() {
   localStorage.setItem('nv_token', document.getElementById('tokenInput').value.trim());
+}
+function unsafeLegacyHybridLocation(a) {
+  if(!a || a.central_id || a.source_type !== 'media' || a.category !== 'road') return false;
+  if(!['estado','municipio'].includes(String(a.precision || '').toLowerCase())) return false;
+  const hasRoadEvidence =
+    a.km != null ||
+    String(a.reference || '').trim().length > 0 ||
+    String(a.corridor || '').trim().length > 0 ||
+    /\b(km|carretera|autopista|federal|mex[-\s]?\d+)\b/i.test(String(a.location || ''));
+  return !!hasRoadEvidence;
 }
 function persistAlerts() { try { localStorage.setItem('nv_alerts', JSON.stringify(alerts)); } catch(e) {} }
 
@@ -2444,14 +2454,15 @@ function distKm2(lat1, lon1, lat2, lon2) { const R=6371, dLat=(lat2-lat1)*Math.P
 function matchCorridor(text) {
   if(typeof RED_VIAL === 'undefined' || !window.RED_VIAL || !Array.isArray(window.RED_VIAL)) return null;
   const n = normAcc(text);
+  const compact = n.replace(/\s+/g, '');
   let best = null, bestLen = 0;
   (window.RED_VIAL).forEach(c => {
-    const keyN = normAcc(c.name).replace(/\s+/g, ' ');
-    if(n.includes(keyN) && keyN.length > bestLen) { bestLen = keyN.length; best = c; }
-    c.aliases.forEach(al => {
-      const a = normAcc(al);
-      if(a.length < 4) return;
-      if(n.includes(a) && a.length > bestLen) { bestLen = a.length; best = c; }
+    [c.name, ...(c.aliases || [])].forEach(value => {
+      const spaced = normAcc(value).replace(/\s+/g, ' ');
+      const joined = spaced.replace(/\s+/g, '');
+      if(spaced.length < 4) return;
+      const matches = n.includes(spaced) || (joined.length >= 5 && compact.includes(joined));
+      if(matches && joined.length > bestLen) { bestLen = joined.length; best = c; }
     });
   });
   return best || null;
@@ -3128,7 +3139,7 @@ async function loadCentralAlerts() {
   if(error||!Array.isArray(data)) return;
   const previous=new Map(alerts.filter(a=>a.central_id).map(a=>[a.central_id,Number(a.received_at)||0]));
   const central=data.map(row=>centralAlertToUi(row,previous.get(row.id)||0));
-  const local=alerts.filter(a=>!a.central_id);
+  const local=alerts.filter(a=>!a.central_id && !unsafeLegacyHybridLocation(a));
   const remainingLocal=[...local];
   const mergedCentral=central.map(current=>{
     const matchIndex=remainingLocal.findIndex(candidate=>alertsLikelySame(candidate,current));
