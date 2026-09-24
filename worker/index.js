@@ -1,6 +1,7 @@
 'use strict';
 
 const { createHash } = require('crypto');
+const { geoDistanceKm, roadMatches, reverseGoogleRoad } = require('../lib/road-match');
 const RED_VIAL = require('./red-vial');
 const CASETAS = require('./casetas');
 const TOMTOM_TRAFFIC = require('./tomtom-traffic');
@@ -524,50 +525,6 @@ function geocodeCandidateScore(query,label,stateOk,baseConfidence,precision) {
   return score;
 }
 
-function normalizeRoadName(value) {
-  return norm(value)
-    .replace(/\b(carretera|autopista|federal|mexico|mex|ruta|libre|cuota|hacia|sentido|km|kilometro)\b/g,' ')
-    .replace(/[^a-z0-9]+/g,' ')
-    .replace(/\s+/g,' ')
-    .trim();
-}
-
-function roadNameTokens(value) {
-  return new Set(normalizeRoadName(value).split(' ').filter(token=>token.length>=2));
-}
-
-function roadMatchesExpected(expected,resolved) {
-  const a=normalizeRoadName(expected), b=normalizeRoadName(resolved);
-  if(!a || !b) return false;
-  if(a===b || a.includes(b) || b.includes(a)) return true;
-  const an=(a.match(/\b\d+[a-z]?\b/g)||[]);
-  const bn=new Set(b.match(/\b\d+[a-z]?\b/g)||[]);
-  if(an.some(token=>bn.has(token))) return true;
-  const aa=roadNameTokens(a), bb=roadNameTokens(b);
-  let common=0;
-  for(const token of aa) if(bb.has(token)) common++;
-  return common>=2 || (common>=1 && Math.min(aa.size,bb.size)<=2);
-}
-
-async function reverseGoogleRoad(lat,lon) {
-  if(!GOOGLE_KEY) return '';
-  const url=new URL('https://maps.googleapis.com/maps/api/geocode/json');
-  url.searchParams.set('latlng',`${lat},${lon}`);
-  url.searchParams.set('language','es');
-  url.searchParams.set('region','mx');
-  url.searchParams.set('key',GOOGLE_KEY);
-  try {
-    const response=await fetch(url,{headers:{Accept:'application/json'}});
-    const body=await response.json().catch(()=>({}));
-    if(!response.ok || body.status==='REQUEST_DENIED') return '';
-    for(const result of body.results || []) {
-      const route=result.address_components?.find(c=>c.types?.includes('route'));
-      if(route?.long_name) return route.long_name;
-    }
-  } catch {}
-  return '';
-}
-
 async function snapRoadCandidate(candidate, precision, expectedRoad='') {
   if (!GOOGLE_KEY || !candidate || !['road','kilometer','reference'].includes(precision)) return candidate;
   const lat=Number(candidate.latitude), lon=Number(candidate.longitude);
@@ -609,7 +566,7 @@ async function snapRoadCandidate(candidate, precision, expectedRoad='') {
     let resolvedRoad='';
     let routeVerified=false;
     if(expected) {
-      resolvedRoad=await reverseGoogleRoad(snappedLat,snappedLon);
+      resolvedRoad=await reverseGoogleRoad(snappedLat,snappedLon,GOOGLE_KEY);
       if(!resolvedRoad) {
         roadSnapMetrics.reverse_failed++;
         log('warn','Snap vial descartado: reverse geocode sin nombre de vía',{
@@ -620,7 +577,7 @@ async function snapRoadCandidate(candidate, precision, expectedRoad='') {
         });
         return candidate;
       }
-      routeVerified=roadMatchesExpected(expected,resolvedRoad);
+      routeVerified=roadMatches(expected,resolvedRoad);
       if(!routeVerified) {
         roadSnapMetrics.rejected_road_mismatch++;
         log('warn','Snap vial descartado por carretera distinta',{
@@ -769,14 +726,6 @@ async function geocode(query, expectedState, precision = 'zone', expectedRoad = 
     confidence:Math.min(cap,base), status:'approximate', precision,
     location_type:result.type || null, provider:'nominatim'
   },precision,expectedRoad);
-}
-
-function geoDistanceKm(aLat, aLon, bLat, bLon) {
-  const r = 6371;
-  const dLat = (bLat - aLat) * Math.PI / 180;
-  const dLon = (bLon - aLon) * Math.PI / 180;
-  const x = Math.sin(dLat/2) ** 2 + Math.cos(aLat*Math.PI/180) * Math.cos(bLat*Math.PI/180) * Math.sin(dLon/2) ** 2;
-  return 2 * r * Math.asin(Math.sqrt(x));
 }
 
 function roadKey(value) {
