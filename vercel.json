@@ -3,6 +3,7 @@
   "builds": [
     { "src": "*.html", "use": "@vercel/static" },
     { "src": "casetas-data.js", "use": "@vercel/static" },
+    { "src": "red-vial.js", "use": "@vercel/static" },
     { "src": "*.png", "use": "@vercel/static" },
     { "src": "*.svg", "use": "@vercel/static" },
     { "src": "robots.txt", "use": "@vercel/static" },
