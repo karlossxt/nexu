@@ -27,6 +27,8 @@ const MAX_AGE_MS = Math.max(1, Number(env.ALERT_MAX_AGE_HOURS) || 24) * 3600_000
 const MAX_AI_PER_CYCLE = Math.max(1, Number(env.MAX_AI_PER_CYCLE) || 6);
 const AI_DELAY_MS = Math.max(5_000, Number(env.AI_DELAY_MS) || 10_000);
 const AI_MAX_PER_HOUR = Math.max(1, Math.min(60, Number(env.AI_MAX_PER_HOUR) || 8));
+const FAST_LANE_MAX_PER_HOUR = Math.max(0, Math.min(20, Number(env.FAST_LANE_MAX_PER_HOUR) || 6));
+const FAST_LANE_MIN_INTERVAL_MS = Math.max(60_000, Number(env.FAST_LANE_MIN_INTERVAL_MS) || 120_000);
 const AI_MIN_INTERVAL_MS = Math.ceil(3600_000 / AI_MAX_PER_HOUR);
 const QUEUE_MAX_ATTEMPTS = Math.max(1, Number(env.QUEUE_MAX_ATTEMPTS) || 5);
 const FEEDS = [env.RSS_PRI, env.RSS_SEC].map(x => String(x || '').trim()).filter(Boolean);
@@ -38,6 +40,8 @@ let aiNextAllowedAt = 0;
 let lastAiProvider = 'none';
 let strictLocationRejects = Object.create(null);
 let roadSnapMetrics = { attempted:0, success:0, rejected_distance:0, rejected_road_mismatch:0, reverse_failed:0 };
+let fastLaneHistory = [];
+let fastLaneLastAt = 0;
 
 function noteStrictLocationReject(reason) {
   const key=String(reason || 'unknown');
@@ -171,12 +175,40 @@ function relevant(item) {
   return r.incident >= 1 && r.score >= 5 && (r.mx || r.location >= 1 || r.impact >= 1 || r.incident >= 2);
 }
 
+function trustedRoadSource(item) {
+  const source=norm(item?.source || '');
+  const text=norm(`${item?.title || ''} ${item?.body || ''}`);
+  return /capufe|guardia nacional|red via corta|redviacorta|ovial|c5\b|proteccion civil|secretaria de seguridad|autopista/.test(`${source} ${text}`);
+}
+
+function isFastLaneCandidate(item) {
+  if (!GEMINI_KEY || FAST_LANE_MAX_PER_HOUR<=0 || !trustedRoadSource(item)) return false;
+  const text=norm(`${item?.title || ''} ${item?.body || ''}`);
+  const incident=/accidente|choque|volcadura|cierre total|cierre parcial|bloqueo|incendio|derrumbe|inundacion|asalto|ataque armado/.test(text);
+  const road=/autopista|carretera|libramiento|caseta/.test(text);
+  const km=/\bkm\s*\d{1,4}(?:\s*\+\s*\d{1,3})?\b/.test(text);
+  return incident && road && km;
+}
+
+function fastLaneAvailable() {
+  const now=Date.now();
+  fastLaneHistory=fastLaneHistory.filter(ts=>now-ts<3600_000);
+  return fastLaneHistory.length<FAST_LANE_MAX_PER_HOUR && now-fastLaneLastAt>=FAST_LANE_MIN_INTERVAL_MS;
+}
+
+function markFastLaneUsed() {
+  const now=Date.now();
+  fastLaneHistory.push(now);
+  fastLaneLastAt=now;
+}
+
 function incidentPriority(item) {
   const text = norm(`${item.title} ${item.body}`);
   const source = norm(item.source);
   let score = 0;
-  if (/capufe|guardia nacional|proteccion civil|secretaria de seguridad|c5\b/.test(`${source} ${text}`)) score += 8;
-  if (/cierre total|cierre de circulacion|bloqueo|balacera|asalto|ataque armado|enfrentamiento/.test(text)) score += 7;
+  if (/capufe|guardia nacional|proteccion civil|secretaria de seguridad|c5\b|red via corta|redviacorta|ovial/.test(`${source} ${text}`)) score += 8;
+  if (/cierre total|cierre parcial|cierre de circulacion|bloqueo|balacera|asalto|ataque armado|enfrentamiento/.test(text)) score += 7;
+  if (isFastLaneCandidate(item)) score += 20;
   if (/accidente|choque|volcadura|incendio|derrumbe|deslave|inundacion/.test(text)) score += 5;
   if (/autopista|carretera|km\s*\d|caseta/.test(text)) score += 3;
   const published = item.published_at ? new Date(item.published_at).getTime() : 0;
@@ -406,8 +438,17 @@ async function classifyWithGemini(prompt) {
   try { return JSON.parse(raw); } catch(error) { throw new Error('Gemini devolvió JSON inválido: '+error.message); }
 }
 
-async function classify(text) {
+async function classify(text, options={}) {
   const prompt=classificationPrompt(text);
+  if(options.preferGemini && GEMINI_KEY) {
+    try {
+      const result=await classifyWithGemini(prompt);
+      lastAiProvider='gemini';
+      return result;
+    } catch(error) {
+      log('warn','Fast lane Gemini no disponible; usando flujo normal',{reason:error.message.slice(0,120)});
+    }
+  }
   if(Date.now()>=groqCooldownUntil) {
     try {
       const result=await classifyWithGroq(prompt);
@@ -1051,10 +1092,10 @@ function strictLocationDecision(ai, geo, context={}) {
   return {ok:false,reason:'unknown_location_precision'};
 }
 
-async function processItem(item, feed) {
+async function processItem(item, feed, options={}) {
   const externalId = hash(item.url || item.title + '|' + item.published_at);
   if (await alreadyExists(externalId)) return 'duplicate';
-  const ai = await classify((item.title + '. ' + item.body).slice(0, 1400));
+  const ai = await classify((item.title + '. ' + item.body).slice(0, 1400), options);
   if (!ai?.valido || !['road','security'].includes(ai.categoria)) return 'rejected';
   const copy = normalizeAlertCopy(ai.resumen, ai.detail);
   const title = copy.title;
@@ -1225,7 +1266,7 @@ async function cycle() {
   const started = new Date().toISOString();
   strictLocationRejects = Object.create(null);
   roadSnapMetrics = { attempted:0, success:0, rejected_distance:0, rejected_road_mismatch:0, reverse_failed:0 };
-  const stats = { received:0, relevant:0, queued_new:0, queue_pending:0, queue_failed:0, queue_oldest_min:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, groq_used:0, gemini_used:0, ai_cooldown_seconds:0, ai_budget_wait_seconds:0, ai_max_per_hour:AI_MAX_PER_HOUR, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0, tomtom_enabled:false, tomtom_received:0, tomtom_boxes:0, tomtom_errors:0, tomtom_high_value:0, tomtom_medium_value:0, tomtom_low_value:0, tomtom_operational_candidates:0, tomtom_collapsed_duplicates:0, tomtom_categories:{}, queue_expired_removed:0, strict_location_mode:STRICT_LOCATION_MODE, strict_location_rejections:{}, road_snap_metrics:{} };
+  const stats = { received:0, relevant:0, queued_new:0, queue_pending:0, queue_failed:0, queue_oldest_min:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, groq_used:0, gemini_used:0, ai_cooldown_seconds:0, ai_budget_wait_seconds:0, ai_max_per_hour:AI_MAX_PER_HOUR, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0, tomtom_enabled:false, tomtom_received:0, tomtom_boxes:0, tomtom_errors:0, tomtom_high_value:0, tomtom_medium_value:0, tomtom_low_value:0, tomtom_operational_candidates:0, tomtom_collapsed_duplicates:0, tomtom_categories:{}, queue_expired_removed:0, strict_location_mode:STRICT_LOCATION_MODE, strict_location_rejections:{}, road_snap_metrics:{}, fast_lane_used:0, fast_lane_skipped_budget:0, fast_lane_max_per_hour:FAST_LANE_MAX_PER_HOUR };
   await health({ status:'running', last_started_at:started, last_error:null });
   try {
     const tomtom = await TOMTOM_TRAFFIC.fetchShadowIncidents(env);
@@ -1310,19 +1351,32 @@ async function cycle() {
       const item = queued.item || {};
       const feed = queued.feed_url || '';
       const externalId = queued.external_id;
+      const wantsFastLane=isFastLaneCandidate(item);
+      const useFastLane=wantsFastLane && fastLaneAvailable();
+      if(wantsFastLane && !useFastLane) stats.fast_lane_skipped_budget++;
       if (Date.now() < groqCooldownUntil && !GEMINI_KEY) {
         stats.ai_cooldown_seconds = Math.ceil((groqCooldownUntil - Date.now()) / 1000);
         break;
       }
-      if (Date.now() < aiNextAllowedAt) {
+      if (!useFastLane && Date.now() < aiNextAllowedAt) {
         stats.ai_budget_wait_seconds = Math.ceil((aiNextAllowedAt - Date.now()) / 1000);
         break;
       }
       stats.analyzed++;
-      aiNextAllowedAt = Date.now() + AI_MIN_INTERVAL_MS;
+      if(useFastLane) {
+        markFastLaneUsed();
+        stats.fast_lane_used++;
+        log('info','Fast lane: alerta vial prioritaria enviada a Gemini',{
+          source:item.source || null,
+          title:String(item.title||'').slice(0,120),
+          priority:queued.priority
+        });
+      } else {
+        aiNextAllowedAt = Date.now() + AI_MIN_INTERVAL_MS;
+      }
       await updateQueue(externalId, { status:'processing', processing_started_at:new Date().toISOString() });
       try {
-        const result = await processItem(item, feed);
+        const result = await processItem(item, feed, { preferGemini:useFastLane });
         if(lastAiProvider==='gemini') stats.gemini_used++; else if(lastAiProvider==='groq') stats.groq_used++;
         if (result === 'inserted') stats.inserted++;
         else if (result === 'no_location') stats.no_location++;
