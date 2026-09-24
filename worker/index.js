@@ -183,12 +183,20 @@ function trustedRoadSource(item) {
 }
 
 function isFastLaneCandidate(item) {
-  if (!GEMINI_KEY || FAST_LANE_MAX_PER_HOUR<=0 || !trustedRoadSource(item)) return false;
-  const text=norm(`${item?.title || ''} ${item?.body || ''}`);
+  if (!GEMINI_KEY || FAST_LANE_MAX_PER_HOUR<=0) return false;
+  const raw=`${item?.title || ''} ${item?.body || ''}`;
+  const text=norm(raw);
   const incident=/accidente|choque|volcadura|cierre total|cierre parcial|bloqueo|incendio|derrumbe|inundacion|asalto|ataque armado/.test(text);
+  if(!incident) return false;
+
   const road=/autopista|carretera|libramiento|caseta/.test(text);
   const km=/\bkm\s*\d{1,4}(?:\s*\+\s*\d{1,3})?\b/.test(text);
-  return incident && road && km;
+  if(trustedRoadSource(item) && road && km) return true;
+
+  // Reportes ciudadanos también pueden saltar la cola cuando mencionan
+  // una caseta explícita que sí existe en nuestro catálogo CASETAS.
+  const tollReference=extractExplicitTollReference(raw);
+  return !!resolveTollReference(tollReference);
 }
 
 function fastLaneAvailable() {
@@ -823,6 +831,23 @@ function tollKey(value) {
     .trim();
 }
 
+function editDistanceAtMostOne(a,b) {
+  a=String(a||''); b=String(b||'');
+  if(a===b) return true;
+  if(Math.abs(a.length-b.length)>1) return false;
+  let i=0,j=0,diff=0;
+  while(i<a.length && j<b.length) {
+    if(a[i]===b[j]) { i++; j++; continue; }
+    diff++;
+    if(diff>1) return false;
+    if(a.length>b.length) i++;
+    else if(b.length>a.length) j++;
+    else { i++; j++; }
+  }
+  if(i<a.length || j<b.length) diff++;
+  return diff<=1;
+}
+
 function tollMatchScore(reference, name) {
   const a=tollKey(reference), b=tollKey(name);
   if (!a || !b) return 0;
@@ -833,7 +858,16 @@ function tollMatchScore(reference, name) {
   const bb=new Set(b.split(' ').filter(x=>x.length>2));
   if (!aa.size || !bb.size) return 0;
   const common=[...aa].filter(x=>bb.has(x)).length;
-  return Math.round((common/Math.max(aa.size,bb.size))*90);
+  const overlap=Math.round((common/Math.max(aa.size,bb.size))*90);
+  if(overlap>=82) return overlap;
+
+  // Tolerancia muy acotada a un error tipográfico en nombres distintivos
+  // de 6+ caracteres (p.ej. "Tepozotlan" vs "Tepotzotlan").
+  const longA=[...aa].filter(x=>x.length>=6);
+  const longB=[...bb].filter(x=>x.length>=6);
+  if(longA.some(x=>longB.some(y=>editDistanceAtMostOne(x,y)))) return 88;
+
+  return overlap;
 }
 
 function resolveTollReference(reference) {
