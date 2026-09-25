@@ -793,6 +793,44 @@ function pointAtRoadKilometer(corridor, kilometer) {
   return null;
 }
 
+async function resolvedStateAtPoint(lat, lon) {
+  if (GEOAPIFY_KEY) {
+    try {
+      const url=new URL('https://api.geoapify.com/v1/geocode/reverse');
+      url.searchParams.set('lat',String(lat));
+      url.searchParams.set('lon',String(lon));
+      url.searchParams.set('format','json');
+      url.searchParams.set('lang','es');
+      url.searchParams.set('limit','1');
+      url.searchParams.set('apiKey',GEOAPIFY_KEY);
+      const response=await fetch(url,{headers:{Accept:'application/json'}});
+      const body=await response.json().catch(()=>({}));
+      const state=clean(body?.results?.[0]?.state);
+      if(response.ok && state) return { state, provider:'geoapify' };
+    } catch {}
+  }
+
+  if (GOOGLE_KEY) {
+    try {
+      const url=new URL('https://maps.googleapis.com/maps/api/geocode/json');
+      url.searchParams.set('latlng',`${lat},${lon}`);
+      url.searchParams.set('language','es');
+      url.searchParams.set('region','mx');
+      url.searchParams.set('key',GOOGLE_KEY);
+      const response=await fetch(url,{headers:{Accept:'application/json'}});
+      const body=await response.json().catch(()=>({}));
+      if(response.ok && body.status==='OK') {
+        for(const result of body.results || []) {
+          const state=result.address_components?.find(x=>x.types?.includes('administrative_area_level_1'))?.long_name || '';
+          if(state) return { state:clean(state), provider:'google' };
+        }
+      }
+    } catch {}
+  }
+
+  return { state:'', provider:'' };
+}
+
 function resolveStaticRoadKilometer(road, kilometer) {
   if (!road || kilometer == null) return null;
   const match = findRoadCorridor(road);
@@ -894,8 +932,37 @@ async function resolveRoadLocation(ai, kilometer, reference) {
   if (!ai.carretera) return null;
   const staticKm = resolveStaticRoadKilometer(ai.carretera, kilometer);
   if (staticKm) {
-    log('info','Kilómetro resuelto con RED_VIAL',{ road:ai.carretera, kilometer, corridor:staticKm.corridor, confidence:staticKm.confidence });
-    return staticKm;
+    const expectedState=clean(ai.estado);
+    if(expectedState) {
+      const verified=await resolvedStateAtPoint(staticKm.latitude, staticKm.longitude);
+      if(!verified.state || !stateMatches(expectedState, verified.state)) {
+        log('warn','RED_VIAL descartado por estado inconsistente',{
+          road:ai.carretera,
+          kilometer,
+          corridor:staticKm.corridor,
+          expected_state:expectedState,
+          resolved_state:verified.state || null,
+          verifier:verified.provider || null
+        });
+      } else {
+        staticKm.state_verified=true;
+        staticKm.resolved_state=verified.state;
+        staticKm.state_verifier=verified.provider;
+        log('info','Kilómetro resuelto con RED_VIAL',{
+          road:ai.carretera,
+          kilometer,
+          corridor:staticKm.corridor,
+          confidence:staticKm.confidence,
+          state_verified:true,
+          resolved_state:verified.state,
+          verifier:verified.provider
+        });
+        return staticKm;
+      }
+    } else {
+      log('info','Kilómetro resuelto con RED_VIAL',{ road:ai.carretera, kilometer, corridor:staticKm.corridor, confidence:staticKm.confidence });
+      return staticKm;
+    }
   }
   const candidates = [];
   const queries = [
@@ -1034,6 +1101,7 @@ function strictLocationDecision(ai, geo, context={}) {
     return confidence>=.88 ? {ok:true,reason:'trusted_toll'} : {ok:false,reason:'low_confidence_toll'};
   }
   if (precision==='kilometer_static') {
+    if(state && !geo.state_verified) return {ok:false,reason:'red_vial_state_unverified'};
     return confidence>=.84 ? {ok:true,reason:'trusted_red_vial'} : {ok:false,reason:'low_confidence_red_vial'};
   }
   if (precision==='intersection') {
