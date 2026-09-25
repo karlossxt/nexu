@@ -654,7 +654,8 @@ async function geocode(query, expectedState, precision = 'zone', expectedRoad = 
           return score>-900 ? {
             latitude:lat, longitude:lon, label, confidence,
             status:confidence >= .82 ? 'automatic' : 'approximate',
-            precision, location_type:result.result_type || result.category || null, provider:'geoapify', score
+            precision, location_type:result.result_type || result.category || null, provider:'geoapify',
+            resolved_state:resolvedState || null, score
           } : null;
         }).filter(Boolean).sort((a,b)=>b.score-a.score);
         if(ranked.length) {
@@ -693,7 +694,7 @@ async function geocode(query, expectedState, precision = 'zone', expectedRoad = 
             return score>-900 ? {
               latitude:lat,longitude:lon,label,confidence,
               status:confidence>=.82?'automatic':'approximate',
-              precision,location_type:type,provider:'google',score
+              precision,location_type:type,provider:'google',resolved_state:resolvedState || null,score
             } : null;
           }).filter(Boolean).sort((a,b)=>b.score-a.score);
           if(ranked.length){
@@ -732,7 +733,7 @@ async function geocode(query, expectedState, precision = 'zone', expectedRoad = 
   return await snapRoadCandidate({
     latitude:lat, longitude:lon, label:result.display_name,
     confidence:Math.min(cap,base), status:'approximate', precision,
-    location_type:result.type || null, provider:'nominatim'
+    location_type:result.type || null, provider:'nominatim', resolved_state:resolved || null
   },precision,expectedRoad);
 }
 
@@ -1240,6 +1241,57 @@ async function processItem(item, feed, options={}) {
     }
   }
   if (!geo || !Number.isFinite(geo.latitude) || !Number.isFinite(geo.longitude)) return 'no_location';
+
+  // Validación final universal: ningún pin operativo puede contradecir el estado
+  // extraído de la alerta. Reutilizamos el estado del geocoder cuando existe;
+  // para CASETAS/RED_VIAL/otros puntos estáticos hacemos reverse geocode.
+  const expectedGeoState=clean(ai.estado);
+  if(expectedGeoState) {
+    let resolvedGeoState=clean(geo.resolved_state);
+    let stateVerifier=resolvedGeoState ? (geo.provider || 'provider') : '';
+
+    if(!resolvedGeoState) {
+      const verified=await resolvedStateAtPoint(geo.latitude, geo.longitude);
+      resolvedGeoState=clean(verified.state);
+      stateVerifier=verified.provider || '';
+    }
+
+    if(!resolvedGeoState) {
+      noteStrictLocationReject('coordinate_state_unverified');
+      log('warn','Ubicación descartada: no fue posible verificar el estado del punto',{
+        expected_state:expectedGeoState,
+        road:clean(ai.carretera),
+        kilometer,
+        reference,
+        precision:geo.precision || null,
+        provider:geo.provider || null,
+        latitude:Number(geo.latitude),
+        longitude:Number(geo.longitude)
+      });
+      return 'no_location';
+    }
+
+    if(!stateMatches(expectedGeoState,resolvedGeoState)) {
+      noteStrictLocationReject('coordinate_state_mismatch');
+      log('warn','Ubicación descartada: coordenadas fuera del estado esperado',{
+        expected_state:expectedGeoState,
+        resolved_state:resolvedGeoState,
+        verifier:stateVerifier || null,
+        road:clean(ai.carretera),
+        kilometer,
+        reference,
+        precision:geo.precision || null,
+        provider:geo.provider || null,
+        latitude:Number(geo.latitude),
+        longitude:Number(geo.longitude)
+      });
+      return 'no_location';
+    }
+
+    geo.state_verified=true;
+    geo.resolved_state=resolvedGeoState;
+    geo.state_verifier=stateVerifier || geo.state_verifier || null;
+  }
 
   const strictDecision=strictLocationDecision(ai,geo,{
     kilometer,
