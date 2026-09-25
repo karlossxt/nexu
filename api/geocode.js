@@ -225,7 +225,10 @@ async function requestGoogle(query, key) {
   url.searchParams.set('key', key);
   const response = await fetch(url, { headers: { Accept: 'application/json' } });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok || body.status === 'REQUEST_DENIED') throw new Error(`google_${body.status || response.status}`);
+  const googleStatus=String(body.status || '');
+  if (!response.ok || (googleStatus && !['OK','ZERO_RESULTS'].includes(googleStatus))) {
+    throw new Error(`google_${googleStatus || response.status}`);
+  }
   const result = body.results && body.results[0];
   if (!result) return null;
   const state = (result.address_components || []).find(c => (c.types || []).includes('administrative_area_level_1'));
@@ -322,35 +325,60 @@ module.exports = async (req, res) => {
   if (hit && Date.now() - hit.time < CACHE_TTL) return res.status(200).json({ ...hit.data, cached: true });
 
   try {
-    // Las correcciones de alertas conservan el ajuste a carretera de Google.
+    let googleSnapError='';
+
+    // Las correcciones de alertas conservan el ajuste a carretera de Google,
+    // pero una caída/restricción de Google no debe tumbar todo /api/geocode.
     if (mode === 'search' && snap && googleKey) {
-      let result = await requestGoogle(query, googleKey);
-      if (!result || !stateMatches(expectedState, result.resolved_state)) return res.status(404).json({ error:'sin_resultados' });
-      result = await snapGoogleRoad(result, googleKey, { expectedRoad, maxDistanceKm:.75 });
-      if(expectedRoad && (!result.road_snapped || !result.route_verified)) {
-        return res.status(404).json({
-          error:'snap_no_confiable',
-          reason:result.snap_rejected || 'road_unverified',
-          distance_m:result.snap_distance_m ?? null
-        });
+      try {
+        let result = await requestGoogle(query, googleKey);
+        if (result && stateMatches(expectedState, result.resolved_state)) {
+          result = await snapGoogleRoad(result, googleKey, { expectedRoad, maxDistanceKm:.75 });
+          if(expectedRoad && (!result.road_snapped || !result.route_verified)) {
+            return res.status(404).json({
+              error:'snap_no_confiable',
+              reason:result.snap_rejected || 'road_unverified',
+              distance_m:result.snap_distance_m ?? null
+            });
+          }
+          return sendCached(res, cacheKey, result);
+        }
+      } catch (error) {
+        googleSnapError=String(error?.message || 'google_error').slice(0,80);
       }
-      return sendCached(res, cacheKey, result);
     }
+
     if (geoapifyKey) {
       const raw = await requestGeoapify({ mode, query, lat, lon, limit, key: geoapifyKey });
       const results = raw.map(normalizeGeoapify)
         .filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lon))
         .filter(item => stateMatches(expectedState, item.resolved_state));
       if (results.length) {
+        if(mode==='search' && snap) {
+          const fallback={ ...results[0], snap_unavailable:true, snap_provider:'google', snap_error:googleSnapError || null };
+          return sendCached(res, cacheKey, fallback);
+        }
         const data = mode === 'autocomplete' ? { provider: 'geoapify', results } : results[0];
         return sendCached(res, cacheKey, data);
       }
     }
+
     if (mode !== 'search') return res.status(503).json({ error: 'modo_requiere_geoapify' });
-    const result = await requestGoogle(query, googleKey);
-    if (!result || !stateMatches(expectedState, result.resolved_state)) return res.status(404).json({ error: 'sin_resultados' });
-    return sendCached(res, cacheKey, result);
+
+    if(googleKey) {
+      try {
+        const result = await requestGoogle(query, googleKey);
+        if (!result || !stateMatches(expectedState, result.resolved_state)) return res.status(404).json({ error: 'sin_resultados' });
+        return sendCached(res, cacheKey, result);
+      } catch(error) {
+        const reason=String(error?.message || 'google_error').toLowerCase().replace(/[^a-z0-9_]+/g,'_').slice(0,80);
+        return res.status(503).json({ error:'proveedor_no_disponible', provider:'google', reason });
+      }
+    }
+
+    return res.status(503).json({ error:'proveedor_no_disponible' });
   } catch (error) {
-    return res.status(502).json({ error: 'proveedor_no_disponible' });
+    const reason=String(error?.message || 'provider_error').toLowerCase().replace(/[^a-z0-9_]+/g,'_').slice(0,80);
+    return res.status(503).json({ error: 'proveedor_no_disponible', reason });
   }
 };
