@@ -3164,16 +3164,10 @@ async function loadCentralAlerts() {
 }
 async function initCentralAlerts() {
   await Promise.all([refreshCentralWorkerHealth(),loadCentralAlerts()]);
+  // Polling robusto: evita depender de Realtime/WebSocket para el mapa público.
+  // Las alertas centrales se refrescan cada minuto aunque Realtime esté caído,
+  // bloqueado por red corporativa o deshabilitado en Supabase.
   if(!centralAlertsTimer) centralAlertsTimer=setInterval(()=>{ refreshCentralWorkerHealth(); loadCentralAlerts(); },60000);
-  if(!centralAlertsChannel&&supabaseClient.channel) {
-    centralAlertsChannel=supabaseClient.channel('zero-vial-alerts')
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'alerts'},payload=>{
-        const alert=centralAlertToUi(payload.new,Date.now());
-        alerts=alerts.filter(a=>a.central_id!==alert.central_id); alerts.push(alert);
-        persistAlerts(); updateLists(); rebuildU();
-        if(alert.importante&&isFreshForNotification(alert)) notifyImportant(alert);
-      }).subscribe();
-  }
 }
 function applyRoleAccess() {
   const authorized=['operator','admin'].includes(zeroVialRole);
