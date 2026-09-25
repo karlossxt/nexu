@@ -348,35 +348,51 @@ module.exports = async (req, res) => {
       }
     }
 
+    let geoapifyError='';
     if (geoapifyKey) {
-      const raw = await requestGeoapify({ mode, query, lat, lon, limit, key: geoapifyKey });
-      const results = raw.map(normalizeGeoapify)
-        .filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lon))
-        .filter(item => stateMatches(expectedState, item.resolved_state));
-      if (results.length) {
-        if(mode==='search' && snap) {
-          const fallback={ ...results[0], snap_unavailable:true, snap_provider:'google', snap_error:googleSnapError || null };
-          return sendCached(res, cacheKey, fallback);
+      try {
+        const raw = await requestGeoapify({ mode, query, lat, lon, limit, key: geoapifyKey });
+        const results = raw.map(normalizeGeoapify)
+          .filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lon))
+          .filter(item => stateMatches(expectedState, item.resolved_state));
+        if (results.length) {
+          if(mode==='search' && snap) {
+            const fallback={ ...results[0], snap_unavailable:true, snap_provider:'google', snap_error:googleSnapError || null };
+            return sendCached(res, cacheKey, fallback);
+          }
+          const data = mode === 'autocomplete' ? { provider: 'geoapify', results } : results[0];
+          return sendCached(res, cacheKey, data);
         }
-        const data = mode === 'autocomplete' ? { provider: 'geoapify', results } : results[0];
-        return sendCached(res, cacheKey, data);
+      } catch(error) {
+        geoapifyError=String(error?.message || 'geoapify_error').slice(0,80);
       }
     }
 
-    if (mode !== 'search') return res.status(503).json({ error: 'modo_requiere_geoapify' });
+    if (mode !== 'search') {
+      const reason=String(geoapifyError || 'geoapify_unavailable').toLowerCase().replace(/[^a-z0-9_]+/g,'_').slice(0,80);
+      return res.status(503).json({ error:'modo_requiere_geoapify', provider:'geoapify', reason });
+    }
 
+    let googlePlainError=googleSnapError;
     if(googleKey) {
       try {
         const result = await requestGoogle(query, googleKey);
-        if (!result || !stateMatches(expectedState, result.resolved_state)) return res.status(404).json({ error: 'sin_resultados' });
-        return sendCached(res, cacheKey, result);
+        if (result && stateMatches(expectedState, result.resolved_state)) return sendCached(res, cacheKey, result);
       } catch(error) {
-        const reason=String(error?.message || 'google_error').toLowerCase().replace(/[^a-z0-9_]+/g,'_').slice(0,80);
-        return res.status(503).json({ error:'proveedor_no_disponible', provider:'google', reason });
+        googlePlainError=String(error?.message || 'google_error').slice(0,80);
       }
     }
 
-    return res.status(503).json({ error:'proveedor_no_disponible' });
+    if(googlePlainError || geoapifyError) {
+      const sanitize=value=>String(value||'').toLowerCase().replace(/[^a-z0-9_]+/g,'_').slice(0,80);
+      return res.status(503).json({
+        error:'proveedores_no_disponibles',
+        google:googlePlainError ? sanitize(googlePlainError) : null,
+        geoapify:geoapifyError ? sanitize(geoapifyError) : null
+      });
+    }
+
+    return res.status(404).json({ error:'sin_resultados' });
   } catch (error) {
     const reason=String(error?.message || 'provider_error').toLowerCase().replace(/[^a-z0-9_]+/g,'_').slice(0,80);
     return res.status(503).json({ error: 'proveedor_no_disponible', reason });
