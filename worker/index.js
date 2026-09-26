@@ -2,6 +2,7 @@
 
 const { createHash } = require('crypto');
 const { geoDistanceKm, roadMatches, reverseGoogleRoad } = require('../lib/road-match');
+const { normalizeStateKey: stateKey, stateMatches } = require('../lib/state-match');
 const RED_VIAL = require('./red-vial');
 const CASETAS = require('./casetas');
 const TOMTOM_TRAFFIC = require('./tomtom-traffic');
@@ -81,18 +82,6 @@ function retryDelayMs(response, body) {
     if (milliseconds > 0) return Math.ceil(milliseconds);
   }
   return 10 * 60_000;
-}
-
-function stateKey(value) {
-  const key = norm(value).replace(/\b(estado de|state of)\b/g, '').replace(/\s+/g, ' ').trim();
-  const aliases = { 'ciudad de mexico':'cdmx', 'distrito federal':'cdmx', 'mexico':'edomex', 'estado mexico':'edomex', 'nuevo leon':'nuevo leon', 'michoacan de ocampo':'michoacan', 'veracruz de ignacio de la llave':'veracruz' };
-  return aliases[key] || key;
-}
-
-function stateMatches(expected, resolved) {
-  if (!expected || !resolved) return true;
-  const a = stateKey(expected), b = stateKey(resolved);
-  return a === b || a.includes(b) || b.includes(a);
 }
 
 function usableMunicipality(municipality, state) {
@@ -658,7 +647,10 @@ async function geocode(query, expectedState, precision = 'zone', expectedRoad = 
             latitude:lat, longitude:lon, label, confidence,
             status:confidence >= .82 ? 'automatic' : 'approximate',
             precision, location_type:result.result_type || result.category || null, provider:'geoapify',
-            resolved_state:resolvedState || null, score
+            resolved_state:resolvedState || null,
+            resolved_road:clean(result.street || result.name || result.address_line1 || ''),
+            route_verified:expectedRoad ? roadMatches(expectedRoad, clean(result.street || result.name || result.address_line1 || '')) : false,
+            score
           } : null;
         }).filter(Boolean).sort((a,b)=>b.score-a.score);
         if(ranked.length) {
@@ -687,6 +679,7 @@ async function geocode(query, expectedState, precision = 'zone', expectedRoad = 
           const ranked=body.results.map(result=>{
             const country=result.address_components?.find(x=>x.types?.includes('country'))?.short_name || '';
             const resolvedState=result.address_components?.find(x=>x.types?.includes('administrative_area_level_1'))?.long_name || '';
+            const resolvedRoad=result.address_components?.find(x=>x.types?.includes('route'))?.long_name || '';
             const lat=Number(result.geometry.location.lat), lon=Number(result.geometry.location.lng);
             if((country && country!=='MX') || !inMexico(lat,lon)) return null;
             const type=result.geometry?.location_type || 'APPROXIMATE';
@@ -697,7 +690,8 @@ async function geocode(query, expectedState, precision = 'zone', expectedRoad = 
             return score>-900 ? {
               latitude:lat,longitude:lon,label,confidence,
               status:confidence>=.82?'automatic':'approximate',
-              precision,location_type:type,provider:'google',resolved_state:resolvedState || null,score
+              precision,location_type:type,provider:'google',resolved_state:resolvedState || null,
+              resolved_road:clean(resolvedRoad),route_verified:expectedRoad ? roadMatches(expectedRoad,resolvedRoad) : false,score
             } : null;
           }).filter(Boolean).sort((a,b)=>b.score-a.score);
           if(ranked.length){
@@ -730,13 +724,16 @@ async function geocode(query, expectedState, precision = 'zone', expectedRoad = 
   const lat = Number(result.lat), lon = Number(result.lon);
   if (result.address?.country_code && result.address.country_code !== 'mx') return null;
   if (!inMexico(lat, lon) || !stateMatches(expectedState, resolved)) return null;
+  if (precision==='intersection' && !candidateMatchesIntersection(query,result.display_name || '')) return null;
   const roadTypes=['motorway','trunk','primary','secondary','tertiary','road','unclassified','residential'];
   if (requiresRoadPrecision(precision) && !roadTypes.includes(result.type)) return null;
   const base = roadTypes.includes(result.type) ? .70 : result.type === 'administrative' ? .48 : .58;
   return await snapRoadCandidate({
     latitude:lat, longitude:lon, label:result.display_name,
     confidence:Math.min(cap,base), status:'approximate', precision,
-    location_type:result.type || null, provider:'nominatim', resolved_state:resolved || null
+    location_type:result.type || null, provider:'nominatim', resolved_state:resolved || null,
+    resolved_road:clean(result.address?.road || result.address?.pedestrian || result.address?.motorway || result.name || ''),
+    route_verified:expectedRoad ? roadMatches(expectedRoad, clean(result.address?.road || result.address?.pedestrian || result.address?.motorway || result.name || '')) : false
   },precision,expectedRoad);
 }
 
@@ -833,7 +830,7 @@ async function resolvedStateAtPoint(lat, lon) {
   }
 
   try {
-    const url='https://nominatim.openstreetmap.org/reverse?format=json&zoom=5&addressdetails=1&lat='
+    const url='https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&addressdetails=1&lat='
       + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lon);
     const response=await fetch(url,{
       headers:{ 'User-Agent':'ZeroVial/1.0 contacto@zerovial.mx', 'Accept-Language':'es', Accept:'application/json' }
@@ -1121,17 +1118,29 @@ function strictLocationDecision(ai, geo, context={}) {
   }
   if (precision==='intersection') {
     if (!explicitIntersection) return {ok:false,reason:'intersection_without_two_streets'};
-    if (confidence<.74) return {ok:false,reason:'low_confidence_intersection'};
-    return {ok:true,reason:'trusted_intersection'};
+    const verifiedNominatimIntersection=provider==='nominatim' && !!geo.state_verified && confidence>=.70;
+    if (confidence<.74 && !verifiedNominatimIntersection) return {ok:false,reason:'low_confidence_intersection'};
+    return {ok:true,reason:verifiedNominatimIntersection?'trusted_nominatim_intersection':'trusted_intersection'};
   }
 
   if (['kilometer','reference','road'].includes(precision)) {
     if (!road) return {ok:false,reason:'road_precision_without_road'};
-    if (['APPROXIMATE','GEOMETRIC_CENTER'].includes(locationType)) return {ok:false,reason:'generic_geocoder_location_type'};
-    if (!roadSnapped) return {ok:false,reason:'road_not_snapped'};
     const minConfidence=precision==='road' ? .68 : .72;
-    if (confidence<minConfidence) return {ok:false,reason:'low_confidence_road'};
-    return {ok:true,reason:'trusted_snapped_road'};
+
+    if (roadSnapped) {
+      if (['APPROXIMATE','GEOMETRIC_CENTER'].includes(locationType)) return {ok:false,reason:'generic_geocoder_location_type'};
+      if (confidence<minConfidence) return {ok:false,reason:'low_confidence_road'};
+      return {ok:true,reason:'trusted_snapped_road'};
+    }
+
+    const verifiedFallback =
+      !!geo.route_verified &&
+      (!state || !!geo.state_verified) &&
+      !['GEOMETRIC_CENTER'].includes(locationType) &&
+      confidence>=minConfidence;
+
+    if (!verifiedFallback) return {ok:false,reason:'road_not_verified'};
+    return {ok:true,reason:'trusted_geocoder_road'};
   }
 
   // Una ubicación puramente municipal/estatal es demasiado ambigua para un pin operativo.
