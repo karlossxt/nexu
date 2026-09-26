@@ -2396,6 +2396,10 @@ async function reverseGeocodePoint(lat, lon) {
     return data.formatted_address || 'Mi ubicación actual';
 }
 
+function looksLikeStreetQuery(value) {
+    return /\b(av\.?|avenida|calle|blvd\.?|boulevard|bulevar|perif\.?|periferico|periférico|calzada|carr\.?|carretera|autop\.?|autopista|libramiento|viaducto|eje|circuito|entronque|puente|km\s*\d|kil[oó]metro|esquina|cruce)\b/i.test(String(value || ''));
+}
+
 async function geocodeBest(place, options = {}) {
     const cleaned = cleanGeoQuery(place);
     const candidates = options.strictRoad
@@ -2430,12 +2434,18 @@ async function geocodeBest(place, options = {}) {
             const res = await fetch(geoUrl); const geoData = await res.json();
             if(geoData && geoData.length > 0) {
               const resolvedState=geoData[0]?.address?.state||'';
-              if(options.expectedState && resolvedState && stateKey(options.expectedState)!==stateKey(resolvedState)) continue;
-              return { lat: parseFloat(geoData[0].lat), lon: parseFloat(geoData[0].lon), provider: 'openstreetmap', confidence: 0.62, roadSnapped: false };
+              if(options.expectedState && (!resolvedState || !stateMatches(options.expectedState,resolvedState))) continue;
+              return {
+                lat:parseFloat(geoData[0].lat), lon:parseFloat(geoData[0].lon),
+                provider:'openstreetmap', confidence:0.62, roadSnapped:false,
+                resolvedState,
+                stateVerified:!!options.expectedState && !!resolvedState && stateMatches(options.expectedState,resolvedState)
+              };
             }
         } catch(e) {}
     }
     if(options.strictRoad) return null;
+    if(looksLikeStreetQuery(place)) return null;
     try {
         const backupUrl = LINKS.photon.replace('{q}', encodeURIComponent(place + ', Mexico'));
         const res2 = await fetch(backupUrl); const data2 = await res2.json();
