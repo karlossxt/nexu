@@ -2418,12 +2418,20 @@ async function geocodeBest(place, options = {}) {
                     const result = {
                         lat, lon, provider: data.provider || 'google', confidence: Number(data.confidence) || 0.5,
                         roadSnapped: !!data.road_snapped, locationType: data.location_type || '',
-                        formattedAddress: data.formatted_address || c
+                        formattedAddress: data.formatted_address || c,
+                        stateVerified: !!data.state_verified,
+                        routeVerified: !!data.route_verified,
+                        resolvedRoad: data.resolved_road || '',
+                        snapDistanceM: Number(data.snap_distance_m)||null
                     };
-                    if(options.strictRoad && (!result.roadSnapped || (options.expectedRoad && !data.route_verified))) continue;
-                    result.routeVerified=!!data.route_verified;
-                    result.resolvedRoad=data.resolved_road || '';
-                    result.snapDistanceM=Number(data.snap_distance_m)||null;
+                    if(options.strictRoad) {
+                        const stateOk = !options.expectedState || result.stateVerified;
+                        const roadOk = !options.expectedRoad || result.routeVerified;
+                        const type = String(result.locationType || '').toUpperCase();
+                        const typeOk = !['APPROXIMATE','GEOMETRIC_CENTER'].includes(type);
+                        const minConfidence = options.expectedRoad ? .68 : .62;
+                        if(!result.roadSnapped && !(stateOk && roadOk && typeOk && result.confidence >= minConfidence)) continue;
+                    }
                     return result;
                 }
             }
@@ -2577,10 +2585,14 @@ async function processAlert(key, text, sourceName='Fuente RSS', publishedAt='', 
       });
       if(g) {
         const adjustedConfidence = c.prec === 'estado' ? Math.min(g.confidence,0.38) : c.prec === 'municipio' ? Math.min(g.confidence,0.58) : g.confidence;
-        loc = { lat: g.lat, lon: g.lon, prec: g.roadSnapped ? 'carretera' : c.prec, corridor: null, confidence: adjustedConfidence, provider: g.provider, roadSnapped: g.roadSnapped }; break;
+        loc = {
+          lat:g.lat, lon:g.lon, prec:g.roadSnapped || g.routeVerified ? 'carretera' : c.prec,
+          corridor:null, confidence:adjustedConfidence, provider:g.provider,
+          roadSnapped:!!g.roadSnapped, routeVerified:!!g.routeVerified, stateVerified:!!g.stateVerified
+        }; break;
       }
     }
-    if(requiresSpecificRoadLocation && !cc && loc && !loc.roadSnapped) {
+    if(requiresSpecificRoadLocation && !cc && loc && !loc.roadSnapped && !loc.routeVerified) {
       log(`🚫 Ubicación vial ambigua descartada: ${data.resumen}`, 'warn');
       diagAdd('noLocation'); return;
     }

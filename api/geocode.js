@@ -76,6 +76,7 @@ function normalizeGeoapify(result) {
     lat: Number(result.lat), lon: Number(result.lon), provider: 'geoapify',
     formatted_address: result.formatted || result.address_line2 || result.address_line1 || '',
     resolved_state: result.state || '',
+    resolved_road: result.street || result.name || result.address_line1 || '',
     confidence: Number(geoapifyConfidence(result).toFixed(2)),
     location_type: result.result_type || result.category || 'APPROXIMATE',
     road_snapped: false
@@ -123,14 +124,49 @@ async function requestGoogle(query, key) {
   const result = body.results && body.results[0];
   if (!result) return null;
   const state = (result.address_components || []).find(c => (c.types || []).includes('administrative_area_level_1'));
+  const route = (result.address_components || []).find(c => (c.types || []).includes('route'));
   return {
     lat: Number(result.geometry.location.lat), lon: Number(result.geometry.location.lng),
     provider: 'google', formatted_address: result.formatted_address || query,
     resolved_state: state && state.long_name || '',
+    resolved_road: route && route.long_name || '',
     confidence: Number(googleConfidence(result).toFixed(2)),
     location_type: result.geometry.location_type || 'APPROXIMATE', road_snapped: false
   };
 }
+async function requestNominatim(query) {
+  const url = new URL('https://nominatim.openstreetmap.org/search');
+  url.searchParams.set('format','jsonv2');
+  url.searchParams.set('addressdetails','1');
+  url.searchParams.set('limit','1');
+  url.searchParams.set('countrycodes','mx');
+  url.searchParams.set('q',query);
+  const response=await fetch(url,{
+    headers:{
+      'User-Agent':'ZeroVial/1.0 contacto@zerovial.mx',
+      'Accept-Language':'es',
+      Accept:'application/json'
+    }
+  });
+  const body=await response.json().catch(()=>[]);
+  if(!response.ok) throw new Error(`nominatim_${response.status}`);
+  const result=Array.isArray(body) ? body[0] : null;
+  if(!result) return null;
+  const road=result.address?.road || result.address?.pedestrian || result.address?.motorway || result.address?.path || result.name || '';
+  const state=result.address?.state || '';
+  const roadTypes=new Set(['motorway','trunk','primary','secondary','tertiary','road','unclassified','residential']);
+  const isRoad=roadTypes.has(String(result.type || '').toLowerCase());
+  return {
+    lat:Number(result.lat), lon:Number(result.lon), provider:'nominatim',
+    formatted_address:result.display_name || query,
+    resolved_state:state,
+    resolved_road:road,
+    confidence:isRoad ? .70 : .62,
+    location_type:result.type || 'APPROXIMATE',
+    road_snapped:false
+  };
+}
+
 async function snapGoogleRoad(result, key, options={}) {
   if (!result) return result;
   const expectedRoad=clean(options.expectedRoad,120);
@@ -199,10 +235,8 @@ module.exports = async (req, res) => {
   const mode = ['search', 'autocomplete', 'reverse'].includes(requestedMode) ? requestedMode : 'search';
 
   if (req.query && req.query.check === '1') {
-    return res.status(200).json({ available: !!(geoapifyKey || googleKey), provider: geoapifyKey ? 'geoapify' : (googleKey ? 'google' : 'none') });
+    return res.status(200).json({ available: true, provider: geoapifyKey ? 'geoapify' : (googleKey ? 'google' : 'nominatim') });
   }
-  if (!geoapifyKey && !googleKey) return res.status(503).json({ error: 'geocodificador_no_configurado' });
-
   const query = clean(req.query && req.query.q);
   const expectedState = clean(req.query && req.query.state, 80);
   const expectedRoad = clean(req.query && req.query.road, 120);
@@ -258,7 +292,8 @@ module.exports = async (req, res) => {
           .map(item => ({
             ...item,
             state_filter_applied:!!expectedState,
-            state_verified:!!expectedState && !!item.resolved_state && stateMatches(expectedState,item.resolved_state)
+            state_verified:!!expectedState && !!item.resolved_state && stateMatches(expectedState,item.resolved_state),
+            route_verified:!!expectedRoad && !!item.resolved_road && roadMatches(expectedRoad,item.resolved_road)
           }));
         if (results.length) {
           if(mode==='search' && snap) {
@@ -285,11 +320,28 @@ module.exports = async (req, res) => {
         if (result && (!expectedState || (result.resolved_state && stateMatches(expectedState, result.resolved_state)))) {
           result.state_filter_applied=!!expectedState;
           result.state_verified=!!expectedState && !!result.resolved_state && stateMatches(expectedState,result.resolved_state);
+          result.route_verified=!!expectedRoad && !!result.resolved_road && roadMatches(expectedRoad,result.resolved_road);
           return sendCached(res, cacheKey, result);
         }
       } catch(error) {
         googlePlainError=String(error?.message || 'google_error').slice(0,80);
       }
+    }
+
+    try {
+      const result=await requestNominatim(query);
+      if(result && Number.isFinite(result.lat) && Number.isFinite(result.lon)) {
+        const stateOk=!expectedState || (!!result.resolved_state && stateMatches(expectedState,result.resolved_state));
+        if(stateOk) {
+          result.state_filter_applied=!!expectedState;
+          result.state_verified=!!expectedState && !!result.resolved_state && stateMatches(expectedState,result.resolved_state);
+          result.route_verified=!!expectedRoad && !!result.resolved_road && roadMatches(expectedRoad,result.resolved_road);
+          return sendCached(res, cacheKey, result);
+        }
+      }
+    } catch(error) {
+      // Nominatim es el último respaldo; si falla, conservamos el diagnóstico
+      // de los proveedores con llave y devolvemos el error normal.
     }
 
     if(googlePlainError || geoapifyError) {
