@@ -2449,7 +2449,20 @@ async function geocodeBest(place, options = {}) {
 // convierte en un punto SOBRE la vía (interpolando el km oficial en
 // la polyline), mucho más preciso que un nominatim ciudad-centro.
 function normAcc(s) { return (s || '').toLowerCase().replace(/[áàäâ]/g,'a').replace(/[éèëê]/g,'e').replace(/[íìïî]/g,'i').replace(/[óòöô]/g,'o').replace(/[úùüû]/g,'u').replace(/ñ/g,'n').replace(/ç/g,'c').replace(/[^a-z0-9]+/g,' ').trim(); }
-function stateKey(s) { const k=normAcc(s).replace(/\s/g,''); return ({cdmx:'ciudaddemexico',distritofederal:'ciudaddemexico',edomex:'mexico',estadodemexico:'mexico'}[k]||k); }
+function stateKey(s) {
+  const k=normAcc(s).replace(/\b(?:estado de|state of)\b/g,'').replace(/\s/g,'');
+  return ({
+    cdmx:'cdmx',ciudaddemexico:'cdmx',distritofederal:'cdmx',
+    edomex:'edomex',mexico:'edomex',estadodemexico:'edomex',
+    michoacan:'michoacan',michoacandeocampo:'michoacan',
+    veracruz:'veracruz',veracruzdeignaciodelallave:'veracruz',
+    coahuila:'coahuila',coahuiladezaragoza:'coahuila'
+  }[k]||k);
+}
+function stateMatches(expected,resolved) {
+  if(!expected || !resolved) return true;
+  return stateKey(expected)===stateKey(resolved);
+}
 function distKm2(lat1, lon1, lat2, lon2) { const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180, a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2; return 2*R*Math.asin(Math.sqrt(a)); }
 function matchCorridor(text) {
   if(typeof RED_VIAL === 'undefined' || !window.RED_VIAL || !Array.isArray(window.RED_VIAL)) return null;
