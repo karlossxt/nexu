@@ -230,7 +230,9 @@ module.exports = async (req, res) => {
     if (mode === 'search' && snap && googleKey) {
       try {
         let result = await requestGoogle(query, googleKey);
-        if (result && stateMatches(expectedState, result.resolved_state)) {
+        if (result && (!expectedState || (result.resolved_state && stateMatches(expectedState, result.resolved_state)))) {
+          result.state_filter_applied=!!expectedState;
+          result.state_verified=!!expectedState && !!result.resolved_state && stateMatches(expectedState,result.resolved_state);
           result = await snapGoogleRoad(result, googleKey, { expectedRoad, maxDistanceKm:.75 });
           if(expectedRoad && (!result.road_snapped || !result.route_verified)) {
             return res.status(404).json({
@@ -252,7 +254,12 @@ module.exports = async (req, res) => {
         const raw = await requestGeoapify({ mode, query, lat, lon, limit, key: geoapifyKey });
         const results = raw.map(normalizeGeoapify)
           .filter(item => Number.isFinite(item.lat) && Number.isFinite(item.lon))
-          .filter(item => stateMatches(expectedState, item.resolved_state));
+          .filter(item => !expectedState || (!!item.resolved_state && stateMatches(expectedState, item.resolved_state)))
+          .map(item => ({
+            ...item,
+            state_filter_applied:!!expectedState,
+            state_verified:!!expectedState && !!item.resolved_state && stateMatches(expectedState,item.resolved_state)
+          }));
         if (results.length) {
           if(mode==='search' && snap) {
             const fallback={ ...results[0], snap_unavailable:true, snap_provider:'google', snap_error:googleSnapError || null };
@@ -275,7 +282,11 @@ module.exports = async (req, res) => {
     if(googleKey) {
       try {
         const result = await requestGoogle(query, googleKey);
-        if (result && stateMatches(expectedState, result.resolved_state)) return sendCached(res, cacheKey, result);
+        if (result && (!expectedState || (result.resolved_state && stateMatches(expectedState, result.resolved_state)))) {
+          result.state_filter_applied=!!expectedState;
+          result.state_verified=!!expectedState && !!result.resolved_state && stateMatches(expectedState,result.resolved_state);
+          return sendCached(res, cacheKey, result);
+        }
       } catch(error) {
         googlePlainError=String(error?.message || 'google_error').slice(0,80);
       }
