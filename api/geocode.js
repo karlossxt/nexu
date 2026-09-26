@@ -13,6 +13,12 @@ function normalizeRoad(value) {
   return String(value || '')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
+    .replace(/\b(?:av|ave|avda)\.?\b/g, ' avenida ')
+    .replace(/\b(?:blvd|bvd)\.?\b/g, ' boulevard ')
+    .replace(/\b(?:perif|perifco)\.?\b/g, ' periferico ')
+    .replace(/\bautop\.?\b/g, ' autopista ')
+    .replace(/\b(?:calz)\.?\b/g, ' calzada ')
+    .replace(/\b(?:carr)\.?\b/g, ' carretera ')
     .replace(/\b(carretera|autopista|federal|mexico|mex|ruta|libre|cuota|hacia|sentido|km|kilometro)\b/g, ' ')
     .replace(/[^a-z0-9]+/g, ' ')
     .replace(/\s+/g, ' ')
@@ -157,11 +163,19 @@ function clean(value, max = 240) {
 }
 function normalizeState(value) {
   const key = String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const aliases = { cdmx: 'ciudaddemexico', distritofederal: 'ciudaddemexico', edomex: 'mexico', estadodemexico: 'mexico' };
+  const aliases = {
+    cdmx:'ciudaddemexico', distritofederal:'ciudaddemexico',
+    edomex:'mexico', estadodemexico:'mexico',
+    michoacandeocampo:'michoacan',
+    veracruzdeignaciodelallave:'veracruz',
+    coahuiladezaragoza:'coahuila'
+  };
   return aliases[key] || key;
 }
 function stateMatches(expected, resolved) {
-  return !expected || !resolved || normalizeState(expected) === normalizeState(resolved);
+  if(!expected || !resolved) return true;
+  const a=normalizeState(expected), b=normalizeState(resolved);
+  return a===b || a.includes(b) || b.includes(a);
 }
 
 function pruneCache() {
@@ -241,7 +255,14 @@ async function requestGoogle(query, key) {
   };
 }
 async function snapGoogleRoad(result, key, options={}) {
-  if (!result || result.confidence < .75) return result;
+  if (!result) return result;
+  const expectedRoad=clean(options.expectedRoad,120);
+  const locationType=String(result.location_type || '').toUpperCase();
+  if(expectedRoad && locationType==='GEOMETRIC_CENTER') {
+    return { ...result, snap_rejected:'geometric_center' };
+  }
+  const minConfidence=expectedRoad ? .55 : .75;
+  if(result.confidence < minConfidence) return result;
   const url = new URL('https://roads.googleapis.com/v1/nearestRoads');
   url.searchParams.set('points', `${result.lat},${result.lon}`);
   url.searchParams.set('key', key);
@@ -253,12 +274,12 @@ async function snapGoogleRoad(result, key, options={}) {
 
   const snappedLat=Number(point.location.latitude), snappedLon=Number(point.location.longitude);
   const distanceKm=geoDistanceKm(result.lat,result.lon,snappedLat,snappedLon);
-  const maxDistanceKm=Number(options.maxDistanceKm)||.75;
+  const requestedMax=Number(options.maxDistanceKm)||.75;
+  const maxDistanceKm=locationType==='APPROXIMATE' ? Math.min(requestedMax,.35) : requestedMax;
   if(!Number.isFinite(distanceKm) || distanceKm>maxDistanceKm) {
     return { ...result, snap_rejected:'distance', snap_distance_m:Number.isFinite(distanceKm)?Math.round(distanceKm*1000):null };
   }
 
-  const expectedRoad=clean(options.expectedRoad,120);
   let resolvedRoad='';
   let routeVerified=false;
   if(expectedRoad) {
