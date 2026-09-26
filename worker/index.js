@@ -27,7 +27,7 @@ const POLL_MS = Math.max(60_000, Number(env.WORKER_INTERVAL_MS) || 60_000);
 const MAX_AGE_MS = Math.max(1, Number(env.ALERT_MAX_AGE_HOURS) || 24) * 3600_000;
 const MAX_AI_PER_CYCLE = Math.max(1, Number(env.MAX_AI_PER_CYCLE) || 6);
 const AI_DELAY_MS = Math.max(5_000, Number(env.AI_DELAY_MS) || 10_000);
-const AI_MAX_PER_HOUR = Math.max(1, Math.min(60, Number(env.AI_MAX_PER_HOUR) || 8));
+const AI_MAX_PER_HOUR = Math.max(1, Math.min(60, Number(env.AI_MAX_PER_HOUR) || 16));
 const FAST_LANE_MAX_PER_HOUR = Math.max(0, Math.min(20, Number(env.FAST_LANE_MAX_PER_HOUR) || 6));
 const FAST_LANE_MIN_INTERVAL_MS = Math.max(60_000, Number(env.FAST_LANE_MIN_INTERVAL_MS) || 120_000);
 const AI_MIN_INTERVAL_MS = Math.ceil(3600_000 / AI_MAX_PER_HOUR);
@@ -43,6 +43,10 @@ let strictLocationRejects = Object.create(null);
 let roadSnapMetrics = { attempted:0, success:0, rejected_distance:0, rejected_road_mismatch:0, reverse_failed:0 };
 let fastLaneHistory = [];
 let fastLaneLastAt = 0;
+
+if(!GOOGLE_KEY) console.warn('[warn] GOOGLE_MAPS_API_KEY no configurada: las alertas de carretera que requieren snap estricto tendrán cobertura reducida');
+if(!GEOAPIFY_KEY) console.warn('[warn] GEOAPIFY_API_KEY no configurada: se reduce la redundancia de geocodificación y validación de estado');
+if(!GEMINI_KEY) console.warn('[warn] GEMINI_API_KEY no configurada: fast lane deshabilitada');
 
 function noteStrictLocationReject(reason) {
   const key=String(reason || 'unknown');
@@ -259,9 +263,8 @@ function textSimilarity(a,b) {
 }
 
 function roadSimilarity(a,b) {
-  const aa=roadKey(a), bb=roadKey(b);
-  if (!aa || !bb) return false;
-  return aa===bb || aa.includes(bb) || bb.includes(aa);
+  if(!a || !b) return false;
+  return roadMatches(a,b);
 }
 
 async function findSpatialDuplicate(row) {
@@ -292,7 +295,7 @@ async function findSpatialDuplicate(row) {
     let duplicate=false;
     if (sameEvent && distanceKm<=0.25 && similarity>=0.20) duplicate=true;
     else if (sameEvent && sameRoad && distanceKm<=1.0 && similarity>=0.30) duplicate=true;
-    else if (sameEvent && sameRoad && sameKm && distanceKm<=1.5) duplicate=true;
+    else if (sameEvent && sameRoad && sameKm && distanceKm<=1.5 && similarity>=0.15) duplicate=true;
     else if (!existing.event_type && sameRoad && distanceKm<=0.5 && similarity>=0.48) duplicate=true;
 
     if (duplicate) {
@@ -828,6 +831,17 @@ async function resolvedStateAtPoint(lat, lon) {
       }
     } catch {}
   }
+
+  try {
+    const url='https://nominatim.openstreetmap.org/reverse?format=json&zoom=5&addressdetails=1&lat='
+      + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lon);
+    const response=await fetch(url,{
+      headers:{ 'User-Agent':'ZeroVial/1.0 contacto@zerovial.mx', 'Accept-Language':'es', Accept:'application/json' }
+    });
+    const body=await response.json().catch(()=>({}));
+    const state=clean(body?.address?.state);
+    if(response.ok && body?.address?.country_code==='mx' && state) return { state, provider:'nominatim' };
+  } catch {}
 
   return { state:'', provider:'' };
 }
@@ -1369,7 +1383,8 @@ async function cycle() {
   const started = new Date().toISOString();
   strictLocationRejects = Object.create(null);
   roadSnapMetrics = { attempted:0, success:0, rejected_distance:0, rejected_road_mismatch:0, reverse_failed:0 };
-  const stats = { received:0, relevant:0, queued_new:0, queue_pending:0, queue_failed:0, queue_oldest_min:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, groq_used:0, gemini_used:0, ai_cooldown_seconds:0, ai_budget_wait_seconds:0, ai_max_per_hour:AI_MAX_PER_HOUR, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0, tomtom_enabled:false, tomtom_received:0, tomtom_boxes:0, tomtom_errors:0, tomtom_high_value:0, tomtom_medium_value:0, tomtom_low_value:0, tomtom_operational_candidates:0, tomtom_collapsed_duplicates:0, tomtom_categories:{}, queue_expired_removed:0, strict_location_mode:STRICT_LOCATION_MODE, strict_location_rejections:{}, road_snap_metrics:{}, fast_lane_used:0, fast_lane_skipped_budget:0, fast_lane_max_per_hour:FAST_LANE_MAX_PER_HOUR };
+  const stats = { received:0, relevant:0, queued_new:0, queue_pending:0, queue_failed:0, queue_oldest_min:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, groq_used:0, gemini_used:0, ai_cooldown_seconds:0, ai_budget_wait_seconds:0, ai_max_per_hour:AI_MAX_PER_HOUR, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0, tomtom_enabled:false, tomtom_received:0, tomtom_boxes:0, tomtom_errors:0, tomtom_high_value:0, tomtom_medium_value:0, tomtom_low_value:0, tomtom_operational_candidates:0, tomtom_collapsed_duplicates:0, tomtom_categories:{}, queue_expired_removed:0, strict_location_mode:STRICT_LOCATION_MODE, strict_location_rejections:{}, road_snap_metrics:{}, fast_lane_used:0, fast_lane_skipped_budget:0, fast_lane_max_per_hour:FAST_LANE_MAX_PER_HOUR,
+    google_geocoder_enabled:!!GOOGLE_KEY, geoapify_enabled:!!GEOAPIFY_KEY, gemini_enabled:!!GEMINI_KEY };
   await health({ status:'running', last_started_at:started, last_error:null });
   try {
     const tomtom = await TOMTOM_TRAFFIC.fetchShadowIncidents(env);
@@ -1462,8 +1477,11 @@ async function cycle() {
         break;
       }
       if (!useFastLane && Date.now() < aiNextAllowedAt) {
-        stats.ai_budget_wait_seconds = Math.ceil((aiNextAllowedAt - Date.now()) / 1000);
-        break;
+        stats.ai_budget_wait_seconds = Math.max(
+          stats.ai_budget_wait_seconds,
+          Math.ceil((aiNextAllowedAt - Date.now()) / 1000)
+        );
+        continue;
       }
       stats.analyzed++;
       if(useFastLane) {
@@ -1479,6 +1497,7 @@ async function cycle() {
       }
       await updateQueue(externalId, { status:'processing', processing_started_at:new Date().toISOString() });
       try {
+        lastAiProvider='none';
         const result = await processItem(item, feed, { preferGemini:useFastLane });
         if(lastAiProvider==='gemini') stats.gemini_used++; else if(lastAiProvider==='groq') stats.groq_used++;
         if (result === 'inserted') stats.inserted++;
