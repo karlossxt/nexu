@@ -17,7 +17,15 @@ services:
         sync: false
       - key: GOOGLE_MAPS_API_KEY
         sync: false
+      - key: GEOAPIFY_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
       - key: RSS_PRI
         sync: false
       - key: RSS_SEC
         sync: false
+      - key: AI_MAX_PER_HOUR
+        value: "16"
+      - key: STRICT_LOCATION_MODE
+        value: "true"
