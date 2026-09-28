@@ -24,3 +24,7 @@ Antes de ampliar el índice: distinguir variantes de cadenamiento, sentido, libr
 Los km 223–226 y 231 en adelante tienen referencias repetidas o ramales que requieren distinguir sentido/cadenamiento antes de habilitarlos. Tampoco se interpolan los km ausentes 202–204, 207, 210 y 228. La posición de cada poste es aproximada y no garantiza el punto del incidente.
 
 Tras desplegar el worker, `supabase/migrations/20260928_rnc_150d_reviewed_backfill.sql` puede actualizar alertas vigentes sin coordenadas, con carretera y km exactos y estado compatible. Excluye el km 229 ya cubierto por el backfill del piloto.
+
+## Brecha corta 54D: km 104 y 105
+
+La RNC no trae postes para estos dos kilómetros. Se revisaron los postes km 103 (`ID_KM=40864`) y km 106 (`ID_KM=40865`) sobre la cuota Guadalajara–Colima. El trayecto recto entre ellos mide aproximadamente 2.95 km; las posiciones interpoladas se proyectaron a la geometría de cuota (`ID_RED=2746298` y `2746299`), con separaciones consecutivas de 0.96, 1.05 y 0.97 km desde el poste 103 hasta el 106. Una comprobación de estado dio Jalisco para ambos puntos. Son estimaciones explícitas con radio visual de 2 km, **no postes oficiales ni GPS del incidente**. Otros huecos no se habilitan automáticamente. El backfill correspondiente para alertas recientes sin punto es `supabase/migrations/20260928_rnc_54d_short_gap_backfill.sql` y debe ejecutarse tras el despliegue.
