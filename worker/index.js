@@ -6,6 +6,7 @@ const { normalizeStateKey: stateKey, stateMatches } = require('../lib/state-matc
 const RED_VIAL = require('./red-vial');
 const CASETAS = require('./casetas');
 const { resolveRncPost, resolveRncEstimatedKm } = require('./rnc-km-anchors');
+const { resolveOfficialTollReference, officialNameExists } = require('./rnc-toll-reference');
 const { kilometersConflict } = require('../lib/alert-km');
 const { orientativeCorridorPoint } = require('../lib/corridor-reference');
 const TOMTOM_TRAFFIC = require('./tomtom-traffic');
@@ -926,8 +927,13 @@ function tollMatchScore(reference, name) {
   return overlap;
 }
 
-function resolveTollReference(reference) {
+function resolveTollReference(reference, road='') {
   if (!reference || !/(caseta|plaza\s+de\s+cobro|peaje)/i.test(reference)) return null;
+  const official=resolveOfficialTollReference(reference,road);
+  if(official) return official;
+  // An official name on a different corridor must not fall through to an
+  // unrelated OSM namesake without a road identity check.
+  if(road && officialNameExists(reference)) return null;
   let best=null;
   for (const toll of CASETAS) {
     const score=tollMatchScore(reference,toll.name);
@@ -1245,7 +1251,7 @@ async function processItem(item, feed, options={}) {
     { query:municipality ? [municipality, ai.estado].map(clean).filter(Boolean).join(', ') : '', precision:'municipality' },
     { query:clean(ai.estado), precision:'state' }
   ].filter(x => x.query.length >= 4).filter((x,index,list) => list.findIndex(y => y.query === x.query) === index).slice(0, 4);
-  let geo = resolveTollReference(reference);
+  let geo = resolveTollReference(reference,ai.carretera);
   if (geo) log('info','Caseta resuelta con CASETAS',{
     reference,
     extracted_from_text:!!explicitTollReference,
