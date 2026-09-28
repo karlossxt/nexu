@@ -876,7 +876,7 @@ function extractExplicitTollReference(text) {
   const quoted=source.match(/(?:plaza\s+de\s+cobro|caseta(?:\s+de\s+cobro)?|peaje)\s*['"“”‘’]([^'"“”‘’]{2,80})['"“”‘’]/i);
   if (quoted) return clean(`Plaza de Cobro ${quoted[1]}`);
 
-  const plain=source.match(/(?:plaza\s+de\s+cobro|caseta(?:\s+de\s+cobro)?|peaje)\s+(?:de\s+)?([A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .-]{2,60}?)(?=\s+(?:a\s+la\s+altura|ubicad[ao]|sobre|en\s+el\s+km|km\b|toluca\b|edo\.?\s*m[eé]x|estado\s+de)|[,.;]|$)/i);
+  const plain=source.match(/(?:plaza\s+de\s+cobro|caseta(?:\s+de\s+cobro)?|peaje)\s+(?:de\s+)?([A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .-]{2,60}?)(?=\s+(?:a\s+la\s+altura|cerca\s+de|ubicad[ao]|sobre|en\s+(?:el\s+km|el\s+municipio|la\s+carretera)|km\b|toluca\b|edo\.?\s*m[eé]x|estado\s+de)|[,.;]|$)/i);
   return plain ? clean(`Plaza de Cobro ${plain[1]}`) : '';
 }
 

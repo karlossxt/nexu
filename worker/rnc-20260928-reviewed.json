@@ -1,0 +1,22 @@
+[
+  {
+    "road": "Cuernavaca–Acapulco 95D",
+    "state": "Morelos",
+    "km": 142,
+    "lat": 18.529994817157206,
+    "lon": -99.20052082776984,
+    "alias": "cuernavaca\\s*[-–—]?\\s*acapulco",
+    "sourcePostId": 1510,
+    "sourceRoadId": 1167584
+  },
+  {
+    "road": "Puente de Ixtla–Iguala 91D",
+    "state": "Guerrero",
+    "km": 48,
+    "lat": 18.402194431886052,
+    "lon": -99.48919214593606,
+    "alias": "puente\\s+de\\s+ixtla\\s*[-–—]?\\s*iguala",
+    "sourcePostId": 1317,
+    "sourceRoadId": 26107
+  }
+]
