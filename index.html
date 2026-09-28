@@ -2639,6 +2639,7 @@ function alertSourceLabel(a) {
 function precisionLabel(a) {
   if(!hasAlertPoint(a)) return 'Ubicación pendiente de verificar';
   if(a.location_precision === 'toll_reference') return 'Referencia de caseta';
+  if(a.location_precision === 'kilometer_rnc') return 'Poste kilométrico aproximado';
   if(a.location_precision === 'kilometer_static') return 'Kilómetro estimado en corredor';
   if(a.location_precision === 'intersection') return 'Intersección localizada';
   if(a.precision === 'carretera') return 'Ajustado a carretera';
@@ -2665,9 +2666,10 @@ function referenceChipHTML(a) {
 }
 function estimatedRadiusMeters(a) {
   if(a.location_precision === 'toll_reference') return 200;
+  if(a.location_precision === 'kilometer_rnc') return 1500;
   if(a.location_precision === 'kilometer_static') return 500;
   if(a.location_precision === 'intersection') return 250;
-  return ({ punto:200, carretera:500, kilometro:500, tramo:2500, zona:3000, municipio:6000, estado:15000 }[a.precision] || 3000);
+  return ({ punto:200, carretera:500, kilometro:a.location_precision === 'kilometer_rnc' ? 1500 : 500, tramo:2500, zona:3000, municipio:6000, estado:15000 }[a.precision] || 3000);
 }
 function estimatedRadiusLabel(a) {
   if(!hasAlertPoint(a)) return 'sin radio';
@@ -3102,7 +3104,7 @@ function centralPrecisionToUi(rawPrecision,status,confidence) {
   if(['corrected','verified'].includes(status)) return 'punto';
   const raw=String(rawPrecision||'').toLowerCase();
   if(['exact','toll_reference'].includes(raw)) return 'punto';
-  if(['kilometer_static','kilometer'].includes(raw)) return 'kilometro';
+  if(['kilometer_rnc','kilometer_static','kilometer'].includes(raw)) return 'kilometro';
   if(raw==='intersection') return 'punto';
   if(['reference','road'].includes(raw)) return 'carretera';
   if(raw==='zone') return 'zona';
