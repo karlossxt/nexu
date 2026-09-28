@@ -488,6 +488,7 @@ body.user-mode.right-rail .selected-alert-card{ right:76px; }
 .sac-copy span,.sac-copy small{ display:block; margin-top:3px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; color:var(--text-muted); font-size:10px; }
 .sac-actions{ display:flex; gap:6px; }
 .sac-actions button{ width:auto; min-height:34px; padding:6px 9px; border-radius:9px; font-size:10px; box-shadow:none; }
+.sac-actions button[hidden]{ display:none; }
 #feed-list{ display:flex; flex-direction:column; gap:8px; }
 #feed-empty{ text-align:center; color:#6B7280; padding:44px 10px; }
 #feed-empty i{ font-size:40px; color:#1E293B; margin-bottom:12px; }
@@ -2638,6 +2639,7 @@ function alertSourceLabel(a) {
 }
 function precisionLabel(a) {
   if(!hasAlertPoint(a)) return 'Ubicación pendiente de verificar';
+  if(a.location_precision === 'corridor_reference') return 'Punto orientativo de la autopista · km sin verificar';
   if(a.location_precision === 'toll_reference') return 'Referencia de caseta';
   if(a.location_precision === 'kilometer_rnc') return 'Poste kilométrico aproximado';
   if(a.location_precision === 'kilometer_static') return 'Kilómetro estimado en corredor';
@@ -2665,6 +2667,7 @@ function referenceChipHTML(a) {
   return ref ? `<span class="reference-chip"><i class="fa-solid fa-road-barrier"></i> Referencia: ${escapeHtml(ref)}</span>` : '';
 }
 function estimatedRadiusMeters(a) {
+  if(a.location_precision === 'corridor_reference') return 0;
   if(a.location_precision === 'toll_reference') return 200;
   if(a.location_precision === 'kilometer_rnc') return 1500;
   if(a.location_precision === 'kilometer_static') return 500;
@@ -2674,13 +2677,14 @@ function estimatedRadiusMeters(a) {
 function estimatedRadiusLabel(a) {
   if(!hasAlertPoint(a)) return 'sin radio';
   const meters=estimatedRadiusMeters(a);
+  if(!meters) return 'no determinado';
   return meters < 1000 ? `${meters} m` : `${(meters/1000).toLocaleString('es-MX',{maximumFractionDigits:1})} km`;
 }
 function alertDistanceKm(a) {
-  return myPosition && hasAlertPoint(a) ? haversineKm(myPosition.lat, myPosition.lon, a.lat, a.lon) : null;
+  return myPosition && hasAlertPoint(a) && a.location_precision !== 'corridor_reference' ? haversineKm(myPosition.lat, myPosition.lon, a.lat, a.lon) : null;
 }
 function navigateToAlert(id) {
-  const a = alerts.find(x => x.id === id); if(!hasAlertPoint(a)) return;
+  const a = alerts.find(x => x.id === id); if(!hasAlertPoint(a) || a.location_precision === 'corridor_reference') return;
   const destination = `${a.lat},${a.lon}`;
   const origin = myPosition ? `&origin=${myPosition.lat},${myPosition.lon}` : '';
   window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}${origin}&travelmode=driving`, '_blank', 'noopener');
@@ -2695,6 +2699,7 @@ function showAlertFocus(a) {
   document.getElementById('sac-location').textContent=a.location || 'Ubicación aproximada';
   const knownRef=alertKnownReference(a);
   document.getElementById('sac-meta').textContent=`${alertSourceLabel(a)} · ${precisionLabel(a)}${knownRef?' · Referencia: '+knownRef:''} · ${reportedTimeLabel(a.time)}`;
+  document.querySelector('#selected-alert-card .sac-actions .btn-outline')?.toggleAttribute('hidden',a.location_precision === 'corridor_reference');
   const icon=document.getElementById('sac-icon'); icon.style.background=visual.color; icon.innerHTML=`<i class="fa-solid ${visual.icon}"></i>`;
   banner.classList.add('open'); card.classList.add('open');
 }
@@ -2703,7 +2708,7 @@ function clearAlertFocus() {
   document.getElementById('selected-alert-card')?.classList.remove('open');
   map.closePopup();
 }
-function centerFocusedAlert() { const a=alerts.find(x=>x.id===currentAlertId); if(hasAlertPoint(a)) map.setView([a.lat,a.lon],15); }
+function centerFocusedAlert() { const a=alerts.find(x=>x.id===currentAlertId); if(hasAlertPoint(a)) map.setView([a.lat,a.lon],a.location_precision === 'corridor_reference'?10:15); }
 function openFocusedDetail() { if(currentAlertId!=null) openAlertDetail(currentAlertId); }
 function navigateFocusedAlert() { if(currentAlertId!=null) navigateToAlert(currentAlertId); }
 function shareFocusedAlert() { if(currentAlertId!=null) shareAlert(currentAlertId); }
@@ -2747,8 +2752,8 @@ function addMarkerToMap(alert) {
   const m = L.marker([alert.lat, alert.lon], {icon, keyboard:true, title:markerLabel, alt:markerLabel});
   m.on('click',()=>showAlertFocus(alert));
   const radius=estimatedRadiusMeters(alert);
-  L.circle([alert.lat,alert.lon],{radius,color,weight:1.5,opacity:.7,dashArray:alert.precision==='punto'?null:'5 5',fillColor:color,fillOpacity:alert.precision==='punto'?.06:.12,interactive:true}).bindTooltip(`Área estimada · radio ${estimatedRadiusLabel(alert)}`,{direction:'top'}).addTo(alertAreaLayer);
-  const nota = `<div class="location-meta"><span class="precision-chip"><i class="fa-solid fa-location-dot"></i> ${precisionLabel(alert)}</span><span class="distance-chip"><i class="fa-solid fa-circle-dot"></i> Área estimada: ${estimatedRadiusLabel(alert)}</span>${referenceChipHTML(alert)}</div>`;
+  if(radius) L.circle([alert.lat,alert.lon],{radius,color,weight:1.5,opacity:.7,dashArray:alert.precision==='punto'?null:'5 5',fillColor:color,fillOpacity:alert.precision==='punto'?.06:.12,interactive:true}).bindTooltip(`Área estimada · radio ${estimatedRadiusLabel(alert)}`,{direction:'top'}).addTo(alertAreaLayer);
+  const nota = `<div class="location-meta"><span class="precision-chip"><i class="fa-solid fa-location-dot"></i> ${precisionLabel(alert)}</span>${radius?`<span class="distance-chip"><i class="fa-solid fa-circle-dot"></i> Área estimada: ${estimatedRadiusLabel(alert)}</span>`:''}${referenceChipHTML(alert)}</div>`;
   const chip = (!isSec && alert.trafico) ? `<div style="margin-top:5px;"><span class="traffic-chip" style="background:${trafficStyle(alert.trafico).bg}; color:${trafficStyle(alert.trafico).color};">${trafficStyle(alert.trafico).label}</span></div>` : '';
   const stale = expired ? `<div style="margin-top:5px;"><span class="traffic-chip" style="background:rgba(154,160,166,.2); color:#80868b;">🕓 Hace más de 6h</span></div>` : '';
   m.bindPopup(`
@@ -2756,7 +2761,7 @@ function addMarkerToMap(alert) {
       <b>${escapeHtml(alert.title)}</b><br>
       <span style="color:#5f6368;font-size:12px;">${escapeHtml(alert.location)}</span>${nota}${chip}${stale}
       <div class="alert-source"><i class="fa-solid fa-circle-info"></i> ${escapeHtml(alertSourceLabel(alert))}</div>
-      <br><div style="display:flex;gap:6px;"><button onclick="openAlertDetail(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:none;border-radius:6px;background:#1976d2;color:#fff;cursor:pointer;font-size:12px;font-weight:600;">Ver detalle</button><button onclick="navigateToAlert(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:1px solid #2563EB;border-radius:6px;background:transparent;color:#60A5FA;cursor:pointer;font-size:12px;font-weight:600;">Cómo llegar</button></div>
+      <br><div style="display:flex;gap:6px;"><button onclick="openAlertDetail(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:none;border-radius:6px;background:#1976d2;color:#fff;cursor:pointer;font-size:12px;font-weight:600;">Ver detalle</button>${radius?`<button onclick="navigateToAlert(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:1px solid #2563EB;border-radius:6px;background:transparent;color:#60A5FA;cursor:pointer;font-size:12px;font-weight:600;">Cómo llegar</button>`:''}</div>
     </div>`);
   m.category = alert.category; markers.addLayer(m);
 }
@@ -2777,7 +2782,7 @@ function alertCardHTML(a) {
     </div>
     <b class="ac-title">${escapeHtml(a.title)}</b>
     <div class="ac-location"><i class="fa-solid fa-location-dot"></i><span>${escapeHtml(a.location || 'Ubicación aproximada')}</span></div>
-    <div class="ac-tags"><span class="precision-chip"><i class="fa-solid fa-crosshairs"></i> ${precisionLabel(a)}${hasAlertPoint(a) ? ' · radio '+estimatedRadiusLabel(a) : ''}</span>${referenceChipHTML(a)}${distanceChip}${trafficChip}${syncChip}${stale}${hasAlertPoint(a) ? `<button class="card-nav" onclick="event.stopPropagation(); navigateToAlert(${a.id})"><i class="fa-solid fa-diamond-turn-right"></i> Ir</button>` : ''}</div>
+    <div class="ac-tags"><span class="precision-chip"><i class="fa-solid fa-crosshairs"></i> ${precisionLabel(a)}${hasAlertPoint(a) && estimatedRadiusMeters(a) ? ' · radio '+estimatedRadiusLabel(a) : ''}</span>${referenceChipHTML(a)}${distanceChip}${trafficChip}${syncChip}${stale}${hasAlertPoint(a) && a.location_precision !== 'corridor_reference' ? `<button class="card-nav" onclick="event.stopPropagation(); navigateToAlert(${a.id})"><i class="fa-solid fa-diamond-turn-right"></i> Ir</button>` : ''}</div>
     <div class="ac-source"><i class="fa-solid fa-circle-info"></i><span>${alertSourceLabel(a)} · ${alertTimingLabel(a)}</span><span class="ac-actions"><button onclick="event.stopPropagation(); toggleLike(${a.id})" id="btn-heart-${a.id}" class="ac-action${a.liked ? ' liked' : ''}" title="Guardar alerta" aria-label="Guardar alerta"><i class="fa-solid fa-heart"></i></button><button onclick="event.stopPropagation(); shareAlert(${a.id})" class="ac-action share" title="Compartir" aria-label="Compartir alerta"><i class="fa-brands fa-whatsapp"></i></button><button onclick="event.stopPropagation(); removeAlert(${a.id})" class="ac-action delete" title="Eliminar" aria-label="Eliminar alerta"><i class="fa-solid fa-xmark"></i></button></span></div>
   `;
 }
@@ -2866,8 +2871,9 @@ function openAlertDetail(id) {
   document.getElementById('am-desc').textContent += (a.state ? '\n📍 Estado: ' + a.state : '');
   document.getElementById('am-time').textContent = `Reportado: ${formatAlertTime(a.time)} · ${detectionDelayLabel(a)}`;
   document.getElementById('am-source').textContent = alertSourceLabel(a);
-  document.getElementById('am-precision').textContent = precisionLabel(a) + (a.km !== null && a.km !== undefined && a.km !== '' ? ' · km ' + a.km : '');
-  if(hasAlertPoint(a)) document.getElementById('am-precision').textContent += ' · área estimada: radio ' + estimatedRadiusLabel(a);
+  document.getElementById('am-precision').textContent = precisionLabel(a) + (a.km !== null && a.km !== undefined && a.km !== '' ? ' · km reportado ' + a.km : '');
+  if(hasAlertPoint(a) && estimatedRadiusMeters(a)) document.getElementById('am-precision').textContent += ' · área estimada: radio ' + estimatedRadiusLabel(a);
+  document.getElementById('am-navigate').style.display=a.location_precision === 'corridor_reference'?'none':'';
   const knownReference=alertKnownReference(a);
   if(knownReference) document.getElementById('am-precision').textContent += ' · referencia: ' + knownReference;
   if(hasAlertPoint(a) && a.location_confidence != null && Number.isFinite(Number(a.location_confidence))) document.getElementById('am-precision').textContent += ' · confianza ' + Math.round(Number(a.location_confidence) * 100) + '%';
@@ -3105,6 +3111,7 @@ function centralPrecisionToUi(rawPrecision,status,confidence) {
   const raw=String(rawPrecision||'').toLowerCase();
   if(['exact','toll_reference'].includes(raw)) return 'punto';
   if(['kilometer_rnc','kilometer_static','kilometer'].includes(raw)) return 'kilometro';
+  if(raw==='corridor_reference') return 'tramo';
   if(raw==='intersection') return 'punto';
   if(['reference','road'].includes(raw)) return 'carretera';
   if(raw==='zone') return 'zona';
@@ -3119,12 +3126,15 @@ function hasAlertPoint(a) {
 function centralAlertToUi(row,receivedAt=0) {
   const confidence=Number(row.location_confidence)||0;
   const severity=row.severity||'medium';
-  const precision=centralPrecisionToUi(row.location_precision,row.location_status,confidence);
+  // Las alertas anteriores con km se guardaron como "intersection" aunque el
+  // proveedor solo devolvió un punto genérico de la autopista.
+  const locationPrecision=row.location_precision==='intersection' && row.kilometer != null && row.road ? 'corridor_reference' : row.location_precision;
+  const precision=centralPrecisionToUi(locationPrecision,row.location_status,confidence);
   return {
     id:centralNumericId(row.id||row.external_id), central_id:row.id, external_id:row.external_id,
     lat:row.latitude == null ? null : Number(row.latitude), lon:row.longitude == null ? null : Number(row.longitude), category:row.category,
     title:row.title, detail:row.detail||row.title, location:row.location_label||[row.road,row.municipality,row.state].filter(Boolean).join(', '),
-    state:row.state||'', precision, km:row.kilometer ?? null, location_precision:row.location_precision||null,
+    state:row.state||'', precision, km:row.kilometer ?? null, location_precision:locationPrecision||null,
     location_confidence:confidence, location_provider:'central', road_snapped:false,
     time:new Date(row.event_at), published_at:row.event_at, detected_at:row.created_at||null, received_at:receivedAt,
     event_type:row.event_type||null, traffic_status:row.traffic_status||null,
@@ -3943,6 +3953,7 @@ function alertSeverity(a) {
 }
 function locationQuality(a) {
   if(!hasAlertPoint(a)) return {label:'Ubicación pendiente de verificar',cls:'low'};
+  if(a.location_precision === 'corridor_reference') return {label:'Referencia de autopista · km sin verificar',cls:'low'};
   const score=Number(a.location_confidence)||0;
   if(score >= .82 && ['punto','carretera','kilometro'].includes(a.precision)) return {label:'Precisión alta',cls:''};
   if(score >= .58 && a.precision !== 'estado') return {label:'Precisión media',cls:''};
@@ -4042,7 +4053,7 @@ function renderAlertCenter() {
     return `<article class="acn-card" style="--sev:${meta[1]}">
       <div class="acn-card-top"><span class="acn-badge">${meta[0]}</span><span class="acn-badge" style="--sev:#027A48">Fuente identificada</span>${a.km?`<span class="acn-badge" style="--sev:#1570EF">km ${a.km}</span>`:''}<time><i class="fa-regular fa-clock"></i> ${reportedTimeLabel(a.time)}</time></div>
       <h3>${escapeHtml(a.title || 'Incidente')}</h3><p>${escapeHtml(alertDetailDisplay(a))}</p>
-      <div class="acn-card-foot"><i class="fa-solid fa-location-dot" style="color:#EF4444"></i><span>${escapeHtml(a.location||'Ubicación aproximada')}</span><span class="loc-confidence ${loc.cls}">· ${hasAlertPoint(a) ? loc.label+' ('+Math.round((Number(a.location_confidence)||0)*100)+'%) · radio '+estimatedRadiusLabel(a) : loc.label}</span>${distance==null?'':`<b>· ${distance<10?distance.toFixed(1):Math.round(distance)} km de ti</b>`}<span class="source">${escapeHtml(alertSourceLabel(a))}</span>${hasAlertPoint(a) ? `<button class="acn-map" onclick="showCenterAlertOnMap(${a.id})"><i class="fa-solid fa-location-arrow"></i> Ver en mapa</button>` : ''}</div>
+      <div class="acn-card-foot"><i class="fa-solid fa-location-dot" style="color:#EF4444"></i><span>${escapeHtml(a.location||'Ubicación aproximada')}</span><span class="loc-confidence ${loc.cls}">· ${hasAlertPoint(a) ? loc.label+(estimatedRadiusMeters(a)?' ('+Math.round((Number(a.location_confidence)||0)*100)+'%) · radio '+estimatedRadiusLabel(a):'') : loc.label}</span>${distance==null?'':`<b>· ${distance<10?distance.toFixed(1):Math.round(distance)} km de ti</b>`}<span class="source">${escapeHtml(alertSourceLabel(a))}</span>${hasAlertPoint(a) ? `<button class="acn-map" onclick="showCenterAlertOnMap(${a.id})"><i class="fa-solid fa-location-arrow"></i> Ver en mapa</button>` : ''}</div>
     </article>`;
   }).join('');
 }
@@ -4058,7 +4069,7 @@ function closeAlertCenter(){
   closeModal('alert-center-modal');
   document.body.classList.remove('alert-center-open');
 }
-function showCenterAlertOnMap(id){ const a=alerts.find(x=>x.id===id); if(!hasAlertPoint(a))return; closeAlertCenter(); showAlertFocus(a); map.setView([a.lat,a.lon],Math.max(map.getZoom(),14)); }
+function showCenterAlertOnMap(id){ const a=alerts.find(x=>x.id===id); if(!hasAlertPoint(a))return; closeAlertCenter(); showAlertFocus(a); map.setView([a.lat,a.lon],a.location_precision === 'corridor_reference'?10:Math.max(map.getZoom(),14)); }
 function openModal(id) { const m = document.getElementById(id); if(m) m.classList.add('open'); }
 function closeModal(id) { const m = document.getElementById(id); if(m) m.classList.remove('open'); }
 document.querySelectorAll('.u-modal').forEach(m => m.addEventListener('click', ev => {
