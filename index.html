@@ -2669,7 +2669,7 @@ function referenceChipHTML(a) {
 }
 function estimatedRadiusMeters(a) {
   if(a.location_precision === 'corridor_reference') return 0;
-  if(a.location_precision === 'toll_reference') return 200;
+  if(a.location_precision === 'toll_reference') return 500;
   if(a.location_precision === 'kilometer_rnc') return 1500;
   if(a.location_precision === 'kilometer_rnc_estimated') return 2000;
   if(a.location_precision === 'kilometer_static') return 500;
