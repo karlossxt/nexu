@@ -5,7 +5,7 @@ const { geoDistanceKm, roadMatches, reverseGoogleRoad } = require('../lib/road-m
 const { normalizeStateKey: stateKey, stateMatches } = require('../lib/state-match');
 const RED_VIAL = require('./red-vial');
 const CASETAS = require('./casetas');
-const { resolveRncPost } = require('./rnc-km-anchors');
+const { resolveRncPost, resolveRncEstimatedKm } = require('./rnc-km-anchors');
 const { kilometersConflict } = require('../lib/alert-km');
 const { orientativeCorridorPoint } = require('../lib/corridor-reference');
 const TOMTOM_TRAFFIC = require('./tomtom-traffic');
@@ -950,6 +950,8 @@ async function resolveRoadLocation(ai, kilometer, reference) {
   if (!ai.carretera) return null;
   const rncPost=resolveRncPost(ai.carretera, kilometer, ai.estado);
   if(rncPost) return rncPost;
+  const rncEstimate=resolveRncEstimatedKm(ai.carretera, kilometer, ai.estado);
+  if(rncEstimate) return rncEstimate;
   const staticKm = resolveStaticRoadKilometer(ai.carretera, kilometer);
   if (staticKm) {
     const expectedState=clean(ai.estado);
@@ -1130,6 +1132,10 @@ function strictLocationDecision(ai, geo, context={}) {
   if (precision==='kilometer_rnc') {
     if(state && !geo.state_verified) return {ok:false,reason:'rnc_state_unverified'};
     return confidence>=.76 ? {ok:true,reason:'trusted_rnc_post'} : {ok:false,reason:'low_confidence_rnc_post'};
+  }
+  if (precision==='kilometer_rnc_estimated') {
+    if(state && !geo.state_verified) return {ok:false,reason:'rnc_estimate_state_unverified'};
+    return confidence>=.70 ? {ok:true,reason:'reviewed_rnc_short_gap'} : {ok:false,reason:'low_confidence_rnc_estimate'};
   }
   if (precision==='kilometer_static') {
     if(state && !geo.state_verified) return {ok:false,reason:'red_vial_state_unverified'};
