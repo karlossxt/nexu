@@ -251,6 +251,9 @@ module.exports = async (req, res) => {
   } else if (query.length < 3 || query.length > 240) {
     return res.status(400).json({ error: 'consulta_invalida' });
   }
+  if (mode === 'search' && /\b(?:km|kil[oó]metro)\s*\d+(?:[+.,]\d+)?\b/i.test(query) && (expectedRoad || /\b(?:autopista|carretera|libramiento)\b/i.test(query))) {
+    return res.status(404).json({ error:'kilometro_sin_cadenamiento', message:'El geocodificador no verifica postes kilométricos' });
+  }
 
   const cacheKey = mode === 'reverse' ? `reverse:${lat.toFixed(5)},${lon.toFixed(5)}` : `${mode}:${snap ? 'snap' : 'plain'}:${query.toLowerCase()}:${normalizeStateKey(expectedState)}:${normalizeRoad(expectedRoad)}`;
   const hit = cache.get(cacheKey);
@@ -344,7 +347,7 @@ module.exports = async (req, res) => {
       // de los proveedores con llave y devolvemos el error normal.
     }
 
-    if(googlePlainError || geoapifyError) {
+    if(geoapifyError) {
       const sanitize=value=>String(value||'').toLowerCase().replace(/[^a-z0-9_]+/g,'_').slice(0,80);
       return res.status(503).json({
         error:'proveedores_no_disponibles',
@@ -353,6 +356,8 @@ module.exports = async (req, res) => {
       });
     }
 
+    // Un proveedor configurado pero rechazado no convierte una búsqueda sin
+    // coincidencias en una caída del servicio cuando los demás respondieron.
     return res.status(404).json({ error:'sin_resultados' });
   } catch (error) {
     const reason=String(error?.message || 'provider_error').toLowerCase().replace(/[^a-z0-9_]+/g,'_').slice(0,80);

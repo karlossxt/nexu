@@ -847,6 +847,8 @@ function resolveStaticRoadKilometer(road, kilometer) {
   if (!road || kilometer == null) return null;
   const match = findRoadCorridor(road);
   if (!match) return null;
+  // La geometría por sí sola no certifica el cadenamiento.
+  if (!match.corridor.chainageVerified) return null;
   const point = pointAtRoadKilometer(match.corridor, kilometer);
   if (!point || !inMexico(point.latitude, point.longitude)) return null;
   return {
@@ -976,6 +978,8 @@ async function resolveRoadLocation(ai, kilometer, reference) {
       return staticKm;
     }
   }
+  // Los geocodificadores de direcciones no resuelven postes kilométricos.
+  if (kilometer != null) return null;
   const candidates = [];
   const queries = [
     { query:[reference, ai.carretera, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'reference' },
@@ -1190,6 +1194,23 @@ async function processItem(item, feed, options={}) {
     : [ai.ubicacion, municipality, ai.estado];
   const locationQuery = [...new Set(locationParts.map(clean).filter(Boolean))].join(', ');
   if (locationQuery.length < 4) return 'no_location';
+  const storeWithoutPoint = async reason => {
+    // Conserva el incidente verificable sin convertir una referencia textual en un pin.
+    if (!clean(ai.estado) && !clean(ai.carretera) && !municipality) return 'no_location';
+    const eventAt = item.published_at && Date.now() - new Date(item.published_at).getTime() <= MAX_AGE_MS ? item.published_at : new Date().toISOString();
+    const row = {
+      external_id:externalId, title, detail, category:ai.categoria,
+      severity:['critical','high','medium','low'].includes(ai.severidad) ? ai.severidad : 'medium',
+      event_type:eventType, traffic_status:ai.categoria==='road' ? trafficStatus : 'unknown',
+      state:clean(ai.estado)||null, municipality:municipality||null, road:clean(ai.carretera)||null,
+      kilometer, location_label:[locationQuery, direction ? 'sentido '+direction : ''].filter(Boolean).join(' · '),
+      latitude:null, longitude:null, location_confidence:null, location_precision:'unlocated',
+      location_status:'unlocated', source_name:sourceName(item,feed), source_url:item.url||null, event_at:eventAt
+    };
+    await sb('alerts?on_conflict=external_id', { method:'POST', headers:{ Prefer:'resolution=ignore-duplicates,return=minimal' }, body:JSON.stringify(row) });
+    log('info','Alerta guardada sin punto; visible solo en lista',{ external_id:externalId, reason });
+    return 'inserted_unlocated';
+  };
   const locationQueries = [
     { query:locationQuery, precision:ai.carretera && kilometer != null ? 'kilometer' : ai.carretera && reference ? 'reference' : ai.carretera ? 'road' : 'zone' },
     { query:[reference, ai.carretera, municipality, ai.estado].map(clean).filter(Boolean).join(', '), precision:reference && ai.carretera ? 'reference' : 'zone' },
@@ -1243,7 +1264,7 @@ async function processItem(item, feed, options={}) {
       state:clean(ai.estado),
       location:clean(ai.ubicacion)
     });
-    return 'no_location';
+    return storeWithoutPoint('intersection_unresolved');
   }
   const requiresSpecificRoadLocation = !!clean(ai.carretera) || kilometer != null || !!reference;
   if (!geo && requiresSpecificRoadLocation) {
@@ -1254,7 +1275,7 @@ async function processItem(item, feed, options={}) {
       municipality,
       state:clean(ai.estado)
     });
-    return 'no_location';
+    return storeWithoutPoint('road_unresolved');
   }
   if (!geo) {
     for (const candidate of locationQueries.filter(x=>['zone','municipality','state'].includes(x.precision))) {
@@ -1263,7 +1284,8 @@ async function processItem(item, feed, options={}) {
       if (!GEOAPIFY_KEY && !GOOGLE_KEY) await sleep(1100);
     }
   }
-  if (!geo || !Number.isFinite(geo.latitude) || !Number.isFinite(geo.longitude)) return 'no_location';
+  if (!geo || !Number.isFinite(geo.latitude) || !Number.isFinite(geo.longitude)) return storeWithoutPoint('coordinates_missing');
+  if (geo.precision === 'state') return storeWithoutPoint('state_only');
 
   // Validación final universal: ningún pin operativo puede contradecir el estado
   // extraído de la alerta. Reutilizamos el estado del geocoder cuando existe;
@@ -1338,7 +1360,7 @@ async function processItem(item, feed, options={}) {
       location_type:geo.location_type || null,
       road_snapped:!!geo.road_snapped
     });
-    return 'no_location';
+    return storeWithoutPoint('strict_location_rejected');
   }
 
   const eventAt = item.published_at && Date.now() - new Date(item.published_at).getTime() <= MAX_AGE_MS ? item.published_at : new Date().toISOString();
@@ -1509,7 +1531,10 @@ async function cycle() {
         lastAiProvider='none';
         const result = await processItem(item, feed, { preferGemini:useFastLane });
         if(lastAiProvider==='gemini') stats.gemini_used++; else if(lastAiProvider==='groq') stats.groq_used++;
-        if (result === 'inserted') stats.inserted++;
+        if (result === 'inserted' || result === 'inserted_unlocated') {
+          stats.inserted++;
+          if (result === 'inserted_unlocated') stats.unlocated_inserted=(stats.unlocated_inserted||0)+1;
+        }
         else if (result === 'no_location') stats.no_location++;
         else if (result === 'duplicate') stats.duplicates++;
         else stats.rejected++;
@@ -1543,7 +1568,7 @@ async function cycle() {
     stats.strict_location_rejections={...strictLocationRejects};
     stats.road_snap_metrics={...roadSnapMetrics};
     const located=stats.inserted+stats.no_location;
-    stats.location_success_rate_pct=located?Math.round((stats.inserted/located)*100):0;
+    stats.location_success_rate_pct=located?Math.round(((stats.inserted-(stats.unlocated_inserted||0))/located)*100):0;
     await health({
       status:'healthy',
       last_success_at:new Date().toISOString(),

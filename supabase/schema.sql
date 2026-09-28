@@ -38,7 +38,7 @@ create table if not exists public.alerts (
   longitude double precision,
   location_confidence numeric check (location_confidence between 0 and 1),
   location_precision text,
-  location_status text not null default 'automatic' check (location_status in ('automatic','approximate','corrected','verified')),
+  location_status text not null default 'automatic' check (location_status in ('automatic','approximate','corrected','verified','unlocated')),
   source_name text,
   source_url text,
   event_at timestamptz not null,
@@ -50,6 +50,11 @@ create table if not exists public.alerts (
 alter table public.alerts add column if not exists location_precision text;
 alter table public.alerts add column if not exists event_type text;
 alter table public.alerts add column if not exists traffic_status text;
+alter table public.alerts alter column latitude drop not null;
+alter table public.alerts alter column longitude drop not null;
+alter table public.alerts drop constraint if exists alerts_location_status_check;
+alter table public.alerts add constraint alerts_location_status_check
+  check (location_status in ('automatic','approximate','corrected','verified','unlocated'));
 
 create table if not exists public.location_corrections (
   id uuid primary key default gen_random_uuid(),
