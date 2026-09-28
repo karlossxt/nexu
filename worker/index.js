@@ -6,6 +6,8 @@ const { normalizeStateKey: stateKey, stateMatches } = require('../lib/state-matc
 const RED_VIAL = require('./red-vial');
 const CASETAS = require('./casetas');
 const { resolveRncPost } = require('./rnc-km-anchors');
+const { kilometersConflict } = require('../lib/alert-km');
+const { orientativeCorridorPoint } = require('../lib/corridor-reference');
 const TOMTOM_TRAFFIC = require('./tomtom-traffic');
 
 const env = process.env;
@@ -268,6 +270,7 @@ async function findSpatialDuplicate(row) {
     +'&order=event_at.desc&limit=80';
   const recent=await sb(path) || [];
   for (const existing of recent) {
+    if (kilometersConflict(row.kilometer,existing.kilometer)) continue;
     const lat=Number(existing.latitude), lon=Number(existing.longitude);
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
     const distanceKm=geoDistanceKm(row.latitude,row.longitude,lat,lon);
@@ -981,8 +984,13 @@ async function resolveRoadLocation(ai, kilometer, reference) {
       return staticKm;
     }
   }
-  // Los geocodificadores de direcciones no resuelven postes kilométricos.
-  if (kilometer != null) return null;
+  // Un punto de la carretera sirve para orientar en el mapa, pero NO ubica el
+  // kilómetro reportado. Exigimos que el proveedor nombre la misma vía y estado.
+  if (kilometer != null) {
+    if (roadKey(ai.carretera).split(' ').filter(Boolean).length < 2) return null;
+    const corridor=await geocode([ai.carretera,ai.estado].map(clean).filter(Boolean).join(', '),ai.estado,'road',ai.carretera);
+    return orientativeCorridorPoint(ai.carretera,corridor);
+  }
   const candidates = [];
   const queries = [
     { query:[reference, ai.carretera, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'reference' },
@@ -1127,6 +1135,11 @@ function strictLocationDecision(ai, geo, context={}) {
     if(state && !geo.state_verified) return {ok:false,reason:'red_vial_state_unverified'};
     return confidence>=.84 ? {ok:true,reason:'trusted_red_vial'} : {ok:false,reason:'low_confidence_red_vial'};
   }
+  if (precision==='corridor_reference') {
+    if (!road || kilometer == null || !geo.route_verified || !clean(geo.resolved_state)) return {ok:false,reason:'corridor_road_unverified'};
+    if (state && !geo.state_verified) return {ok:false,reason:'corridor_state_unverified'};
+    return confidence>=.58 ? {ok:true,reason:'orientative_corridor_point'} : {ok:false,reason:'low_confidence_corridor'};
+  }
   if (precision==='intersection') {
     if (!explicitIntersection) return {ok:false,reason:'intersection_without_two_streets'};
     const verifiedNominatimIntersection=provider==='nominatim' && !!geo.state_verified && confidence>=.70;
@@ -1251,9 +1264,8 @@ async function processItem(item, feed, options={}) {
 
   if (!geo) geo = await resolveRoadLocation(ai, kilometer, reference);
 
-  // Si existe un km, el corredor tiene prioridad. Si RED_VIAL/geocoder vial no resolvió,
-  // todavía permitimos usar un cruce explícito como respaldo.
-  if (!geo && explicitIntersection) {
+  // Un cruce geocodificado no sustituye un poste kilométrico sin resolver.
+  if (!geo && explicitIntersection && kilometer == null) {
     geo = await resolveUrbanIntersection({ ...ai, municipio:municipality });
     if (geo) log('info','Intersección urbana resuelta como respaldo',{
       location:clean(ai.ubicacion),
