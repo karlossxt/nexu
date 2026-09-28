@@ -6,3 +6,4 @@ worker/.env
 npm-debug.log*
 .vercel/
 .DS_Store
+__pycache__/
