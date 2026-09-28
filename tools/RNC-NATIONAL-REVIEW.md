@@ -47,3 +47,11 @@ python3 -m unittest tools/test_rnc_batch_review.py
 ```
 
 Agrupa carretera y km, ordena por frecuencia y solo propone coincidencias de nombre completo y km cubierto por una cadena candidata. `exact_post_needs_review` **no aprueba el punto**: todavía hay que confirmar entidad, cuota/libre, ramal, cadenamiento y vecinos. `no_matching_chain` evita confundir Zacapalco–Rancho Viejo con Zacapalco–Taxco. El script no escribe en Supabase ni en el índice del worker.
+
+Para ordenar primero los corredores con aforos conocidos, añadir un cuarto argumento con registros `road,tdpa,year,station,stationKm,source`:
+
+```sh
+python3 tools/rnc-batch-review.py alerts.json /tmp/rnc-national-review.json /tmp/rnc-prioritized.json tools/traffic-2024-samples.json
+```
+
+`traffic-2024-samples.json` contiene **tres mediciones puntuales** publicadas por SICT en Datos Viales 2025 (aforos 2024), no un ranking nacional ni el promedio de cada carretera. Al incorporar el conjunto nacional completo se podrá ordenar el resto de corredores por TDPA comparable. Un valor alto solo define el orden de revisión; nunca aprueba una coordenada. Las alertas sin muestra permanecen en el reporte.

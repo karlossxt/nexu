@@ -1,0 +1,29 @@
+[
+  {
+    "road": "México - Puebla",
+    "route": "150D",
+    "station": "Plaza de Cobro San Martín Texmelucan",
+    "stationKm": 91,
+    "tdpa": 51563,
+    "year": 2024,
+    "source": "https://micrs.sct.gob.mx/images/DireccionesGrales/DGST/Datos_Viales_2025/33_DV2025_PlazasCobro2025.pdf"
+  },
+  {
+    "road": "México - Querétaro",
+    "route": "57D",
+    "station": "Jorobas",
+    "stationKm": 56.18,
+    "tdpa": 44433,
+    "year": 2024,
+    "source": "https://micrs.sct.gob.mx/images/DireccionesGrales/DGST/Datos_Viales_2025/22_DV2025_Queretaro.pdf"
+  },
+  {
+    "road": "Querétaro - Irapuato",
+    "route": "45D",
+    "station": "Plaza de Cobro Querétaro",
+    "stationKm": 7,
+    "tdpa": 15370,
+    "year": 2024,
+    "source": "https://micrs.sct.gob.mx/images/DireccionesGrales/DGST/Datos_Viales_2025/33_DV2025_PlazasCobro2025.pdf"
+  }
+]
