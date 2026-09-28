@@ -49,3 +49,18 @@ test('54D short-gap estimates never pose as official posts',()=>{
   assert.equal(resolveRncEstimatedKm('Autopista Guadalajara - Colima',104,'Colima'),null);
   assert.equal(resolveRncEstimatedKm('Autopista Acatzingo - Cd. Mendoza',104),null);
 });
+
+test('reviewed 95D and 91D posts resolve only exact road, km and compatible state',()=>{
+  const cuernavaca=resolveRncPost('Autopista Cuernavaca - Acapulco',142,'Morelos');
+  assert.equal(cuernavaca?.source_post_id,1510);
+  assert.equal(cuernavaca?.precision,'kilometer_rnc');
+  assert.equal(resolveRncPost('Autopista Cuernavaca - Acapulco',142,'Guerrero'),null);
+  assert.equal(resolveRncPost('Autopista Cuernavaca - Acapulco',141),null);
+  const ixtla=resolveRncPost('Autopista Puente de Ixtla - Iguala',48,'Guerrero');
+  assert.equal(ixtla?.source_post_id,1317);
+  assert.equal(resolveRncPost('Autopista Puente de Ixtla - Iguala',48,'Morelos'),null);
+  assert.equal(resolveRncPost('Autopista Zacapalco - Rancho Viejo',8),null);
+  assert.equal(resolveRncPost('Autopista Querétaro - Irapuato',63),null);
+  assert.equal(resolveRncPost('Autopista Plan de Ayala - El Porvenir',48),null);
+  assert.equal(resolveRncPost('Carretera libre Puente de Ixtla - Iguala',48),null);
+});

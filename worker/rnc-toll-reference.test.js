@@ -23,3 +23,20 @@ test('same-named plazas on distinct corridors remain ambiguous without a road',(
   assert.deepEqual(resolveOfficialTollReference('Caseta La Joya','Autopista Alfa - Beta',catalog)?.source_plaza_ids,[1]);
   assert.equal(resolveOfficialTollReference('Caseta La Joya','Autopista Beta - Delta',catalog),null);
 });
+
+test('Sánchez Magallanes nearby ramps give one approximate reference on reviewed corridor',()=>{
+  const plaza=resolveOfficialTollReference('Plaza de Cobro Sánchez Magallanes','Cárdenas-Coatzacoalcos');
+  assert.deepEqual(plaza.source_plaza_ids,[760,761,759,762,763,764]);
+  assert.equal(plaza.precision,'toll_reference');
+  assert.equal(plaza.status,'approximate');
+  assert.ok(plaza.latitude>18.029 && plaza.latitude<18.032);
+  assert.equal(resolveOfficialTollReference('Plaza de Cobro Sánchez Magallanes','Querétaro - Irapuato'),null);
+});
+
+test('same name remains ambiguous when plazas are far apart',()=>{
+  const catalog=[
+    {name:'La Joya',section:'Ruta Alfa - Beta',lat:19,lon:-99,sourceIds:[1]},
+    {name:'La Joya',section:'Ruta Alfa - Beta',lat:19.02,lon:-99,sourceIds:[2]}
+  ];
+  assert.equal(resolveOfficialTollReference('Caseta La Joya','Ruta Alfa - Beta',catalog),null);
+});

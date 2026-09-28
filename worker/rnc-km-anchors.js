@@ -1,6 +1,7 @@
 'use strict';
 const { stateMatches } = require('../lib/state-match');
 const posts = require('./rnc-150d-reviewed.json');
+const reviewedToday = require('./rnc-20260928-reviewed.json');
 
 // RNC 2025: Poste de referencia, approximate position (not an incident GPS fix).
 // Reviewed against adjacent kilometre posts and the tolled road geometry.
@@ -9,7 +10,8 @@ const ANCHORS = [
   { road:'Guadalajara–Colima 54D', state:'Jalisco', km:117, lat:19.46473314598444, lon:-103.46481122763824,
     aliases:[/guadalajara\s*[-–—]?\s*colima/i, /colima\s*[-–—]?\s*guadalajara/i], sourcePostId:40870 },
   ...posts.map(p=>({ ...p, road:'Acatzingo–Ciudad Mendoza 150D',
-    aliases:[/acatzingo\s*[-–—]?\s*(?:cd\.?|ciudad)\s*mendoza/i, /(?:cd\.?|ciudad)\s*mendoza\s*[-–—]?\s*acatzingo/i] }))
+    aliases:[/acatzingo\s*[-–—]?\s*(?:cd\.?|ciudad)\s*mendoza/i, /(?:cd\.?|ciudad)\s*mendoza\s*[-–—]?\s*acatzingo/i] })),
+  ...reviewedToday.map(p=>({ ...p, aliases:[new RegExp(p.alias,'i')] }))
 ];
 
 // km 104/105 lie between RNC posts 103 (ID 40864) and 106 (ID 40865).
