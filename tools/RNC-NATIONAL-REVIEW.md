@@ -36,3 +36,14 @@ python3 tools/rnc-national-review.py /ruta/rnc2025.gpkg /tmp/rnc-national-review
 ```
 
 El ejemplo de coordenadas es solo formato. No debe usarse como ancla real. El resultado `anchorValidation` exige una única cadena del **mismo código** y, si se proporciona, el mismo nombre de tramo; no acepta la predicción más cercana de cualquier ruta. Una ancla derivada de los propios postes RNC no cuenta como validación independiente.
+
+## Priorización por alertas reales
+
+Exportar a JSON las alertas con `id,road,kilometer,state,event_at,latitude,longitude,location_status` y ejecutar:
+
+```sh
+python3 tools/rnc-batch-review.py alerts.json /tmp/rnc-national-review.json /tmp/rnc-prioritized.json
+python3 -m unittest tools/test_rnc_batch_review.py
+```
+
+Agrupa carretera y km, ordena por frecuencia y solo propone coincidencias de nombre completo y km cubierto por una cadena candidata. `exact_post_needs_review` **no aprueba el punto**: todavía hay que confirmar entidad, cuota/libre, ramal, cadenamiento y vecinos. `no_matching_chain` evita confundir Zacapalco–Rancho Viejo con Zacapalco–Taxco. El script no escribe en Supabase ni en el índice del worker.
