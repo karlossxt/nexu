@@ -945,7 +945,7 @@ function resolveTollReference(reference) {
 
 async function resolveRoadLocation(ai, kilometer, reference) {
   if (!ai.carretera) return null;
-  const rncPost=resolveRncPost(ai.carretera, kilometer);
+  const rncPost=resolveRncPost(ai.carretera, kilometer, ai.estado);
   if(rncPost) return rncPost;
   const staticKm = resolveStaticRoadKilometer(ai.carretera, kilometer);
   if (staticKm) {

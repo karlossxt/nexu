@@ -9,6 +9,8 @@ test('matches only reviewed route and exact kilometre', () => {
   assert.equal(colima.precision,'kilometer_rnc');
   assert.equal(colima.status,'approximate');
   assert.equal(resolveRncPost('Autopista Acatzingo - Cd. Mendoza',229).source_post_id,5725);
+  assert.equal(resolveRncPost('Autopista Acatzingo - Cd. Mendoza',229,'Puebla'),null);
+  assert.equal(resolveRncPost('Autopista Acatzingo - Cd. Mendoza',229,'Veracruz').source_post_id,5725);
   assert.equal(resolveRncPost('Autopista Acatzingo - Cd. Mendoza',228),null);
   assert.equal(resolveRncPost('Carretera libre Guadalajara - Colima',117),null);
   assert.equal(resolveRncPost('Carretera Federal 54 Guadalajara - Colima',117),null);
