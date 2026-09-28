@@ -5,6 +5,7 @@ const { geoDistanceKm, roadMatches, reverseGoogleRoad } = require('../lib/road-m
 const { normalizeStateKey: stateKey, stateMatches } = require('../lib/state-match');
 const RED_VIAL = require('./red-vial');
 const CASETAS = require('./casetas');
+const { resolveRncPost } = require('./rnc-km-anchors');
 const TOMTOM_TRAFFIC = require('./tomtom-traffic');
 
 const env = process.env;
@@ -944,6 +945,8 @@ function resolveTollReference(reference) {
 
 async function resolveRoadLocation(ai, kilometer, reference) {
   if (!ai.carretera) return null;
+  const rncPost=resolveRncPost(ai.carretera, kilometer, ai.estado);
+  if(rncPost) return rncPost;
   const staticKm = resolveStaticRoadKilometer(ai.carretera, kilometer);
   if (staticKm) {
     const expectedState=clean(ai.estado);
@@ -1115,6 +1118,10 @@ function strictLocationDecision(ai, geo, context={}) {
 
   if (precision==='toll_reference') {
     return confidence>=.88 ? {ok:true,reason:'trusted_toll'} : {ok:false,reason:'low_confidence_toll'};
+  }
+  if (precision==='kilometer_rnc') {
+    if(state && !geo.state_verified) return {ok:false,reason:'rnc_state_unverified'};
+    return confidence>=.76 ? {ok:true,reason:'trusted_rnc_post'} : {ok:false,reason:'low_confidence_rnc_post'};
   }
   if (precision==='kilometer_static') {
     if(state && !geo.state_verified) return {ok:false,reason:'red_vial_state_unverified'};
@@ -1313,7 +1320,7 @@ async function processItem(item, feed, options={}) {
         latitude:Number(geo.latitude),
         longitude:Number(geo.longitude)
       });
-      return 'no_location';
+      return storeWithoutPoint('coordinate_state_unverified');
     }
 
     if(!stateMatches(expectedGeoState,resolvedGeoState)) {
@@ -1330,7 +1337,7 @@ async function processItem(item, feed, options={}) {
         latitude:Number(geo.latitude),
         longitude:Number(geo.longitude)
       });
-      return 'no_location';
+      return storeWithoutPoint('coordinate_state_mismatch');
     }
 
     geo.state_verified=true;

@@ -2171,6 +2171,7 @@ function alertSourceLabel(a) {
 function precisionLabel(a) {
   if(!hasAlertPoint(a)) return 'Ubicación pendiente de verificar';
   if(a.precision === 'carretera') return 'Ajustado a carretera';
+  if(a.location_precision === 'kilometer_rnc') return 'Poste kilométrico aproximado';
   if(a.precision === 'kilometro') return 'Kilómetro calculado';
   if(a.precision === 'punto') return 'Punto localizado';
   if(a.precision === 'tramo') return 'Tramo aproximado';
@@ -2179,7 +2180,7 @@ function precisionLabel(a) {
   return 'Zona aproximada';
 }
 function estimatedRadiusMeters(a) {
-  return ({ punto:200, carretera:350, kilometro:500, tramo:2500, zona:3000, municipio:6000, estado:15000 }[a.precision] || 3000);
+  return ({ punto:200, carretera:350, kilometro:a.location_precision === 'kilometer_rnc' ? 1500 : 500, tramo:2500, zona:3000, municipio:6000, estado:15000 }[a.precision] || 3000);
 }
 function estimatedRadiusLabel(a) {
   if(!hasAlertPoint(a)) return 'sin radio';
@@ -2559,7 +2560,7 @@ function hasAlertPoint(a) {
 function centralAlertToUi(row,receivedAt=0) {
   const confidence=Number(row.location_confidence)||0;
   const severity=row.severity||'medium';
-  const precision=row.location_status==='unlocated' || row.location_precision==='unlocated' ? 'sin_punto' : ['corrected','verified'].includes(row.location_status)?'punto':confidence>=.92?'punto':confidence>=.82?'carretera':confidence>=.68?'tramo':confidence>=.48?'municipio':'estado';
+  const precision=row.location_precision==='kilometer_rnc' ? 'kilometro' : row.location_status==='unlocated' || row.location_precision==='unlocated' ? 'sin_punto' : ['corrected','verified'].includes(row.location_status)?'punto':confidence>=.92?'punto':confidence>=.82?'carretera':confidence>=.68?'tramo':confidence>=.48?'municipio':'estado';
   return {
     id:centralNumericId(row.id||row.external_id), central_id:row.id, external_id:row.external_id,
     lat:row.latitude == null ? null : Number(row.latitude), lon:row.longitude == null ? null : Number(row.longitude), category:row.category,
