@@ -29,6 +29,16 @@ class BatchReviewTest(unittest.TestCase):
     def test_shared_place_name_does_not_equate_distinct_corridors(self):
         self.assertFalse(batch.name_matches('Zacapalco - Rancho Viejo', 'Zacapalco - Taxco'))
 
+    def test_traffic_samples_rank_only_matching_roads_without_approving_posts(self):
+        alerts = [{'road': 'Autopista Querétaro - Irapuato', 'kilometer': 63},
+                  {'road': 'Autopista Zacapalco - Rancho Viejo', 'kilometer': 8}]
+        samples = [{'road': 'Querétaro - Irapuato', 'tdpa': 15370, 'year': 2024}]
+        result = batch.review(alerts, {'chains': []}, samples)
+        self.assertEqual(result[0]['road'], alerts[0]['road'])
+        self.assertEqual(result[0]['trafficSample']['tdpa'], 15370)
+        self.assertEqual(result[0]['status'], 'review_required')
+        self.assertIsNone(result[1]['trafficSample'])
+
 
 if __name__ == '__main__':
     unittest.main()

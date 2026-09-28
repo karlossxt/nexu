@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Rank unlocated road+km alerts against RNC candidate chains; never publish pins.
 
-Usage: python3 tools/rnc-batch-review.py alerts.json rnc-national-review.json output.json
+Usage: python3 tools/rnc-batch-review.py alerts.json rnc-national-review.json output.json [traffic.json]
 The alerts input is an array exported from Supabase with road, kilometer, event_at,
 latitude, longitude, location_status, state and optionally id/title.
 """
@@ -25,7 +25,7 @@ def name_matches(alert_road, chain_name):
     return len(a) >= 2 and a == b
 
 
-def review(alerts, report):
+def review(alerts, report, traffic=()):
     groups = collections.defaultdict(list)
     for alert in alerts:
         if alert.get('latitude') is not None or alert.get('longitude') is not None:
@@ -54,20 +54,30 @@ def review(alerts, report):
                   'ambiguous_chains' if len(candidates) > 1 else
                   'exact_post_needs_review' if candidates[0]['exactPost'] else
                   'gap_needs_review')
+        samples = [s for s in traffic if name_matches(road, s.get('road'))]
+        sample = max(samples, key=lambda s: s['tdpa']) if samples else None
         output.append({'road': road, 'kilometer': km, 'alerts': len(rows),
                        'states': sorted({a['state'] for a in rows if a.get('state')}),
                        'latestEventAt': max((a.get('event_at') or '' for a in rows)),
                        'alertIds': [a['id'] for a in rows if a.get('id')],
+                       'trafficSample': sample,
                        'reason': reason, 'candidates': candidates,
                        'status': 'review_required'})
+    if traffic:
+        # A station is a sample, not a road-wide or national ranking. Missing
+        # samples remain visible below the measured corridors.
+        return sorted(output, key=lambda x: (-int(bool(x['trafficSample'])),
+                    -(x['trafficSample']['tdpa'] if x['trafficSample'] else 0),
+                    -x['alerts'], x['road'], x['kilometer']))
     return sorted(output, key=lambda x: (-x['alerts'], -bool(x['candidates']), x['road'], x['kilometer']))
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
+    if len(sys.argv) not in (4, 5):
         raise SystemExit(__doc__)
-    alerts, source, target = map(Path, sys.argv[1:])
-    result = review(json.loads(alerts.read_text()), json.loads(source.read_text()))
+    alerts, source, target = map(Path, sys.argv[1:4])
+    traffic = json.loads(Path(sys.argv[4]).read_text()) if len(sys.argv) == 5 else []
+    result = review(json.loads(alerts.read_text()), json.loads(source.read_text()), traffic)
     target.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
     print(json.dumps({'groups': len(result), 'alerts': sum(r['alerts'] for r in result),
                       'exactCandidates': sum(r['reason'] == 'exact_post_needs_review' for r in result)},
