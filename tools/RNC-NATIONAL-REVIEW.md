@@ -55,3 +55,14 @@ python3 tools/rnc-batch-review.py alerts.json /tmp/rnc-national-review.json /tmp
 ```
 
 `traffic-2024-samples.json` contiene **tres mediciones puntuales** publicadas por SICT en Datos Viales 2025 (aforos 2024), no un ranking nacional ni el promedio de cada carretera. Al incorporar el conjunto nacional completo se podrá ordenar el resto de corredores por TDPA comparable. Un valor alto solo define el orden de revisión; nunca aprueba una coordenada. Las alertas sin muestra permanecen en el reporte.
+
+## Auditar calibraciones externas
+
+Si se genera una calibración de `red-vial.js` a partir de postes cercanos a la geometría, contrastarla antes de llevarla al worker:
+
+```sh
+python3 tools/rnc-calibration-audit.py /ruta/corridor-calibration.json /tmp/rnc-national-review.json /tmp/rnc-calibration-audit.json
+python3 -m unittest tools/test_rnc_calibration_audit.py
+```
+
+La auditoría conserva solo postes con ID presente en una cadena de la revisión nacional: tramo de cuota nombrado igual, sin código/km duplicado y con saltos de hasta 3 km. Separa secuencias de al menos cuatro postes. El resultado siempre dice `review_required`; no valida por sí solo el sentido, la geometría completa ni un error de interpolación independiente. Un poste rechazado por la revisión nacional no se rehabilita solo porque caiga cerca de la polilínea OSRM.
