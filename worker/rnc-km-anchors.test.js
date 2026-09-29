@@ -63,4 +63,13 @@ test('reviewed 95D and 91D posts resolve only exact road, km and compatible stat
   assert.equal(resolveRncPost('Autopista Querétaro - Irapuato',63),null);
   assert.equal(resolveRncPost('Autopista Plan de Ayala - El Porvenir',48),null);
   assert.equal(resolveRncPost('Carretera libre Puente de Ixtla - Iguala',48),null);
+  for(const [km,id] of [[247,1237],[248,1238],[249,1239],[250,1240]]) {
+    const point=resolveRncPost('Autopista Cuernavaca - Acapulco',km,'Guerrero');
+    assert.equal(point?.source_post_id,id);
+    assert.equal(point?.precision,'kilometer_rnc');
+    assert.equal(resolveRncPost('Autopista Cuernavaca - Acapulco',km,'Morelos'),null);
+    assert.equal(resolveRncPost('Carretera libre Cuernavaca - Acapulco',km,'Guerrero'),null);
+  }
+  assert.equal(resolveRncPost('Autopista Cuernavaca - Acapulco',246,'Guerrero'),null);
+  assert.equal(resolveRncPost('Autopista Cuernavaca - Acapulco',251,'Guerrero'),null);
 });
