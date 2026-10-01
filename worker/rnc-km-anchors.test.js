@@ -73,3 +73,29 @@ test('reviewed 95D and 91D posts resolve only exact road, km and compatible stat
   assert.equal(resolveRncPost('Autopista Cuernavaca - Acapulco',246,'Guerrero'),null);
   assert.equal(resolveRncPost('Autopista Cuernavaca - Acapulco',251,'Guerrero'),null);
 });
+
+test('September 30 exact posts reject neighboring routes, states and fractional km',()=>{
+  const cases=[
+    ['Autopista México-Cuernavaca',63,'Morelos',1405],
+    ['Autopista Cd Mendoza - Córdoba',282,'Veracruz',6261],
+    ['Autopista Cd. Mendoza - Córdoba',285,'Veracruz',6259],
+    ['Autopista Ciudad Mendoza - Córdoba',286,'Veracruz',6258],
+    ['Autopista Cd. Mendoza - Córdoba',289,'Veracruz',6255],
+    ['Autopista La Pera - Cuautla',6,'Morelos',1422],
+    ['Autopista La Pera - Cuautla',25,'Morelos',1720],
+    ['Autopista Nuevo Teapa - Cosoleacaque',7,'Veracruz',6658]
+  ];
+  for(const [road,km,state,id] of cases) {
+    const found=resolveRncPost(road,km,state);
+    assert.equal(found?.source_post_id,id);
+    assert.equal(found?.status,'approximate');
+    assert.equal(found?.uncertainty_m,1500);
+    assert.equal(resolveRncPost(road,km,'Sonora'),null);
+    assert.equal(resolveRncPost(road,km+.5,state),null);
+    assert.equal(resolveRncPost('Carretera libre '+road,km,state),null);
+  }
+  assert.equal(resolveRncPost('Autopista Córdoba-Puebla',282,'Veracruz'),null);
+  assert.equal(resolveRncPost('Autopista Acatzingo - Cd. Mendoza',282,'Veracruz'),null);
+  assert.equal(resolveRncPost('Autopista Cd. Mendoza - Córdoba',297,'Veracruz'),null);
+  assert.equal(resolveRncPost('Autopista Nuevo Teapa - Cosoleacaque',17,'Veracruz'),null);
+});
