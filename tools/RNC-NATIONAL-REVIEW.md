@@ -1,11 +1,34 @@
 # Revisión nacional de postes RNC 2025
 
-Genera **candidatos para revisión**, nunca coordenadas de producción. Parte del GeoPackage oficial descargado según [RNC-PILOT.md](RNC-PILOT.md). No requiere llaves, proveedores de geocodificación ni dependencias Python externas.
+Genera **candidatos para revisión**, nunca coordenadas de producción. Parte del GeoPackage oficial descargado según [RNC-PILOT.md](RNC-PILOT.md). No requiere llaves, proveedores de geocodificación ni dependencias externas: el GeoPackage es un SQLite y `node:sqlite` lo lee de forma nativa.
 
 ```sh
-python3 tools/rnc-national-review.py /ruta/rnc2025.gpkg /tmp/rnc-national-review.json
-python3 -m unittest tools/test_rnc_national_review.py
+node tools/rnc-national-review.js /ruta/rnc2025.gpkg /ruta/rnc-national-review.json
+node --test tools/test_rnc_national_review.js
 ```
+
+`rnc-national-review.js` es un port fiel de `rnc-national-review.py`; el original se conserva como referencia y ya no es necesario para ejecutar la revisión. Los demás `tools/*.py` siguen requiriendo Python.
+
+## Verificación del port a Node
+
+El port reproduce exactamente la línea base documentada más abajo:
+
+| Métrica | Documentado | Port a Node |
+|---|---:|---:|
+| postes examinados | 46,289 | 46,289 |
+| asignados antes de la revisión de cadenas | 5,567 | 5,567 |
+| cadenas candidatas | 127 | 127 |
+| postes candidatos | 2,296 | 2,296 |
+| sin cuota nombrada a 120 m | 39,803 | 39,803 |
+| próximos también a libre/otro código | 305 | 305 |
+| km repetidos | 2,887 | 2,887 |
+| km extremos/inválidos | 598 | 598 |
+| nombre de tramo ambiguo | 16 | 16 |
+| aislados o en fragmentos cortos | 384 | 384 |
+
+Controles comprobados sobre el JSON producido: el km 117 de la 54D (`ID_KM=40870`) queda en la cadena *Acatlán de Juárez - El Trapiche* km 106-128; los dos km 223 de la 150D (`ID_KM` 3998 y 4001) quedan en `duplicate_km_same_code` y ningún km 223 aparece en cadena del código 150; el km 229 (`ID_KM=5725`) queda aislado como `short_or_isolated_chain`; ningún código se convierte en `54D`/`150D` y toda cadena queda con `toll=true`.
+
+La corrida completa tarda unos 4 s con los índices RTree del propio GeoPackage.
 
 El JSON completo se mantiene fuera del repositorio. Incluye `chains` (postes, `ID_KM`, `ID_RED`, coordenadas originales y proyectadas, distancia de ajuste) y `flaggedPosts` con la causa de exclusión. `status=review_required` significa que **ninguna cadena está aprobada por este programa**.
 
@@ -42,16 +65,28 @@ El ejemplo de coordenadas es solo formato. No debe usarse como ancla real. El re
 Exportar a JSON las alertas con `id,road,kilometer,state,event_at,latitude,longitude,location_status` y ejecutar:
 
 ```sh
-python3 tools/rnc-batch-review.py alerts.json /tmp/rnc-national-review.json /tmp/rnc-prioritized.json
-python3 -m unittest tools/test_rnc_batch_review.py
+node tools/rnc-batch-review.js alerts.json /tmp/rnc-national-review.json /tmp/rnc-prioritized.json
+node --test tools/test_rnc_batch_review.js
 ```
 
 Agrupa carretera y km, ordena por frecuencia y solo propone coincidencias de nombre completo y km cubierto por una cadena candidata. `exact_post_needs_review` **no aprueba el punto**: todavía hay que confirmar entidad, cuota/libre, ramal, cadenamiento y vecinos. `no_matching_chain` evita confundir Zacapalco–Rancho Viejo con Zacapalco–Taxco. El script no escribe en Supabase ni en el índice del worker.
 
+### Límites del coincidente por nombre
+
+El empate es de lista de tokens **completa y en orden**: `autopista`, `carretera`, `de`, `del`, `la`, `el`, `cuota`, `federal` y `km` se eliminan, todo lo demás debe coincidir. Dos límites medidos sobre las 127 cadenas candidatas (55 nombres distintos) que conviene no confundir con un fallo del script:
+
+| Caso | Alerta | RNC | Resultado |
+| --- | --- | --- | --- |
+| Abreviatura de topónimo | `Cd. Mendoza` | `Ciudad Mendoza` | No coincide: `cd` ≠ `ciudad` |
+| Número de ruta en el nombre | `Carretera Federal 95 Cuernavaca - Acapulco` | `Cuernavaca - Acapulco` | No coincide: los dígitos no son palabra vacía |
+| Nombre de corredor distinto | `Guadalajara - Colima` | `Acatlán de Juárez - El Trapiche` | No coincide: ningún orden de tokens los aproxima |
+
+El primero y el segundo se pueden cerrar con una tabla de normalización. El tercero no: exige un **alias** por corredor, que es exactamente el campo `alias` de los JSON `rnc-*-reviewed.json` del repo. Mientras no exista esa tabla, `no_matching_chain` significa "sin coincidencia por nombre", no "sin anclas": revisar esos grupos a mano antes de concluir que no hay poste.
+
 Para ordenar primero los corredores con aforos conocidos, añadir un cuarto argumento con registros `road,tdpa,year,station,stationKm,source`:
 
 ```sh
-python3 tools/rnc-batch-review.py alerts.json /tmp/rnc-national-review.json /tmp/rnc-prioritized.json tools/traffic-2024-samples.json
+node tools/rnc-batch-review.js alerts.json /tmp/rnc-national-review.json /tmp/rnc-prioritized.json tools/traffic-2024-samples.json
 ```
 
 `traffic-2024-samples.json` contiene **tres mediciones puntuales** publicadas por SICT en Datos Viales 2025 (aforos 2024), no un ranking nacional ni el promedio de cada carretera. Al incorporar el conjunto nacional completo se podrá ordenar el resto de corredores por TDPA comparable. Un valor alto solo define el orden de revisión; nunca aprueba una coordenada. Las alertas sin muestra permanecen en el reporte.
@@ -61,8 +96,16 @@ python3 tools/rnc-batch-review.py alerts.json /tmp/rnc-national-review.json /tmp
 Si se genera una calibración de `red-vial.js` a partir de postes cercanos a la geometría, contrastarla antes de llevarla al worker:
 
 ```sh
-python3 tools/rnc-calibration-audit.py /ruta/corridor-calibration.json /tmp/rnc-national-review.json /tmp/rnc-calibration-audit.json
-python3 -m unittest tools/test_rnc_calibration_audit.py
+node tools/rnc-calibration-audit.js /ruta/corridor-calibration.json /tmp/rnc-national-review.json /tmp/rnc-calibration-audit.json
+node --test tools/test_rnc_calibration_audit.js
 ```
 
 La auditoría conserva solo postes con ID presente en una cadena de la revisión nacional: tramo de cuota nombrado igual, sin código/km duplicado y con saltos de hasta 3 km. Separa secuencias de al menos cuatro postes. El resultado siempre dice `review_required`; no valida por sí solo el sentido, la geometría completa ni un error de interpolación independiente. Un poste rechazado por la revisión nacional no se rehabilita solo porque caiga cerca de la polilínea OSRM.
+
+`detalleAnclas` debe traer los **ID reales** de la revisión nacional, no un rango inventado. El `ID_KM` del RNC **no sigue el sentido de la carretera**: en la cadena del 150 km 273-300 los IDs bajan de 6270 (km 273) a 6248 (km 300). Un rango inventado sobre IDs contiguos produce anclas que no existen; la auditoría las descarta en silencio y devuelve `segments: []`. Para comprobar si un tramo propuesto se sostiene, imprimir antes los IDs de la cadena:
+
+```sh
+node -e "const n=require('/tmp/rnc-national-review.json');const c=n.chains.find(c=>c.code==='150'&&c.fromKm===273);console.log(c.posts.map(p=>p.id+'(km '+p.km+')').join(', '))"
+```
+
+Un `segments: []` con `candidateAnchors` mayor que cero casi siempre significa IDs propuestos que no están en cadena, no un corredor sin posts.
