@@ -1,0 +1,82 @@
+[
+  {
+    "road": "Ciudad Mendoza–Córdoba 150D",
+    "state": "Veracruz",
+    "km": 282,
+    "lat": 18.899710620755304,
+    "lon": -97.03679808740777,
+    "alias": "^(?:Autopista\\s+)?(?:Cd\\.?|Ciudad)\\s*Mendoza\\s*[-–—]\\s*C[oó]rdoba$",
+    "sourcePostId": 6261,
+    "sourceRoadId": 188698
+  },
+  {
+    "road": "Ciudad Mendoza–Córdoba 150D",
+    "state": "Veracruz",
+    "km": 285,
+    "lat": 18.907048327555657,
+    "lon": -97.01059927943602,
+    "alias": "^(?:Autopista\\s+)?(?:Cd\\.?|Ciudad)\\s*Mendoza\\s*[-–—]\\s*C[oó]rdoba$",
+    "sourcePostId": 6259,
+    "sourceRoadId": 191832
+  },
+  {
+    "road": "Ciudad Mendoza–Córdoba 150D",
+    "state": "Veracruz",
+    "km": 286,
+    "lat": 18.90692782851448,
+    "lon": -97.00099003590323,
+    "alias": "^(?:Autopista\\s+)?(?:Cd\\.?|Ciudad)\\s*Mendoza\\s*[-–—]\\s*C[oó]rdoba$",
+    "sourcePostId": 6258,
+    "sourceRoadId": 183494
+  },
+  {
+    "road": "Ciudad Mendoza–Córdoba 150D",
+    "state": "Veracruz",
+    "km": 289,
+    "lat": 18.895281070432667,
+    "lon": -96.97861849246151,
+    "alias": "^(?:Autopista\\s+)?(?:Cd\\.?|Ciudad)\\s*Mendoza\\s*[-–—]\\s*C[oó]rdoba$",
+    "sourcePostId": 6255,
+    "sourceRoadId": 187828
+  },
+  {
+    "road": "La Pera–Cuautla 160D",
+    "state": "Morelos",
+    "km": 6,
+    "lat": 18.998496603783565,
+    "lon": -99.12503293940631,
+    "alias": "^(?:Autopista\\s+)?La\\s+Pera\\s*[-–—]\\s*Cuautla$",
+    "sourcePostId": 1422,
+    "sourceRoadId": 2396434
+  },
+  {
+    "road": "La Pera–Cuautla 160D",
+    "state": "Morelos",
+    "km": 25,
+    "lat": 18.912512887640165,
+    "lon": -98.99602752017226,
+    "alias": "^(?:Autopista\\s+)?La\\s+Pera\\s*[-–—]\\s*Cuautla$",
+    "sourcePostId": 1720,
+    "sourceRoadId": 930164
+  },
+  {
+    "road": "Nuevo Teapa–Cosoleacaque 180D",
+    "state": "Veracruz",
+    "km": 7,
+    "lat": 18.03052122500765,
+    "lon": -94.36090684300267,
+    "alias": "^(?:Autopista\\s+)?Nuevo\\s+Teapa\\s*[-–—]\\s*Cosoleacaque$",
+    "sourcePostId": 6658,
+    "sourceRoadId": 2028101
+  },
+  {
+    "road": "México–Cuernavaca 95D",
+    "state": "Morelos",
+    "km": 63,
+    "lat": 19.024862350303803,
+    "lon": -99.16868799065422,
+    "alias": "^(?:Autopista\\s+)?M[eé]xico\\s*[-–—]\\s*Cuernavaca$",
+    "sourcePostId": 1405,
+    "sourceRoadId": 34844
+  }
+]
