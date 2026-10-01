@@ -109,3 +109,40 @@ node -e "const n=require('/tmp/rnc-national-review.json');const c=n.chains.find(
 ```
 
 Un `segments: []` con `candidateAnchors` mayor que cero casi siempre significa IDs propuestos que no están en cadena, no un corredor sin posts.
+
+## Invariante de plaza de cobro
+
+Tercera fuente independiente, opcional, para **separar coincidencia de desacuerdo** en las cadenas candidatas. No aprueba ni corrige nada.
+
+```sh
+node tools/build-toll-plaza-verification.js /ruta/rnc2025.gpkg /tmp/plaza-verification.json
+node tools/rnc-plaza-invariant-run.js /tmp/rnc-national-review.json /tmp/plaza-verification.json /tmp/plaza-invariant.json
+node --test tools/test_rnc_plaza_invariant.js
+```
+
+El índice agrupa por `ID_RED` de cuota los tramos a 120 m de una plaza declarada, con tres compuertas: código único entre los candidatos, código numérico 1-999, y si `SECCION` resuelve a un solo código, que ese código sea el geométrico. Sobre RNC 2025 deja **1,692 `ID_RED` en 54 códigos, desde 832 anclas** (de 1,376 plazas: 338 sin código numérico, 145 sin vía de cuota cerca, 44 ambiguas, 17 en conflicto de nombre). Cada entrada guarda el par plaza↔`SECCION` con su `snapM`, para que un desacuerdo diga qué plaza revisar.
+
+El invariante se evalúa **por segmento, no por código**, y eso cambia el resultado. Por código las 127 cadenas parecen cubiertas; por `ID_RED` solo lo están 32. El código no discrimina: el 15 cubre 39 secciones declaradas, el 150 llega a 21. El `ID_RED` sí.
+
+| Veredicto | Cadenas | Significado |
+|---|---:|---|
+| `exact` | 20 | la plaza declara exactamente ese tramo |
+| `shares_toponym` | 7 | mismo corredor, segmentación distinta de plaza |
+| `different` | 5 | la plaza declara **otro** tramo: revisar alias |
+| `no_plaza_on_road_ids` | 95 | invariante mudo: ninguna plaza toca esos `ID_RED` |
+
+Los 95 mudos son el dato principal: **el invariante no corrobora la mayoría de las cadenas** porque 39,704 de 46,289 postes están sobre vía libre, y 1,376 plazas no alcanzan a cubrirlos. La distancia mediana de un poste a su plaza más cercana es 35 km. Estirar el radio no ayuda: a 250 m y 500 m el número de anclas cae, porque se mezclan códigos.
+
+Los 5 `different` son los que valen la pena revisar, y ninguno se resuelve por cercanía:
+
+| Código | Cadena | Sección declarada por la plaza |
+|---|---|---|
+| 15 | Atlacomulco - Zapotlanejo | Copándaro - Ent. Morelia |
+| 150 | Córdoba - Veracruz | Cuitláhuac - La Tinaja |
+| 180 | Mérida - Cancún | Kantunil - Pisté, Kantunil - Valladolid, Pisté - Valladolid |
+| 54 | Acatlán de Juárez - El Trapiche | Atoyac - Ciudad Guzmán, Atoyac - Cuidad Guzmán |
+| 57 | México - Querétaro | Joroba - Tepeji (CONMEX), Jorobas - Tepeji |
+
+La clasificación no usa coincidencia exacta. Una `SECCION` de plaza es un **subsegmento** del corredor, no el corredor entero: `Paso del Toro - Veracruz` es un tramo de `Córdoba - Veracruz` y no es un conflicto, igual que la dirección invertida `Gómez Palacio - Jiménez` / `Jiménez - Gómez Palacio`. Se comparte topónimo con significado, conservando los dígitos porque en un nombre de tramo suelen ser parte del topónimo (`16 de Septiembre`) y no una medida de ruta. Por eso `Cuitláhuac - La Tinaja` frente a `Córdoba - Veracruz` sale `different` siendo el mismo corredor: es un caso que la tabla marca para revisión manual, no un error demostrado.
+
+`rnc-national-review.js` acepta además `--plaza-verification <archivo>` para que un tramo de cuota sin nombre propio tome el de un tramo corroborado, marcado `nameSource: 'toll_plaza_verified'`. **Medido sobre RNC 2025, rescata 0 postes** y no cambia ninguna métrica de la revisión (5,566 asignados, 127 cadenas, 2,296 candidatos). Los descartes son correctos, no un bug: 87.1% de los postes están sobre vía libre y casi ninguno de los de cuota cae en un tramo sin nombre que una plaza declare. Queda disponible por si el dataset cambia, no porque sirva hoy.
