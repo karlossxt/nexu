@@ -70,8 +70,22 @@ test('reviewed 95D and 91D posts resolve only exact road, km and compatible stat
     assert.equal(resolveRncPost('Autopista Cuernavaca - Acapulco',km,'Morelos'),null);
     assert.equal(resolveRncPost('Carretera libre Cuernavaca - Acapulco',km,'Guerrero'),null);
   }
-  assert.equal(resolveRncPost('Autopista Cuernavaca - Acapulco',246,'Guerrero'),null);
-  assert.equal(resolveRncPost('Autopista Cuernavaca - Acapulco',251,'Guerrero'),null);
+  // El alcance de la revision manual llegaba hasta el km 250, y estos dos `null`
+  // afirmaban ese limite, no un defecto de los postes. La promocion en bloque los
+  // cubre ahora: son postes RNC del MISMO ID_RED que 247-250, con la misma geometria
+  // y el mismo estado. Excluirlos para conservar el `null` abriria un hueco entre
+  // km 245 y 252, que si resuelven, en medio de un corredor verificado.
+  for(const [km,id] of [[246,1236],[251,1241]]) {
+    const point=resolveRncPost('Autopista Cuernavaca - Acapulco',km,'Guerrero');
+    assert.equal(point?.source_post_id,id);
+    assert.equal(point?.precision,'kilometer_rnc');
+    assert.equal(resolveRncPost('Autopista Cuernavaca - Acapulco',km,'Morelos'),null);
+  }
+  // El limite sigue existiendo, ahora donde de verdad esta: el tramo siguiente
+  // (km 259 en adelante) no tiene poste RNC.
+  assert.equal(resolveRncPost('Autopista Cuernavaca - Acapulco',259,'Guerrero'),null);
+  assert.equal(resolveRncPost('Autopista Cuernavaca - Acapulco',245,'Guerrero')?.source_post_id,1235);
+  assert.equal(resolveRncPost('Autopista Cuernavaca - Acapulco',252,'Guerrero')?.source_post_id,1242);
 });
 
 test('September 30 exact posts reject neighboring routes, states and fractional km',()=>{

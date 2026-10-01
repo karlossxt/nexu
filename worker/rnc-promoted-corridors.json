@@ -1,0 +1,263 @@
+[
+ {
+  "road": "132 Ent. Tulancingo - Venta Grande",
+  "code": "132",
+  "name": "Ent. Tulancingo - Venta Grande",
+  "aliases": [
+   "(?:Ent\\.?|Entrada)\\s*[-–—]?\\s*Tulancingo\\s*[-–—]?\\s*Venta\\s*[-–—]?\\s*Grande",
+   "Venta\\s*[-–—]?\\s*Grande\\s*[-–—]?\\s*(?:Ent\\.?|Entrada)\\s*[-–—]?\\s*Tulancingo"
+  ]
+ },
+ {
+  "road": "132 Tejocotal - Nuevo Necaxa",
+  "code": "132",
+  "name": "Tejocotal - Nuevo Necaxa",
+  "aliases": [
+   "Tejocotal\\s*[-–—]?\\s*Nuevo\\s*[-–—]?\\s*Necaxa",
+   "Nuevo\\s*[-–—]?\\s*Necaxa\\s*[-–—]?\\s*Tejocotal"
+  ]
+ },
+ {
+  "road": "135 Cuacnopalan - Oaxaca",
+  "code": "135",
+  "name": "Cuacnopalan - Oaxaca",
+  "aliases": [
+   "Cuacnopalan\\s*[-–—]?\\s*Oaxaca",
+   "Oaxaca\\s*[-–—]?\\s*Cuacnopalan"
+  ]
+ },
+ {
+  "road": "140 Amozoc - Perote",
+  "code": "140",
+  "name": "Amozoc - Perote",
+  "aliases": [
+   "Amozoc\\s*[-–—]?\\s*Perote",
+   "Perote\\s*[-–—]?\\s*Amozoc"
+  ]
+ },
+ {
+  "road": "145 Las Choapas - Ocozocoautla",
+  "code": "145",
+  "name": "Las Choapas - Ocozocoautla",
+  "aliases": [
+   "Las\\s*[-–—]?\\s*Choapas\\s*[-–—]?\\s*Ocozocoautla",
+   "Ocozocoautla\\s*[-–—]?\\s*Las\\s*[-–—]?\\s*Choapas"
+  ]
+ },
+ {
+  "road": "15 Atlacomulco - Zapotlanejo",
+  "code": "15",
+  "name": "Atlacomulco - Zapotlanejo",
+  "aliases": [
+   "Atlacomulco\\s*[-–—]?\\s*Zapotlanejo",
+   "Zapotlanejo\\s*[-–—]?\\s*Atlacomulco"
+  ]
+ },
+ {
+  "road": "150 Acatzingo - Ciudad Mendoza",
+  "code": "150",
+  "name": "Acatzingo - Ciudad Mendoza",
+  "aliases": [
+   "Acatzingo\\s*[-–—]?\\s*(?:Cd\\.?|Ciudad)\\s*[-–—]?\\s*Mendoza",
+   "(?:Cd\\.?|Ciudad)\\s*[-–—]?\\s*Mendoza\\s*[-–—]?\\s*Acatzingo"
+  ]
+ },
+ {
+  "road": "150 Córdoba - Veracruz",
+  "code": "150",
+  "name": "Córdoba - Veracruz",
+  "aliases": [
+   "C[oóó]rdoba\\s*[-–—]?\\s*Veracruz",
+   "Veracruz\\s*[-–—]?\\s*C[oóó]rdoba"
+  ]
+ },
+ {
+  "road": "150 México - Puebla",
+  "code": "150",
+  "name": "México - Puebla",
+  "aliases": [
+   "M[eéé]xico\\s*[-–—]?\\s*Puebla",
+   "Puebla\\s*[-–—]?\\s*M[eéé]xico"
+  ]
+ },
+ {
+  "road": "150 Puebla - Acatzingo",
+  "code": "150",
+  "name": "Puebla - Acatzingo",
+  "aliases": [
+   "Puebla\\s*[-–—]?\\s*Acatzingo",
+   "Acatzingo\\s*[-–—]?\\s*Puebla"
+  ]
+ },
+ {
+  "road": "180 Kantunil - Cancún",
+  "code": "180",
+  "name": "Kantunil - Cancún",
+  "aliases": [
+   "Kantunil\\s*[-–—]?\\s*Canc[uúú]n",
+   "Canc[uúú]n\\s*[-–—]?\\s*Kantunil"
+  ]
+ },
+ {
+  "road": "180 Mérida - Cancún",
+  "code": "180",
+  "name": "Mérida - Cancún",
+  "aliases": [
+   "M[eéé]rida\\s*[-–—]?\\s*Canc[uúú]n",
+   "Canc[uúú]n\\s*[-–—]?\\s*M[eéé]rida"
+  ]
+ },
+ {
+  "road": "180 Nuevo Teapa - Cosoleacaque",
+  "code": "180",
+  "name": "Nuevo Teapa - Cosoleacaque",
+  "aliases": [
+   "Nuevo\\s*[-–—]?\\s*Teapa\\s*[-–—]?\\s*Cosoleacaque",
+   "Cosoleacaque\\s*[-–—]?\\s*Nuevo\\s*[-–—]?\\s*Teapa"
+  ]
+ },
+ {
+  "road": "184 Agua Dulce - Cárdenas",
+  "code": "184",
+  "name": "Agua Dulce - Cárdenas",
+  "aliases": [
+   "Agua\\s*[-–—]?\\s*Dulce\\s*[-–—]?\\s*C[aáá]rdenas",
+   "C[aáá]rdenas\\s*[-–—]?\\s*Agua\\s*[-–—]?\\s*Dulce"
+  ]
+ },
+ {
+  "road": "190 Tuxtla Gutiérrez - San Cristóbal de las Casas",
+  "code": "190",
+  "name": "Tuxtla Gutiérrez - San Cristóbal de las Casas",
+  "aliases": [
+   "Tuxtla\\s*[-–—]?\\s*Guti[eéé]rrez\\s*[-–—]?\\s*San\\s*[-–—]?\\s*Crist[oóó]bal\\s*[-–—]?\\s*de\\s*[-–—]?\\s*las\\s*[-–—]?\\s*Casas",
+   "San\\s*[-–—]?\\s*Crist[oóó]bal\\s*[-–—]?\\s*de\\s*[-–—]?\\s*las\\s*[-–—]?\\s*Casas\\s*[-–—]?\\s*Tuxtla\\s*[-–—]?\\s*Guti[eéé]rrez"
+  ]
+ },
+ {
+  "road": "2 Mexicali - Tijuana",
+  "code": "2",
+  "name": "Mexicali - Tijuana",
+  "aliases": [
+   "Mexicali\\s*[-–—]?\\s*Tijuana",
+   "Tijuana\\s*[-–—]?\\s*Mexicali"
+  ]
+ },
+ {
+  "road": "37 Nueva Italia - Lázaro Cárdenas",
+  "code": "37",
+  "name": "Nueva Italia - Lázaro Cárdenas",
+  "aliases": [
+   "Nueva\\s*[-–—]?\\s*Italia\\s*[-–—]?\\s*L[aáá]zaro\\s*[-–—]?\\s*C[aáá]rdenas",
+   "L[aáá]zaro\\s*[-–—]?\\s*C[aáá]rdenas\\s*[-–—]?\\s*Nueva\\s*[-–—]?\\s*Italia"
+  ]
+ },
+ {
+  "road": "40 Durango - Gómez Palacio",
+  "code": "40",
+  "name": "Durango - Gómez Palacio",
+  "aliases": [
+   "Durango\\s*[-–—]?\\s*G[oóó]mez\\s*[-–—]?\\s*Palacio",
+   "G[oóó]mez\\s*[-–—]?\\s*Palacio\\s*[-–—]?\\s*Durango"
+  ]
+ },
+ {
+  "road": "45 Jiménez - Chihuahua",
+  "code": "45",
+  "name": "Jiménez - Chihuahua",
+  "aliases": [
+   "Jim[eéé]nez\\s*[-–—]?\\s*Chihuahua",
+   "Chihuahua\\s*[-–—]?\\s*Jim[eéé]nez"
+  ]
+ },
+ {
+  "road": "49 Gómez Palacio - Jiménez",
+  "code": "49",
+  "name": "Gómez Palacio - Jiménez",
+  "aliases": [
+   "G[oóó]mez\\s*[-–—]?\\s*Palacio\\s*[-–—]?\\s*Jim[eéé]nez",
+   "Jim[eéé]nez\\s*[-–—]?\\s*G[oóó]mez\\s*[-–—]?\\s*Palacio"
+  ]
+ },
+ {
+  "road": "54 Acatlán de Juárez - El Trapiche",
+  "code": "54",
+  "name": "Acatlán de Juárez - El Trapiche",
+  "aliases": [
+   "Acatl[aáá]n\\s*[-–—]?\\s*de\\s*[-–—]?\\s*Ju[aáá]rez\\s*[-–—]?\\s*El\\s*[-–—]?\\s*Trapiche",
+   "El\\s*[-–—]?\\s*Trapiche\\s*[-–—]?\\s*Acatl[aáá]n\\s*[-–—]?\\s*de\\s*[-–—]?\\s*Ju[aáá]rez"
+  ]
+ },
+ {
+  "road": "57 Puerto México - Ojo Caliente",
+  "code": "57",
+  "name": "Puerto México - Ojo Caliente",
+  "aliases": [
+   "Puerto\\s*[-–—]?\\s*M[eéé]xico\\s*[-–—]?\\s*Ojo\\s*[-–—]?\\s*Caliente",
+   "Ojo\\s*[-–—]?\\s*Caliente\\s*[-–—]?\\s*Puerto\\s*[-–—]?\\s*M[eéé]xico"
+  ]
+ },
+ {
+  "road": "68 Chapalilla - Compostela",
+  "code": "68",
+  "name": "Chapalilla - Compostela",
+  "aliases": [
+   "Chapalilla\\s*[-–—]?\\s*Compostela",
+   "Compostela\\s*[-–—]?\\s*Chapalilla"
+  ]
+ },
+ {
+  "road": "80 Zapotlanejo - Lagos de Moreno",
+  "code": "80",
+  "name": "Zapotlanejo - Lagos de Moreno",
+  "aliases": [
+   "Zapotlanejo\\s*[-–—]?\\s*Lagos\\s*[-–—]?\\s*de\\s*[-–—]?\\s*Moreno",
+   "Lagos\\s*[-–—]?\\s*de\\s*[-–—]?\\s*Moreno\\s*[-–—]?\\s*Zapotlanejo"
+  ]
+ },
+ {
+  "road": "91 Puente de Ixtla - Iguala",
+  "code": "91",
+  "name": "Puente de Ixtla - Iguala",
+  "aliases": [
+   "Puente\\s*[-–—]?\\s*de\\s*[-–—]?\\s*Ixtla\\s*[-–—]?\\s*Iguala",
+   "Iguala\\s*[-–—]?\\s*Puente\\s*[-–—]?\\s*de\\s*[-–—]?\\s*Ixtla"
+  ]
+ },
+ {
+  "road": "92 Zacapalco - Taxco",
+  "code": "92",
+  "name": "Zacapalco - Taxco",
+  "aliases": [
+   "Zacapalco\\s*[-–—]?\\s*Taxco",
+   "Taxco\\s*[-–—]?\\s*Zacapalco"
+  ]
+ },
+ {
+  "road": "95 Cuernavaca - Acapulco",
+  "code": "95",
+  "name": "Cuernavaca - Acapulco",
+  "aliases": [
+   "Cuernavaca\\s*[-–—]?\\s*Acapulco",
+   "Acapulco\\s*[-–—]?\\s*Cuernavaca"
+  ]
+ },
+ {
+  "road": "95 México - Cuernavaca",
+  "code": "95",
+  "name": "México - Cuernavaca",
+  "aliases": [
+   "M[eéé]xico\\s*[-–—]?\\s*Cuernavaca(?![\\s[-–—]?]*(?:Cuota)\\b)",
+   "Cuernavaca\\s*[-–—]?\\s*M[eéé]xico(?![\\s[-–—]?]*(?:Cuota)\\b)"
+  ]
+ },
+ {
+  "road": "95 México - Cuernavaca Cuota",
+  "code": "95",
+  "name": "México - Cuernavaca Cuota",
+  "aliases": [
+   "M[eéé]xico\\s*[-–—]?\\s*Cuernavaca\\s*[-–—]?\\s*Cuota",
+   "Cuernavaca\\s*[-–—]?\\s*Cuota\\s*[-–—]?\\s*M[eéé]xico"
+  ]
+ }
+]
