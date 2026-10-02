@@ -1406,7 +1406,7 @@ async function processItem(item, feed, options={}) {
     kilometer,
     // Los puntos RNC/RED_VIAL ya describen el poste en su etiqueta; los pines
     // de geocoder no, así que el km se conserva aparte para no perderlo.
-    location_label: [geo.label || locationQuery, geo.label ? '' : kilometerLabel, reference ? 'ref. ' + reference : '', direction ? 'sentido ' + direction : ''].filter(Boolean).join(' · '),
+    location_label: [geo.label || locationQuery, geo.label && /\b(?:km|kil[oó]metros?)\.?\s*\d/i.test(geo.label) ? '' : kilometerLabel, reference ? 'ref. ' + reference : '', direction ? 'sentido ' + direction : ''].filter(Boolean).join(' · '),
     latitude: geo.latitude,
     longitude: geo.longitude,
     location_confidence: geo.confidence,
