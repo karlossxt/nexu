@@ -7,7 +7,7 @@ const RED_VIAL = require('./red-vial');
 const CASETAS = require('./casetas');
 const { resolveRncPost, resolveRncEstimatedKm } = require('./rnc-km-anchors');
 const { resolveOfficialTollReference, officialNameExists } = require('./rnc-toll-reference');
-const { kilometersConflict } = require('../lib/alert-km');
+const { kilometersConflict, normalizedKilometer } = require('../lib/alert-km');
 const { orientativeCorridorPoint } = require('../lib/corridor-reference');
 const TOMTOM_TRAFFIC = require('./tomtom-traffic');
 
@@ -95,14 +95,6 @@ function usableMunicipality(municipality, state) {
   // Mantenerlo como municipio hace que los geocodificadores tiendan al centro de la ciudad.
   if (stateKey(value) === 'cdmx' && stateKey(state) === 'cdmx') return '';
   return value;
-}
-
-function normalizedKilometer(value, text) {
-  const source = `${value ?? ''} ${text || ''}`;
-  const plus = source.match(/(?:km|kil[oó]metro)?\s*[:.]?\s*(\d{1,4})\s*\+\s*(\d{1,3})/i);
-  if (plus) return Number(plus[1]) + Number(plus[2]) / 1000;
-  const number = Number(value);
-  return Number.isFinite(number) ? number : null;
 }
 
 function itemDate(item) {
@@ -999,11 +991,12 @@ async function resolveRoadLocation(ai, kilometer, reference) {
     const corridor=await geocode([ai.carretera,ai.estado].map(clean).filter(Boolean).join(', '),ai.estado,'road',ai.carretera);
     return orientativeCorridorPoint(ai.carretera,corridor);
   }
+  // Todo lo que sigue se consulta sin kilometraje: la rama anterior ya devolvió
+  // para las alertas con poste, y aquí el km nunca debe llegar al geocoder.
   const candidates = [];
   const queries = [
     { query:[reference, ai.carretera, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'reference' },
-    { query:[ai.carretera, kilometer != null ? 'km ' + kilometer : '', reference, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'kilometer' },
-    { query:[ai.carretera, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'road' }
+    { query:[ai.carretera, reference, ai.municipio, ai.estado].map(clean).filter(Boolean).join(', '), precision:'road' }
   ].filter(x => x.query.length >= 4).filter((x,i,a) => a.findIndex(y => y.query === x.query) === i);
   for (const candidate of queries) {
     const result = await geocode(candidate.query, ai.estado, candidate.precision, ai.carretera);
@@ -1221,8 +1214,12 @@ async function processItem(item, feed, options={}) {
   const eventType = ['traffic_update','crash','closure','blockage','protest','road_hazard','security_incident','emergency','other'].includes(String(ai.event_type||'').toLowerCase()) ? String(ai.event_type).toLowerCase() : 'other';
   const municipality = usableMunicipality(ai.municipio, ai.estado);
   const explicitIntersection = urbanIntersection(ai);
+  const kilometerLabel = kilometer != null ? 'km ' + kilometer : '';
+  // El poste kilométrico se muestra al usuario pero no se envía al geocoder:
+  // ningún geocodificador resuelve postes y "km 27" solo añade ruido al
+  // emparejamiento. El cadenamiento se resuelve aparte (RNC / corredor).
   const locationParts = ai.carretera
-    ? [ai.carretera, kilometer != null ? 'km ' + kilometer : '', reference, municipality, ai.estado]
+    ? [ai.carretera, reference, municipality, ai.estado]
     : [ai.ubicacion, municipality, ai.estado];
   const locationQuery = [...new Set(locationParts.map(clean).filter(Boolean))].join(', ');
   if (locationQuery.length < 4) return 'no_location';
@@ -1235,7 +1232,7 @@ async function processItem(item, feed, options={}) {
       severity:['critical','high','medium','low'].includes(ai.severidad) ? ai.severidad : 'medium',
       event_type:eventType, traffic_status:ai.categoria==='road' ? trafficStatus : 'unknown',
       state:clean(ai.estado)||null, municipality:municipality||null, road:clean(ai.carretera)||null,
-      kilometer, location_label:[locationQuery, direction ? 'sentido '+direction : ''].filter(Boolean).join(' · '),
+      kilometer, location_label:[locationQuery, kilometerLabel, direction ? 'sentido '+direction : ''].filter(Boolean).join(' · '),
       latitude:null, longitude:null, location_confidence:null, location_precision:'unlocated',
       location_status:'unlocated', source_name:sourceName(item,feed), source_url:item.url||null, event_at:eventAt
     };
@@ -1407,7 +1404,9 @@ async function processItem(item, feed, options={}) {
     municipality: municipality || null,
     road: clean(ai.carretera) || null,
     kilometer,
-    location_label: [geo.label || locationQuery, reference ? 'ref. ' + reference : '', direction ? 'sentido ' + direction : ''].filter(Boolean).join(' · '),
+    // Los puntos RNC/RED_VIAL ya describen el poste en su etiqueta; los pines
+    // de geocoder no, así que el km se conserva aparte para no perderlo.
+    location_label: [geo.label || locationQuery, geo.label && /\b(?:km|kil[oó]metros?)\.?\s*\d/i.test(geo.label) ? '' : kilometerLabel, reference ? 'ref. ' + reference : '', direction ? 'sentido ' + direction : ''].filter(Boolean).join(' · '),
     latitude: geo.latitude,
     longitude: geo.longitude,
     location_confidence: geo.confidence,
