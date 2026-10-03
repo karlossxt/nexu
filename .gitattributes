@@ -1,0 +1,20 @@
+# Sin esto, un clon en Windows (core.autocrlf=true) convierte todo a CRLF y
+# un archivo como worker/index.js -- 1,626 lineas -- produce un diff entero de
+# finales de linea que esconde el cambio real.
+* text=auto eol=lf
+
+# Los .png se guardan con finales de linea arbitrarios en el blob; no aplicar
+# conversiones a ellos.
+*.png binary
+*.jpg binary
+*.ico binary
+
+# Datos generados: LF en el repositorio, CRLF tolerado al clonar en Windows.
+*.json text eol=lf
+*.js text eol=lf
+*.md text eol=lf
+*.sql text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.mjs text eol=lf
+*.py text eol=lf

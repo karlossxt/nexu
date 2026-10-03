@@ -1,0 +1,23 @@
+node_modules/
+.env
+.env.*
+!.env.example
+worker/.env
+npm-debug.log*
+.vercel/
+.DS_Store
+__pycache__/
+
+# RNC 2025 son 2.25 GB y se descarga aparte (ver tools/RNC-PILOT.md).
+*.gpkg
+*.gpkg-journal
+
+# Salidas de las herramientas de revision: dependen del GeoPackage local y
+# ninguno se versiona. Los catalogos que si son del repo (worker/*.json,
+# worker/rnc-km-anchors.js) quedan fuera de estos patrones.
+tools/rnc-national-review.json
+tools/rnc-prioritized.json
+tools/rnc-calibration-audit.json
+tools/plaza-verification.json
+tools/plaza-invariant.json
+tools/rnc-*-reviewed.json

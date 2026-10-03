@@ -1,0 +1,7019 @@
+[
+  {
+    "name": "1o. de Mayo",
+    "section": "Toreo - Tepalcapa",
+    "lat": 19.46546524,
+    "lon": -99.22755194,
+    "sourceIds": [
+      1123
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "4 Oriente Río Churubusco A",
+    "section": "4 Oriente Río Churubusco",
+    "lat": 19.3746399,
+    "lon": -99.09730465,
+    "sourceIds": [
+      1934
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "5 Sur Leyes de Reforma A",
+    "section": "5 Sur Leyes de Reforma",
+    "lat": 19.37828712,
+    "lon": -99.08675638,
+    "sourceIds": [
+      1933
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "6 Sur Luis Méndez A",
+    "section": "6 Sur Luis Méndez",
+    "lat": 19.36733106,
+    "lon": -99.09534552,
+    "sourceIds": [
+      1936
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "6 Sur Luis Méndez B",
+    "section": "6 Sur Luis Méndez",
+    "lat": 19.36835966,
+    "lon": -99.08542039,
+    "sourceIds": [
+      1937
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Acaponeta",
+    "section": "Tepic - Villa Unión",
+    "lat": 22.45393624,
+    "lon": -105.42485054,
+    "sourceIds": [
+      295
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Acaponeta A2",
+    "section": "Acaponeta - Villa Unión",
+    "lat": 22.4539728,
+    "lon": -105.41862099,
+    "sourceIds": [
+      288
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Acatic",
+    "section": "Zapotlanejo - Acatic",
+    "lat": 20.73803552,
+    "lon": -102.91040384,
+    "sourceIds": [
+      308,
+      309
+    ],
+    "spreadM": 127
+  },
+  {
+    "name": "Acatlán",
+    "section": "Guadalajara - Colima",
+    "lat": 20.37344391,
+    "lon": -103.5762481,
+    "sourceIds": [
+      1316,
+      1317
+    ],
+    "spreadM": 11
+  },
+  {
+    "name": "Acayucan",
+    "section": "Acayucan - Cosoleacaque",
+    "lat": 17.9103433,
+    "lon": -94.937007,
+    "sourceIds": [
+      574,
+      575
+    ],
+    "spreadM": 65
+  },
+  {
+    "name": "Acayucan",
+    "section": "Isla - Acayucan",
+    "lat": 17.9099208,
+    "lon": -94.93755,
+    "sourceIds": [
+      572,
+      573
+    ],
+    "spreadM": 46
+  },
+  {
+    "name": "Acayucan",
+    "section": "Isla - Cosoleacaque",
+    "lat": 17.91005963,
+    "lon": -94.93727323,
+    "sourceIds": [
+      570,
+      571
+    ],
+    "spreadM": 9
+  },
+  {
+    "name": "Acceso Al Puente Ing. Antonio Dovalí Jaime",
+    "section": "Nuevo Teapa - Cosoleacaque",
+    "lat": 18.01407673,
+    "lon": -94.44337706,
+    "sourceIds": [
+      579
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Aeropuerto",
+    "section": "Cuernavaca - Acapulco",
+    "lat": 18.80250104,
+    "lon": -99.22043468,
+    "sourceIds": [
+      393,
+      394,
+      395,
+      396
+    ],
+    "spreadM": 72
+  },
+  {
+    "name": "Aeropuerto",
+    "section": "Morelia - Aeropuerto - Entronque (Maravatío - Zapotlanejo)",
+    "lat": 19.88546573,
+    "lon": -101.01001465,
+    "sourceIds": [
+      251
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Agualeguas",
+    "section": "Monterrey - Nuevo Laredo",
+    "lat": 26.33986094,
+    "lon": -100.07097435,
+    "sourceIds": [
+      17,
+      880,
+      1208
+    ],
+    "spreadM": 141
+  },
+  {
+    "name": "Aguas Buenas",
+    "section": "Eje Metropolitano - DT Los Rodríguez",
+    "lat": 20.96141755,
+    "lon": -101.38483695,
+    "sourceIds": [
+      1737,
+      1739
+    ],
+    "spreadM": 7
+  },
+  {
+    "name": "Alencastre Poniente",
+    "section": "Autopista Urbana Norte",
+    "lat": 19.41730271,
+    "lon": -99.19502247,
+    "sourceIds": [
+      1139
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Alhuey",
+    "section": "Culiacán - Los Mochis",
+    "lat": 25.39281166,
+    "lon": -108.12738583,
+    "sourceIds": [
+      1681,
+      1682
+    ],
+    "spreadM": 71
+  },
+  {
+    "name": "Alpuyeca",
+    "section": "Cuernavaca - Acapulco",
+    "lat": 18.72291966,
+    "lon": -99.26003873,
+    "sourceIds": [
+      400,
+      735,
+      921
+    ],
+    "spreadM": 106
+  },
+  {
+    "name": "Altar",
+    "section": "Santa Ana - Sonoita",
+    "lat": 30.59381715,
+    "lon": -111.51896416,
+    "sourceIds": [
+      149
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Altar",
+    "section": "Sonoita - Santa Ana",
+    "lat": 30.59352733,
+    "lon": -111.5190059,
+    "sourceIds": [
+      151
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Amado Nervo",
+    "section": "Jala - Las Caleras",
+    "lat": 21.08897468,
+    "lon": -104.71728373,
+    "sourceIds": [
+      1586,
+      1587
+    ],
+    "spreadM": 5
+  },
+  {
+    "name": "Amanalco",
+    "section": "Ramal Valle de Bravo",
+    "lat": 19.23364377,
+    "lon": -100.07226486,
+    "sourceIds": [
+      1970
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Amealco I",
+    "section": "Amealco I - Atlacomulco",
+    "lat": 20.27765678,
+    "lon": -100.05908529,
+    "sourceIds": [
+      1656
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Amealco I",
+    "section": "Atlacomulco - Amealco I",
+    "lat": 20.27773187,
+    "lon": -100.05915811,
+    "sourceIds": [
+      1664
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Amealco I",
+    "section": "Coroneo/Huimilpan/Apaseo el Alto/Apaseo el Grande/Querétaro - Amealco I",
+    "lat": 20.2778157,
+    "lon": -100.05924438,
+    "sourceIds": [
+      1912
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Amozoc",
+    "section": "Puebla - Acatzingo",
+    "lat": 19.04926988,
+    "lon": -98.03124607,
+    "sourceIds": [
+      504,
+      505,
+      507,
+      508
+    ],
+    "spreadM": 227
+  },
+  {
+    "name": "Amozoc A",
+    "section": "Puebla - Amozoc",
+    "lat": 19.04979568,
+    "lon": -98.03230675,
+    "sourceIds": [
+      503,
+      506
+    ],
+    "spreadM": 60
+  },
+  {
+    "name": "Amozoc II",
+    "section": "Amozoc - Ent. Ixtenco",
+    "lat": 19.06353084,
+    "lon": -98.06906404,
+    "sourceIds": [
+      502
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Anzaldúas",
+    "section": "Puente Internacional Reynosa - McAllen \"Anzaldúas\"",
+    "lat": 26.1096914,
+    "lon": -98.34482152,
+    "sourceIds": [
+      75
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Apaseo el Alto",
+    "section": "Apaseo el Alto - Atlacomulco",
+    "lat": 20.49751913,
+    "lon": -100.58810197,
+    "sourceIds": [
+      1654
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Apaseo el Alto",
+    "section": "Apaseo el Grande/Querétaro - Apaseo el Alto",
+    "lat": 20.49780508,
+    "lon": -100.58803999,
+    "sourceIds": [
+      1913
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Apaseo el Alto",
+    "section": "Coroneo/Huimilpan/Amealco I/Atlacomulco - Apaseo el Alto",
+    "lat": 20.49763216,
+    "lon": -100.58807894,
+    "sourceIds": [
+      1662
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Apaseo el Grande",
+    "section": "Apaseo el Alto/Coroneo/Huimilpan/Amealco I/Atlacomulco - Apaseo el Grande",
+    "lat": 20.51124135,
+    "lon": -100.59957291,
+    "sourceIds": [
+      1661
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Apaseo el Grande",
+    "section": "Apaseo el Grande - Atlacomulco",
+    "lat": 20.53362648,
+    "lon": -100.62790583,
+    "sourceIds": [
+      1653
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Arandas",
+    "section": "Arandas - Ent. ITESI",
+    "lat": 20.73744657,
+    "lon": -101.3799582,
+    "sourceIds": [
+      1071
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Arandas",
+    "section": "Ent. ITESI - Arandas",
+    "lat": 20.73752378,
+    "lon": -101.38004587,
+    "sourceIds": [
+      349
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Arandas",
+    "section": "Ent. ITESI - San Cristóbal",
+    "lat": 20.73748803,
+    "lon": -101.38000241,
+    "sourceIds": [
+      339
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Arandas 2",
+    "section": "Arandas - San Cristóbal",
+    "lat": 20.73348006,
+    "lon": -101.38127985,
+    "sourceIds": [
+      341
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Arriaga",
+    "section": "Arriaga - Ocozocoautla",
+    "lat": 16.25734221,
+    "lon": -93.8755139,
+    "sourceIds": [
+      865
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Arroyo de Enmedio",
+    "section": "Zapotlanejo - Tonalá",
+    "lat": 20.61564401,
+    "lon": -103.24280006,
+    "sourceIds": [
+      1477,
+      1478
+    ],
+    "spreadM": 19
+  },
+  {
+    "name": "Atempan",
+    "section": "Virreyes - Teziutlán",
+    "lat": 19.79828371,
+    "lon": -97.45576626,
+    "sourceIds": [
+      792
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Atempan Secundaria 1",
+    "section": "Atempan - Virreyes",
+    "lat": 19.79918726,
+    "lon": -97.45676569,
+    "sourceIds": [
+      790
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Atempan Secundaria 2",
+    "section": "Teziutlán - Atempan",
+    "lat": 19.79923464,
+    "lon": -97.45672404,
+    "sourceIds": [
+      789
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Atempan Secundaria 3",
+    "section": "Virreyes - Atempan y Gómez",
+    "lat": 19.79807018,
+    "lon": -97.4565686,
+    "sourceIds": [
+      864
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Atempan Secundaria 4",
+    "section": "Gómez - Teziutlán",
+    "lat": 19.79799095,
+    "lon": -97.45550417,
+    "sourceIds": [
+      787
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Atizapán",
+    "section": "Chamapa - Lechería",
+    "lat": 19.58254042,
+    "lon": -99.27111721,
+    "sourceIds": [
+      730,
+      731
+    ],
+    "spreadM": 5
+  },
+  {
+    "name": "Atlacomulco",
+    "section": "Amealco I/Huimilpan/Coroneo/Apaseo el Alto/Apaeo el Grande/Querétaro - Atlacomulco",
+    "lat": 20.2901402,
+    "lon": -99.94967798,
+    "sourceIds": [
+      1665
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Atlacomulco",
+    "section": "Atlacomulco - Maravatío",
+    "lat": 19.83776471,
+    "lon": -99.94548218,
+    "sourceIds": [
+      652,
+      653
+    ],
+    "spreadM": 10
+  },
+  {
+    "name": "Aucal",
+    "section": "San Martín Texmelucan - Tlaxcala",
+    "lat": 19.30153103,
+    "lon": -98.40404671,
+    "sourceIds": [
+      510
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Aucal",
+    "section": "Tlaxcala - San Martín Texmelucan",
+    "lat": 19.30160228,
+    "lon": -98.40411097,
+    "sourceIds": [
+      511
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Audi",
+    "section": "Ent. Ixtenco - Ent. Km 35+640",
+    "lat": 19.27447411,
+    "lon": -97.82641382,
+    "sourceIds": [
+      1627
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Aut. México - Guadalajara a Zapotlanejo (Remota La Laja)",
+    "section": "Zapotlanejo - Guadalajara",
+    "lat": 20.58690597,
+    "lon": -103.09955496,
+    "sourceIds": [
+      1694,
+      1735
+    ],
+    "spreadM": 159
+  },
+  {
+    "name": "Autopista Mexicali - Tijuana",
+    "section": "Entronque Planta Dart Valle Redondo Tijuana",
+    "lat": 32.54297598,
+    "lon": -116.75827161,
+    "sourceIds": [
+      1609
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Auxiliar Esperanza - Hornos",
+    "section": "Ent. Lib. Obregón Guaymas",
+    "lat": 27.60692923,
+    "lon": -109.90310625,
+    "sourceIds": [
+      1845
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Auxiliar Malinalco",
+    "section": "Lerma - Tenango",
+    "lat": 19.14988173,
+    "lon": -99.54997412,
+    "sourceIds": [
+      1862
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Auxiliar Metepec",
+    "section": "Lerma - Tenango",
+    "lat": 19.15140996,
+    "lon": -99.54827972,
+    "sourceIds": [
+      1861
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Auxiliar Xonacatlán",
+    "section": "San Cayetano - Xonacatlán",
+    "lat": 19.3806909,
+    "lon": -99.55539169,
+    "sourceIds": [
+      647
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ayotuxco",
+    "section": "Toluca - Naucalpan",
+    "lat": 19.40066925,
+    "lon": -99.38096003,
+    "sourceIds": [
+      1774,
+      1775,
+      1777,
+      1778
+    ],
+    "spreadM": 85
+  },
+  {
+    "name": "Barranca Larga",
+    "section": "Barranca Larga - Ventanilla",
+    "lat": 16.46914341,
+    "lon": -96.744892,
+    "sourceIds": [
+      1962
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Bermejillo",
+    "section": "Gómez Palacio - Jiménez",
+    "lat": 25.92372136,
+    "lon": -103.62218818,
+    "sourceIds": [
+      166,
+      167
+    ],
+    "spreadM": 10
+  },
+  {
+    "name": "Bosque Real",
+    "section": "La Venta - Chamapa",
+    "lat": 19.41748642,
+    "lon": -99.29849202,
+    "sourceIds": [
+      1556,
+      1557
+    ],
+    "spreadM": 4
+  },
+  {
+    "name": "Bosque Real 2 - E",
+    "section": "San Miguel - Bosque Real",
+    "lat": 19.42146945,
+    "lon": -99.29948672,
+    "sourceIds": [
+      1558
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Bosque Real 2 - S",
+    "section": "Chamapa - La Venta",
+    "lat": 19.41916413,
+    "lon": -99.30030163,
+    "sourceIds": [
+      1559
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Caimanero",
+    "section": "Culiacán - Los Mochis",
+    "lat": 24.95423934,
+    "lon": -107.75829035,
+    "sourceIds": [
+      128
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Calderón",
+    "section": "Ent. La Pila - Villa de Arriaga",
+    "lat": 21.81348877,
+    "lon": -101.0128098,
+    "sourceIds": [
+      371
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Calderón",
+    "section": "San Luis Potosí - Villa de Arriaga",
+    "lat": 21.80162427,
+    "lon": -101.02396984,
+    "sourceIds": [
+      1807,
+      1825
+    ],
+    "spreadM": 6
+  },
+  {
+    "name": "Calderón",
+    "section": "Villa de Arriaga - San Luis Potosí",
+    "lat": 21.81336816,
+    "lon": -101.01265875,
+    "sourceIds": [
+      1668
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Camargo",
+    "section": "Puente Internacional Camargo",
+    "lat": 26.36242965,
+    "lon": -98.8062766,
+    "sourceIds": [
+      74
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Cantona",
+    "section": "Ent. Oriental - Ent. Perote II",
+    "lat": 19.50754559,
+    "lon": -97.49772275,
+    "sourceIds": [
+      488,
+      489
+    ],
+    "spreadM": 8
+  },
+  {
+    "name": "Cantona A1",
+    "section": "Ent. Oriental - Ent. Cantona",
+    "lat": 19.50771993,
+    "lon": -97.49632158,
+    "sourceIds": [
+      485,
+      486
+    ],
+    "spreadM": 173
+  },
+  {
+    "name": "Cantona A2",
+    "section": "Ent. Cantona - Ent. Perote II",
+    "lat": 19.50775878,
+    "lon": -97.49626364,
+    "sourceIds": [
+      1562,
+      1563
+    ],
+    "spreadM": 174
+  },
+  {
+    "name": "Carmen Serdán",
+    "section": "Periférico - Cuauhtémoc",
+    "lat": 19.08314867,
+    "lon": -98.18361758,
+    "sourceIds": [
+      1473
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Carril 20 de la PC-91 \"Revolución\"",
+    "section": "México - Pachuca",
+    "lat": 19.60890218,
+    "lon": -99.03409067,
+    "sourceIds": [
+      1077
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Caseta Apodaca",
+    "section": "Periférico del Área Metropolitana de Monterrey",
+    "lat": 25.78765709,
+    "lon": -100.16850162,
+    "sourceIds": [
+      42,
+      43
+    ],
+    "spreadM": 8
+  },
+  {
+    "name": "Caseta Crespo",
+    "section": "Libramiento Sur Celaya",
+    "lat": 20.50667315,
+    "lon": -100.87089074,
+    "sourceIds": [
+      352,
+      353
+    ],
+    "spreadM": 9
+  },
+  {
+    "name": "Caseta de Cadereyta",
+    "section": "Monterrey - Cadereyta Jiménez",
+    "lat": 25.60741498,
+    "lon": -100.0012486,
+    "sourceIds": [
+      65,
+      66
+    ],
+    "spreadM": 14
+  },
+  {
+    "name": "Caseta Guadalupe",
+    "section": "Monterrey - Cadereyta",
+    "lat": 25.69163975,
+    "lon": -100.15766188,
+    "sourceIds": [
+      31,
+      32,
+      33,
+      34,
+      1847,
+      1848
+    ],
+    "spreadM": 42
+  },
+  {
+    "name": "Caseta Juárez",
+    "section": "Periférico del Área Metropolitana de Monterrey",
+    "lat": 25.62222355,
+    "lon": -100.07124018,
+    "sourceIds": [
+      1898,
+      1899
+    ],
+    "spreadM": 8
+  },
+  {
+    "name": "Caseta Laja",
+    "section": "Libramiento Sur Celaya",
+    "lat": 20.50962056,
+    "lon": -100.76523114,
+    "sourceIds": [
+      354,
+      355
+    ],
+    "spreadM": 9
+  },
+  {
+    "name": "Caseta Lincoln",
+    "section": "Periférico del Área Metropolitana de Monterrey",
+    "lat": 25.79011062,
+    "lon": -100.46375792,
+    "sourceIds": [
+      38,
+      39,
+      40
+    ],
+    "spreadM": 93
+  },
+  {
+    "name": "Caseta Sahuaripa",
+    "section": "Ent. Hermosillo Sur - Sahuaripa",
+    "lat": 29.03027297,
+    "lon": -110.85552485,
+    "sourceIds": [
+      1786
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Caseta Sahuaripa",
+    "section": "Sahuaripa-Ent. Hermosillo Norte",
+    "lat": 29.0303228,
+    "lon": -110.85301099,
+    "sourceIds": [
+      1787
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Cayaco",
+    "section": "Acapulco - Aeropuerto",
+    "lat": 16.81763047,
+    "lon": -99.81754159,
+    "sourceIds": [
+      1510
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Cayaco",
+    "section": "Aeropuerto - Acapulco",
+    "lat": 16.81774061,
+    "lon": -99.81746316,
+    "sourceIds": [
+      1511
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "CDI Poniente",
+    "section": "Autopista Urbana Norte",
+    "lat": 19.44789843,
+    "lon": -99.22040678,
+    "sourceIds": [
+      1703
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "CE Jaltenco",
+    "section": "Entronque México Querétaro",
+    "lat": 19.69368521,
+    "lon": -99.08099421,
+    "sourceIds": [
+      1611
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ceballos",
+    "section": "Gómez Palacio - Jiménez",
+    "lat": 26.5866184,
+    "lon": -104.05771584,
+    "sourceIds": [
+      164,
+      165
+    ],
+    "spreadM": 19
+  },
+  {
+    "name": "Cerrillo",
+    "section": "Toluca - Naucalpan",
+    "lat": 19.32643619,
+    "lon": -99.51603336,
+    "sourceIds": [
+      1772,
+      1773
+    ],
+    "spreadM": 4
+  },
+  {
+    "name": "Cerritos",
+    "section": "Ent. Rioverde - Ent. San Isidro",
+    "lat": 22.42892619,
+    "lon": -100.320444,
+    "sourceIds": [
+      376
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Cerritos",
+    "section": "Ent. San Isidro - Ent. Rioverde",
+    "lat": 22.42889206,
+    "lon": -100.32047614,
+    "sourceIds": [
+      375
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Cerritos A1",
+    "section": "Ent. Cerritos - Ent. Rioverde",
+    "lat": 22.42765992,
+    "lon": -100.31852298,
+    "sourceIds": [
+      1358,
+      1387
+    ],
+    "spreadM": 3
+  },
+  {
+    "name": "Cerro Gordo A1",
+    "section": "Celaya - Salamanca",
+    "lat": 20.59040355,
+    "lon": -101.13617156,
+    "sourceIds": [
+      1792
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Cerro Gordo A2",
+    "section": "Cerro Gordo - Salamanca",
+    "lat": 20.59211175,
+    "lon": -101.13936381,
+    "sourceIds": [
+      335,
+      1075
+    ],
+    "spreadM": 211
+  },
+  {
+    "name": "Cervera",
+    "section": "Silao - Cervera",
+    "lat": 20.97192881,
+    "lon": -101.29954348,
+    "sourceIds": [
+      1755,
+      1756
+    ],
+    "spreadM": 8
+  },
+  {
+    "name": "Ceylan",
+    "section": "Ceylan - México Pachuca",
+    "lat": 19.51389823,
+    "lon": -99.17484528,
+    "sourceIds": [
+      1231
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Chalco",
+    "section": "Chalco - Jorobas",
+    "lat": 19.30007346,
+    "lon": -98.87519463,
+    "sourceIds": [
+      1603
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Chalco",
+    "section": "Chalco - México",
+    "lat": 19.2932119,
+    "lon": -98.88350109,
+    "sourceIds": [
+      671,
+      672,
+      673
+    ],
+    "spreadM": 69
+  },
+  {
+    "name": "Chalco",
+    "section": "Jorobas - Chalco",
+    "lat": 19.30014488,
+    "lon": -98.87532152,
+    "sourceIds": [
+      1602
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Chalco",
+    "section": "México - Chalco",
+    "lat": 19.29204652,
+    "lon": -98.88171609,
+    "sourceIds": [
+      1063
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Chamapa",
+    "section": "Toluca - Naucalapan",
+    "lat": 19.43453873,
+    "lon": -99.30376034,
+    "sourceIds": [
+      1769
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Chamapa",
+    "section": "Toluca - Naucalpan",
+    "lat": 19.43452913,
+    "lon": -99.30360949,
+    "sourceIds": [
+      1768
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Chamapa CAPUFE",
+    "section": "Chamapa - Lechería",
+    "lat": 19.44021866,
+    "lon": -99.29732802,
+    "sourceIds": [
+      596,
+      597
+    ],
+    "spreadM": 38
+  },
+  {
+    "name": "Chapala",
+    "section": "Macrolibramiento Guadalajara",
+    "lat": 20.39013604,
+    "lon": -103.30214873,
+    "sourceIds": [
+      1600,
+      1601
+    ],
+    "spreadM": 7
+  },
+  {
+    "name": "Chapultepec",
+    "section": "Entronque Capula - Entronque Pátzcuaro",
+    "lat": 19.5455255,
+    "lon": -101.53585692,
+    "sourceIds": [
+      1226
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Chapultepec",
+    "section": "Lerma - Tenango",
+    "lat": 19.19673959,
+    "lon": -99.52527046,
+    "sourceIds": [
+      634
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Charco Blanco A1",
+    "section": "Ent. Cerritos - Ent. Charco Blanco",
+    "lat": 22.44030167,
+    "lon": -100.3345209,
+    "sourceIds": [
+      1389
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Charco Blanco A1",
+    "section": "Ent. Charco Blanco - Ent. Cerritos",
+    "lat": 22.44140743,
+    "lon": -100.33939764,
+    "sourceIds": [
+      1357
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Charco Blanco A2",
+    "section": "Ent. Charco Blanco - Ent. San Isidro",
+    "lat": 22.44339353,
+    "lon": -100.33878361,
+    "sourceIds": [
+      1382
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Charco Blanco A2",
+    "section": "Ent. San Isidro - Ent. Charco Blanco",
+    "lat": 22.44188313,
+    "lon": -100.33997227,
+    "sourceIds": [
+      1390
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Chiapa de Corzo",
+    "section": "Tuxtla Gutiérrez - San Cristóbal de las Casas",
+    "lat": 16.73065059,
+    "lon": -93.00951777,
+    "sourceIds": [
+      751
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Chichimequillas",
+    "section": "Libramiento Noreste de Querétaro",
+    "lat": 20.70558798,
+    "lon": -100.34373656,
+    "sourceIds": [
+      361,
+      362
+    ],
+    "spreadM": 4
+  },
+  {
+    "name": "Chihuahua - Ojinaga",
+    "section": "(Chihuahua - Ojinaga) - La Mula",
+    "lat": 29.05499061,
+    "lon": -105.1047025,
+    "sourceIds": [
+      781,
+      782,
+      783,
+      784
+    ],
+    "spreadM": 22
+  },
+  {
+    "name": "Cien Metros",
+    "section": "Cien Metros - México - Pachuca",
+    "lat": 19.51551028,
+    "lon": -99.15303636,
+    "sourceIds": [
+      1235
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Cien Metros",
+    "section": "Cien Metros - Puente de Vigas",
+    "lat": 19.51379234,
+    "lon": -99.15880082,
+    "sourceIds": [
+      1234
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Cipreses",
+    "section": "Chamapa - Lechería",
+    "lat": 19.4688092,
+    "lon": -99.31137381,
+    "sourceIds": [
+      602,
+      857
+    ],
+    "spreadM": 4
+  },
+  {
+    "name": "Circunvalación",
+    "section": "Entronque Urbana Norte - Tepalcapa",
+    "lat": 19.51743936,
+    "lon": -99.23202052,
+    "sourceIds": [
+      1636
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Circunvalación",
+    "section": "Toreo - Tepalcapa",
+    "lat": 19.51794831,
+    "lon": -99.2312952,
+    "sourceIds": [
+      1114,
+      1117
+    ],
+    "spreadM": 94
+  },
+  {
+    "name": "Ciudad Sahagún",
+    "section": "Acambay - San Martín Texmelucan",
+    "lat": 19.75604986,
+    "lon": -98.6305151,
+    "sourceIds": [
+      685
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ciudad Sahagún",
+    "section": "San Martín Texmelucan - Acambay",
+    "lat": 19.75594357,
+    "lon": -98.62807965,
+    "sourceIds": [
+      688
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Compostela",
+    "section": "Chapalilla - Compostela",
+    "lat": 21.22944066,
+    "lon": -104.88740619,
+    "sourceIds": [
+      281
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Compostela",
+    "section": "Tepic - Puerto Vallarta",
+    "lat": 21.20443624,
+    "lon": -104.88637815,
+    "sourceIds": [
+      1585
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "CONMEX",
+    "section": "Hank González T - 2 Conmex",
+    "lat": 19.57553167,
+    "lon": -99.02055564,
+    "sourceIds": [
+      706,
+      707
+    ],
+    "spreadM": 14
+  },
+  {
+    "name": "Constituyentes Oriente",
+    "section": "Autopista Urbana Norte",
+    "lat": 19.40955461,
+    "lon": -99.19617709,
+    "sourceIds": [
+      1138
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Contadero",
+    "section": "México - Contadero",
+    "lat": 19.33581194,
+    "lon": -99.31102292,
+    "sourceIds": [
+      623
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Contepec",
+    "section": "Atlacomulco - Maravatío",
+    "lat": 19.87538558,
+    "lon": -100.18807581,
+    "sourceIds": [
+      260,
+      261
+    ],
+    "spreadM": 13
+  },
+  {
+    "name": "Copándaro",
+    "section": "Copándaro - Ent. Morelia",
+    "lat": 19.88024799,
+    "lon": -101.20364053,
+    "sourceIds": [
+      1242
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Copándaro",
+    "section": "Ent. Morelia - Copándaro",
+    "lat": 19.88229082,
+    "lon": -101.20177228,
+    "sourceIds": [
+      1239
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Coroneo",
+    "section": "Apaseo el Alto/Apaseo el Grande/Querétaro - Coroneo",
+    "lat": 20.41562196,
+    "lon": -100.4290192,
+    "sourceIds": [
+      1918
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Coroneo",
+    "section": "Huimilpan/Amealco I/Atlacomulco - Coroneo",
+    "lat": 20.41565678,
+    "lon": -100.42892545,
+    "sourceIds": [
+      1923
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Cosamaloapan",
+    "section": "La Tinaja - Cosamaloapan",
+    "lat": 18.33509614,
+    "lon": -95.82234456,
+    "sourceIds": [
+      1046,
+      1047
+    ],
+    "spreadM": 16
+  },
+  {
+    "name": "Cosamaloapan",
+    "section": "La Tinaja - Cosoleacaque",
+    "lat": 18.33514984,
+    "lon": -95.82241674,
+    "sourceIds": [
+      813,
+      814
+    ],
+    "spreadM": 124
+  },
+  {
+    "name": "Cosamaloapan",
+    "section": "La Tinaja - Isla",
+    "lat": 18.33509757,
+    "lon": -95.82233581,
+    "sourceIds": [
+      566,
+      567
+    ],
+    "spreadM": 8
+  },
+  {
+    "name": "Coscomate",
+    "section": "Durango - Villa Unión",
+    "lat": 23.70630407,
+    "lon": -105.57118753,
+    "sourceIds": [
+      881
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Costa Rica",
+    "section": "Mazatlán - Culiacán",
+    "lat": 24.57030726,
+    "lon": -107.43020485,
+    "sourceIds": [
+      838,
+      839
+    ],
+    "spreadM": 15
+  },
+  {
+    "name": "Cruce Internacional San Luis Río Colorado II",
+    "section": "Sonoita - Mexicali",
+    "lat": 32.45704697,
+    "lon": -114.70142647,
+    "sourceIds": [
+      1531
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Cuapiaxtla",
+    "section": "Ent. Ixtenco - Ent. Oriental",
+    "lat": 19.31030279,
+    "lon": -97.79756623,
+    "sourceIds": [
+      451
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Cuapiaxtla A1",
+    "section": "Ent. Ixtenco - Ent. Cuapiaxtla",
+    "lat": 19.30417709,
+    "lon": -97.80564052,
+    "sourceIds": [
+      452,
+      453
+    ],
+    "spreadM": 19
+  },
+  {
+    "name": "Cuapiaxtla A2",
+    "section": "Ent. Cuapiaxtla - Ent. Oriental",
+    "lat": 19.3103073,
+    "lon": -97.79757844,
+    "sourceIds": [
+      454,
+      455
+    ],
+    "spreadM": 18
+  },
+  {
+    "name": "Cuauhtémoc",
+    "section": "Chihuahua - Cuauhtémoc",
+    "lat": 28.32738586,
+    "lon": -106.5504628,
+    "sourceIds": [
+      195,
+      196,
+      197,
+      198
+    ],
+    "spreadM": 19
+  },
+  {
+    "name": "Cuauhtémoc",
+    "section": "Cuauhtémoc - Periférico",
+    "lat": 19.07694481,
+    "lon": -98.15003895,
+    "sourceIds": [
+      1474
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Cuautitlán Izcalli",
+    "section": "Cuautitlán - Vialidad Mexiquense",
+    "lat": 19.63531562,
+    "lon": -99.20507918,
+    "sourceIds": [
+      708
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Cuautitlán Izcalli",
+    "section": "San Miguel - Chamapa",
+    "lat": 19.63510237,
+    "lon": -99.20506531,
+    "sourceIds": [
+      709
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Cuencamé",
+    "section": "Durango - Gómez Palacio",
+    "lat": 24.98101777,
+    "lon": -103.73539478,
+    "sourceIds": [
+      168,
+      169,
+      170,
+      171,
+      172,
+      173
+    ],
+    "spreadM": 130
+  },
+  {
+    "name": "Cuerámaro Línea 7",
+    "section": "León - Ent. Central de Abastos",
+    "lat": 21.06907264,
+    "lon": -101.67979992,
+    "sourceIds": [
+      824
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Cuerámaro Línea 8",
+    "section": "León - Ent. Central de Abastos",
+    "lat": 21.0696731,
+    "lon": -101.67915276,
+    "sourceIds": [
+      823
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Cuitláhuac",
+    "section": "Córdoba - La Tinaja",
+    "lat": 18.83944426,
+    "lon": -96.74693343,
+    "sourceIds": [
+      549,
+      550
+    ],
+    "spreadM": 7
+  },
+  {
+    "name": "Cuitláhuac A1",
+    "section": "Córdoba - Cuitláhuac",
+    "lat": 18.83945009,
+    "lon": -96.74692692,
+    "sourceIds": [
+      547,
+      548
+    ],
+    "spreadM": 17
+  },
+  {
+    "name": "Cuitláhuac A2",
+    "section": "Cuitláhuac - La Tinaja",
+    "lat": 18.8380838,
+    "lon": -96.73844397,
+    "sourceIds": [
+      546,
+      1039
+    ],
+    "spreadM": 125
+  },
+  {
+    "name": "Cuitzeo A1",
+    "section": "Copándaro - Cuitzeo",
+    "lat": 19.96887804,
+    "lon": -101.15967951,
+    "sourceIds": [
+      269
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Cuitzeo A1",
+    "section": "Cuitzeo - Copándaro",
+    "lat": 19.96831025,
+    "lon": -101.16205772,
+    "sourceIds": [
+      270
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Culiacán",
+    "section": "Culiacán - Los Mochis",
+    "lat": 24.74888447,
+    "lon": -107.46222175,
+    "sourceIds": [
+      134,
+      135
+    ],
+    "spreadM": 4
+  },
+  {
+    "name": "Cuto KM 28+858",
+    "section": "Copándaro - Pátzcuaro",
+    "lat": 19.71066916,
+    "lon": -101.33725016,
+    "sourceIds": [
+      1238
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Cuyutlán",
+    "section": "Armería - Manzanillo",
+    "lat": 18.92777949,
+    "lon": -104.08144154,
+    "sourceIds": [
+      963,
+      964
+    ],
+    "spreadM": 6
+  },
+  {
+    "name": "Durango",
+    "section": "Durango - Gómez Palacio",
+    "lat": 24.13175696,
+    "lon": -104.53411808,
+    "sourceIds": [
+      174,
+      175
+    ],
+    "spreadM": 5
+  },
+  {
+    "name": "Ecatepec - Pirámides",
+    "section": "Ecatepec - Pirámides",
+    "lat": 19.61174367,
+    "lon": -99.02571907,
+    "sourceIds": [
+      717,
+      718
+    ],
+    "spreadM": 10
+  },
+  {
+    "name": "Ecatepec - Pirámides",
+    "section": "Ent. Tepexpan",
+    "lat": 19.61621724,
+    "lon": -98.94830927,
+    "sourceIds": [
+      719,
+      720,
+      776,
+      777
+    ],
+    "spreadM": 13
+  },
+  {
+    "name": "Ecuandureo",
+    "section": "La Barca - Morelia",
+    "lat": 20.17482532,
+    "lon": -102.19095805,
+    "sourceIds": [
+      875,
+      1575
+    ],
+    "spreadM": 86
+  },
+  {
+    "name": "Ecuandureo",
+    "section": "Maravatío - Zapotlanejo",
+    "lat": 20.17502723,
+    "lon": -102.19131033,
+    "sourceIds": [
+      833,
+      856,
+      1577,
+      1578
+    ],
+    "spreadM": 13
+  },
+  {
+    "name": "Ejército Nacional Poniente",
+    "section": "Autopista Urbana Norte",
+    "lat": 19.4379119,
+    "lon": -99.21391246,
+    "sourceIds": [
+      1151
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "El Arenal",
+    "section": "Guadalajara - Tepic",
+    "lat": 20.77876404,
+    "lon": -103.66244083,
+    "sourceIds": [
+      296,
+      297
+    ],
+    "spreadM": 8
+  },
+  {
+    "name": "El Capomo - La Peñita",
+    "section": "Las Varas - Puerto Vallarta",
+    "lat": 21.07020269,
+    "lon": -105.21727428,
+    "sourceIds": [
+      1901,
+      1902
+    ],
+    "spreadM": 39
+  },
+  {
+    "name": "El Chichimeco",
+    "section": "Aguascalientes - León",
+    "lat": 22.00071363,
+    "lon": -102.36008625,
+    "sourceIds": [
+      1920
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "El Chichimeco",
+    "section": "León - Aguascalientes",
+    "lat": 22.00095856,
+    "lon": -102.3596117,
+    "sourceIds": [
+      1922
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "El Chichimeco",
+    "section": "León - Zacatecas",
+    "lat": 22.00580434,
+    "lon": -102.35762908,
+    "sourceIds": [
+      1915
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "El Chichimeco",
+    "section": "Libramiento Carretero Poniente de la Ciudad de Aguascalientes",
+    "lat": 22.00584828,
+    "lon": -102.35775465,
+    "sourceIds": [
+      1876,
+      1877
+    ],
+    "spreadM": 5
+  },
+  {
+    "name": "El Chichimeco",
+    "section": "Zacatecas - León",
+    "lat": 22.00589506,
+    "lon": -102.35790353,
+    "sourceIds": [
+      1919
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "El Cortijo",
+    "section": "El Cortijo - Guadalajara",
+    "lat": 20.62014323,
+    "lon": -103.20506689,
+    "sourceIds": [
+      1324
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "El Cortijo",
+    "section": "Guadalajara - El Cortijo",
+    "lat": 20.61966715,
+    "lon": -103.20618255,
+    "sourceIds": [
+      1321
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "El Dorado",
+    "section": "Toluca - Atlacomulco",
+    "lat": 19.40821685,
+    "lon": -99.71605395,
+    "sourceIds": [
+      632
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "El Piñal",
+    "section": "Ávila Camacho - Venustiano Carranza",
+    "lat": 20.45892529,
+    "lon": -97.85386098,
+    "sourceIds": [
+      1649
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "El Pisal",
+    "section": "Culiacán - Los Mochis",
+    "lat": 24.83237593,
+    "lon": -107.59759504,
+    "sourceIds": [
+      1394,
+      1395
+    ],
+    "spreadM": 4
+  },
+  {
+    "name": "El Vado",
+    "section": "El Vado-Guadalajara",
+    "lat": 20.60473256,
+    "lon": -103.15863295,
+    "sourceIds": [
+      1323
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "El Vado",
+    "section": "Guadalajara - El Vado",
+    "lat": 20.6047513,
+    "lon": -103.15964187,
+    "sourceIds": [
+      1322
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "El Vainillo",
+    "section": "Mazatlán - Villa Unión",
+    "lat": 23.21616129,
+    "lon": -106.26039425,
+    "sourceIds": [
+      1037,
+      1038
+    ],
+    "spreadM": 11
+  },
+  {
+    "name": "El Vainillo II",
+    "section": "Aeropuerto - Libramiento Mazatlán",
+    "lat": 23.21660472,
+    "lon": -106.26480912,
+    "sourceIds": [
+      1707
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "El Vainillo II",
+    "section": "Aeropuerto - Villa Unión",
+    "lat": 23.2165832,
+    "lon": -106.26477572,
+    "sourceIds": [
+      1709
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "El Vainillo II",
+    "section": "Libramiento Mazatlán - Aeropuerto",
+    "lat": 23.21667384,
+    "lon": -106.26491204,
+    "sourceIds": [
+      1706
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "El Vainillo II",
+    "section": "Villa Unión - Aeropuerto Mazatlán",
+    "lat": 23.21663159,
+    "lon": -106.26487271,
+    "sourceIds": [
+      1708
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Emiliano Zapata",
+    "section": "Cuernavaca - Acapulco",
+    "lat": 18.83794492,
+    "lon": -99.21652784,
+    "sourceIds": [
+      397,
+      398,
+      1407,
+      1408,
+      1409,
+      1410
+    ],
+    "spreadM": 132
+  },
+  {
+    "name": "Encarnación de Díaz",
+    "section": "Encarnación de Díaz - Aguascalientes",
+    "lat": 21.48968292,
+    "lon": -102.24322107,
+    "sourceIds": [
+      310,
+      387
+    ],
+    "spreadM": 8
+  },
+  {
+    "name": "Encarnación de Díaz",
+    "section": "Ent. Lagos de Moreno - Aguascalientes",
+    "lat": 21.48969169,
+    "lon": -102.24323018,
+    "sourceIds": [
+      311
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ent. - San Blas - Estación Yago",
+    "section": "Tepic - Villa Unión",
+    "lat": 21.84467009,
+    "lon": -105.08497284,
+    "sourceIds": [
+      291
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ent. Cuernavaca - Ent. Centinela",
+    "section": "Libramiento Mexicali",
+    "lat": 32.53351625,
+    "lon": -115.42077903,
+    "sourceIds": [
+      118,
+      119
+    ],
+    "spreadM": 4
+  },
+  {
+    "name": "Ent. Cuernavaca - Ent. San Felipe",
+    "section": "Libramiento Mexicali",
+    "lat": 32.53362641,
+    "lon": -115.40876985,
+    "sourceIds": [
+      109
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ent. La Cinta",
+    "section": "Copándaro - Ent. Cerro Gordo",
+    "lat": 20.07341185,
+    "lon": -101.13668526,
+    "sourceIds": [
+      343,
+      943
+    ],
+    "spreadM": 5
+  },
+  {
+    "name": "Ent. La Cinta",
+    "section": "Copándaro - La Cinta",
+    "lat": 20.07340975,
+    "lon": -101.1365478,
+    "sourceIds": [
+      323
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ent. La Cinta",
+    "section": "La Cinta - Cerro Gordo",
+    "lat": 20.07618588,
+    "lon": -101.13576557,
+    "sourceIds": [
+      324
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ent. La Cinta",
+    "section": "La Cinta - Copándaro",
+    "lat": 20.07341109,
+    "lon": -101.13681767,
+    "sourceIds": [
+      342
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ent. La Cinta",
+    "section": "La Cinta - Ent. Cerro Gordo",
+    "lat": 20.07743516,
+    "lon": -101.13777785,
+    "sourceIds": [
+      325
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ent. Lincoln",
+    "section": "Periférico del Área Metropolitana de Monterrey",
+    "lat": 25.78385233,
+    "lon": -100.47143446,
+    "sourceIds": [
+      35,
+      37
+    ],
+    "spreadM": 172
+  },
+  {
+    "name": "Ent. Monclova",
+    "section": "Periférico del Área Metropolitana de Monterrey",
+    "lat": 25.83389109,
+    "lon": -100.30574047,
+    "sourceIds": [
+      51,
+      52,
+      1842,
+      1843
+    ],
+    "spreadM": 42
+  },
+  {
+    "name": "Ent. Pedreras",
+    "section": "Periférico del Área Metropolitana de Monterrey",
+    "lat": 25.81796989,
+    "lon": -100.39342063,
+    "sourceIds": [
+      49,
+      50,
+      1840,
+      1841
+    ],
+    "spreadM": 38
+  },
+  {
+    "name": "Ent. San Felipe - Centinela",
+    "section": "Libramiento Mexicali",
+    "lat": 32.53279345,
+    "lon": -115.40993036,
+    "sourceIds": [
+      108
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ent. Uriangato",
+    "section": "Copándaro - Ent. Cerro Gordo",
+    "lat": 20.18292973,
+    "lon": -101.15728899,
+    "sourceIds": [
+      939,
+      940
+    ],
+    "spreadM": 6
+  },
+  {
+    "name": "Entronque Ex-Garita",
+    "section": "Monterrey - Nuevo Laredo",
+    "lat": 27.26972775,
+    "lon": -99.61462638,
+    "sourceIds": [
+      1790,
+      1791
+    ],
+    "spreadM": 112
+  },
+  {
+    "name": "Entronque Ojo de Agua",
+    "section": "México - Pachuca",
+    "lat": 19.66557496,
+    "lon": -99.00162432,
+    "sourceIds": [
+      1865,
+      1866,
+      1867
+    ],
+    "spreadM": 101
+  },
+  {
+    "name": "Entronque Peñón",
+    "section": "Peñón - Texcoco",
+    "lat": 19.468852,
+    "lon": -99.00441655,
+    "sourceIds": [
+      601
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Entronque Trapichillo",
+    "section": "Libramiento Tepic",
+    "lat": 21.56055039,
+    "lon": -104.96789793,
+    "sourceIds": [
+      1598
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Entronque Trapichillo",
+    "section": "Tepic - San Blas",
+    "lat": 21.56141053,
+    "lon": -104.97095737,
+    "sourceIds": [
+      1596,
+      1597
+    ],
+    "spreadM": 93
+  },
+  {
+    "name": "Esperanza",
+    "section": "Acatzingo - Ciudad Mendoza",
+    "lat": 18.87076479,
+    "lon": -97.38590045,
+    "sourceIds": [
+      477,
+      478
+    ],
+    "spreadM": 8
+  },
+  {
+    "name": "Esperanza",
+    "section": "Acatzingo - Esperanza",
+    "lat": 18.87085317,
+    "lon": -97.385908,
+    "sourceIds": [
+      473,
+      475
+    ],
+    "spreadM": 61
+  },
+  {
+    "name": "Esperanza",
+    "section": "Cd. Obregón - Hermosillo",
+    "lat": 27.60383496,
+    "lon": -109.93905348,
+    "sourceIds": [
+      158
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Esperanza",
+    "section": "Esperanza - Ciudad Mendoza",
+    "lat": 18.87085784,
+    "lon": -97.38590642,
+    "sourceIds": [
+      474,
+      476
+    ],
+    "spreadM": 66
+  },
+  {
+    "name": "Esperanza",
+    "section": "Hermosillo - Cd. Obregón",
+    "lat": 27.6037445,
+    "lon": -109.93921556,
+    "sourceIds": [
+      159
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Estación Don No. 148",
+    "section": "Cd. Obregón - Los Mochis",
+    "lat": 26.84978541,
+    "lon": -109.3733779,
+    "sourceIds": [
+      163
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Estación Don No. 148",
+    "section": "Los Mochis - Cd. Obregón",
+    "lat": 26.84982603,
+    "lon": -109.3730997,
+    "sourceIds": [
+      162
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Estación Ruiz",
+    "section": "Tepic - Villa Unión",
+    "lat": 21.95188057,
+    "lon": -105.11609684,
+    "sourceIds": [
+      290
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Estación Yago - Ent. San Blas",
+    "section": "Tepic - Mazatlán",
+    "lat": 21.84375424,
+    "lon": -105.08543367,
+    "sourceIds": [
+      293
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Estación Yago - Ruiz",
+    "section": "Tepic - Mazatlán",
+    "lat": 21.84695934,
+    "lon": -105.08520949,
+    "sourceIds": [
+      292
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Feliciano",
+    "section": "Nueva Italia - Lázaro Cárdenas",
+    "lat": 18.0056564,
+    "lon": -101.96223315,
+    "sourceIds": [
+      408,
+      409,
+      410,
+      418,
+      419
+    ],
+    "spreadM": 204
+  },
+  {
+    "name": "Fundición No. 149",
+    "section": "Cd. Obregón - Los Mochis",
+    "lat": 27.32023393,
+    "lon": -109.71989436,
+    "sourceIds": [
+      161
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Fundición No. 149",
+    "section": "Los Mochis - Cd. Obregón",
+    "lat": 27.32059733,
+    "lon": -109.71982348,
+    "sourceIds": [
+      160
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Galeana",
+    "section": "Ricardo Flores Magón - Galeana",
+    "lat": 30.00425317,
+    "lon": -107.24249981,
+    "sourceIds": [
+      910,
+      957
+    ],
+    "spreadM": 2
+  },
+  {
+    "name": "Guadalupe",
+    "section": "Libramiento de Ciudad Juárez",
+    "lat": 31.41183426,
+    "lon": -106.19558994,
+    "sourceIds": [
+      1952,
+      1953,
+      1954,
+      1955
+    ],
+    "spreadM": 9
+  },
+  {
+    "name": "Guanajuato",
+    "section": "Guanajuato - Silao",
+    "lat": 20.98242923,
+    "lon": -101.29014991,
+    "sourceIds": [
+      358,
+      359
+    ],
+    "spreadM": 7
+  },
+  {
+    "name": "Guaymas",
+    "section": "Obregón - Hermosillo",
+    "lat": 28.03656679,
+    "lon": -110.92453982,
+    "sourceIds": [
+      156,
+      157
+    ],
+    "spreadM": 18
+  },
+  {
+    "name": "Gustavo Baz",
+    "section": "Toreo - Tepalcapa",
+    "lat": 19.48113399,
+    "lon": -99.23154902,
+    "sourceIds": [
+      1097,
+      1124
+    ],
+    "spreadM": 207
+  },
+  {
+    "name": "Hank González",
+    "section": "Hank González",
+    "lat": 19.58488679,
+    "lon": -99.02804236,
+    "sourceIds": [
+      721
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Hermanos Serdán",
+    "section": "Periférico - Cuauhtémoc",
+    "lat": 19.09216524,
+    "lon": -98.22266898,
+    "sourceIds": [
+      1472
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Hermosillo 152",
+    "section": "Hermosillo - Magdalena de Kino",
+    "lat": 29.22079137,
+    "lon": -110.93026156,
+    "sourceIds": [
+      154,
+      155
+    ],
+    "spreadM": 14
+  },
+  {
+    "name": "Huachichil",
+    "section": "La Carbonera - Puerto México",
+    "lat": 25.24553181,
+    "lon": -100.80147717,
+    "sourceIds": [
+      1
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Huaniqueo",
+    "section": "Maravatío - Zapotlanejo",
+    "lat": 19.88326121,
+    "lon": -101.51093782,
+    "sourceIds": [
+      264,
+      265
+    ],
+    "spreadM": 107
+  },
+  {
+    "name": "Huehuetoca",
+    "section": "Peñón - Texcoco",
+    "lat": 19.82270287,
+    "lon": -99.23587613,
+    "sourceIds": [
+      732,
+      733
+    ],
+    "spreadM": 73
+  },
+  {
+    "name": "Huimilpan",
+    "section": "Amealco I/Atlacomulco - Huimilpan",
+    "lat": 20.34839149,
+    "lon": -100.27750987,
+    "sourceIds": [
+      1663
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Huimilpan",
+    "section": "Coroneo/Apaseo el Alto/Apaseo el Grande/Querétaro - Huimilpan",
+    "lat": 20.34845029,
+    "lon": -100.27748319,
+    "sourceIds": [
+      1911
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Huimilpan",
+    "section": "Huimilpan - Atlacomulco",
+    "lat": 20.3483088,
+    "lon": -100.27754742,
+    "sourceIds": [
+      1655
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Huixquilucan",
+    "section": "La Venta - Chamapa",
+    "lat": 19.4143886,
+    "lon": -99.29967753,
+    "sourceIds": [
+      626,
+      627
+    ],
+    "spreadM": 4
+  },
+  {
+    "name": "Ignacio Zaragoza",
+    "section": "Puente Internacional Matamoros III Los Tomates",
+    "lat": 25.87422358,
+    "lon": -97.47469471,
+    "sourceIds": [
+      88,
+      873
+    ],
+    "spreadM": 6
+  },
+  {
+    "name": "Iguala",
+    "section": "Puente de Ixtla - Iguala",
+    "lat": 18.33620838,
+    "lon": -99.50831947,
+    "sourceIds": [
+      425,
+      426
+    ],
+    "spreadM": 6
+  },
+  {
+    "name": "Ing. Francisco Velasco Durán",
+    "section": "Cuernavaca - Acapulco",
+    "lat": 18.69839161,
+    "lon": -99.27811155,
+    "sourceIds": [
+      401,
+      402
+    ],
+    "spreadM": 10
+  },
+  {
+    "name": "Interlomas",
+    "section": "La Venta - Chamapa",
+    "lat": 19.39541505,
+    "lon": -99.29505313,
+    "sourceIds": [
+      617,
+      618,
+      1554,
+      1555
+    ],
+    "spreadM": 95
+  },
+  {
+    "name": "Ixtapaluca",
+    "section": "Chalco - México",
+    "lat": 19.2899621,
+    "lon": -98.88030524,
+    "sourceIds": [
+      1062
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ixtapan de la Sal - Tenango",
+    "section": "Ixtapan de la Sal - Tenango",
+    "lat": 18.852863,
+    "lon": -99.66752926,
+    "sourceIds": [
+      658
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ixtepec (90)",
+    "section": "Tehuantepec - La Ventosa",
+    "lat": 16.56146561,
+    "lon": -95.13537066,
+    "sourceIds": [
+      745,
+      746,
+      747,
+      748,
+      749
+    ],
+    "spreadM": 121
+  },
+  {
+    "name": "Jalostotitlán",
+    "section": "Ent. Arandas - Jalostotitlán",
+    "lat": 21.1177239,
+    "lon": -102.45792682,
+    "sourceIds": [
+      1479,
+      1481
+    ],
+    "spreadM": 29
+  },
+  {
+    "name": "Jalostotitlán",
+    "section": "Ent. Jalostotitlán - San Juan de los Lagos",
+    "lat": 21.11911606,
+    "lon": -102.4557919,
+    "sourceIds": [
+      818
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Jalostotitlán",
+    "section": "San Juan de los Lagos - Jalostotitlán",
+    "lat": 21.12042142,
+    "lon": -102.45531802,
+    "sourceIds": [
+      817
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Jalostotitlán",
+    "section": "Zapotlanejo - Lagos de Moreno",
+    "lat": 21.11756266,
+    "lon": -102.4580875,
+    "sourceIds": [
+      320,
+      1480
+    ],
+    "spreadM": 6
+  },
+  {
+    "name": "Jantetelco - El Higuerón",
+    "section": "Jantetelco - El Higuerón",
+    "lat": 18.65277284,
+    "lon": -99.00872255,
+    "sourceIds": [
+      1684
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Jantetelco - El Higuerón",
+    "section": "San Rafael - Jantetelco",
+    "lat": 18.65255944,
+    "lon": -99.00146324,
+    "sourceIds": [
+      1687,
+      1688
+    ],
+    "spreadM": 30
+  },
+  {
+    "name": "Jantetelco - El Higuerón",
+    "section": "San Rafael - Xicatlacotla",
+    "lat": 18.65277723,
+    "lon": -99.00872776,
+    "sourceIds": [
+      1685,
+      1686
+    ],
+    "spreadM": 16
+  },
+  {
+    "name": "Jeráhuaro",
+    "section": "Maravatío - Zapotlanejo",
+    "lat": 19.89399742,
+    "lon": -100.648961,
+    "sourceIds": [
+      258,
+      259
+    ],
+    "spreadM": 248
+  },
+  {
+    "name": "Jerónimo",
+    "section": "Samalayuca - San Jerónimo",
+    "lat": 31.57692345,
+    "lon": -106.66675911,
+    "sourceIds": [
+      892,
+      960
+    ],
+    "spreadM": 11
+  },
+  {
+    "name": "Jiménez",
+    "section": "Jiménez - Camargo",
+    "lat": 27.24496887,
+    "lon": -104.93324145,
+    "sourceIds": [
+      215,
+      216,
+      217,
+      218
+    ],
+    "spreadM": 18
+  },
+  {
+    "name": "Jiménez",
+    "section": "Libramiento Oriente de Chihuahua",
+    "lat": 28.60346493,
+    "lon": -105.9513637,
+    "sourceIds": [
+      1100,
+      1102,
+      1128,
+      1206
+    ],
+    "spreadM": 8
+  },
+  {
+    "name": "Jiquipilas",
+    "section": "Arriaga - Ocozocoautla",
+    "lat": 16.62125773,
+    "lon": -93.60158073,
+    "sourceIds": [
+      913,
+      917,
+      918,
+      1250,
+      1251
+    ],
+    "spreadM": 147
+  },
+  {
+    "name": "Jorobas",
+    "section": "Joroba - Tepeji (CONMEX)",
+    "lat": 19.82620387,
+    "lon": -99.24992368,
+    "sourceIds": [
+      1552
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Juárez - Lincoln",
+    "section": "Puente Internacional Juárez - Lincoln",
+    "lat": 27.49819891,
+    "lon": -99.50248624,
+    "sourceIds": [
+      70,
+      71
+    ],
+    "spreadM": 7
+  },
+  {
+    "name": "La Antigua",
+    "section": "Cardel - Veracruz",
+    "lat": 19.32040035,
+    "lon": -96.31077744,
+    "sourceIds": [
+      532,
+      535
+    ],
+    "spreadM": 7
+  },
+  {
+    "name": "La Calera",
+    "section": "Ent. La Calera - Ent. La Pitahaya",
+    "lat": 21.90546609,
+    "lon": -98.95280698,
+    "sourceIds": [
+      1515
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Calera",
+    "section": "Ent. La Calera - Ent. San Juan",
+    "lat": 21.90227013,
+    "lon": -98.95288365,
+    "sourceIds": [
+      1513
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Calera",
+    "section": "Ent. La Pitahaya - Ent. La Calera",
+    "lat": 21.90221153,
+    "lon": -98.95292078,
+    "sourceIds": [
+      1512
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Calera",
+    "section": "Ent. San Juan - Ent. La Calera",
+    "lat": 21.90541629,
+    "lon": -98.95278796,
+    "sourceIds": [
+      1514
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Calera",
+    "section": "Laguna Larga - Patti II",
+    "lat": 20.39563784,
+    "lon": -101.9933704,
+    "sourceIds": [
+      1023
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Calera",
+    "section": "Libramiento Ciudad Valles - Tamuín",
+    "lat": 21.90413839,
+    "lon": -98.95536905,
+    "sourceIds": [
+      1507
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Calera",
+    "section": "Patti II - Laguna Larga",
+    "lat": 20.3955888,
+    "lon": -101.99350844,
+    "sourceIds": [
+      1024
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Calera A1",
+    "section": "La Calera - Laguna Larga",
+    "lat": 20.39539443,
+    "lon": -101.99804456,
+    "sourceIds": [
+      1025
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Calera A1",
+    "section": "Laguna Larga - La Calera",
+    "lat": 20.39547972,
+    "lon": -101.9980901,
+    "sourceIds": [
+      1026
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Calera A2",
+    "section": "La Calera - Patti II",
+    "lat": 20.39542888,
+    "lon": -101.99806313,
+    "sourceIds": [
+      1027
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Calera A2",
+    "section": "Patti II - La Calera",
+    "lat": 20.39551757,
+    "lon": -101.99810918,
+    "sourceIds": [
+      1028
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Cantera",
+    "section": "Libramiento Tepic",
+    "lat": 21.49850402,
+    "lon": -104.81340842,
+    "sourceIds": [
+      1455
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Carbonera",
+    "section": "Puerto México - Ojo Caliente",
+    "lat": 25.51096534,
+    "lon": -100.86833305,
+    "sourceIds": [
+      2,
+      3
+    ],
+    "spreadM": 16
+  },
+  {
+    "name": "La Cuchilla P.C. 163",
+    "section": "Torreón - Saltillo",
+    "lat": 25.62700408,
+    "lon": -102.87833703,
+    "sourceIds": [
+      6,
+      7
+    ],
+    "spreadM": 7
+  },
+  {
+    "name": "La Curva",
+    "section": "Culiacán - Los Mochis",
+    "lat": 24.7503781,
+    "lon": -107.57125872,
+    "sourceIds": [
+      132,
+      133
+    ],
+    "spreadM": 22
+  },
+  {
+    "name": "La Florida - Bucerías",
+    "section": "La Florida - Bucerías",
+    "lat": 20.77518217,
+    "lon": -105.3740475,
+    "sourceIds": [
+      1896
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Florida - Bucerías",
+    "section": "Las Varas - Vallarta",
+    "lat": 20.78141966,
+    "lon": -105.37006508,
+    "sourceIds": [
+      1897
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Hincada",
+    "section": "Ent. Charco Blanco - Ent. Tula",
+    "lat": 22.63013751,
+    "lon": -100.11335119,
+    "sourceIds": [
+      382
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Hincada",
+    "section": "Ent. Tula - Ent. Charco Blanco",
+    "lat": 22.63030091,
+    "lon": -100.11341591,
+    "sourceIds": [
+      381
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Hortaliza",
+    "section": "Zitácuaro - Toluca",
+    "lat": 19.38033526,
+    "lon": -99.80793843,
+    "sourceIds": [
+      639,
+      640,
+      641,
+      642
+    ],
+    "spreadM": 88
+  },
+  {
+    "name": "La Joya",
+    "section": "Guadalajara - Zapotlanejo",
+    "lat": 20.60487473,
+    "lon": -103.1390375,
+    "sourceIds": [
+      300,
+      301,
+      302
+    ],
+    "spreadM": 64
+  },
+  {
+    "name": "La Joya II",
+    "section": "Guadalajara - Zapotlanejo",
+    "lat": 20.61557682,
+    "lon": -103.08932364,
+    "sourceIds": [
+      1549
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Joya II",
+    "section": "Zapotlanejo - Guadalajara",
+    "lat": 20.6157707,
+    "lon": -103.08934857,
+    "sourceIds": [
+      1548
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Laja - Libramiento Guadalajara",
+    "section": "Macrolibramiento Guadalajara",
+    "lat": 20.57268267,
+    "lon": -103.10127967,
+    "sourceIds": [
+      1534,
+      1535
+    ],
+    "spreadM": 7
+  },
+  {
+    "name": "La Nueva Viga",
+    "section": "6 Sur Luis Méndez",
+    "lat": 19.36806687,
+    "lon": -99.09773508,
+    "sourceIds": [
+      1935
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Peñita",
+    "section": "Las Varas - Vallarta",
+    "lat": 21.06644927,
+    "lon": -105.21813538,
+    "sourceIds": [
+      1844
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Peñita - La Florida",
+    "section": "Las Varas - Puerto Vallarta",
+    "lat": 21.06644456,
+    "lon": -105.21814031,
+    "sourceIds": [
+      1903,
+      1904
+    ],
+    "spreadM": 22
+  },
+  {
+    "name": "La Pitahaya",
+    "section": "La Pitahaya - Vicente Guerrero",
+    "lat": 21.9676617,
+    "lon": -99.17453697,
+    "sourceIds": [
+      1365
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Pitahaya",
+    "section": "Vicente Guerrero - La Pitahaya",
+    "lat": 21.9675371,
+    "lon": -99.17449079,
+    "sourceIds": [
+      1380
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Platanera",
+    "section": "Culiacán - Los Mochis",
+    "lat": 24.81494432,
+    "lon": -107.58584728,
+    "sourceIds": [
+      131
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Sauceda",
+    "section": "La Sauceda - Zapotlanejo",
+    "lat": 20.54807348,
+    "lon": -103.03454607,
+    "sourceIds": [
+      1614
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Unidad",
+    "section": "Isla del Carmen - Isla Aguada",
+    "lat": 18.78552317,
+    "lon": -91.49489699,
+    "sourceIds": [
+      774
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Unidad",
+    "section": "Puente",
+    "lat": 18.7855172,
+    "lon": -91.4948212,
+    "sourceIds": [
+      893
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "La Venta",
+    "section": "Cuernavaca - Acapulco",
+    "lat": 16.92829142,
+    "lon": -99.80190047,
+    "sourceIds": [
+      412,
+      413
+    ],
+    "spreadM": 7
+  },
+  {
+    "name": "La Venta",
+    "section": "La Venta - Chamapa",
+    "lat": 19.34897459,
+    "lon": -99.30660192,
+    "sourceIds": [
+      615,
+      965
+    ],
+    "spreadM": 9
+  },
+  {
+    "name": "La Venta",
+    "section": "México - La Marquesa",
+    "lat": 19.33245603,
+    "lon": -99.31440853,
+    "sourceIds": [
+      609,
+      610,
+      611,
+      612,
+      620,
+      621,
+      622,
+      1710
+    ],
+    "spreadM": 205
+  },
+  {
+    "name": "La Venta 2",
+    "section": "La Venta - Chamapa",
+    "lat": 19.35222272,
+    "lon": -99.30572778,
+    "sourceIds": [
+      619
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Lago de Guadalupe",
+    "section": "Chamapa - Lechería",
+    "lat": 19.60909537,
+    "lon": -99.23708062,
+    "sourceIds": [
+      846,
+      847,
+      848,
+      849
+    ],
+    "spreadM": 224
+  },
+  {
+    "name": "Lago de Guadalupe",
+    "section": "Toreo - Tepalcapa",
+    "lat": 19.57701544,
+    "lon": -99.20736324,
+    "sourceIds": [
+      1107,
+      1120
+    ],
+    "spreadM": 92
+  },
+  {
+    "name": "Laguna Seca",
+    "section": "San Cayetano - El Monumento",
+    "lat": 19.35445257,
+    "lon": -99.98309273,
+    "sourceIds": [
+      661,
+      662
+    ],
+    "spreadM": 39
+  },
+  {
+    "name": "Laredo",
+    "section": "Puente Internacional Laredo I",
+    "lat": 27.49854529,
+    "lon": -99.5073964,
+    "sourceIds": [
+      67
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Las Brisas",
+    "section": "Culiacán - Las Brisas",
+    "lat": 25.39493577,
+    "lon": -108.12987721,
+    "sourceIds": [
+      124,
+      125
+    ],
+    "spreadM": 7
+  },
+  {
+    "name": "Las Cañas",
+    "section": "Nueva Italia - Lázaro Cárdenas",
+    "lat": 18.55394398,
+    "lon": -101.97169158,
+    "sourceIds": [
+      277,
+      278
+    ],
+    "spreadM": 140
+  },
+  {
+    "name": "Las Choapas",
+    "section": "Ent. Las Choapas - Ent. Nuevo Sacrificio",
+    "lat": 17.94479033,
+    "lon": -94.17232431,
+    "sourceIds": [
+      577
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Las Chopas A1",
+    "section": "Ent. Las Choapas - Ent. Las Choapas II",
+    "lat": 17.9427015,
+    "lon": -94.17220795,
+    "sourceIds": [
+      578
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Las Chopas A2",
+    "section": "Ent. Las Choapas II - Ent. Nuevo Sacrificio",
+    "lat": 17.94267604,
+    "lon": -94.17215866,
+    "sourceIds": [
+      882
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Las Cruces (Maxitúnel)",
+    "section": "Cuernavaca - Acapulco",
+    "lat": 16.88599818,
+    "lon": -99.83933301,
+    "sourceIds": [
+      416,
+      417
+    ],
+    "spreadM": 11
+  },
+  {
+    "name": "Las Flores",
+    "section": "Puente Internacional Las Flores",
+    "lat": 26.06064158,
+    "lon": -97.94979626,
+    "sourceIds": [
+      84,
+      961
+    ],
+    "spreadM": 59
+  },
+  {
+    "name": "Las Joyas",
+    "section": "León - Entronque Las Joyas",
+    "lat": 21.09795962,
+    "lon": -101.77792161,
+    "sourceIds": [
+      1612,
+      1615
+    ],
+    "spreadM": 98
+  },
+  {
+    "name": "Las Vigas",
+    "section": "Perote - Banderilla",
+    "lat": 19.63046058,
+    "lon": -97.12796604,
+    "sourceIds": [
+      536,
+      537
+    ],
+    "spreadM": 10
+  },
+  {
+    "name": "Lechería",
+    "section": "Toreo - Tepalcapa",
+    "lat": 19.59754222,
+    "lon": -99.20082775,
+    "sourceIds": [
+      1108,
+      1121
+    ],
+    "spreadM": 101
+  },
+  {
+    "name": "Lechería - Cuautitlán",
+    "section": "Chamapa - Lechería",
+    "lat": 19.60484367,
+    "lon": -99.20586662,
+    "sourceIds": [
+      710,
+      711
+    ],
+    "spreadM": 8
+  },
+  {
+    "name": "León",
+    "section": "León - (Autopista Salamanca - León)",
+    "lat": 21.04604928,
+    "lon": -101.62853813,
+    "sourceIds": [
+      1072,
+      1201
+    ],
+    "spreadM": 27
+  },
+  {
+    "name": "León Guzmán",
+    "section": "El Vergel - León Guzmán",
+    "lat": 25.52065883,
+    "lon": -103.63961426,
+    "sourceIds": [
+      182
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "León Guzmán",
+    "section": "El Vergel - Pedriceña",
+    "lat": 25.52065244,
+    "lon": -103.63955292,
+    "sourceIds": [
+      185
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "León Guzmán",
+    "section": "León Guzmán - El Vergel",
+    "lat": 25.52223327,
+    "lon": -103.63910913,
+    "sourceIds": [
+      183
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "León Guzmán",
+    "section": "León Guzmán - Pedriceña",
+    "lat": 25.51950325,
+    "lon": -103.63971312,
+    "sourceIds": [
+      181
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "León Guzmán",
+    "section": "Pedriceña - El Vergel",
+    "lat": 25.52064381,
+    "lon": -103.63939017,
+    "sourceIds": [
+      184
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "León Guzmán",
+    "section": "Pedriceña - León Guzmán",
+    "lat": 25.51948969,
+    "lon": -103.63941354,
+    "sourceIds": [
+      180
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "León Línea 2",
+    "section": "León - Entronque Lagos de Moreno",
+    "lat": 21.10259545,
+    "lon": -101.78445971,
+    "sourceIds": [
+      360
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "León Líneas 3 y 4",
+    "section": "León - Entronque Lagos de Moreno",
+    "lat": 21.10266829,
+    "lon": -101.78438064,
+    "sourceIds": [
+      356
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Libramiento de Técpan",
+    "section": "Libramiento de Técpan",
+    "lat": 17.19699122,
+    "lon": -100.62675813,
+    "sourceIds": [
+      411
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Libramiento Durango",
+    "section": "Durango - Villa Unión",
+    "lat": 24.00505625,
+    "lon": -104.73451914,
+    "sourceIds": [
+      179
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Libramiento Felipe Carrillo Puerto",
+    "section": "Chetumal - Felipe Carrillo Puerto",
+    "lat": 19.58774138,
+    "lon": -88.07031648,
+    "sourceIds": [
+      1340
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Libramiento Felipe Carrillo Puerto",
+    "section": "Mérida - Chetumal",
+    "lat": 19.58604266,
+    "lon": -88.07245091,
+    "sourceIds": [
+      1341
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Libramiento los Herreras",
+    "section": "Libramiento de los Herreras",
+    "lat": 25.8986829,
+    "lon": -99.39361101,
+    "sourceIds": [
+      61
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Libramiento Norte San Luis Potosí",
+    "section": "Libramiento Norte de San Luis Potosí",
+    "lat": 22.29984676,
+    "lon": -100.97135911,
+    "sourceIds": [
+      1058
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Libramiento Poniente",
+    "section": "San Martín Texmelucan - Huejotzingo",
+    "lat": 19.25358503,
+    "lon": -98.44223657,
+    "sourceIds": [
+      1564
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Libramiento Poniente San Luis Potosí",
+    "section": "Libramiento Poniente de San Luis Potosí",
+    "lat": 22.16364706,
+    "lon": -101.0792441,
+    "sourceIds": [
+      1506,
+      1746
+    ],
+    "spreadM": 9
+  },
+  {
+    "name": "Libramiento San Pedro",
+    "section": "San Pedro - Costa Rica",
+    "lat": 24.74864406,
+    "lon": -107.56807015,
+    "sourceIds": [
+      829,
+      830
+    ],
+    "spreadM": 5
+  },
+  {
+    "name": "Libramiento Sur Atlixco",
+    "section": "Atlixco - Morelos",
+    "lat": 18.89507439,
+    "lon": -98.48943153,
+    "sourceIds": [
+      1733
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Libramiento Surponiente",
+    "section": "Celaya - Libramiento Surponiente",
+    "lat": 20.57002145,
+    "lon": -100.48115818,
+    "sourceIds": [
+      367
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Libramiento Surponiente",
+    "section": "Libramiento Surponiente - Celaya",
+    "lat": 20.57213861,
+    "lon": -100.48080403,
+    "sourceIds": [
+      366
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Libramiento Surponiente",
+    "section": "Libramiento Surponiente - Querétaro",
+    "lat": 20.57038845,
+    "lon": -100.48046251,
+    "sourceIds": [
+      368
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Libramiento Surponiente",
+    "section": "Querétaro - Libramiento Surponiente",
+    "lat": 20.57234788,
+    "lon": -100.48087943,
+    "sourceIds": [
+      365
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Libre Comercio",
+    "section": "Puente Internacional Lucio Blanco - Los Indios",
+    "lat": 26.02165779,
+    "lon": -97.73877025,
+    "sourceIds": [
+      85,
+      86
+    ],
+    "spreadM": 6
+  },
+  {
+    "name": "Llano Grande",
+    "section": "Durango - Villa Unión",
+    "lat": 23.87086067,
+    "lon": -105.19153818,
+    "sourceIds": [
+      178
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Lomas Verdes",
+    "section": "Chamapa - Lechería",
+    "lat": 19.51904207,
+    "lon": -99.28638071,
+    "sourceIds": [
+      599
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Lomas Verdes",
+    "section": "Chapama - Lechería",
+    "lat": 19.51927878,
+    "lon": -99.28634368,
+    "sourceIds": [
+      598
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Lomas Verdes",
+    "section": "Toreo - Tepalcapa",
+    "lat": 19.48783706,
+    "lon": -99.2391073,
+    "sourceIds": [
+      1098,
+      1116
+    ],
+    "spreadM": 3
+  },
+  {
+    "name": "Los Chorros",
+    "section": "La Carbonera - Puerto México",
+    "lat": 25.18678864,
+    "lon": -100.7320185,
+    "sourceIds": [
+      62,
+      63
+    ],
+    "spreadM": 9
+  },
+  {
+    "name": "Los Gil",
+    "section": "Los Gil - Buenos Aires",
+    "lat": 20.8861547,
+    "lon": -97.46680188,
+    "sourceIds": [
+      1782
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Los Herrera",
+    "section": "Cadereyta - Reynosa",
+    "lat": 25.75832897,
+    "lon": -99.37403663,
+    "sourceIds": [
+      1212,
+      1213,
+      1214,
+      1215
+    ],
+    "spreadM": 121
+  },
+  {
+    "name": "Los Reyes",
+    "section": "Lechería",
+    "lat": 19.61055009,
+    "lon": -99.03832698,
+    "sourceIds": [
+      727,
+      1784
+    ],
+    "spreadM": 38
+  },
+  {
+    "name": "Lucio Blanco",
+    "section": "Ent. San Fernando - Ent. Monterrey",
+    "lat": 25.98773224,
+    "lon": -98.43156341,
+    "sourceIds": [
+      1573
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Macrolibramiento",
+    "section": "Zapotlanejo - Guadalajara",
+    "lat": 20.58808794,
+    "lon": -103.10168381,
+    "sourceIds": [
+      1567,
+      1569
+    ],
+    "spreadM": 63
+  },
+  {
+    "name": "Magdalena",
+    "section": "Libramiento Magdalena de Kino",
+    "lat": 30.62943824,
+    "lon": -110.94871205,
+    "sourceIds": [
+      148,
+      152
+    ],
+    "spreadM": 6
+  },
+  {
+    "name": "Malinalco",
+    "section": "Lerma - Tenango",
+    "lat": 19.15130471,
+    "lon": -99.54375278,
+    "sourceIds": [
+      1860
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Malpasito",
+    "section": "Ent. Malpasito - Ent. Raudales",
+    "lat": 17.3482172,
+    "lon": -93.58692307,
+    "sourceIds": [
+      753
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Malpasito",
+    "section": "Ent. Nuevo Sacrificio - Ent. Malpasito",
+    "lat": 17.34913021,
+    "lon": -93.58552117,
+    "sourceIds": [
+      754
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Malpasito",
+    "section": "Ent. Nuevo Sacrificio - Ent. Raudales",
+    "lat": 17.34903173,
+    "lon": -93.58635238,
+    "sourceIds": [
+      752
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mármol",
+    "section": "Mazatlán - Culiacán",
+    "lat": 23.47122112,
+    "lon": -106.56947198,
+    "sourceIds": [
+      145,
+      146
+    ],
+    "spreadM": 5
+  },
+  {
+    "name": "Marquesa T2",
+    "section": "Lerma - Marquesa",
+    "lat": 19.29053775,
+    "lon": -99.43437742,
+    "sourceIds": [
+      1347,
+      1348
+    ],
+    "spreadM": 26
+  },
+  {
+    "name": "Matamoros",
+    "section": "Puente Internacional Matamoros",
+    "lat": 25.89698207,
+    "lon": -97.49800491,
+    "sourceIds": [
+      87
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Matanchén",
+    "section": "Tepic - San Blas",
+    "lat": 21.50724284,
+    "lon": -105.20101666,
+    "sourceIds": [
+      1454
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Matehuala",
+    "section": "Libramiento de Matehuala",
+    "lat": 23.66417751,
+    "lon": -100.60729832,
+    "sourceIds": [
+      377,
+      378
+    ],
+    "spreadM": 10
+  },
+  {
+    "name": "Matehuala A1",
+    "section": "Ent. Sur Matehuala - Ent. Este Matehuala",
+    "lat": 23.66416097,
+    "lon": -100.60639425,
+    "sourceIds": [
+      379
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Matehuala A2",
+    "section": "Ent. Este Matehuala - Ent. Norte Matehuala",
+    "lat": 23.66383637,
+    "lon": -100.60832879,
+    "sourceIds": [
+      380
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mazapiltepec",
+    "section": "Cuacnopalan - El Seco",
+    "lat": 19.0991312,
+    "lon": -97.66401468,
+    "sourceIds": [
+      1977
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mazapiltepec",
+    "section": "Cuapiaxtla - Cuacnopalan",
+    "lat": 19.1088156,
+    "lon": -97.67097853,
+    "sourceIds": [
+      1959
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mazapiltepec",
+    "section": "Cuapiaxtla - El Seco",
+    "lat": 19.10873833,
+    "lon": -97.67114569,
+    "sourceIds": [
+      1960
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mazapiltepec",
+    "section": "El Seco - Cuacnopalan",
+    "lat": 19.09914081,
+    "lon": -97.66433359,
+    "sourceIds": [
+      1961
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mazapiltepec",
+    "section": "El Seco - Cuapiaxtla",
+    "lat": 19.108886,
+    "lon": -97.67082014,
+    "sourceIds": [
+      1978
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mendoza",
+    "section": "ITESI - Salamanca",
+    "lat": 20.67290524,
+    "lon": -101.21368264,
+    "sourceIds": [
+      1089
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mendoza",
+    "section": "Salamanca - ITESI",
+    "lat": 20.67302309,
+    "lon": -101.21357498,
+    "sourceIds": [
+      1090
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mérida - Cancún",
+    "section": "Kantunil - Pisté",
+    "lat": 20.7289745,
+    "lon": -88.58288018,
+    "sourceIds": [
+      903,
+      908
+    ],
+    "spreadM": 36
+  },
+  {
+    "name": "Mérida - Cancún",
+    "section": "Kantunil - Valladolid",
+    "lat": 20.72904104,
+    "lon": -88.58319315,
+    "sourceIds": [
+      765,
+      766
+    ],
+    "spreadM": 2
+  },
+  {
+    "name": "Mesillas",
+    "section": "Concordia - Durango",
+    "lat": 23.25812918,
+    "lon": -106.05076033,
+    "sourceIds": [
+      890
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mesillas",
+    "section": "Durango - Concordia",
+    "lat": 23.25842442,
+    "lon": -106.05126738,
+    "sourceIds": [
+      891
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mesillas",
+    "section": "Mazatlán - Durango",
+    "lat": 23.255197,
+    "lon": -106.05364075,
+    "sourceIds": [
+      887
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mesillas",
+    "section": "Mazatlán - Mesillas",
+    "lat": 23.25517734,
+    "lon": -106.05360208,
+    "sourceIds": [
+      889
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mesillas",
+    "section": "Mesillas - Mazatlán",
+    "lat": 23.25522875,
+    "lon": -106.05369199,
+    "sourceIds": [
+      888
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Metlapil",
+    "section": "La Venta - Punta Diamante",
+    "lat": 16.85588424,
+    "lon": -99.75397807,
+    "sourceIds": [
+      414
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Metlapil",
+    "section": "Punta Diamante - La Venta",
+    "lat": 16.85573155,
+    "lon": -99.75393237,
+    "sourceIds": [
+      415
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mexicali - Tijuana",
+    "section": "El Centinela - Rumorosa",
+    "lat": 32.56262473,
+    "lon": -116.04790792,
+    "sourceIds": [
+      115
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mexicali - Tijuana",
+    "section": "Intersección Esperanza",
+    "lat": 32.55118721,
+    "lon": -116.62151622,
+    "sourceIds": [
+      101,
+      102
+    ],
+    "spreadM": 60
+  },
+  {
+    "name": "Mexicali - Tijuana",
+    "section": "La Rumorosa - Tecate",
+    "lat": 32.5222147,
+    "lon": -116.31992929,
+    "sourceIds": [
+      110,
+      113
+    ],
+    "spreadM": 30
+  },
+  {
+    "name": "Mexicali - Tijuana",
+    "section": "Libramiento Tecate",
+    "lat": 32.52583569,
+    "lon": -116.69028191,
+    "sourceIds": [
+      103
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mexicali - Tijuana",
+    "section": "Rumorosa - El Centinela",
+    "lat": 32.55587079,
+    "lon": -116.03650475,
+    "sourceIds": [
+      114
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mexicali - Tijuana",
+    "section": "Rumorosa - Tecate",
+    "lat": 32.52188073,
+    "lon": -116.32000646,
+    "sourceIds": [
+      117
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mexicali - Tijuana",
+    "section": "Tecate - La Rumorosa",
+    "lat": 32.52111556,
+    "lon": -116.32017231,
+    "sourceIds": [
+      111
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Mexicali - Tijuana",
+    "section": "Tecate - Rumorosa",
+    "lat": 32.5214868,
+    "lon": -116.32008311,
+    "sourceIds": [
+      112,
+      116
+    ],
+    "spreadM": 35
+  },
+  {
+    "name": "México - Pachuca",
+    "section": "México - Pachuca",
+    "lat": 19.60223243,
+    "lon": -99.03744721,
+    "sourceIds": [
+      714
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "México - Pachuca",
+    "section": "Plande Vigas - Ecatepec",
+    "lat": 19.51591399,
+    "lon": -99.10305499,
+    "sourceIds": [
+      1560
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Miahuapan",
+    "section": "Venustiano Carranza - Tihuatlán",
+    "lat": 20.61092177,
+    "lon": -97.61453068,
+    "sourceIds": [
+      1527
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Miahuatlán",
+    "section": "Tehuacán - Miahuatlán",
+    "lat": 18.26459614,
+    "lon": -97.31551473,
+    "sourceIds": [
+      482,
+      483,
+      484
+    ],
+    "spreadM": 101
+  },
+  {
+    "name": "Michac",
+    "section": "Apizaco - Chignahuapan",
+    "lat": 19.86324747,
+    "lon": -98.05624952,
+    "sourceIds": [
+      501
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Michac",
+    "section": "Apizaco - Huauchinango",
+    "lat": 19.86144865,
+    "lon": -98.06070043,
+    "sourceIds": [
+      499
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Miradores",
+    "section": "Libramiento de Xalapa",
+    "lat": 19.47435348,
+    "lon": -96.77531932,
+    "sourceIds": [
+      779,
+      780
+    ],
+    "spreadM": 11
+  },
+  {
+    "name": "Mitla - Tehuantepec",
+    "section": "Lachixila - Tehuantepec II",
+    "lat": 16.49588541,
+    "lon": -95.40733441,
+    "sourceIds": [
+      1334
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Morelia",
+    "section": "Morelia - Aeropuerto - Entronque (Maravatío - Zapotlanejo)",
+    "lat": 19.74123507,
+    "lon": -101.10058822,
+    "sourceIds": [
+      266
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Morfín Chávez",
+    "section": "Libramiento de Fresnillo",
+    "lat": 23.17799939,
+    "lon": -102.82876779,
+    "sourceIds": [
+      228,
+      229,
+      1049,
+      1050
+    ],
+    "spreadM": 16
+  },
+  {
+    "name": "Nabor Carrillo",
+    "section": "Chalco - Jorobas",
+    "lat": 19.43582057,
+    "lon": -98.99810057,
+    "sourceIds": [
+      1608
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Nabor Carrillo",
+    "section": "Circuito Exterior Mexiquense Bicentenario",
+    "lat": 19.42564902,
+    "lon": -98.99864278,
+    "sourceIds": [
+      669,
+      670
+    ],
+    "spreadM": 10
+  },
+  {
+    "name": "Nabor Carrillo",
+    "section": "Jorobas - Chalco",
+    "lat": 19.43583921,
+    "lon": -98.99879104,
+    "sourceIds": [
+      1607
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Nabor Carrillo",
+    "section": "T3 Nabor Carrillo",
+    "lat": 19.43582277,
+    "lon": -98.99843258,
+    "sourceIds": [
+      668,
+      689
+    ],
+    "spreadM": 10
+  },
+  {
+    "name": "Nabor Carrillo",
+    "section": "Texcoco - Pirámides",
+    "lat": 19.4960519,
+    "lon": -98.94726917,
+    "sourceIds": [
+      1871,
+      1872,
+      1873
+    ],
+    "spreadM": 14
+  },
+  {
+    "name": "Nacajuca Remota",
+    "section": "Cárdenas - Frontera",
+    "lat": 18.07597275,
+    "lon": -92.93060139,
+    "sourceIds": [
+      1442
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Nacajuca Remota",
+    "section": "Frontera - Cárdenas",
+    "lat": 18.07612227,
+    "lon": -92.93063882,
+    "sourceIds": [
+      1440
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Nacajuca Troncal",
+    "section": "Cárdenas - Nacajuca",
+    "lat": 18.07663042,
+    "lon": -92.9367335,
+    "sourceIds": [
+      1438
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Nacajuca Troncal",
+    "section": "Frontera - Nacajuca",
+    "lat": 18.07667521,
+    "lon": -92.93672524,
+    "sourceIds": [
+      1436
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Nacajuca Troncal",
+    "section": "Nacajuca - Cárdenas",
+    "lat": 18.07653257,
+    "lon": -92.93674449,
+    "sourceIds": [
+      1439
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Nacajuca Troncal",
+    "section": "Nacajuca - Frontera",
+    "lat": 18.07658384,
+    "lon": -92.93673465,
+    "sourceIds": [
+      1437
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Naranjos",
+    "section": "Buenos Aires - Naranjos",
+    "lat": 21.32433632,
+    "lon": -97.62568039,
+    "sourceIds": [
+      1622,
+      1623
+    ],
+    "spreadM": 57
+  },
+  {
+    "name": "Naranjos",
+    "section": "Buenos Aires - Ozuluama",
+    "lat": 21.327109,
+    "lon": -97.62735525,
+    "sourceIds": [
+      1752
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Naranjos",
+    "section": "Naranjos - Ozuluama",
+    "lat": 21.32710765,
+    "lon": -97.6273751,
+    "sourceIds": [
+      1753,
+      1754
+    ],
+    "spreadM": 19
+  },
+  {
+    "name": "No. 21 \"Ojo de Agua\"",
+    "section": "México - Pachuca",
+    "lat": 19.61882008,
+    "lon": -99.02944649,
+    "sourceIds": [
+      715,
+      716
+    ],
+    "spreadM": 23
+  },
+  {
+    "name": "No. 70 Polotitlán",
+    "section": "Tepeji - Polotitlán",
+    "lat": 20.22588909,
+    "lon": -99.81069243,
+    "sourceIds": [
+      655,
+      657
+    ],
+    "spreadM": 68
+  },
+  {
+    "name": "Nodo Popotla",
+    "section": "La Misión - Corredor 2000",
+    "lat": 32.28380878,
+    "lon": -117.0296576,
+    "sourceIds": [
+      1396
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Nogales",
+    "section": "Hermosillo - Nogales",
+    "lat": 31.25841947,
+    "lon": -110.97461735,
+    "sourceIds": [
+      150
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Nogales",
+    "section": "Nogales - Hermosillo",
+    "lat": 31.25836705,
+    "lon": -110.97483788,
+    "sourceIds": [
+      153
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Nopala",
+    "section": "Chamapa - Lechería",
+    "lat": 19.48724639,
+    "lon": -99.31069492,
+    "sourceIds": [
+      591,
+      592,
+      593,
+      594,
+      595
+    ],
+    "spreadM": 142
+  },
+  {
+    "name": "Nuevo Amanecer",
+    "section": "Puente Internacional Reynosa - Pharr",
+    "lat": 26.04184405,
+    "lon": -98.2088365,
+    "sourceIds": [
+      77
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Nuevo Laredo III",
+    "section": "Puente Internacional Nuevo Laredo III",
+    "lat": 27.5952406,
+    "lon": -99.54157683,
+    "sourceIds": [
+      68,
+      69
+    ],
+    "spreadM": 9
+  },
+  {
+    "name": "Nuevo Necaxa",
+    "section": "Tejocotal - Nuevo Necaxa",
+    "lat": 20.13530726,
+    "lon": -98.12274789,
+    "sourceIds": [
+      1743,
+      1744
+    ],
+    "spreadM": 22
+  },
+  {
+    "name": "Nuevo Progreso",
+    "section": "Matamoros - Reynosa",
+    "lat": 26.03620965,
+    "lon": -97.95449271,
+    "sourceIds": [
+      80,
+      81,
+      82,
+      802,
+      803
+    ],
+    "spreadM": 110
+  },
+  {
+    "name": "Nuevo Progreso",
+    "section": "Reynosa - Matamoros",
+    "lat": 26.03623324,
+    "lon": -97.95439755,
+    "sourceIds": [
+      83
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Oacalco A",
+    "section": "La Pera - Cuautla",
+    "lat": 18.93052319,
+    "lon": -99.02599602,
+    "sourceIds": [
+      1892,
+      1924
+    ],
+    "spreadM": 7
+  },
+  {
+    "name": "Oacalco B",
+    "section": "Cuautla - La Pera",
+    "lat": 18.93143088,
+    "lon": -99.02493503,
+    "sourceIds": [
+      1925
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Oacalco B",
+    "section": "La Pera - Cuautla",
+    "lat": 18.93129169,
+    "lon": -99.02506214,
+    "sourceIds": [
+      1893
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Oaxtepec",
+    "section": "La Pera - Cuautla",
+    "lat": 18.90456638,
+    "lon": -98.98639842,
+    "sourceIds": [
+      404,
+      405
+    ],
+    "spreadM": 152
+  },
+  {
+    "name": "Oaxtepec A",
+    "section": "La Pera - Cuautla",
+    "lat": 18.90326852,
+    "lon": -98.98532275,
+    "sourceIds": [
+      1891
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Oaxtepec B",
+    "section": "Cuautla B - La Pera B",
+    "lat": 18.90371946,
+    "lon": -98.98526476,
+    "sourceIds": [
+      1926
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ocotlán",
+    "section": "Guadalajara - Ocotlán",
+    "lat": 20.40489872,
+    "lon": -102.73938669,
+    "sourceIds": [
+      815
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ocotlán",
+    "section": "La Barca - Ocotlán",
+    "lat": 20.40592378,
+    "lon": -102.73910697,
+    "sourceIds": [
+      1565,
+      1568
+    ],
+    "spreadM": 116
+  },
+  {
+    "name": "Ocotlán",
+    "section": "Ocotlán - Guadalajara",
+    "lat": 20.40623844,
+    "lon": -102.73890896,
+    "sourceIds": [
+      317,
+      318,
+      816
+    ],
+    "spreadM": 79
+  },
+  {
+    "name": "Ocozocoautla",
+    "section": "Arriaga - Ocozocoautla",
+    "lat": 16.73851499,
+    "lon": -93.40035801,
+    "sourceIds": [
+      853
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ocozocoautla",
+    "section": "Las Choapas - Ocozocoautla",
+    "lat": 16.86316733,
+    "lon": -93.40685891,
+    "sourceIds": [
+      844
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ojo Laguna",
+    "section": "Ojo Laguna - Flores Magón",
+    "lat": 29.481678,
+    "lon": -106.40679095,
+    "sourceIds": [
+      213,
+      854,
+      954,
+      955
+    ],
+    "spreadM": 9
+  },
+  {
+    "name": "Ozumba",
+    "section": "Amecameca - Cuautla",
+    "lat": 19.04612319,
+    "lon": -98.82830122,
+    "sourceIds": [
+      966,
+      967
+    ],
+    "spreadM": 7
+  },
+  {
+    "name": "P.C. 162 Plan de Ayala",
+    "section": "Torreón - Saltillo",
+    "lat": 25.44418188,
+    "lon": -101.30389262,
+    "sourceIds": [
+      4,
+      5
+    ],
+    "spreadM": 6
+  },
+  {
+    "name": "Pachuca",
+    "section": "México - Pachuca",
+    "lat": 19.60344791,
+    "lon": -99.03723887,
+    "sourceIds": [
+      713
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Palmas Poniente",
+    "section": "Autopista Urbana Norte",
+    "lat": 19.43179256,
+    "lon": -99.20906102,
+    "sourceIds": [
+      1152,
+      1156,
+      1700
+    ],
+    "spreadM": 141
+  },
+  {
+    "name": "Palmillas (5)",
+    "section": "Palmillas - Tepeji",
+    "lat": 20.29593118,
+    "lon": -99.92917501,
+    "sourceIds": [
+      649
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Palmillas (5)",
+    "section": "Tepeji - Palmillas",
+    "lat": 20.29623572,
+    "lon": -99.92898648,
+    "sourceIds": [
+      656
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Palmillas Bis",
+    "section": "Palmillas - Tepeji",
+    "lat": 20.29047884,
+    "lon": -99.92061131,
+    "sourceIds": [
+      1544
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Palmillas Bis",
+    "section": "Tepeji - Palmillas",
+    "lat": 20.29095292,
+    "lon": -99.91852212,
+    "sourceIds": [
+      1545
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Palo Blanco",
+    "section": "Cuernavaca - Acapulco",
+    "lat": 17.42395564,
+    "lon": -99.46695176,
+    "sourceIds": [
+      421,
+      422
+    ],
+    "spreadM": 9
+  },
+  {
+    "name": "Panindícuaro",
+    "section": "Maravatío - Zapotlanejo",
+    "lat": 19.97202585,
+    "lon": -101.75686159,
+    "sourceIds": [
+      859,
+      860,
+      879,
+      1496,
+      1497,
+      1504
+    ],
+    "spreadM": 84
+  },
+  {
+    "name": "Parque Naucalli",
+    "section": "Toreo - Tepalcapa",
+    "lat": 19.49083537,
+    "lon": -99.2371512,
+    "sourceIds": [
+      1115
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Paso del Toro",
+    "section": "La Tinaja - Paso del Toro",
+    "lat": 19.08172306,
+    "lon": -96.19846275,
+    "sourceIds": [
+      553,
+      554
+    ],
+    "spreadM": 16
+  },
+  {
+    "name": "Paso del Toro",
+    "section": "La Tinaja - Veracruz",
+    "lat": 19.08172193,
+    "lon": -96.19846007,
+    "sourceIds": [
+      555,
+      556
+    ],
+    "spreadM": 6
+  },
+  {
+    "name": "Paso del Toro",
+    "section": "Paso del Toro - Veracruz",
+    "lat": 19.0843929,
+    "lon": -96.19647615,
+    "sourceIds": [
+      551,
+      552
+    ],
+    "spreadM": 47
+  },
+  {
+    "name": "Paso Morelos",
+    "section": "Cuernavaca - Acapulco",
+    "lat": 18.2314588,
+    "lon": -99.21545264,
+    "sourceIds": [
+      423,
+      424,
+      836,
+      837,
+      1532,
+      1533
+    ],
+    "spreadM": 14
+  },
+  {
+    "name": "Payuca",
+    "section": "Virreyes - Teziutlán",
+    "lat": 19.52178786,
+    "lon": -97.63809181,
+    "sourceIds": [
+      487
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Peñón",
+    "section": "Entronque Aeropuerto",
+    "lat": 19.48567293,
+    "lon": -99.01516071,
+    "sourceIds": [
+      607
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Peñón",
+    "section": "Peñón - Texcoco",
+    "lat": 19.45839741,
+    "lon": -99.03361778,
+    "sourceIds": [
+      600
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Periférico",
+    "section": "Ent. Aeropuerto",
+    "lat": 19.48724228,
+    "lon": -99.0163931,
+    "sourceIds": [
+      608
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Periférico",
+    "section": "Guadalajara - Periférico",
+    "lat": 20.61911209,
+    "lon": -103.21542503,
+    "sourceIds": [
+      1325
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Periférico",
+    "section": "Periférico - Cuauhtémoc",
+    "lat": 19.13156989,
+    "lon": -98.26814804,
+    "sourceIds": [
+      1471
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Periférico",
+    "section": "Periférico - Guadalajara",
+    "lat": 20.61939665,
+    "lon": -103.21612788,
+    "sourceIds": [
+      1326
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Perote",
+    "section": "San Antonio Limón (Totalco) - Perote",
+    "lat": 19.55168255,
+    "lon": -97.28953581,
+    "sourceIds": [
+      528,
+      529
+    ],
+    "spreadM": 10
+  },
+  {
+    "name": "Pichardo Pagaza",
+    "section": "Jorobas - Chalco",
+    "lat": 19.50638658,
+    "lon": -99.01494411,
+    "sourceIds": [
+      1605
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Pinotepa",
+    "section": "Viaducto Punta Diamante",
+    "lat": 16.83015719,
+    "lon": -99.75914793,
+    "sourceIds": [
+      420,
+      1895
+    ],
+    "spreadM": 7
+  },
+  {
+    "name": "Plan de Ayala",
+    "section": "León - Plan de Ayala",
+    "lat": 21.07682558,
+    "lon": -101.71031139,
+    "sourceIds": [
+      1762,
+      1763
+    ],
+    "spreadM": 40
+  },
+  {
+    "name": "Plan del Río",
+    "section": "Xalapa - Veracruz",
+    "lat": 19.39708782,
+    "lon": -96.62156363,
+    "sourceIds": [
+      530,
+      531
+    ],
+    "spreadM": 5
+  },
+  {
+    "name": "Playas de Tijuana",
+    "section": "Rosarito - Tijuana",
+    "lat": 32.51402733,
+    "lon": -117.10942646,
+    "sourceIds": [
+      106
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Playas de Tijuana",
+    "section": "Tijuana - Rosarito",
+    "lat": 32.51408755,
+    "lon": -117.10963036,
+    "sourceIds": [
+      107
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Plaza de Cobro Esperanza - Hornos",
+    "section": "Libramiento de Ciudad Obregón",
+    "lat": 27.60451433,
+    "lon": -109.89872245,
+    "sourceIds": [
+      1620,
+      1621
+    ],
+    "spreadM": 9
+  },
+  {
+    "name": "Poniente Ramal Horizontes",
+    "section": "Avenida Horizontes",
+    "lat": 22.15644322,
+    "lon": -101.07209985,
+    "sourceIds": [
+      1745,
+      1749
+    ],
+    "spreadM": 4
+  },
+  {
+    "name": "Puente Alvarado",
+    "section": "Puente Alvarado",
+    "lat": 18.76983556,
+    "lon": -95.74464944,
+    "sourceIds": [
+      557
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente Cadereyta",
+    "section": "Monterrey - Reynosa",
+    "lat": 25.60103618,
+    "lon": -100.00592427,
+    "sourceIds": [
+      64
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente Caracol",
+    "section": "Puente Caracol",
+    "lat": 18.13307959,
+    "lon": -96.13669519,
+    "sourceIds": [
+      561
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente Colorado",
+    "section": "Sonoita - Mexicali",
+    "lat": 32.49169273,
+    "lon": -114.80880104,
+    "sourceIds": [
+      1402
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente Culiacán",
+    "section": "Culiacán - Los Mochis",
+    "lat": 24.94899588,
+    "lon": -107.54576655,
+    "sourceIds": [
+      142
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente el Prieto",
+    "section": "Pueblo Viejo - T.C. (Ciudad Valles - Tampico)",
+    "lat": 22.20333754,
+    "lon": -97.93737993,
+    "sourceIds": [
+      851
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente Grijalva",
+    "section": "Villahermosa - Francisco Escárcega",
+    "lat": 17.94761363,
+    "lon": -92.78529067,
+    "sourceIds": [
+      757
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente Grijalva I",
+    "section": "Villahermosa - Francisco Escárcega",
+    "lat": 17.94767796,
+    "lon": -92.78516737,
+    "sourceIds": [
+      758
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente Ing. Antonio Dovalí Jaime",
+    "section": "Nuevo Teapa - Cosoleacaque",
+    "lat": 18.01337677,
+    "lon": -94.39676422,
+    "sourceIds": [
+      582,
+      585
+    ],
+    "spreadM": 4
+  },
+  {
+    "name": "Puente Internacional Acuña",
+    "section": "Morelos - Ciudad Acuña",
+    "lat": 29.32535686,
+    "lon": -100.92890196,
+    "sourceIds": [
+      1676
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente Internacional Piedras Negras I",
+    "section": "Monclova - Piedras Negras",
+    "lat": 28.70523182,
+    "lon": -100.512997,
+    "sourceIds": [
+      1674
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente Internacional Piedras Negras II",
+    "section": "Monclova - Piedras Negras",
+    "lat": 28.6971222,
+    "lon": -100.51246068,
+    "sourceIds": [
+      1675
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente Internacional Solidaridad - General Bernardo Reyes",
+    "section": "Monterrey - Colombia",
+    "lat": 27.69730716,
+    "lon": -99.74780729,
+    "sourceIds": [
+      1679
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente José López Portillo",
+    "section": "Tihuatlán - Potrero del Llano",
+    "lat": 20.93002415,
+    "lon": -97.68072066,
+    "sourceIds": [
+      516
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente Miguel Alemán",
+    "section": "Puente Internacional Miguel Alemán",
+    "lat": 26.4028797,
+    "lon": -99.02067361,
+    "sourceIds": [
+      72
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente Nacional La Piedad",
+    "section": "Irapuato - Guadalajara",
+    "lat": 20.35278222,
+    "lon": -102.02509474,
+    "sourceIds": [
+      247
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente Nautla",
+    "section": "Poza Rica - Veracruz",
+    "lat": 20.21028236,
+    "lon": -96.77875711,
+    "sourceIds": [
+      526
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente Pánuco",
+    "section": "Alazán - Canoas",
+    "lat": 22.14875942,
+    "lon": -98.14494768,
+    "sourceIds": [
+      515
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente Papaloapan",
+    "section": "Puente Papaloapan",
+    "lat": 18.15959478,
+    "lon": -96.09666924,
+    "sourceIds": [
+      568
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente San Miguel",
+    "section": "Los Mochis - Ciudad Obregón",
+    "lat": 25.97633411,
+    "lon": -109.03356566,
+    "sourceIds": [
+      126,
+      127
+    ],
+    "spreadM": 12
+  },
+  {
+    "name": "Puente Sinaloa",
+    "section": "Culiacán - Los Mochis",
+    "lat": 25.51297035,
+    "lon": -108.34761788,
+    "sourceIds": [
+      122,
+      123
+    ],
+    "spreadM": 8
+  },
+  {
+    "name": "Puente Tampico",
+    "section": "Ramal a Puente Tampico",
+    "lat": 22.21835052,
+    "lon": -97.82472753,
+    "sourceIds": [
+      95,
+      96
+    ],
+    "spreadM": 5
+  },
+  {
+    "name": "Puente Tecolutla",
+    "section": "Poza Rica - Veracruz",
+    "lat": 20.43777692,
+    "lon": -97.0865325,
+    "sourceIds": [
+      522
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente Tlacotalpan",
+    "section": "Puente Tlacotalpan",
+    "lat": 18.70461508,
+    "lon": -95.64137241,
+    "sourceIds": [
+      562
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente Usumacinta",
+    "section": "Villahermosa - Francisco Escárcega",
+    "lat": 17.8598386,
+    "lon": -91.78360723,
+    "sourceIds": [
+      756
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puente Zacatal",
+    "section": "Villahermosa - Cd. Del Carmen",
+    "lat": 18.61291607,
+    "lon": -91.86080053,
+    "sourceIds": [
+      775
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puerto Colombia - Laredo",
+    "section": "Monterrey - Colombia",
+    "lat": 27.6882118,
+    "lon": -99.76267166,
+    "sourceIds": [
+      1967
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puerto Interior",
+    "section": "La Garrida - T. Lozano",
+    "lat": 20.98398451,
+    "lon": -101.54210063,
+    "sourceIds": [
+      1088
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Puerto Interior",
+    "section": "Timoteo Lozano - La Garrida",
+    "lat": 20.98382313,
+    "lon": -101.54221501,
+    "sourceIds": [
+      1087
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Querétaro",
+    "section": "Celaya - Querétaro",
+    "lat": 20.57209533,
+    "lon": -100.47285815,
+    "sourceIds": [
+      364
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Querétaro",
+    "section": "Querétaro - Celaya",
+    "lat": 20.57220367,
+    "lon": -100.47286987,
+    "sourceIds": [
+      363
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Quilá",
+    "section": "Mazatlán - Culiacán",
+    "lat": 24.39709088,
+    "lon": -107.27094989,
+    "sourceIds": [
+      138,
+      139,
+      140,
+      141
+    ],
+    "spreadM": 121
+  },
+  {
+    "name": "Rancho Viejo",
+    "section": "Zacapalco - Taxco",
+    "lat": 18.58863606,
+    "lon": -99.55996465,
+    "sourceIds": [
+      427
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Rayón",
+    "section": "Lerma - Tenango",
+    "lat": 19.15119802,
+    "lon": -99.5437526,
+    "sourceIds": [
+      635
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Rayón",
+    "section": "Rayón - Vicente Guerrero",
+    "lat": 21.86356744,
+    "lon": -99.62339715,
+    "sourceIds": [
+      912
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Remota Zirahuén",
+    "section": "Pátzcuaro - Uruapan",
+    "lat": 19.48237803,
+    "lon": -101.73102117,
+    "sourceIds": [
+      1765
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Revolución",
+    "section": "México - Pachuca",
+    "lat": 19.60286885,
+    "lon": -99.03821625,
+    "sourceIds": [
+      712,
+      1076
+    ],
+    "spreadM": 37
+  },
+  {
+    "name": "Reynosa",
+    "section": "Puente Internacional Reynosa",
+    "lat": 26.09326701,
+    "lon": -98.2709633,
+    "sourceIds": [
+      76,
+      869
+    ],
+    "spreadM": 6
+  },
+  {
+    "name": "Río Bravo - Donna",
+    "section": "Puente Internacional Río Bravo - Donna",
+    "lat": 26.0592505,
+    "lon": -98.08018204,
+    "sourceIds": [
+      91
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Río San Joaquín",
+    "section": "Toreo Tepalcapa",
+    "lat": 19.45591683,
+    "lon": -99.21885951,
+    "sourceIds": [
+      1249
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Romita",
+    "section": "Arandas - San Cristóbal",
+    "lat": 20.73523939,
+    "lon": -101.38320705,
+    "sourceIds": [
+      340
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Romita",
+    "section": "Irapuato - Romita",
+    "lat": 20.90928555,
+    "lon": -101.49328887,
+    "sourceIds": [
+      1758
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Romita",
+    "section": "León - Romita",
+    "lat": 20.9093404,
+    "lon": -101.49329552,
+    "sourceIds": [
+      1759
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Romita",
+    "section": "Romita - Irapuato",
+    "lat": 20.90910676,
+    "lon": -101.49325316,
+    "sourceIds": [
+      1757
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Romita",
+    "section": "Romita - León",
+    "lat": 20.90916581,
+    "lon": -101.49326234,
+    "sourceIds": [
+      1760
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Rosario",
+    "section": "Tepic - Mazatlán",
+    "lat": 22.98475554,
+    "lon": -105.87807458,
+    "sourceIds": [
+      886
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Rosario Castellanos Poniente",
+    "section": "Autopista Urbana Norte",
+    "lat": 19.42424237,
+    "lon": -99.20068661,
+    "sourceIds": [
+      1159
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Rosarito",
+    "section": "Ensenada - Rosarito",
+    "lat": 32.31121361,
+    "lon": -117.04444759,
+    "sourceIds": [
+      99,
+      100
+    ],
+    "spreadM": 7
+  },
+  {
+    "name": "Ruiz - Estación Yago",
+    "section": "Tepic - Mazatlán",
+    "lat": 21.8454148,
+    "lon": -105.08649625,
+    "sourceIds": [
+      294
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ruiz A2",
+    "section": "Tepic - Villa Unión",
+    "lat": 21.95307785,
+    "lon": -105.12089439,
+    "sourceIds": [
+      289
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Sacramento",
+    "section": "Chihuahua - El Sueco",
+    "lat": 28.86023669,
+    "lon": -106.21645271,
+    "sourceIds": [
+      207,
+      208,
+      209,
+      210,
+      211,
+      1941
+    ],
+    "spreadM": 20
+  },
+  {
+    "name": "Sacramento",
+    "section": "Libramiento Oriente de Chihuahua",
+    "lat": 28.79052319,
+    "lon": -106.13924404,
+    "sourceIds": [
+      1104,
+      1105,
+      1131,
+      1207
+    ],
+    "spreadM": 8
+  },
+  {
+    "name": "Salamanca",
+    "section": "Irapuato - Cerro Gordo",
+    "lat": 20.59837568,
+    "lon": -101.1809579,
+    "sourceIds": [
+      1669
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Salamanca",
+    "section": "Salamanca - Irapuato",
+    "lat": 20.59854607,
+    "lon": -101.18092115,
+    "sourceIds": [
+      344
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Salamanca A1",
+    "section": "Celaya - Salamanca",
+    "lat": 20.5991086,
+    "lon": -101.18066694,
+    "sourceIds": [
+      347
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Salamanca A1",
+    "section": "Salamanca - Cerro Gordo",
+    "lat": 20.59763112,
+    "lon": -101.18101116,
+    "sourceIds": [
+      348
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Salamanca A2",
+    "section": "Salamanca - Irapuato",
+    "lat": 20.59836444,
+    "lon": -101.18085409,
+    "sourceIds": [
+      345,
+      346
+    ],
+    "spreadM": 91
+  },
+  {
+    "name": "San Ángel Zurumucapio",
+    "section": "Pátzcuaro - Uruapan",
+    "lat": 19.44199279,
+    "lon": -101.88378144,
+    "sourceIds": [
+      272
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Antonio Oriente",
+    "section": "Autopista Urbana Norte",
+    "lat": 19.3825701,
+    "lon": -99.19168006,
+    "sourceIds": [
+      1135,
+      1701,
+      1702
+    ],
+    "spreadM": 51
+  },
+  {
+    "name": "San Blas",
+    "section": "Culiacán - Los Mochis",
+    "lat": 24.87737834,
+    "lon": -107.65548904,
+    "sourceIds": [
+      129,
+      130
+    ],
+    "spreadM": 37
+  },
+  {
+    "name": "San Buenaventura",
+    "section": "Chalco - Jorobas",
+    "lat": 19.29999063,
+    "lon": -98.87506153,
+    "sourceIds": [
+      1606
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Buenaventura",
+    "section": "Entronque Periférico Oriente",
+    "lat": 19.30708265,
+    "lon": -98.87175573,
+    "sourceIds": [
+      1604
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Cristóbal",
+    "section": "México - Pachuca",
+    "lat": 19.58780186,
+    "lon": -99.0418604,
+    "sourceIds": [
+      1091
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Cristóbal",
+    "section": "Pachuca - México",
+    "lat": 19.58784346,
+    "lon": -99.04213594,
+    "sourceIds": [
+      1094
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Felipe",
+    "section": "Ramal San Felipe - Villa de Arriaga",
+    "lat": 21.80522899,
+    "lon": -101.01431894,
+    "sourceIds": [
+      372
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Felipe",
+    "section": "Villa de Arriaga - San Felipe",
+    "lat": 21.80521391,
+    "lon": -101.01446903,
+    "sourceIds": [
+      1824
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Fernando",
+    "section": "Ent. San Fernando - Ent. Anzaldúas",
+    "lat": 25.94463826,
+    "lon": -98.22751895,
+    "sourceIds": [
+      79,
+      1617
+    ],
+    "spreadM": 12
+  },
+  {
+    "name": "San Francisco de Rivas",
+    "section": "La Barca - San Francisco de Rivas",
+    "lat": 20.32321246,
+    "lon": -102.56735839,
+    "sourceIds": [
+      1508,
+      1509
+    ],
+    "spreadM": 100
+  },
+  {
+    "name": "San Francisco Línea 6",
+    "section": "León - San Francisco del Rincón",
+    "lat": 21.08232972,
+    "lon": -101.74556571,
+    "sourceIds": [
+      826
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Francisco Línea 7",
+    "section": "León - San Francisco del Rincón",
+    "lat": 21.08136527,
+    "lon": -101.74601333,
+    "sourceIds": [
+      825
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Juan",
+    "section": "El Desperdicio - San Juan de los Lagos",
+    "lat": 21.22567122,
+    "lon": -102.31367451,
+    "sourceIds": [
+      819
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Juan",
+    "section": "Libramiento de Camargo",
+    "lat": 26.3118688,
+    "lon": -98.84191357,
+    "sourceIds": [
+      73
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Juan",
+    "section": "San Juan de los Lados - Desperdicio",
+    "lat": 21.2246689,
+    "lon": -102.31311887,
+    "sourceIds": [
+      820
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Julián",
+    "section": "San Julián - Veracruz",
+    "lat": 19.23924132,
+    "lon": -96.25793963,
+    "sourceIds": [
+      558,
+      559,
+      932,
+      933
+    ],
+    "spreadM": 13
+  },
+  {
+    "name": "San Luis Río Colorado - Estación El Doctor",
+    "section": "San Luis Río Colorado - Golfo de Santa Clara",
+    "lat": 32.37518774,
+    "lon": -114.76064176,
+    "sourceIds": [
+      1065
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Marcos",
+    "section": "San Marcos - México - Circuito Exterior Mexiquense",
+    "lat": 19.29657684,
+    "lon": -98.87077734,
+    "sourceIds": [
+      675
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Marcos - San Martín Texmelucan",
+    "section": "San Marcos - San Martín Texmelucan",
+    "lat": 19.29631502,
+    "lon": -98.87068807,
+    "sourceIds": [
+      676
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Marcos BIS - México - Circuito Exterior Mexiquense",
+    "section": "San Marcos BIS - México - Circuito Exterior Mexiquense",
+    "lat": 19.29455613,
+    "lon": -98.87603282,
+    "sourceIds": [
+      806,
+      807,
+      808,
+      809
+    ],
+    "spreadM": 179
+  },
+  {
+    "name": "San Martín",
+    "section": "San Martín Texmelucan - Puebla",
+    "lat": 19.24112787,
+    "lon": -98.38587574,
+    "sourceIds": [
+      470,
+      471
+    ],
+    "spreadM": 8
+  },
+  {
+    "name": "San Martín Texmelucan",
+    "section": "Arco Norte - San Martín",
+    "lat": 19.29713329,
+    "lon": -98.41029855,
+    "sourceIds": [
+      1217,
+      1219
+    ],
+    "spreadM": 147
+  },
+  {
+    "name": "San Martín Texmelucan",
+    "section": "Entronque México - Puebla",
+    "lat": 19.29674333,
+    "lon": -98.41042539,
+    "sourceIds": [
+      1638,
+      1639
+    ],
+    "spreadM": 83
+  },
+  {
+    "name": "San Martín Texmelucan",
+    "section": "San Martín - Arco Norte",
+    "lat": 19.2962312,
+    "lon": -98.41016891,
+    "sourceIds": [
+      1216,
+      1220
+    ],
+    "spreadM": 140
+  },
+  {
+    "name": "San Miguel",
+    "section": "Chamapa - Lechería",
+    "lat": 19.63502407,
+    "lon": -99.20554691,
+    "sourceIds": [
+      1550
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Miguel",
+    "section": "La Laja - Plancarte",
+    "lat": 20.58109349,
+    "lon": -100.79532027,
+    "sourceIds": [
+      1019
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Miguel",
+    "section": "San Miguel - Chamapa",
+    "lat": 19.63524658,
+    "lon": -99.2055716,
+    "sourceIds": [
+      1432
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Miguel El Alto",
+    "section": "Ent. Arandas - San Miguel El Alto",
+    "lat": 21.03052479,
+    "lon": -102.55494987,
+    "sourceIds": [
+      1750,
+      1751
+    ],
+    "spreadM": 73
+  },
+  {
+    "name": "San Nicolás",
+    "section": "Toluca - Naucalpan",
+    "lat": 19.35478575,
+    "lon": -99.48081028,
+    "sourceIds": [
+      1770,
+      1771,
+      1776,
+      1779
+    ],
+    "spreadM": 116
+  },
+  {
+    "name": "San Nicolás de los Jassos",
+    "section": "Libramiento Oriente San Luis Potosí",
+    "lat": 22.12981924,
+    "lon": -100.82514954,
+    "sourceIds": [
+      369,
+      370
+    ],
+    "spreadM": 11
+  },
+  {
+    "name": "San Pedro",
+    "section": "Costa Rica - Libramiento San Pedro",
+    "lat": 24.69029277,
+    "lon": -107.52323408,
+    "sourceIds": [
+      831,
+      832
+    ],
+    "spreadM": 20
+  },
+  {
+    "name": "San Pedro Torreón",
+    "section": "Matamoros San Pedro",
+    "lat": 25.64926119,
+    "lon": -103.36142337,
+    "sourceIds": [
+      1034
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Pedro Torreón",
+    "section": "Matamoros Vergel",
+    "lat": 25.6505999,
+    "lon": -103.36919777,
+    "sourceIds": [
+      1030
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Pedro Torreón",
+    "section": "San Pedro Matamoros",
+    "lat": 25.64899893,
+    "lon": -103.36148307,
+    "sourceIds": [
+      1035
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Pedro Torreón",
+    "section": "San Pedro Vergel",
+    "lat": 25.65066992,
+    "lon": -103.36917983,
+    "sourceIds": [
+      1032
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Pedro Torreón",
+    "section": "Vergel Matamoros",
+    "lat": 25.65047897,
+    "lon": -103.36922434,
+    "sourceIds": [
+      1031
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "San Pedro Torreón",
+    "section": "Vergel San Pedro",
+    "lat": 25.65039343,
+    "lon": -103.36924124,
+    "sourceIds": [
+      1033
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Sánchez Magallanes",
+    "section": "Agua Dulce - Cárdenas",
+    "lat": 18.03057321,
+    "lon": -93.81299509,
+    "sourceIds": [
+      760,
+      761
+    ],
+    "spreadM": 15
+  },
+  {
+    "name": "Sánchez Magallanes",
+    "section": "Agua Dulce - Ent. Magallanes",
+    "lat": 18.03161597,
+    "lon": -93.81370091,
+    "sourceIds": [
+      759,
+      762
+    ],
+    "spreadM": 3
+  },
+  {
+    "name": "Sánchez Magallanes",
+    "section": "Ent. Magallanes - Cárdenas",
+    "lat": 18.02992373,
+    "lon": -93.81308874,
+    "sourceIds": [
+      763,
+      764
+    ],
+    "spreadM": 5
+  },
+  {
+    "name": "Santa Ana",
+    "section": "Cuauhtémoc - Periférico",
+    "lat": 19.08496499,
+    "lon": -98.19259475,
+    "sourceIds": [
+      1476
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Santa Casilda",
+    "section": "Uruapan - Nueva Italia",
+    "lat": 19.15476576,
+    "lon": -101.97722205,
+    "sourceIds": [
+      276,
+      1582,
+      1583,
+      1584
+    ],
+    "spreadM": 237
+  },
+  {
+    "name": "Santa Cecilia",
+    "section": "Santa Cecilia - Magdalena",
+    "lat": 20.44246812,
+    "lon": -103.54585878,
+    "sourceIds": [
+      1695,
+      1696
+    ],
+    "spreadM": 10
+  },
+  {
+    "name": "Santa Fe",
+    "section": "México - La Marquesa",
+    "lat": 19.35943916,
+    "lon": -99.2731188,
+    "sourceIds": [
+      624,
+      625
+    ],
+    "spreadM": 61
+  },
+  {
+    "name": "Santa Fe",
+    "section": "México - Santa Fe",
+    "lat": 19.36338015,
+    "lon": -99.26734393,
+    "sourceIds": [
+      845
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Santa María del Oro",
+    "section": "Guadalajara - Tepic",
+    "lat": 21.32819117,
+    "lon": -104.66458521,
+    "sourceIds": [
+      282,
+      922
+    ],
+    "spreadM": 4
+  },
+  {
+    "name": "Santa María del Oro",
+    "section": "Ixtlán del Río - Santa María del Oro",
+    "lat": 21.32750462,
+    "lon": -104.66400696,
+    "sourceIds": [
+      283,
+      284
+    ],
+    "spreadM": 96
+  },
+  {
+    "name": "Santa María del Oro",
+    "section": "Santa María del Oro - Tepic",
+    "lat": 21.32752204,
+    "lon": -104.66403133,
+    "sourceIds": [
+      1223,
+      1224
+    ],
+    "spreadM": 98
+  },
+  {
+    "name": "Santa Mónica",
+    "section": "Toreo - Tepalcapa",
+    "lat": 19.5322518,
+    "lon": -99.22511827,
+    "sourceIds": [
+      1101,
+      1118
+    ],
+    "spreadM": 2
+  },
+  {
+    "name": "Saucillo",
+    "section": "Camargo - Delicias",
+    "lat": 28.04638788,
+    "lon": -105.32936137,
+    "sourceIds": [
+      858,
+      956
+    ],
+    "spreadM": 9
+  },
+  {
+    "name": "Savalza",
+    "section": "Gómez Palacio - Jiménez",
+    "lat": 27.08230212,
+    "lon": -104.84150454,
+    "sourceIds": [
+      219,
+      220,
+      221,
+      222
+    ],
+    "spreadM": 13
+  },
+  {
+    "name": "Seybaplaya 132",
+    "section": "Champotón - Campeche",
+    "lat": 19.6366626,
+    "lon": -90.67197426,
+    "sourceIds": [
+      769,
+      770,
+      771,
+      772,
+      773
+    ],
+    "spreadM": 131
+  },
+  {
+    "name": "Siglo XXI",
+    "section": "Puebla - Morelos",
+    "lat": 18.91639494,
+    "lon": -98.48471567,
+    "sourceIds": [
+      472
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Sóstenes Rocha Oriente",
+    "section": "Autopista Urbana Norte",
+    "lat": 19.40535102,
+    "lon": -99.19174486,
+    "sourceIds": [
+      1137
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Suchixtlahuaca",
+    "section": "Tehuacán - Oaxaca",
+    "lat": 17.72608939,
+    "lon": -97.3524582,
+    "sourceIds": [
+      742,
+      743
+    ],
+    "spreadM": 59
+  },
+  {
+    "name": "Suchixtlahuaca 78",
+    "section": "Tehuacán - Oaxaca",
+    "lat": 17.72604648,
+    "lon": -97.35375345,
+    "sourceIds": [
+      741
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tamasopo",
+    "section": "La Pitahaya - Tamasopo",
+    "lat": 21.90579602,
+    "lon": -99.38515267,
+    "sourceIds": [
+      1370
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tamasopo",
+    "section": "Tamasopo - La Pitahaya",
+    "lat": 21.90405332,
+    "lon": -99.38465831,
+    "sourceIds": [
+      1359
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tamasopo",
+    "section": "Tamasopo - Vicente Guerrero",
+    "lat": 21.90561258,
+    "lon": -99.38509249,
+    "sourceIds": [
+      1360
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tamasopo",
+    "section": "Vicente Guerrero - Tamasopo",
+    "lat": 21.90410192,
+    "lon": -99.38482665,
+    "sourceIds": [
+      1369
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tambaca",
+    "section": "La Pitahaya - Tambaca",
+    "lat": 21.93933563,
+    "lon": -99.27012227,
+    "sourceIds": [
+      1375
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tambaca",
+    "section": "Tambaca - La Pitahaya",
+    "lat": 21.94026636,
+    "lon": -99.27386105,
+    "sourceIds": [
+      1364
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tambaca",
+    "section": "Tambaca - Vicente Guerrero",
+    "lat": 21.93926829,
+    "lon": -99.27023643,
+    "sourceIds": [
+      1363
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tambaca",
+    "section": "Vicente Guerrero - Tambaca",
+    "lat": 21.94021033,
+    "lon": -99.27400003,
+    "sourceIds": [
+      1371
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tampico (Directa)",
+    "section": "Libramiento Poniente de Tampico",
+    "lat": 22.27528824,
+    "lon": -97.89343864,
+    "sourceIds": [
+      92
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tampico (Intermedia)",
+    "section": "Libramiento Poniente de Tampico",
+    "lat": 22.27645538,
+    "lon": -97.89328351,
+    "sourceIds": [
+      93,
+      94
+    ],
+    "spreadM": 4
+  },
+  {
+    "name": "Tehuacán",
+    "section": "Cuacnopalan - Tehuacán",
+    "lat": 18.48713459,
+    "lon": -97.4561546,
+    "sourceIds": [
+      479,
+      480,
+      481,
+      919,
+      920
+    ],
+    "spreadM": 97
+  },
+  {
+    "name": "Tehuantepec",
+    "section": "Salina Cruz - La Ventosa",
+    "lat": 16.16225608,
+    "lon": -95.28929407,
+    "sourceIds": [
+      744
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tejocotal",
+    "section": "Asunción - Nuevo Necaxa",
+    "lat": 20.14826811,
+    "lon": -98.28714823,
+    "sourceIds": [
+      895,
+      899,
+      900
+    ],
+    "spreadM": 204
+  },
+  {
+    "name": "Tejocotal",
+    "section": "Lib. de Tulancingo - Nuevo Necaxa",
+    "lat": 20.14752103,
+    "lon": -98.28576246,
+    "sourceIds": [
+      897
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tejocotal",
+    "section": "Libramiento de Tulancingo",
+    "lat": 20.14792007,
+    "lon": -98.28775536,
+    "sourceIds": [
+      898,
+      901
+    ],
+    "spreadM": 165
+  },
+  {
+    "name": "Tenango",
+    "section": "Tenango - Ixtapan de la Sal",
+    "lat": 19.12245269,
+    "lon": -99.60214312,
+    "sourceIds": [
+      631
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tenango - Ixtapan de la Sal",
+    "section": "La Finca",
+    "lat": 18.85283524,
+    "lon": -99.67013289,
+    "sourceIds": [
+      659
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tenango - Ixtapan de la Sal",
+    "section": "Tenango - Ixtapan de la Sal",
+    "lat": 18.85401435,
+    "lon": -99.6667808,
+    "sourceIds": [
+      660
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tepalcapa",
+    "section": "Toreo - Tepalcapa",
+    "lat": 19.6213733,
+    "lon": -99.19194216,
+    "sourceIds": [
+      1111,
+      1113
+    ],
+    "spreadM": 88
+  },
+  {
+    "name": "Tepatitlán",
+    "section": "Tepatitlán - Entronque Arandas",
+    "lat": 20.8208411,
+    "lon": -102.7939948,
+    "sourceIds": [
+      314
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tepatitlán",
+    "section": "Zapotlanejo - Entronque Arandas",
+    "lat": 20.82463643,
+    "lon": -102.79497061,
+    "sourceIds": [
+      312,
+      391
+    ],
+    "spreadM": 6
+  },
+  {
+    "name": "Tepatitlán",
+    "section": "Zapotlanejo - Tepatitlán",
+    "lat": 20.82091238,
+    "lon": -102.79390882,
+    "sourceIds": [
+      313
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tepotzotlán",
+    "section": "México - Querétaro",
+    "lat": 19.71538679,
+    "lon": -99.20735183,
+    "sourceIds": [
+      703
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tepotzotlán",
+    "section": "Querétaro - México",
+    "lat": 19.71532931,
+    "lon": -99.20769358,
+    "sourceIds": [
+      702
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tepoztlán",
+    "section": "La Pera - Cuautla",
+    "lat": 18.98703807,
+    "lon": -99.11249666,
+    "sourceIds": [
+      392,
+      958,
+      1956
+    ],
+    "spreadM": 23
+  },
+  {
+    "name": "Tepoztlán A",
+    "section": "Tepoztlán",
+    "lat": 18.98417285,
+    "lon": -99.10917723,
+    "sourceIds": [
+      1931
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tepoztlán B",
+    "section": "Tepoztlán",
+    "lat": 18.98471315,
+    "lon": -99.10706046,
+    "sourceIds": [
+      1928
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tepoztlán Bis",
+    "section": "La Pera - Cuautla",
+    "lat": 18.9847455,
+    "lon": -99.11055595,
+    "sourceIds": [
+      1927
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tequepexpan",
+    "section": "Guadalajara - Tepic",
+    "lat": 21.21373385,
+    "lon": -104.59345297,
+    "sourceIds": [
+      286,
+      287
+    ],
+    "spreadM": 80
+  },
+  {
+    "name": "Tequila",
+    "section": "Tequila - Magdalena",
+    "lat": 20.85422819,
+    "lon": -103.86109475,
+    "sourceIds": [
+      303,
+      909
+    ],
+    "spreadM": 14
+  },
+  {
+    "name": "Texcoco",
+    "section": "Circuito Exterior Mexiquense Bicentenario",
+    "lat": 19.45069281,
+    "lon": -98.91101781,
+    "sourceIds": [
+      968,
+      969
+    ],
+    "spreadM": 5
+  },
+  {
+    "name": "Texcoco",
+    "section": "Texcoco - Peñón",
+    "lat": 19.50248379,
+    "lon": -98.91381354,
+    "sourceIds": [
+      1222,
+      1969
+    ],
+    "spreadM": 123
+  },
+  {
+    "name": "Tezoyuca",
+    "section": "Ramal Ecatepec - Pirámides",
+    "lat": 19.60071053,
+    "lon": -98.92549791,
+    "sourceIds": [
+      1542,
+      1543
+    ],
+    "spreadM": 8
+  },
+  {
+    "name": "Tihuatlán",
+    "section": "Ent. Tihuatlán - Ent. Tihuatlán II",
+    "lat": 20.68841604,
+    "lon": -97.49463372,
+    "sourceIds": [
+      525,
+      868
+    ],
+    "spreadM": 38
+  },
+  {
+    "name": "Tijuana",
+    "section": "Tecate - Tijuana",
+    "lat": 32.54585861,
+    "lon": -116.85238837,
+    "sourceIds": [
+      105
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tijuana",
+    "section": "Tijuana - Tecate",
+    "lat": 32.54575083,
+    "lon": -116.85219506,
+    "sourceIds": [
+      104
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tijuana - Ensenada",
+    "section": "La Misión - Rosarito",
+    "lat": 31.90312362,
+    "lon": -116.73277168,
+    "sourceIds": [
+      97
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tijuana - Ensenada",
+    "section": "Rosarito - La Misión",
+    "lat": 31.90298973,
+    "lon": -116.73275132,
+    "sourceIds": [
+      98
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tintal",
+    "section": "Valladolid - Cancún",
+    "lat": 20.8998789,
+    "lon": -87.43519101,
+    "sourceIds": [
+      1146,
+      1147
+    ],
+    "spreadM": 16
+  },
+  {
+    "name": "Tixtla",
+    "section": "Chilpancingo Norte - Montaña Baja",
+    "lat": 17.60808238,
+    "lon": -99.50960527,
+    "sourceIds": [
+      863
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tlalpan",
+    "section": "México - Cuernavaca",
+    "lat": 19.2425128,
+    "lon": -99.14864997,
+    "sourceIds": [
+      629,
+      630
+    ],
+    "spreadM": 10
+  },
+  {
+    "name": "Toluca - Atlacomulco",
+    "section": "El Dorado - Atlacomulco",
+    "lat": 19.76251258,
+    "lon": -99.85561844,
+    "sourceIds": [
+      650,
+      651
+    ],
+    "spreadM": 15
+  },
+  {
+    "name": "Totomoxtle",
+    "section": "Totomoxtle - Ent. El Pital",
+    "lat": 20.46152821,
+    "lon": -97.24688265,
+    "sourceIds": [
+      520,
+      521
+    ],
+    "spreadM": 107
+  },
+  {
+    "name": "Totomoxtle II",
+    "section": "Nautla - Gutiérrez Zamora",
+    "lat": 20.45925975,
+    "lon": -97.24610313,
+    "sourceIds": [
+      1624,
+      1625
+    ],
+    "spreadM": 60
+  },
+  {
+    "name": "Totomoxtle II",
+    "section": "Nautla - Tihuatlán",
+    "lat": 20.45963022,
+    "lon": -97.24641669,
+    "sourceIds": [
+      1626
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Trapichillo",
+    "section": "Tepic - Mazatlán",
+    "lat": 21.57182627,
+    "lon": -104.98754699,
+    "sourceIds": [
+      285
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tres Marías (1A)",
+    "section": "México - Cuernavaca",
+    "lat": 19.05637133,
+    "lon": -99.2411216,
+    "sourceIds": [
+      407
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tres Marías (1B)",
+    "section": "México - Cuernavaca",
+    "lat": 19.05083712,
+    "lon": -99.24135812,
+    "sourceIds": [
+      911
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tultepec",
+    "section": "Chalco - Jorobas",
+    "lat": 19.6941433,
+    "lon": -99.07998838,
+    "sourceIds": [
+      1610
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Tultitlan",
+    "section": "Cuautitlán - Tultepec",
+    "lat": 19.63775156,
+    "lon": -99.16444076,
+    "sourceIds": [
+      725,
+      726
+    ],
+    "spreadM": 14
+  },
+  {
+    "name": "Túnel Sumergido",
+    "section": "Coatzacoalcos - Allende",
+    "lat": 18.14711962,
+    "lon": -94.39694717,
+    "sourceIds": [
+      1591,
+      1592
+    ],
+    "spreadM": 10
+  },
+  {
+    "name": "Túxpam",
+    "section": "Tihuatlán - Túxpam",
+    "lat": 20.75296781,
+    "lon": -97.48232777,
+    "sourceIds": [
+      1452
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Unión de San Antonio",
+    "section": "Unión de San Antonio - Ent. Lagos de Moreno",
+    "lat": 21.25324173,
+    "lon": -101.95017707,
+    "sourceIds": [
+      821,
+      822
+    ],
+    "spreadM": 223
+  },
+  {
+    "name": "V. Juárez A2",
+    "section": "Ent. Cerritos - Ent. Villa Juárez",
+    "lat": 22.31925075,
+    "lon": -100.28467628,
+    "sourceIds": [
+      1361,
+      1385
+    ],
+    "spreadM": 8
+  },
+  {
+    "name": "Vallarta",
+    "section": "Las Varas - Puerto Vallarta",
+    "lat": 20.779791,
+    "lon": -105.25337752,
+    "sourceIds": [
+      1976
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Valle de Bravo",
+    "section": "Ramal Valle de Bravo",
+    "lat": 19.34822935,
+    "lon": -99.98940498,
+    "sourceIds": [
+      883,
+      884
+    ],
+    "spreadM": 16
+  },
+  {
+    "name": "Valle de Santiago",
+    "section": "Copándaro - Valle de Santiago",
+    "lat": 20.37259197,
+    "lon": -101.14732301,
+    "sourceIds": [
+      350
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Valle de Santiago",
+    "section": "Valle de Santiago - Copándaro",
+    "lat": 20.37313441,
+    "lon": -101.14928906,
+    "sourceIds": [
+      326
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Valle de Santiago",
+    "section": "Valle de Santiago - Ent. Cerro Gordo",
+    "lat": 20.37290907,
+    "lon": -101.14830488,
+    "sourceIds": [
+      327,
+      351
+    ],
+    "spreadM": 101
+  },
+  {
+    "name": "Valle Dorado",
+    "section": "Toreo - Tepalcapa",
+    "lat": 19.55171363,
+    "lon": -99.2076553,
+    "sourceIds": [
+      1112,
+      1119
+    ],
+    "spreadM": 2
+  },
+  {
+    "name": "Vallejo",
+    "section": "Vallejo - México - Pachuca",
+    "lat": 19.51257562,
+    "lon": -99.16140808,
+    "sourceIds": [
+      1230
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Vallejo",
+    "section": "Vallejo - Puente de Vigas",
+    "lat": 19.51366977,
+    "lon": -99.16524838,
+    "sourceIds": [
+      1229,
+      1699
+    ],
+    "spreadM": 28
+  },
+  {
+    "name": "Vallejo - Periférico",
+    "section": "Entronque Urbana Norte - Tepalcapa",
+    "lat": 19.56900748,
+    "lon": -99.20845157,
+    "sourceIds": [
+      1634
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Vallejo - Vallejo",
+    "section": "Entronque Urbana Norte - Tepalcapa",
+    "lat": 19.56859281,
+    "lon": -99.20803349,
+    "sourceIds": [
+      1632,
+      1633
+    ],
+    "spreadM": 2
+  },
+  {
+    "name": "Valtierrilla",
+    "section": "Copándaro - Ent. Cerro Gordo",
+    "lat": 20.54265003,
+    "lon": -101.13775103,
+    "sourceIds": [
+      941,
+      942
+    ],
+    "spreadM": 6
+  },
+  {
+    "name": "Valtierrilla",
+    "section": "Valtierrilla - Copándaro",
+    "lat": 20.54267225,
+    "lon": -101.13787897,
+    "sourceIds": [
+      1330
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "VB Oriente",
+    "section": "Autopista Urbana Norte",
+    "lat": 19.45235258,
+    "lon": -99.21986949,
+    "sourceIds": [
+      1095
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ventanilla",
+    "section": "Barranca Larga - Ventanilla",
+    "lat": 15.90744244,
+    "lon": -96.92763548,
+    "sourceIds": [
+      1963
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ventura - El Peyote",
+    "section": "El Peyote - Ventura",
+    "lat": 22.5210016,
+    "lon": -100.65660907,
+    "sourceIds": [
+      1945
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Ventura - El Peyote",
+    "section": "Ventura - El Peyote",
+    "lat": 22.52064289,
+    "lon": -100.65627527,
+    "sourceIds": [
+      1944
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Vetagrande",
+    "section": "Libramiento Noreste de Zacatecas",
+    "lat": 22.8469156,
+    "lon": -102.5648462,
+    "sourceIds": [
+      230,
+      231,
+      232,
+      233,
+      234
+    ],
+    "spreadM": 234
+  },
+  {
+    "name": "Vía Atlixcáyotl",
+    "section": "Atlixco - Puebla",
+    "lat": 19.00389288,
+    "lon": -98.27261103,
+    "sourceIds": [
+      509
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Vía Atlixcáyotl",
+    "section": "Puebla - Atlixco",
+    "lat": 19.00536978,
+    "lon": -98.27060686,
+    "sourceIds": [
+      1553
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Vía José López Portillo",
+    "section": "Toreo - Tepalcapa",
+    "lat": 19.60106555,
+    "lon": -99.18982713,
+    "sourceIds": [
+      1122
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Vía José López Portillo",
+    "section": "Torero - Tepalcapa",
+    "lat": 19.60108137,
+    "lon": -99.18986397,
+    "sourceIds": [
+      1109
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Vialidad Mexiquense",
+    "section": "Cuautitlán - Tultepec",
+    "lat": 19.63807176,
+    "lon": -99.15754283,
+    "sourceIds": [
+      722,
+      723,
+      724,
+      1433
+    ],
+    "spreadM": 204
+  },
+  {
+    "name": "Vialidad Mexiquense",
+    "section": "Entronque Tultepec",
+    "lat": 19.63732778,
+    "lon": -99.16437777,
+    "sourceIds": [
+      1616
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Villa Ahumada",
+    "section": "El Sueco - Ciudad Juárez",
+    "lat": 30.43704845,
+    "lon": -106.52174552,
+    "sourceIds": [
+      885,
+      948,
+      949,
+      950
+    ],
+    "spreadM": 22
+  },
+  {
+    "name": "Villa Guerrero",
+    "section": "Tenango - Ixtapan de la Sal",
+    "lat": 18.98926405,
+    "lon": -99.6566959,
+    "sourceIds": [
+      1345
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Villagrán",
+    "section": "Celaya - Ent. Villagrán",
+    "lat": 20.58082453,
+    "lon": -100.99225711,
+    "sourceIds": [
+      328,
+      329
+    ],
+    "spreadM": 156
+  },
+  {
+    "name": "Vista Hermosa",
+    "section": "Maravatío - Zapotlanejo",
+    "lat": 20.26954389,
+    "lon": -102.44116062,
+    "sourceIds": [
+      241,
+      242
+    ],
+    "spreadM": 211
+  },
+  {
+    "name": "Xochitepec",
+    "section": "Cuernavaca - Acapulco",
+    "lat": 18.77506546,
+    "lon": -99.2252871,
+    "sourceIds": [
+      403,
+      1698
+    ],
+    "spreadM": 3
+  },
+  {
+    "name": "Xonacatlán",
+    "section": "Lerma - San Cayetano",
+    "lat": 19.37585067,
+    "lon": -99.54941575,
+    "sourceIds": [
+      636,
+      645,
+      734
+    ],
+    "spreadM": 15
+  },
+  {
+    "name": "Xonacatlán",
+    "section": "San Cayetano - Xonacatlán",
+    "lat": 19.37567445,
+    "lon": -99.54966779,
+    "sourceIds": [
+      646
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Xonacatlán",
+    "section": "Xonacatlán - San Cayetano",
+    "lat": 19.38121254,
+    "lon": -99.55552533,
+    "sourceIds": [
+      648
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Yerbanís",
+    "section": "Durango - Gómez Palacio",
+    "lat": 24.73079054,
+    "lon": -103.86185786,
+    "sourceIds": [
+      176,
+      177
+    ],
+    "spreadM": 15
+  },
+  {
+    "name": "Yóstiro",
+    "section": "San Cristóbal - Ent. Carretera 90",
+    "lat": 20.60106582,
+    "lon": -101.4385338,
+    "sourceIds": [
+      338
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Zacapalco",
+    "section": "Zacapalco - Taxco",
+    "lat": 18.53800135,
+    "lon": -99.44733885,
+    "sourceIds": [
+      406
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Zacatecas",
+    "section": "Cuauhtémoc - Osiris",
+    "lat": 22.71094197,
+    "lon": -102.44880714,
+    "sourceIds": [
+      240
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Zacatelco",
+    "section": "Puebla - Tlaxcala",
+    "lat": 19.21157257,
+    "lon": -98.26492334,
+    "sourceIds": [
+      1052
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Zacatelco",
+    "section": "Puebla - Zacatelco",
+    "lat": 19.21146687,
+    "lon": -98.26315305,
+    "sourceIds": [
+      1051
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Zamora",
+    "section": "Entronque Zamora - Ecuandureo",
+    "lat": 20.17361591,
+    "lon": -102.24383475,
+    "sourceIds": [
+      1883,
+      1884,
+      1885
+    ],
+    "spreadM": 11
+  },
+  {
+    "name": "Zamora",
+    "section": "Zamora - Ecuandureo",
+    "lat": 20.17362428,
+    "lon": -102.24386968,
+    "sourceIds": [
+      1780
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Zapotlán del Rey",
+    "section": "Maravatío - Zapotlanejo",
+    "lat": 20.46732625,
+    "lon": -102.90993348,
+    "sourceIds": [
+      315,
+      316
+    ],
+    "spreadM": 167
+  },
+  {
+    "name": "Zaragoza",
+    "section": "Virreyes - Zaragoza",
+    "lat": 19.75997618,
+    "lon": -97.54825175,
+    "sourceIds": [
+      804
+    ],
+    "spreadM": 0
+  },
+  {
+    "name": "Zinapécuaro",
+    "section": "Maravatío - Zapotlanejo",
+    "lat": 19.90168307,
+    "lon": -100.78839289,
+    "sourceIds": [
+      252,
+      254,
+      255,
+      256,
+      257,
+      861
+    ],
+    "spreadM": 114
+  },
+  {
+    "name": "Zirahuén",
+    "section": "Pátzcuaro - Uruapan",
+    "lat": 19.50559171,
+    "lon": -101.65936128,
+    "sourceIds": [
+      250,
+      1900
+    ],
+    "spreadM": 6
+  },
+  {
+    "name": "Zitácuaro",
+    "section": "Zitácuaro - Lengua de Vaca",
+    "lat": 19.45245204,
+    "lon": -100.28189071,
+    "sourceIds": [
+      263
+    ],
+    "spreadM": 0
+  }
+]

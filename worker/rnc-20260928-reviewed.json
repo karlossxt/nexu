@@ -1,0 +1,42 @@
+[
+  {
+    "road": "Cuernavaca–Acapulco 95D",
+    "state": "Morelos",
+    "km": 142,
+    "lat": 18.529994817157206,
+    "lon": -99.20052082776984,
+    "alias": "cuernavaca\\s*[-–—]?\\s*acapulco",
+    "sourcePostId": 1510,
+    "sourceRoadId": 1167584
+  },
+  {
+    "road": "Puente de Ixtla–Iguala 91D",
+    "state": "Guerrero",
+    "km": 48,
+    "lat": 18.402194431886052,
+    "lon": -99.48919214593606,
+    "alias": "puente\\s+de\\s+ixtla\\s*[-–—]?\\s*iguala",
+    "sourcePostId": 1317,
+    "sourceRoadId": 26107
+  },
+  {
+    "road": "Cuernavaca–Acapulco 95D", "state": "Guerrero", "km": 247,
+    "lat": 17.75936976892942, "lon": -99.48573164591912,
+    "alias": "cuernavaca\\s*[-–—]?\\s*acapulco", "sourcePostId": 1237, "sourceRoadId": 28737
+  },
+  {
+    "road": "Cuernavaca–Acapulco 95D", "state": "Guerrero", "km": 248,
+    "lat": 17.751872019870515, "lon": -99.49003636184939,
+    "alias": "cuernavaca\\s*[-–—]?\\s*acapulco", "sourcePostId": 1238, "sourceRoadId": 28737
+  },
+  {
+    "road": "Cuernavaca–Acapulco 95D", "state": "Guerrero", "km": 249,
+    "lat": 17.74319344053766, "lon": -99.48984253050367,
+    "alias": "cuernavaca\\s*[-–—]?\\s*acapulco", "sourcePostId": 1239, "sourceRoadId": 28737
+  },
+  {
+    "road": "Cuernavaca–Acapulco 95D", "state": "Guerrero", "km": 250,
+    "lat": 17.736544640244464, "lon": -99.49616571219808,
+    "alias": "cuernavaca\\s*[-–—]?\\s*acapulco", "sourcePostId": 1240, "sourceRoadId": 28737
+  }
+]

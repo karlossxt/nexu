@@ -1,0 +1,1 @@
+backup checkpoint 2026-10-03 02:10:00 - optimización alertas con pins + unificación feed/centro/popup

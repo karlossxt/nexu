@@ -1,0 +1,186 @@
+[
+  {
+    "km": 197,
+    "state": "Puebla",
+    "lat": 18.857934761122294,
+    "lon": -97.54991182192217,
+    "sourcePostId": 3976,
+    "sourceRoadId": 138561
+  },
+  {
+    "km": 198,
+    "state": "Puebla",
+    "lat": 18.852920847098353,
+    "lon": -97.54198622793898,
+    "sourcePostId": 3977,
+    "sourceRoadId": 138561
+  },
+  {
+    "km": 199,
+    "state": "Puebla",
+    "lat": 18.84808786230911,
+    "lon": -97.53439075080377,
+    "sourcePostId": 3978,
+    "sourceRoadId": 142146
+  },
+  {
+    "km": 200,
+    "state": "Puebla",
+    "lat": 18.842765425479737,
+    "lon": -97.52601101869513,
+    "sourcePostId": 3979,
+    "sourceRoadId": 142146
+  },
+  {
+    "km": 201,
+    "state": "Puebla",
+    "lat": 18.837780961157637,
+    "lon": -97.51815997589988,
+    "sourcePostId": 3980,
+    "sourceRoadId": 142146
+  },
+  {
+    "km": 205,
+    "state": "Puebla",
+    "lat": 18.830443658805535,
+    "lon": -97.48439177290564,
+    "sourcePostId": 3981,
+    "sourceRoadId": 5866504
+  },
+  {
+    "km": 206,
+    "state": "Puebla",
+    "lat": 18.833410473846246,
+    "lon": -97.47549886105722,
+    "sourcePostId": 3982,
+    "sourceRoadId": 5866505
+  },
+  {
+    "km": 208,
+    "state": "Puebla",
+    "lat": 18.835045832425607,
+    "lon": -97.46219355461982,
+    "sourcePostId": 3983,
+    "sourceRoadId": 140641
+  },
+  {
+    "km": 209,
+    "state": "Puebla",
+    "lat": 18.83768859266196,
+    "lon": -97.45457197939339,
+    "sourcePostId": 3984,
+    "sourceRoadId": 140641
+  },
+  {
+    "km": 211,
+    "state": "Puebla",
+    "lat": 18.845600337886587,
+    "lon": -97.4372304784056,
+    "sourcePostId": 3986,
+    "sourceRoadId": 140641
+  },
+  {
+    "km": 212,
+    "state": "Puebla",
+    "lat": 18.849429606449323,
+    "lon": -97.4288065198834,
+    "sourcePostId": 3987,
+    "sourceRoadId": 140641
+  },
+  {
+    "km": 213,
+    "state": "Puebla",
+    "lat": 18.853372372281875,
+    "lon": -97.4201836749943,
+    "sourcePostId": 3988,
+    "sourceRoadId": 140641
+  },
+  {
+    "km": 214,
+    "state": "Puebla",
+    "lat": 18.857130774121295,
+    "lon": -97.41192150993504,
+    "sourcePostId": 3989,
+    "sourceRoadId": 140641
+  },
+  {
+    "km": 215,
+    "state": "Puebla",
+    "lat": 18.86098685145085,
+    "lon": -97.40377876992078,
+    "sourcePostId": 3990,
+    "sourceRoadId": 5866514
+  },
+  {
+    "km": 216,
+    "state": "Puebla",
+    "lat": 18.86695359845752,
+    "lon": -97.39519515485918,
+    "sourcePostId": 3991,
+    "sourceRoadId": 5866514
+  },
+  {
+    "km": 217,
+    "state": "Puebla",
+    "lat": 18.872180190119856,
+    "lon": -97.38907424969774,
+    "sourcePostId": 3992,
+    "sourceRoadId": 138240
+  },
+  {
+    "km": 218,
+    "state": "Puebla",
+    "lat": 18.86835171987279,
+    "lon": -97.38083945205827,
+    "sourcePostId": 3993,
+    "sourceRoadId": 2640203
+  },
+  {
+    "km": 219,
+    "state": "Puebla",
+    "lat": 18.864616332580642,
+    "lon": -97.37278000719364,
+    "sourcePostId": 3994,
+    "sourceRoadId": 2640211
+  },
+  {
+    "km": 220,
+    "state": "Puebla",
+    "lat": 18.86065408519784,
+    "lon": -97.3642231439088,
+    "sourcePostId": 3995,
+    "sourceRoadId": 137846
+  },
+  {
+    "km": 221,
+    "state": "Puebla",
+    "lat": 18.8548951432824,
+    "lon": -97.35733228541409,
+    "sourcePostId": 3996,
+    "sourceRoadId": 137846
+  },
+  {
+    "km": 222,
+    "state": "Puebla",
+    "lat": 18.84787313023864,
+    "lon": -97.35131075544614,
+    "sourcePostId": 3997,
+    "sourceRoadId": 137846
+  },
+  {
+    "km": 229,
+    "state": "Veracruz",
+    "lat": 18.849633359617624,
+    "lon": -97.29896331195432,
+    "sourcePostId": 5725,
+    "sourceRoadId": 184962
+  },
+  {
+    "km": 230,
+    "state": "Veracruz",
+    "lat": 18.855609149188613,
+    "lon": -97.29680611963326,
+    "sourcePostId": 6307,
+    "sourceRoadId": 184962
+  }
+]
