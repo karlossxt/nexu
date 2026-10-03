@@ -1126,6 +1126,7 @@ body.user-mode:not(.dark-mode) .casetas-filter{color:#067647;background:#ECFDF3;
   .mobile-app-nav button i{font-size:18px}
 }
 </style>
+<script src="/location-enrich.js"></script>
 </head>
 <body>
 
@@ -3176,7 +3177,7 @@ function centralAlertToUi(row,receivedAt=0) {
     id:centralNumericId(row.id||row.external_id), central_id:row.id, external_id:row.external_id,
     lat:row.latitude == null ? null : Number(row.latitude), lon:row.longitude == null ? null : Number(row.longitude), category:row.category,
     title:row.title, detail:row.detail||row.title, location:row.location_label||[row.road,row.municipality,row.state].filter(Boolean).join(', '),
-    state:row.state||'', precision, km:row.kilometer ?? null, location_precision:locationPrecision||null,
+    state:row.state||'', road:row.road||'', municipality:row.municipality||'', precision, km:row.kilometer ?? null, location_precision:locationPrecision||null,
     location_confidence:confidence, location_provider:'central', road_snapped:false,
     time:new Date(row.event_at), published_at:row.event_at, detected_at:row.created_at||null, received_at:receivedAt,
     event_type:row.event_type||null, traffic_status:row.traffic_status||null,
@@ -3239,6 +3240,24 @@ function alertsLikelySame(local,central) {
   const sameSource=normAcc(local.source_name)===normAcc(central.source_name);
   return titleScore>=.5||(sameSource&&titleScore>=.35&&locationScore>=.3);
 }
+let centralEnrichmentRunning=false;
+async function enrichPendingCentralAlerts() {
+  if(centralEnrichmentRunning || typeof enrichAlertLocationSafe!=='function') return;
+  centralEnrichmentRunning=true;
+  try {
+    const pending=alerts.filter(a=>a.central_id && a.lat==null && a.lon==null).slice(0,30);
+    for(const alert of pending) {
+      const point=await enrichAlertLocationSafe(alert);
+      // A newer central refresh or verified update always wins.
+      if(!point || !alerts.includes(alert) || alert.lat!=null || alert.lon!=null) continue;
+      Object.assign(alert,{lat:point.latitude,lon:point.longitude,
+        location_precision:point.precision,location_confidence:point.confidence,
+        location_provider:point.provider,precision:centralPrecisionToUi(point.precision,point.status,point.confidence)});
+      // Session-only enrichment; the database remains the source of truth.
+      updateLists(); rebuildU();
+    }
+  } finally {centralEnrichmentRunning=false;}
+}
 async function loadCentralAlerts() {
   if(!supabaseClient) return;
   const since=new Date(Date.now()-24*3600*1000).toISOString();
@@ -3268,6 +3287,7 @@ async function loadCentralAlerts() {
   });
   alerts=[...remainingLocal,...mergedCentral];
   persistAlerts(); updateLists(); rebuildU();
+  void enrichPendingCentralAlerts();
 }
 async function initCentralAlerts() {
   await Promise.all([refreshCentralWorkerHealth(),loadCentralAlerts()]);
