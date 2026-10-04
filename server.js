@@ -7,6 +7,8 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+const { HttpError, sendJson, remoteIp, createRateLimiter, safeEqual } = require('./lib/http-utils');
+
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
 const DEFAULT_FEED = 'https://news.google.com/rss/search?q=accidente+OR+bloqueo+OR+asalto+carretera+mexico&hl=es-419&gl=MX&ceid=MX:es-419';
@@ -29,13 +31,10 @@ const APP_TOKEN = ENV.APP_TOKEN || '';
 // En producción exige un token: sin esto, /api/groq queda abierto a cualquiera.
 const IS_PROD = (ENV.NODE_ENV || '').toLowerCase() === 'production' || !!ENV.VERCEL || !!ENV.RENDER;
 if (IS_PROD && !APP_TOKEN) {
-  console.warn('[ADVERTENCIA] APP_TOKEN no está configurado en producción. /api/groq quedará deshabilitado.');
+  console.warn('[ADVERTENCIA] APP_TOKEN no está configurado en producción. /api/groq quedará deshabilitado hasta configurarlo.');
 }
 
-// IP del cliente. Solo se confía en x-forwarded-for detrás de un proxy conocido, y se toma la
-// entrada que añadió NUESTRO proxy (contando desde la derecha), porque la primera entrada
-// puede ser falsificada por el cliente. TRUSTED_PROXY_HOPS = nº de proxies de confianza
-// delante de la app (Render/Vercel: 1; Cloudflare + Render: 2).
+// IP del cliente. Solo se confía en x-forwarded-for detrás de un proxy conocido
 const TRUST_PROXY = !!ENV.VERCEL || !!ENV.RENDER || ENV.TRUST_PROXY === '1';
 const PROXY_HOPS = Math.max(1, parseInt(ENV.TRUSTED_PROXY_HOPS, 10) || 1);
 
@@ -44,19 +43,15 @@ const ROLES_ALLOWED = new Set(['system', 'user', 'assistant']);
 const MAX_BODY = 64 * 1024;
 const MAX_PER_MIN = 40;
 const UPSTREAM_TIMEOUT_MS = 30_000;
-const rate = new Map();
-// Limpieza periódica del mapa de rate limit.
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, cur] of rate) if (now - cur.t > 60000) rate.delete(ip);
-}, 5 * 60000).unref();
 
-// Solo estos archivos son públicos. Todo lo demás (server.js, worker/, supabase/, .env, .git…) da 404.
-// Si agregas páginas o assets, inclúyelos aquí o en EXTRA_PUBLIC_FILES (separados por coma).
+const groqLimiter = createRateLimiter({ maxPerMin: MAX_PER_MIN, maxEntries: 2000 });
+
+// Solo estos archivos son públicos. Todo lo demás da 404.
 const PUBLIC_FILES = new Set([
   'index.html', 'acerca.html', 'ayuda.html', 'servicios.html', 'privacidad.html', 'terminos.html',
   'red-vial.js', 'favicon.png', 'favicon-256.png', 'apple-touch-icon.png',
   'logo11.png', 'logo11-white.png', 'zero-logo.png', 'zero-mark.png',
+  'zero-mark-v2.svg', 'sitemap.xml', 'robots.txt', 'casetas-data.js',
   ...String(ENV.EXTRA_PUBLIC_FILES || '').split(',').map(s => s.trim()).filter(Boolean)
 ]);
 
@@ -68,32 +63,16 @@ const MIME = {
   '.png': 'image/png',
   '.ico': 'image/x-icon',
   '.svg': 'image/svg+xml',
+  '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8'
 };
 
-class HttpError extends Error {
-  constructor(status, message) { super(message); this.status = status; }
-}
-
-function sendJson(res, code, obj, headers) {
-  res.writeHead(code, Object.assign({ 'Content-Type': 'application/json; charset=utf-8' }, headers || {}));
-  res.end(JSON.stringify(obj));
-}
-
-function remoteIp(req) {
-  if (TRUST_PROXY) {
-    const parts = String(req.headers['x-forwarded-for'] || '').split(',').map(s => s.trim()).filter(Boolean);
-    if (parts.length) return parts[Math.max(0, parts.length - PROXY_HOPS)];
-  }
-  return req.socket.remoteAddress || 'anon';
+function getRemoteIp(req) {
+  return remoteIp(req, { trustProxy: TRUST_PROXY, proxyHops: PROXY_HOPS });
 }
 
 function rateLimited(ip) {
-  const now = Date.now();
-  const cur = rate.get(ip) || { n: 0, t: now };
-  if (now - cur.t > 60000) { cur.n = 0; cur.t = now; }
-  cur.n += 1;
-  rate.set(ip, cur);
-  return cur.n > MAX_PER_MIN;
+  return groqLimiter.isLimited(ip);
 }
 
 // Comparación en tiempo constante (se hashea para igualar longitudes).
