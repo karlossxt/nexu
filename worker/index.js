@@ -274,11 +274,22 @@ function roadSimilarity(a,b) {
   return roadMatches(a,b);
 }
 
+// Una noticia duplicada pero MÁS RECIENTE puede traer un cambio de estado (p. ej. "se restablece
+// la circulación"). Devuelve el parche para el pin existente, o null si no hay nada que actualizar.
+function duplicateStatusPatch(duplicate, row) {
+  if (!duplicate || !duplicate.existing_event_at || !row.event_at || row.category !== 'road') return null;
+  const next = String(row.traffic_status || 'unknown');
+  if (next === 'unknown' || next === duplicate.existing_status) return null;
+  const newTime = new Date(row.event_at).getTime(), oldTime = new Date(duplicate.existing_event_at).getTime();
+  if (!Number.isFinite(newTime) || !Number.isFinite(oldTime) || newTime <= oldTime) return null;
+  return { traffic_status: next };
+}
+
 async function findSpatialDuplicate(row) {
   const eventTime=new Date(row.event_at || Date.now()).getTime();
   const since=new Date(eventTime - 2*3600_000).toISOString();
   const until=new Date(eventTime + 30*60_000).toISOString();
-  const path='alerts?select=id,title,detail,event_type,category,road,kilometer,latitude,longitude,source_name,event_at,location_label'
+  const path='alerts?select=id,title,detail,event_type,category,road,kilometer,latitude,longitude,source_name,event_at,location_label,traffic_status'
     +'&category=eq.'+encodeURIComponent(row.category)
     +'&event_at=gte.'+encodeURIComponent(since)
     +'&event_at=lte.'+encodeURIComponent(until)
@@ -313,7 +324,9 @@ async function findSpatialDuplicate(row) {
         similarity:Number(similarity.toFixed(2)),
         same_road:sameRoad,
         same_km:sameKm,
-        source:existing.source_name || null
+        source:existing.source_name || null,
+        existing_status:existing.traffic_status || null,
+        existing_event_at:existing.event_at || null
       };
     }
   }
@@ -1490,6 +1503,15 @@ async function processItem(item, feed, options={}) {
       existing_source:spatialDuplicate.source,
       new_source:row.source_name
     });
+    const statusPatch = duplicateStatusPatch(spatialDuplicate, row);
+    if (statusPatch) {
+      try {
+        await sb('alerts?id=eq.' + encodeURIComponent(spatialDuplicate.id), { method:'PATCH', headers:{ Prefer:'return=minimal' }, body:JSON.stringify(statusPatch) });
+        log('info','Estado del pin existente actualizado por noticia más reciente',{ existing_id:spatialDuplicate.id, from:spatialDuplicate.existing_status, to:statusPatch.traffic_status });
+      } catch (error) {
+        log('warn','No se pudo actualizar el estado del pin existente',{ existing_id:spatialDuplicate.id, error:error.message });
+      }
+    }
     return 'duplicate';
   }
   await sb('alerts?on_conflict=external_id', { method:'POST', headers:{ Prefer:'resolution=ignore-duplicates,return=minimal' }, body:JSON.stringify(row) });

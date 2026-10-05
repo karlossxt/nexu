@@ -5,7 +5,6 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
 
 const { HttpError, sendJson, remoteIp, createRateLimiter, safeEqual } = require('./lib/http-utils');
 
@@ -34,7 +33,10 @@ if (IS_PROD && !APP_TOKEN) {
   console.warn('[ADVERTENCIA] APP_TOKEN no está configurado en producción. /api/groq quedará deshabilitado hasta configurarlo.');
 }
 
-// IP del cliente. Solo se confía en x-forwarded-for detrás de un proxy conocido
+// IP del cliente. Solo se confía en x-forwarded-for detrás de un proxy conocido, y se toma la
+// entrada que añade NUESTRO proxy (contando desde la derecha), porque la primera entrada
+// puede ser falsificada por el cliente. TRUSTED_PROXY_HOPS = nº de proxies de confianza
+// delante de la app (Render/Vercel: 1; Cloudflare + Render: 2).
 const TRUST_PROXY = !!ENV.VERCEL || !!ENV.RENDER || ENV.TRUST_PROXY === '1';
 const PROXY_HOPS = Math.max(1, parseInt(ENV.TRUSTED_PROXY_HOPS, 10) || 1);
 
@@ -46,12 +48,14 @@ const UPSTREAM_TIMEOUT_MS = 30_000;
 
 const groqLimiter = createRateLimiter({ maxPerMin: MAX_PER_MIN, maxEntries: 2000 });
 
-// Solo estos archivos son públicos. Todo lo demás da 404.
+// Solo estos archivos son públicos. Todo lo demás (server.js, worker/, supabase/, .env, .git/)
+// da 404. Si agregas páginas o assets, inclúyelos aquí o en EXTRA_PUBLIC_FILES (separados por coma).
 const PUBLIC_FILES = new Set([
   'index.html', 'acerca.html', 'ayuda.html', 'servicios.html', 'privacidad.html', 'terminos.html',
   'red-vial.js', 'favicon.png', 'favicon-256.png', 'apple-touch-icon.png',
-  'logo11.png', 'logo11-white.png', 'zero-logo.png', 'zero-mark.png',
-  'zero-mark-v2.svg', 'sitemap.xml', 'robots.txt', 'casetas-data.js',
+  'logo11.png', 'logo11-white.png', 'zero-logo.png', 'zero-mark.png', 'zero-mark-v2.svg',
+  'logo-mark.webp', 'casetas-data.js',
+  'sitemap.xml', 'robots.txt',
   ...String(ENV.EXTRA_PUBLIC_FILES || '').split(',').map(s => s.trim()).filter(Boolean)
 ]);
 
@@ -63,23 +67,18 @@ const MIME = {
   '.png': 'image/png',
   '.ico': 'image/x-icon',
   '.svg': 'image/svg+xml',
+  '.webp': 'image/webp',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.woff2': 'font/woff2',
+  '.webmanifest': 'application/manifest+json',
   '.txt': 'text/plain; charset=utf-8',
   '.xml': 'application/xml; charset=utf-8'
 };
 
-function getRemoteIp(req) {
-  return remoteIp(req, { trustProxy: TRUST_PROXY, proxyHops: PROXY_HOPS });
-}
-
 function rateLimited(ip) {
   return groqLimiter.isLimited(ip);
-}
-
-// Comparación en tiempo constante (se hashea para igualar longitudes).
-function safeEqual(a, b) {
-  const ha = crypto.createHash('sha256').update(String(a || '')).digest();
-  const hb = crypto.createHash('sha256').update(String(b || '')).digest();
-  return crypto.timingSafeEqual(ha, hb);
 }
 
 async function readBody(req) {
@@ -182,7 +181,9 @@ function handleConfig(res) {
   // explícitamente con EXPOSE_RSS_PRI=1. El worker lo lee directo del entorno.
   const exposePri = ENV.EXPOSE_RSS_PRI === '1';
   return sendJson(res, 200, {
-    rss: [exposePri ? rssPri : '', rssSec || DEFAULT_FEED].filter(Boolean),
+    // Posiciones fijas: el frontend lee cfg.rss[0] (primario) y cfg.rss[1] (secundario).
+    // Sin filter(Boolean), si RSS_PRI está oculto el secundario caería en el campo primario.
+    rss: [exposePri ? rssPri : '', rssSec || DEFAULT_FEED],
     model: ENV.GROQ_MODEL || 'openai/gpt-oss-20b',
     reportModel: ENV.REPORT_MODEL || 'openai/gpt-oss-120b',
     supabase: {

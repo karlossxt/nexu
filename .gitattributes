@@ -8,6 +8,7 @@
 *.png binary
 *.jpg binary
 *.ico binary
+*.webp binary
 
 # Datos generados: LF en el repositorio, CRLF tolerado al clonar en Windows.
 *.json text eol=lf
