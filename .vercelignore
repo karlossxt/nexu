@@ -1,0 +1,11 @@
+# Úsalo SOLO si scripts/verify-deploy.js muestra FALLAS en archivos internos y tu sitio corre en Vercel.
+# Antes de activarlo, confirma que vercel.json no referencia nada de esta lista.
+# Mantén api/, index.html, las demás páginas .html, red-vial.js, casetas-data.js y las imágenes.
+server.js
+worker/
+supabase/
+scripts/
+render.yaml
+.env
+.env.*
+*.md

@@ -2569,7 +2569,15 @@ function pointAtKm(corridor, km) {
   const clamp = Math.max(0, Math.min(1, frac));
   let total = 0;
   for(let i = 0; i < pts.length - 1; i++) total += distKm2(pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1]);
-  const target = clamp * total;
+  let target = clamp * total;
+  // Con anclas verificadas (scripts/verify-red-vial.js) se interpola por tramos entre postes reales.
+  const an = Array.isArray(corridor.anchors) && corridor.anchors.length >= 2 ? corridor.anchors : null;
+  if(an) {
+    if(km < an[0].km - 1 || km > an[an.length-1].km + 1) return null;
+    let k = 0; while(k < an.length - 2 && km > an[k+1].km) k++;
+    const gap = an[k+1].km - an[k].km;
+    target = Math.max(0, Math.min(total, an[k].d + (gap > 0 ? (km - an[k].km) / gap : 0) * (an[k+1].d - an[k].d)));
+  }
   let acc = 0;
   for(let i = 0; i < pts.length - 1; i++) {
     const seg = distKm2(pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1]);

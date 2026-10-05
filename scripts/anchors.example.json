@@ -1,0 +1,4 @@
+[
+  { "corridor": "mex-qro", "km": 44,  "lat": 19.7000, "lon": -99.2000, "label": "EJEMPLO: caseta Tepotzotlán (reemplazar con dato oficial)", "source": "SCT/CAPUFE" },
+  { "corridor": "mex-qro", "km": 144, "lat": 20.2000, "lon": -99.8000, "label": "EJEMPLO: caseta Palmillas (reemplazar con dato oficial)",   "source": "SCT/CAPUFE" }
+]

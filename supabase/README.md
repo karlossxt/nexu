@@ -18,16 +18,30 @@ El esquema incluye:
 
 ### Endurecimiento obligatorio antes de pruebas públicas
 
-Después de crear las tablas, ejecuta `rls_hardening.sql` en **SQL Editor**. La
-migración elimina permisos heredados, vuelve a crear políticas explícitas por
-operación y deja `alerts` y `worker_status` como tablas públicas de sólo lectura.
-El worker de Render conserva escritura porque utiliza `service_role` en el
-servidor.
+Después de crear las tablas, ejecuta **`02-rls-hardening.sql`** en **SQL Editor**
+y después **`01-rls-audit.sql`**. El orden importa: el primero aplica, el
+segundo verifica. Repite la auditoría al terminar; no continúes con pruebas
+públicas si el resumen final muestra algún `FAIL`.
 
-Después ejecuta `rls_audit.sql`. Verifica que las seis tablas muestren
-`rowsecurity = true`, que ningún rol `anon` tenga escritura y que `profiles`
-sólo conceda actualización sobre `display_name`. No continúes con pruebas
-públicas si la auditoría muestra permisos adicionales.
+`02-rls-hardening.sql`:
+
+- elimina permisos heredados de tabla **y de columna**;
+- deja `alerts` y `ingest_queue` con la política más estrecha que corresponde
+  (la cola interna no tiene ninguna política: es territorio exclusivo del worker);
+- limita `worker_status` a la fila `id = 'main'` y a las 7 columnas que el mapa
+  lee;
+- deja `profiles` en sólo lectura, de modo que **nadie puede cambiarse su propio
+  rol desde el navegador**;
+- añade a `location_corrections` validación de rango y longitud en el servidor y
+  un disparador que limita a 30 correcciones por usuario y día.
+
+Cada sección va dentro de un bloque que comprueba si la tabla existe, así que
+puede ejecutarse aunque falte alguna. El worker de Render conserva escritura
+porque utiliza `service_role`, que ignora el RLS.
+
+`01-rls-audit.sql` es de sólo lectura: políticas existentes, vistas,
+funciones `SECURITY DEFINER`, privileges por defecto, las pruebas manuales con
+`set local role anon` y un resumen donde cada fila debe salir `PASS`.
 
 ## 2. Variables de Vercel
 

@@ -7,8 +7,11 @@
     "start": "node server.js",
     "worker": "node worker/index.js",
     "worker:once": "WORKER_ONCE=1 node worker/index.js",
-    "check": "node --check server.js && node --check worker/index.js",
-    "test": "node --test lib/alert-km.test.js lib/corridor-reference.test.js tools/test_rnc_national_review.js tools/test_rnc_batch_review.js tools/test_rnc_calibration_audit.js tools/test_rnc_toll_plazas.js tools/test_rnc_gpkg_extract.js tools/test_rnc_plaza_invariant.js worker/rnc-km-anchors.test.js worker/rnc-toll-reference.test.js"
+    "check": "node --check server.js && node --check worker/index.js && node --check scripts/scan-secrets.js && node --check scripts/verify-deploy.js && node --check scripts/verify-red-vial.js",
+    "scan:secrets": "node scripts/scan-secrets.js",
+    "verify:deploy": "node scripts/verify-deploy.js",
+    "verify:red-vial": "node scripts/verify-red-vial.js",
+    "test": "node --test lib/alert-km.test.js lib/corridor-reference.test.js tools/test_rnc_national_review.js tools/test_rnc_batch_review.js tools/test_rnc_calibration_audit.js tools/test_rnc_toll_plazas.js tools/test_rnc_gpkg_extract.js tools/test_rnc_plaza_invariant.js worker/rnc-km-anchors.test.js worker/rnc-toll-reference.test.js scripts/verify-red-vial.test.js"
   },
   "engines": {
     "node": ">=20"

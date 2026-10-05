@@ -851,8 +851,14 @@ function pointAtRoadKilometer(corridor, kilometer) {
   const km = Number(kilometer);
   const start = Number(corridor?.kmStart), end = Number(corridor?.kmEnd);
   const pts = corridor?.pts || [];
-  if (!Number.isFinite(km) || !Number.isFinite(start) || !Number.isFinite(end) || end <= start || pts.length < 2) return null;
-  if (km < start || km > end) return null;
+  // Con anclas verificadas (scripts/verify-red-vial.js) se interpola por tramos entre postes reales:
+  // [{ km, d }] donde d = distancia recorrida sobre el trazo desde su primer punto.
+  const anchors = Array.isArray(corridor?.anchors) && corridor.anchors.length >= 2 ? corridor.anchors : null;
+  if (!Number.isFinite(km) || pts.length < 2) return null;
+  if (!anchors) {
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null;
+    if (km < start || km > end) return null;
+  }
   const segments = [];
   let total = 0;
   for (let i = 1; i < pts.length; i++) {
@@ -861,7 +867,20 @@ function pointAtRoadKilometer(corridor, kilometer) {
     total += length;
   }
   if (!(total > 0)) return null;
-  const target = ((km - start) / (end - start)) * total;
+  let target, anchorGapKm = null;
+  if (anchors) {
+    const first = anchors[0], last = anchors[anchors.length - 1];
+    // No se extrapola fuera del rango anclado (tolerancia de 1 km).
+    if (km < first.km - 1 || km > last.km + 1) return null;
+    let i = 0;
+    while (i < anchors.length - 2 && km > anchors[i + 1].km) i++;
+    const a = anchors[i], b = anchors[i + 1];
+    anchorGapKm = b.km - a.km;
+    const frac = anchorGapKm > 0 ? (km - a.km) / anchorGapKm : 0;
+    target = Math.max(0, Math.min(total, a.d + frac * (b.d - a.d)));
+  } else {
+    target = ((km - start) / (end - start)) * total;
+  }
   let walked = 0;
   for (let i = 0; i < segments.length; i++) {
     const next = walked + segments[i];
@@ -871,7 +890,8 @@ function pointAtRoadKilometer(corridor, kilometer) {
       return {
         latitude:a[0] + (b[0] - a[0]) * ratio,
         longitude:a[1] + (b[1] - a[1]) * ratio,
-        route_distance_km:target
+        route_distance_km:target,
+        anchor_gap_km:anchorGapKm
       };
     }
     walked = next;
@@ -942,7 +962,9 @@ function resolveStaticRoadKilometer(road, kilometer) {
     longitude:point.longitude,
     label:`${match.corridor.name} · km ${kilometer}`,
     // RED_VIAL interpola el km sobre la geometría del corredor: útil, pero no equivale a un punto físico exacto.
-    confidence:match.score >= 95 ? .90 : .86,
+    // Con anclas, la confianza baja si el kilómetro cae en un tramo largo entre postes conocidos.
+    confidence:(match.score >= 95 ? .90 : .86) - (point.anchor_gap_km > 20 ? .06 : 0),
+    anchor_gap_km:point.anchor_gap_km,
     status:'automatic',
     precision:'kilometer_static',
     corridor:match.corridor.badge,
@@ -1518,7 +1540,19 @@ async function processItem(item, feed, options={}) {
   return 'inserted';
 }
 
+// worker_status lo lee el navegador: se enmascaran llaves/tokens/URLs con credenciales antes de publicar.
+function redactSecrets(value) {
+  return String(value)
+    .replace(/(api[_-]?key|key|token|apikey|authorization)=([^&\s"']+)/gi, '$1=***')
+    .replace(/Bearer\s+[A-Za-z0-9._~+/=-]+/gi, 'Bearer ***')
+    .replace(/(gsk_|AIza|sb_secret_)[A-Za-z0-9_\-]{8,}/g, '$1***')
+    .replace(/eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g, '***jwt***')
+    .replace(/https?:\/\/[^\s"']+/gi, url => { try { return new URL(url).origin + '/…'; } catch { return '***'; } })
+    .slice(0, 500);
+}
+
 async function health(values) {
+  if (values && typeof values.last_error === 'string') values = { ...values, last_error: redactSecrets(values.last_error) };
   try {
     await sb('worker_status?on_conflict=id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates,return=minimal' }, body:JSON.stringify({ id:'main', updated_at:new Date().toISOString(), ...values }) });
   } catch (error) { log('error', 'No se pudo actualizar la salud', { error:error.message }); }
