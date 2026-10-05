@@ -21,3 +21,10 @@ tools/rnc-calibration-audit.json
 tools/plaza-verification.json
 tools/plaza-invariant.json
 tools/rnc-*-reviewed.json
+
+# Salidas de scripts/verify-red-vial.js: se generan a partir de las anclas
+# locales y de red-vial.js. El *.verified.js solo se sube cuando ya es el
+# archivo que se sirve, y entonces a proposito.
+red-vial.report.json
+anchors.json
+*.verified.js

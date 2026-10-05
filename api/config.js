@@ -58,10 +58,17 @@ module.exports = async (req, res) => {
 
   const rssPri = (process.env.RSS_PRI || '').trim();
   const rssSec = (process.env.RSS_SEC || '').trim();
+  // RSS_PRI puede ser un feed privado (la URL de rss.app funciona como
+  // credencial). No se envía al navegador salvo que se pida explícitamente con
+  // EXPOSE_RSS_PRI=1; el worker lo lee directo del entorno. Igual que server.js.
+  const exposePri = process.env.EXPOSE_RSS_PRI === '1';
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Cache-Control', 'public, max-age=120');
   return res.status(200).json({
-    rss: [rssPri, rssSec || DEFAULT_RSS_SEC],
+    // Posiciones fijas: el frontend lee cfg.rss[0] (primario) y cfg.rss[1]
+    // (secundario). Sin esto, con RSS_PRI oculto el secundario caería en el
+    // campo primario.
+    rss: [exposePri ? rssPri : '', rssSec || DEFAULT_RSS_SEC],
     model: process.env.GROQ_MODEL || 'qwen/qwen3.8-27b',
     reportModel: process.env.REPORT_MODEL || 'openai/gpt-oss-120b',
     supabase: {

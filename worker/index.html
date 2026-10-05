@@ -36,13 +36,15 @@ body{ margin:0; font-family:'Roboto','Segoe UI',sans-serif; background:var(--bg)
 
 /* SIDEBAR */
 #sidebar{ width:80px; background:var(--panel); border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; padding-top:20px; z-index:9000; transition:width 0.2s cubic-bezier(0.4,0.0,0.2,1); box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
-#sidebar:hover{ width:280px; }
-#sidebar:hover .nav-label{ display:inline-block; opacity:1; }
-#sidebar:hover .brand-text { display:inline-block; opacity: 1; }
+/* :focus-within ademas de :hover para que el menu se pueda abrir con el teclado:
+   al pulsar Tab el foco entra en la barra lateral aunque el raton no la toque. */
+#sidebar:hover,#sidebar:focus-within{ width:280px; }
+#sidebar:hover .nav-label,#sidebar:focus-within .nav-label{ display:inline-block; opacity:1; }
+#sidebar:hover .brand-text,#sidebar:focus-within .brand-text { display:inline-block; opacity: 1; }
 
 .brand{ width:100%; display:flex; flex-direction: column; align-items:center; justify-content:center; margin-bottom:20px; overflow:hidden; padding:10px 0; cursor: pointer; }
 .brand-logo { width: 50px; height: 50px; object-fit: contain; transition: 0.3s; border-radius: 9px; background:#000; padding: 4px; }
-#sidebar:hover .brand-logo { width: 70px; height: 70px; }
+#sidebar:hover .brand-logo,#sidebar:focus-within .brand-logo { width: 70px; height: 70px; }
 .brand-text { font-weight:800; font-size:18px; color:var(--accent); white-space:nowrap; opacity:0; display:none; transition:0.3s; margin-top: 10px; letter-spacing: 1px; }
 
 .nav-item{ width:100%; padding:16px 0; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; transition:0.2s; border-left:4px solid transparent; }
@@ -290,6 +292,11 @@ body.user-mode #circula{ display:flex; }
 .toast-important{ position:fixed; bottom:20px; right:20px; z-index:20000; max-width:320px; background:var(--panel); border:1px solid var(--danger); border-left:5px solid var(--danger); border-radius:10px; padding:12px 14px; box-shadow:0 10px 30px rgba(0,0,0,.3); cursor:pointer; animation:fadeIn .25s; }
 .toast-important b{ color:var(--danger); font-size:13px; }
 .toast-important div{ font-size:12px; margin-top:4px; color:var(--text); }
+
+/* Respeta la preferencia del sistema: aquí hay animaciones infinitas (blink en
+   .status-danger/.typing/.dot-live, incidentPulse en .incident-pin, gpsSpin en el
+   GPS, fadeIn en los paneles) que sin esto no paran nunca. */
+@media (prefers-reduced-motion: reduce){ *,*::before,*::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; } }
 </style>
 <style>
 /* ============================================
@@ -1107,7 +1114,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
     </div>
     <div class="pr-body">
       <div class="pr-sec active" data-sec="feed">
-        <div class="feed-tools"><div class="pr-search"><i class="fa-solid fa-magnifying-glass"></i><input id="feed-search" placeholder="Buscar alertas, lugar, estado..." oninput="rebuildU()"></div><select id="feed-sort" class="feed-sort" onchange="setFeedSort(this.value)" title="Ordenar alertas"><option value="recent">Más recientes</option><option value="near">Más cercanas</option><option value="risk">Mayor riesgo</option><option value="precision">Mayor precisión</option></select></div>
+        <div class="feed-tools"><div class="pr-search"><i class="fa-solid fa-magnifying-glass"></i><input id="feed-search" placeholder="Buscar alertas, lugar, estado..." oninput="rebuildUDebounced()"></div><select id="feed-sort" class="feed-sort" onchange="setFeedSort(this.value)" title="Ordenar alertas"><option value="recent">Más recientes</option><option value="near">Más cercanas</option><option value="risk">Mayor riesgo</option><option value="precision">Mayor precisión</option></select></div>
         <div id="feed-list"></div>
         <div id="feed-empty"><i class="fa-solid fa-shield-halved"></i><div id="feed-empty-msg">Sin alertas coincidentes con los filtros activos</div><button class="empty-reset" onclick="resetUserFilters()"><i class="fa-solid fa-rotate-left"></i> Restablecer filtros</button></div>
       </div>
@@ -1472,7 +1479,9 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
   </div>
 </div>
 
-<script src="red-vial.js"></script>
+<!-- red-vial.js desactivado: ningún corredor trae chainageVerified, así que geocodeCorridor() siempre devuelve null.
+     Reactívalo solo cuando verifiques el cadenamiento de cada corredor. -->
+<!-- <script src="red-vial.js" defer></script> -->
 <script>
 /* =========================================
    SISTEMA ZERO VIAL v21.1
@@ -3205,6 +3214,8 @@ function refreshCounters() {
   set('nv-top-count', sessionAlerts.length);
   set('nc-road', road); set('nc-sec', sec); set('nc-blockages', blockages); set('nc-imp', redZones); set('nc-risk', roadRisks);
 }
+let rebuildUTimer = null;
+function rebuildUDebounced() { clearTimeout(rebuildUTimer); rebuildUTimer = setTimeout(rebuildU, 250); }
 function rebuildU() {
   const fl = document.getElementById('feed-list');
   const fe = document.getElementById('feed-empty');
