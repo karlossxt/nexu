@@ -71,7 +71,16 @@ function scanLine(line, where) {
 
 function isBinary(buf) { return buf.subarray(0, 4000).includes(0); }
 
-(function main() {
+// Vacía los hallazgos acumulados. Lo usan las pruebas para no arrastrar estado
+// de un caso al siguiente.
+function reset() { findings.clear(); }
+
+// Lo grave arriba: si hay que leer cinco hallazgos, el primero tiene que ser el
+// que obliga a rotar una llave.
+const SEVERITY_ORDER = { CRIT: 0, WARN: 1, INFO: 2 };
+function bySeverity(list) { return [...list].sort((a, b) => SEVERITY_ORDER[a.sev] - SEVERITY_ORDER[b.sev]); }
+
+function main() {
   try { sh(['rev-parse', '--git-dir']); } catch { console.error('Ejecuta este script dentro de un repositorio git.'); process.exit(2); }
 
   // 0. ¿.env versionado o sin ignorar?
@@ -97,8 +106,7 @@ function isBinary(buf) { return buf.subarray(0, 4000).includes(0); }
   }
 
   const finish = () => {
-    const order = { CRIT: 0, WARN: 1, INFO: 2 };
-    const list = [...findings.values()].sort((a, b) => order[a.sev] - order[b.sev]);
+    const list = bySeverity(findings.values());
     console.log('');
     if (!list.length) console.log('✅ Sin hallazgos.');
     for (const f of list) {
@@ -128,4 +136,9 @@ function isBinary(buf) { return buf.subarray(0, 4000).includes(0); }
     }
   });
   child.on('close', finish);
-})();
+}
+
+// Importado como módulo no escanea nada: solo exporta lo testeable.
+if (require.main === module) main();
+
+module.exports = { RULES, JWT_RE, PLACEHOLDER, PLACEHOLDER_STRICT, SEVERITY_ORDER, scanLine, mask, decodeJwt, isBinary, bySeverity, findings, reset };

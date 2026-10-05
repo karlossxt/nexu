@@ -65,12 +65,16 @@ function decodeJwt(token) {
     else {
       const key = cfg.supabase && cfg.supabase.anonKey;
       if (!key) log('WARN', 'anonKey', 'vacía: el mapa no podrá leer alertas');
-      else {
+      else if (/^sb_secret_/.test(key)) {
+        // Se comprueba antes que el formato: si la llave es secreta, decir primero
+        // "formato no JWT (llave nueva sb_publishable_…)" tranquiliza a quien lea
+        // de arriba abajo y esconde que hay una fuga.
+        log('FAIL', 'anonKey', 'es una llave SECRETA de Supabase expuesta al navegador');
+      } else {
         const payload = decodeJwt(key);
         if (payload && payload.role === 'service_role') log('FAIL', 'anonKey', '¡ES LA SERVICE ROLE KEY! Rótala de inmediato: da acceso total a tu base de datos');
         else if (payload && payload.role === 'anon') log('PASS', 'anonKey', 'rol anon (pública por diseño; protégela con RLS)');
         else log('INFO', 'anonKey', payload ? `rol "${payload.role}"` : 'formato no JWT (llave nueva sb_publishable_…)');
-        if (/^sb_secret_/.test(key)) log('FAIL', 'anonKey', 'es una llave SECRETA de Supabase expuesta al navegador');
       }
       const rss = JSON.stringify(cfg.rss || []);
       if (privateRss && rss.includes(privateRss)) log('FAIL', 'rss', 'el feed privado se está enviando al navegador (usa EXPOSE_RSS_PRI vacío)');
