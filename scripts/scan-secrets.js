@@ -29,7 +29,7 @@ const RULES = [
   { id: 'google',    sev: 'CRIT', re: /\b(AIza[0-9A-Za-z_-]{35})\b/g,               note: 'Llave de Google (Maps/Gemini)' },
   { id: 'sb_secret', sev: 'CRIT', re: /\b(sb_secret_[A-Za-z0-9_-]{16,})\b/g,        note: 'Llave secreta de Supabase' },
   { id: 'privkey',   sev: 'CRIT', re: /(-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----)/g, note: 'Llave privada' },
-  { id: 'rss_app',   sev: 'WARN', re: /(rss\.app\/feeds\/[A-Za-z0-9]{8,})/g,        note: 'Feed de RSS.app (la URL funciona como credencial)' },
+  { id: 'rss_app',   sev: 'WARN', re: /(rss\.app\/feeds\/[A-Za-z0-9_-]{8,})/g, note: 'Feed de RSS.app (la URL funciona como credencial)' },
   { id: 'urlkey',    sev: 'WARN', re: /[?&](?:api[_-]?key|apikey|key|token)=([A-Za-z0-9_-]{20,})/gi, note: 'Llave en parámetro de URL' },
   { id: 'assign',    sev: 'WARN', re: /\b(?:[A-Z0-9_]*(?:API_KEY|SECRET|TOKEN|PASSWORD|SERVICE_ROLE)[A-Z0-9_]*)\s*[=:]\s*['"]?([A-Za-z0-9_\-./+]{16,})/g, note: 'Asignación de secreto' },
 ];
