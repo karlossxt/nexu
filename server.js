@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const { HttpError, sendJson, remoteIp, createRateLimiter, safeEqual } = require('./lib/http-utils');
+const { HttpError, sendJson, remoteIp, createRateLimiter } = require('./lib/http-utils');
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
