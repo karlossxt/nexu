@@ -117,6 +117,47 @@ node --test tools/test_rnc_national_review.js
 
 **Estado actual:** Todos los tests pasan (tests de núcleo + herramientas). La lógica crítica (parseo de kilómetros, matching de carreteras/corredores, procesamiento RNC) está fuertemente testeada.
 
+## Dataset RNC 2025
+
+El kilometraje se resuelve con la **Red Nacional de Caminos 2025** (IMT/INEGI, [rnc.imt.mx](https://rnc.imt.mx)) en tres archivos construidos offline en `worker/data/`:
+
+| Archivo | Contenido | Carga |
+|---|---|---|
+| `red-vial-index.json.gz` | metadatos de cadenas: código, secciones, peaje y **cals** (ventanas `validFrom..validTo` certificadas por postes) | al arranque del worker (~430 KB gz) |
+| `km/<código>.json.gz` | geometría con km acumulado + postes por código | bajo demanda (caché LRU de 40) |
+| `casetas.json.gz` | plazas de cobro (auditoría; en producción decide `resolveTollReference`) | no se carga |
+
+### Construcción
+
+```bash
+# Descargar de https://rnc.imt.mx/recursos/ShapeFiles/:
+#   Red_vial_shapefiles2025.zip, Plaza_cobro_shapefiles2025.zip,
+#   Poste_referencia_shapefiles2025.zip
+# y extraerlos en un directorio con la estructura:
+#   rnc-work/redvial/red_vial.{shp,dbf}
+#   rnc-work/poste/poste_de_referencia.{shp,dbf}
+#   rnc-work/plaza/plaza_cobro.{shp,dbf}
+
+node tools/build-rnc.js ruta/rnc-work          # ~70 s, cero dependencias
+node --test tools/test_rnc_build.js            # pruebas de calibración
+node --test worker/rnc-loader.test.js          # pruebas del loader
+```
+
+El build encadena los tramos por código (8,969 cadenas), pega los 46,289 postes a ≤120 m y **calibra** cada cadena: certifica una o varias numeraciones (`cals`) con ≥3 postes ancla, y solo publica la ventana donde el cadenamiento está respaldado. El rescate de postes (fase 5.5) reasigna a la cadena vecina los postes que cayeron en una alineación duplicada del RNC. Fuera de ventana el loader devuelve `null` y la cascada sigue al geocodificador.
+
+### Validación y cobertura
+
+```bash
+# 37 postes revisados a mano (km 197-230 de la 150D, km 48 de la 91D, ...):
+node tools/rnc-exact-posts-validate.js          # 37/37 con error ≤0.03 km
+
+# Cobertura offline sobre un export de alertas (id,road,kilometer,state,...):
+node tools/rnc-alerts-coverage.js alerts.json
+```
+
+Medido sobre las últimas 500 alertas reales (351 con vía+km): **50.7 % se resuelve sin red** (31.3 % poste exacto, 17.1 % interpolación certificada, 2.3 % anclas revisadas) y 132 de las 266 alertas hoy `unlocated` quedan ubicadas con confianza ≥0.9. El resto son vías sin número ni sección RNC en el texto (128; requiere alias por corredor) o km fuera de toda ventana certificada (45); esos casos siguen su cascada al geocodificador externo.
+
+
 ## Arquitectura
 
 ```text
@@ -133,6 +174,8 @@ zero/
 ├── worker/             # Worker de procesamiento de alertas
 │   ├── index.js        # Lógica principal del worker
 │   ├── red-vial.js     # Dataset de red vial (generado)
+│   ├── rnc-loader.js   # Acceso perezoso al dataset RNC 2025 (índice + km)
+│   ├── data/           # Salidas de tools/build-rnc.js (índice, km, casetas)
 │   └── *.test.js       # Tests del worker
 ├── tools/              # Utilidades y scripts de procesamiento de datos
 ├── supabase/           # Esquema y migraciones de BD

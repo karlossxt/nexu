@@ -6,6 +6,7 @@ const { normalizeStateKey: stateKey, stateMatches } = require('../lib/state-matc
 const RED_VIAL = require('./red-vial');
 const CASETAS = require('./casetas');
 const { resolveRncPost, resolveRncEstimatedKm } = require('./rnc-km-anchors');
+const RNC = require('./rnc-loader');
 const { resolveOfficialTollReference, officialNameExists } = require('./rnc-toll-reference');
 const { kilometersConflict, normalizedKilometer } = require('../lib/alert-km');
 const { orientativeCorridorPoint } = require('../lib/corridor-reference');
@@ -1020,6 +1021,62 @@ function resolveTollReference(reference, road='') {
   };
 }
 
+// Kilómetro sobre la Red Nacional de Caminos 2025: poste oficial exacto o
+// interpolación dentro de la ventana certificada de una cadena calibrada.
+// Con estado reportado se verifica igual que RED_VIAL (resolvedStateAtPoint es
+// llamada externa sin caché, acotada a intentos): si el punto cae en otro estado
+// se descarta la cadena y se reintenta con la siguiente candidata.
+async function resolveRncNetworkKilometer(ai, kilometer) {
+  if (kilometer == null || !ai.carretera) return null;
+  const expectedState = clean(ai.estado);
+  const rejected = new Set();
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const hit = RNC.resolveNetworkKilometer(ai.carretera, kilometer, rejected);
+    if (!hit) return null;
+    if (!expectedState) {
+      log('info', 'Kilómetro resuelto con RNC', {
+        road: ai.carretera,
+        kilometer,
+        corridor: hit.corridor,
+        rnc_chain: hit.rnc_chain,
+        precision: hit.precision,
+        confidence: hit.confidence
+      });
+      return hit;
+    }
+    const verified = await resolvedStateAtPoint(hit.latitude, hit.longitude);
+    if (verified.state && stateMatches(expectedState, verified.state)) {
+      hit.state_verified = true;
+      hit.resolved_state = verified.state;
+      hit.state_verifier = verified.provider;
+      log('info', 'Kilómetro resuelto con RNC', {
+        road: ai.carretera,
+        kilometer,
+        corridor: hit.corridor,
+        rnc_chain: hit.rnc_chain,
+        precision: hit.precision,
+        confidence: hit.confidence,
+        state_verified: true,
+        resolved_state: verified.state,
+        verifier: verified.provider
+      });
+      return hit;
+    }
+    log('warn', 'RNC descartado por estado inconsistente', {
+      road: ai.carretera,
+      kilometer,
+      corridor: hit.corridor,
+      rnc_chain: hit.rnc_chain,
+      expected_state: expectedState,
+      resolved_state: verified.state || null,
+      verifier: verified.provider || null
+    });
+    if (!hit.rnc_chain) return null;
+    rejected.add(hit.rnc_chain);
+  }
+  return null;
+}
+
 async function resolveRoadLocation(ai, kilometer, reference) {
   if (!ai.carretera) return null;
   const rncPost=resolveRncPost(ai.carretera, kilometer, ai.estado);
@@ -1060,6 +1117,11 @@ async function resolveRoadLocation(ai, kilometer, reference) {
       return staticKm;
     }
   }
+  // RNC 2025: postes oficiales e interpolación sobre cadenas certificadas.
+  // Corre cuando el RED_VIAL estático no cubrió el km (numeración ausente o
+  // ventana no certificada) y antes de rendir el km ante el geocodificador.
+  const rncKm = await resolveRncNetworkKilometer(ai, kilometer);
+  if (rncKm) return rncKm;
   // Un punto de la carretera sirve para orientar en el mapa, pero NO ubica el
   // kilómetro reportado. Exigimos que el proveedor nombre la misma vía y estado.
   if (kilometer != null) {
@@ -1078,7 +1140,20 @@ async function resolveRoadLocation(ai, kilometer, reference) {
     const result = await geocode(candidate.query, ai.estado, candidate.precision, ai.carretera);
     if (result) candidates.push(result);
   }
-  if (!candidates.length) return null;
+  if (!candidates.length) {
+    // Sin geocodificador y sin km: el punto medio del corredor certificado es
+    // el último recurso para orientar la alerta en el mapa.
+    const midpoint = RNC.corridorMidpoint(ai.carretera);
+    if (midpoint) {
+      log('info', 'Corredor orientado con RNC', {
+        road: ai.carretera,
+        corridor: midpoint.corridor,
+        precision: midpoint.precision
+      });
+      return midpoint;
+    }
+    return null;
+  }
   if (reference && candidates.length >= 2) {
     const ref = candidates[0];
     const near = candidates.filter(x => geoDistanceKm(ref.latitude, ref.longitude, x.latitude, x.longitude) <= 25);
@@ -1688,6 +1763,14 @@ async function cycle() {
 
 async function main() {
   log('info','Worker Zero Vial iniciado',{ feeds:FEEDS.length, interval_ms:POLL_MS, model:GROQ_MODEL, gemini_model:GEMINI_KEY?GEMINI_MODEL:null, ai_max_per_hour:AI_MAX_PER_HOUR, ai_min_interval_ms:AI_MIN_INTERVAL_MS });
+  // RNC 2025: al arranque solo se carga el índice (~430 KB gz); los archivos
+  // de km se leen bajo demanda para respetar el presupuesto de memoria.
+  const rncIndex = RNC._loadIndex();
+  if (rncIndex) {
+    log('info','Índice RNC 2025 cargado',{ chains: Object.values(rncIndex.codes).reduce((n, list) => n + list.length, 0) });
+  } else {
+    log('warn','Índice RNC 2025 ausente — la cascada RNC queda desactivada');
+  }
   await cycle();
   if (env.WORKER_ONCE === '1') return;
   while (!stopping) {
