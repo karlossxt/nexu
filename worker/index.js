@@ -62,6 +62,7 @@ let groqCooldownUntil = 0;
 let aiNextAllowedAt = 0;
 let lastAiProvider = 'none';
 let strictLocationRejects = Object.create(null);
+let locationApproximations = Object.create(null);
 let roadSnapMetrics = { attempted:0, success:0, rejected_distance:0, rejected_road_mismatch:0, reverse_failed:0 };
 let fastLaneHistory = [];
 let fastLaneLastAt = 0;
@@ -73,6 +74,11 @@ if(!GEMINI_KEY) console.warn('[warn] GEMINI_API_KEY no configurada: fast lane de
 function noteStrictLocationReject(reason) {
   const key=String(reason || 'unknown');
   strictLocationRejects[key]=(strictLocationRejects[key] || 0) + 1;
+}
+
+function noteApproximateLocation(precision) {
+  const key=String(precision || 'approximate');
+  locationApproximations[key]=(locationApproximations[key] || 0) + 1;
 }
 
 class GroqRateLimitError extends Error {
@@ -279,6 +285,11 @@ async function findSpatialDuplicate(row) {
   const eventTime=new Date(row.event_at || Date.now()).getTime();
   const since=new Date(eventTime - 2*3600_000).toISOString();
   const until=new Date(eventTime + 30*60_000).toISOString();
+  // En puntos gruesos (centroide municipal) la distancia deja de discriminar:
+  // exigimos similitud textual fuerte para no colapsar incidencias distintas
+  // que solo comparten el centro del municipio (mapa de calor).
+  const coarse=String(row.location_precision||'').trim()==='area_security'
+    || String(row.location_precision||'').trim()==='municipality_approximate';
   const path='alerts?select=id,title,detail,event_type,category,road,kilometer,latitude,longitude,source_name,event_at,location_label'
     +'&category=eq.'+encodeURIComponent(row.category)
     +'&event_at=gte.'+encodeURIComponent(since)
@@ -302,7 +313,11 @@ async function findSpatialDuplicate(row) {
     );
 
     let duplicate=false;
-    if (sameEvent && distanceKm<=0.25 && similarity>=0.20) duplicate=true;
+    if (coarse) {
+      // Punto grueso (centroide municipal): solo se fusiona si el texto es muy
+      // parecido (misma noticia replicada), para no perder incidencias distintas.
+      duplicate = sameEvent && similarity>=0.55;
+    } else if (sameEvent && distanceKm<=0.25 && similarity>=0.20) duplicate=true;
     else if (sameEvent && sameRoad && distanceKm<=1.0 && similarity>=0.30) duplicate=true;
     else if (sameEvent && sameRoad && sameKm && distanceKm<=1.5 && similarity>=0.15) duplicate=true;
     else if (!existing.event_type && sameRoad && distanceKm<=0.5 && similarity>=0.48) duplicate=true;
@@ -1346,6 +1361,22 @@ function strictLocationDecision(ai, geo, context={}) {
   return {ok:false,reason:'unknown_location_precision'};
 }
 
+// Cuando la compuerta estricta rechaza un punto que aún es útil, no se pierde la
+// alerta: se conserva como ubicación APROXIMADA y el frontend la dibuja como
+// área (radio), nunca como pin exacto.
+//   · Seguridad que solo llega a municipio/zona → `area_security` (sin pin,
+//     alimenta el mapa de calor por municipio y tipo).
+//   · Resto → `road_approximate` / `municipality_approximate` (pin + radio).
+function approximateLocationFallback(ai, geo) {
+  if (!geo || !Number.isFinite(Number(geo.latitude)) || !Number.isFinite(Number(geo.longitude))) return null;
+  const precision=String(geo.precision || '').toLowerCase();
+  if(ai?.categoria==='security' && ['municipality','zone','state'].includes(precision)) {
+    return { precision:'area_security', confidenceCap:.55 };
+  }
+  if(precision==='municipality') return { precision:'municipality_approximate', confidenceCap:.5 };
+  return { precision:'road_approximate', confidenceCap:.6 };
+}
+
 async function processItem(item, feed, options={}) {
   const externalId = hash(item.url || item.title + '|' + item.published_at);
   if (await alreadyExists(externalId)) return 'duplicate';
@@ -1423,25 +1454,25 @@ async function processItem(item, feed, options={}) {
 
   if (!geo) geo = await resolveRoadLocation(ai, kilometer, reference);
 
+  // Si la resolución estricta falla no se descarta aún: primero se intenta una
+  // ubicación aproximada (municipio/zona). Se registra el motivo para diagnóstico.
   if (!geo && explicitIntersection) {
-    log('warn','Intersección explícita sin resolución; se evita fallback municipal/estatal',{
+    log('warn','Intersección explícita sin resolución directa; se intenta ubicación aproximada',{
       streets:explicitIntersection,
       municipality,
       state:clean(ai.estado),
       location:clean(ai.ubicacion)
     });
-    return storeWithoutPoint('intersection_unresolved');
   }
   const requiresSpecificRoadLocation = !!clean(ai.carretera) || kilometer != null || !!reference;
   if (!geo && requiresSpecificRoadLocation) {
-    log('warn','Ubicación vial específica sin resolución fiable; se evita fallback municipal/estatal',{
+    log('warn','Ubicación vial específica sin resolución estricta; se intenta ubicación aproximada',{
       road:clean(ai.carretera),
       kilometer,
       reference,
       municipality,
       state:clean(ai.estado)
     });
-    return storeWithoutPoint('road_unresolved');
   }
   if (!geo) {
     for (const candidate of locationQueries.filter(x=>['zone','municipality','state'].includes(x.precision))) {
@@ -1509,23 +1540,49 @@ async function processItem(item, feed, options={}) {
     municipality,
     explicitIntersection
   });
+  // Salida de ubicación: por defecto se respeta la evidencia del proveedor; si la
+  // compuerta estricta la rechaza, se degrada a aproximada (con radio) en lugar
+  // de perder la alerta. Solo se guarda sin punto si no hay coordenadas útiles.
+  let locationPrecision=geo.precision || null;
+  let locationStatus=geo.status || 'approximate';
+  let locationConfidence=Number(geo.confidence)||0;
   if (!strictDecision.ok) {
-    noteStrictLocationReject(strictDecision.reason);
-    log('warn','Ubicación descartada por política estricta',{
+    const fallback=approximateLocationFallback(ai,geo);
+    if (!fallback) {
+      noteStrictLocationReject(strictDecision.reason);
+      log('warn','Ubicación descartada por política estricta',{
+        reason:strictDecision.reason,
+        road:clean(ai.carretera),
+        kilometer,
+        reference,
+        municipality,
+        state:clean(ai.estado),
+        precision:geo.precision || null,
+        confidence:Number(geo.confidence)||0,
+        status:geo.status || null,
+        provider:geo.provider || null,
+        location_type:geo.location_type || null,
+        road_snapped:!!geo.road_snapped
+      });
+      return storeWithoutPoint('strict_location_rejected');
+    }
+    locationPrecision=fallback.precision;
+    locationStatus='approximate';
+    locationConfidence=Math.min(locationConfidence, fallback.confidenceCap);
+    noteApproximateLocation(locationPrecision);
+    log('info','Ubicación degradada a aproximada (área con radio, sin pin exacto)',{
       reason:strictDecision.reason,
+      precision:locationPrecision,
+      confidence:locationConfidence,
+      category:ai.categoria,
       road:clean(ai.carretera),
       kilometer,
-      reference,
       municipality,
       state:clean(ai.estado),
-      precision:geo.precision || null,
-      confidence:Number(geo.confidence)||0,
-      status:geo.status || null,
       provider:geo.provider || null,
-      location_type:geo.location_type || null,
-      road_snapped:!!geo.road_snapped
+      latitude:Number(geo.latitude),
+      longitude:Number(geo.longitude)
     });
-    return storeWithoutPoint('strict_location_rejected');
   }
 
   const eventAt = item.published_at && Date.now() - new Date(item.published_at).getTime() <= MAX_AGE_MS ? item.published_at : new Date().toISOString();
@@ -1546,9 +1603,9 @@ async function processItem(item, feed, options={}) {
     location_label: [geo.label || locationQuery, geo.label && /\b(?:km|kil[oó]metros?)\.?\s*\d/i.test(geo.label) ? '' : kilometerLabel, reference ? 'ref. ' + reference : '', direction ? 'sentido ' + direction : ''].filter(Boolean).join(' · '),
     latitude: geo.latitude,
     longitude: geo.longitude,
-    location_confidence: geo.confidence,
-    location_precision: geo.precision || null,
-    location_status: geo.status,
+    location_confidence: locationConfidence,
+    location_precision: locationPrecision,
+    location_status: locationStatus,
     source_name: sourceName(item, feed),
     source_url: safeUrl(item.url),
     event_at: eventAt
@@ -1580,6 +1637,7 @@ async function health(values) {
 async function cycle() {
   const started = new Date().toISOString();
   strictLocationRejects = Object.create(null);
+  locationApproximations = Object.create(null);
   roadSnapMetrics = { attempted:0, success:0, rejected_distance:0, rejected_road_mismatch:0, reverse_failed:0 };
   const stats = { received:0, relevant:0, queued_new:0, queue_pending:0, queue_failed:0, queue_oldest_min:0, analyzed:0, inserted:0, duplicates:0, rejected:0, no_location:0, errors:0, rate_limited:0, groq_used:0, gemini_used:0, ai_cooldown_seconds:0, ai_budget_wait_seconds:0, ai_max_per_hour:AI_MAX_PER_HOUR, avg_source_delay_min:0, max_source_delay_min:0, location_success_rate_pct:0, tomtom_enabled:false, tomtom_received:0, tomtom_boxes:0, tomtom_errors:0, tomtom_high_value:0, tomtom_medium_value:0, tomtom_low_value:0, tomtom_operational_candidates:0, tomtom_collapsed_duplicates:0, tomtom_categories:{}, queue_expired_removed:0, feed_errors:0, strict_location_mode:STRICT_LOCATION_MODE, strict_location_rejections:{}, road_snap_metrics:{}, fast_lane_used:0, fast_lane_skipped_budget:0, fast_lane_max_per_hour:FAST_LANE_MAX_PER_HOUR,
     google_geocoder_enabled:!!GOOGLE_KEY, geoapify_enabled:!!GEOAPIFY_KEY, gemini_enabled:!!GEMINI_KEY };
@@ -1745,6 +1803,7 @@ async function cycle() {
     }
     Object.assign(stats, await queueMetrics());
     stats.strict_location_rejections={...strictLocationRejects};
+    stats.location_approximations={...locationApproximations};
     stats.road_snap_metrics={...roadSnapMetrics};
     const located=stats.inserted+stats.no_location;
     stats.location_success_rate_pct=located?Math.round(((stats.inserted-(stats.unlocated_inserted||0))/located)*100):0;
