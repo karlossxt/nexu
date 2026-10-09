@@ -157,6 +157,24 @@ node tools/rnc-alerts-coverage.js alerts.json
 
 Medido sobre las últimas 500 alertas reales (351 con vía+km): **50.7 % se resuelve sin red** (31.3 % poste exacto, 17.1 % interpolación certificada, 2.3 % anclas revisadas) y 132 de las 266 alertas hoy `unlocated` quedan ubicadas con confianza ≥0.9. El resto son vías sin número ni sección RNC en el texto (128; requiere alias por corredor) o km fuera de toda ventana certificada (45); esos casos siguen su cascada al geocodificador externo.
 
+### Ubicación aproximada y mapa de calor de seguridad
+
+Cuando la compuerta estricta (`strictLocationDecision`) rechaza un punto que aún es
+útil, la alerta **no se pierde**: se degrada a ubicación aproximada y el frontend la
+dibuja como **área con radio** (nunca como pin exacto):
+
+- `road_approximate` / `municipality_approximate` → pin + círculo de área estimada.
+- `area_security` → alertas de **seguridad** que solo resuelven a municipio/zona. No se
+  pintan como pin individual; alimentan el **mapa de calor** (capa activable en las
+  herramientas del mapa) que agrupa incidencias por municipio y **tipo** (`event_type`),
+  con radio/color/opacidad según cantidad.
+
+La deduplicación espacial exige similitud textual fuerte en puntos gruesos
+(`area_security`/`municipality_approximate`) para no colapsar incidencias distintas que
+comparten el centroide municipal. Los valores nuevos de `location_precision` son texto
+libre (sin `CHECK`), por lo que no requieren migración; `location_status='approximate'`
+ya está permitido por el esquema.
+
 
 ## Arquitectura
 
