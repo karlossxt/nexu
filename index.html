@@ -804,6 +804,8 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a, body.user-mode:not(.dark
 .traffic-legend{ display:none; position:absolute; left:50%; bottom:28px; transform:translateX(-50%); z-index:1200; gap:12px; align-items:center; padding:8px 12px; border-radius:10px; background:rgba(12,16,23,.9); border:1px solid #1E293B; color:#E5E7EB; font-size:10px; box-shadow:0 5px 20px rgba(0,0,0,.45); }
 .traffic-legend.open{ display:flex; }
 .traffic-legend span{ display:flex; align-items:center; gap:4px; white-space:nowrap; }
+#heat-legend{ left:auto; right:16px; transform:none; }
+body.user-mode #heat-legend{ right:16px; }
 .traffic-line{ width:18px; height:4px; border-radius:4px; display:inline-block; }
 .leaflet-bottom.leaflet-left .nv-maptools{ margin-left:14px; margin-bottom:14px; }
 body.user-mode .leaflet-bottom.leaflet-left{ margin-left:346px; transition:margin-left .25s ease; }
@@ -1263,6 +1265,7 @@ body.user-mode:not(.dark-mode) .casetas-filter{color:#067647;background:#ECFDF3;
     <span class="sac-actions"><button onclick="openFocusedDetail()"><i class="fa-solid fa-circle-info"></i> Detalle</button><button class="btn-outline" onclick="navigateFocusedAlert()"><i class="fa-solid fa-diamond-turn-right"></i> Cómo llegar</button><button class="btn-outline" onclick="shareFocusedAlert()" aria-label="Compartir alerta"><i class="fa-solid fa-share-nodes"></i></button></span>
   </section>
   <div id="traffic-legend" class="traffic-legend"><b>TRÁFICO</b><span><i class="traffic-line" style="background:#22C55E"></i> Fluido</span><span><i class="traffic-line" style="background:#F59E0B"></i> Lento</span><span><i class="traffic-line" style="background:#EF4444"></i> Congestionado</span></div>
+  <div id="heat-legend" class="traffic-legend"><b><i class="fa-solid fa-fire" style="color:#EF4444"></i> CALOR SEGURIDAD</b><span><i class="traffic-line" style="background:#F59E0B"></i> Menos</span><span><i class="traffic-line" style="background:#EA580C"></i> Medio</span><span><i class="traffic-line" style="background:#DC2626"></i> Más</span><span data-heat-count>0</span> incidencias</div>
   <button id="panel-launcher" onclick="togglePanel()" title="Abrir panel"><i class="fa-solid fa-sliders"></i> Panel Central</button>
 
   <!-- PANEL CONFIG -->
@@ -1865,6 +1868,8 @@ let activeRoute = null;
 let routeNearAlerts = []; 
 let markers = L.markerClusterGroup({ disableClusteringAtZoom: 16 });
 let alertAreaLayer = L.layerGroup();
+let securityHeatLayer = L.layerGroup();
+let securityHeatEnabled = false;
 let staticLayer = L.layerGroup(); 
 let risLayer = L.layerGroup(); 
 let routeControl = null;
@@ -1951,7 +1956,7 @@ const satelliteLayer = L.tileLayer(LINKS.tilesSatellite, { attribution: 'Imágen
 let baseMapMode = localStorage.getItem('nv_base_map') === 'satellite' ? 'satellite' : 'streets';
 const map = L.map('map', { zoomControl: false }).setView([19.4326, -99.1332], 5);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
-L.Control.MapTools = L.Control.extend({ options: { position: 'bottomleft' }, onAdd() { const div = L.DomUtil.create('div', 'nv-maptools'); div.setAttribute('role','toolbar'); div.setAttribute('aria-label','Herramientas del mapa'); div.innerHTML = '<button id="gps-toggle" class="nv-mtbtn" onclick="gpsTrack()" title="Mi ubicación" data-label="Mi ubicación" aria-label="Activar mi ubicación" aria-pressed="false"><i class="fa-solid fa-location-crosshairs"></i></button><button class="nv-mtbtn" onclick="map.setView([23.6345,-102.5528],5)" title="Vista nacional" data-label="Vista nacional" aria-label="Centrar mapa en México"><i class="fa-solid fa-map-location-dot"></i></button><button id="satellite-toggle" class="nv-mtbtn" onclick="toggleSatellite()" title="Vista satélite" data-label="Vista satélite" aria-label="Cambiar a vista satélite" aria-pressed="false"><i class="fa-solid fa-satellite"></i></button><button id="traffic-toggle" class="nv-mtbtn" onclick="toggleTraffic()" title="Tráfico en vivo" data-label="Tráfico en vivo" aria-label="Mostrar tráfico en vivo" aria-pressed="false"><i class="fa-solid fa-traffic-light"></i></button><button id="theme-toggle" class="nv-mtbtn" onclick="toggleTheme()" title="Cambiar tema" data-label="Cambiar tema" aria-label="Cambiar modo claro u oscuro" aria-pressed="false"><i class="fa-solid fa-moon"></i></button>'; L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div); return div; } });
+L.Control.MapTools = L.Control.extend({ options: { position: 'bottomleft' }, onAdd() { const div = L.DomUtil.create('div', 'nv-maptools'); div.setAttribute('role','toolbar'); div.setAttribute('aria-label','Herramientas del mapa'); div.innerHTML = '<button id="gps-toggle" class="nv-mtbtn" onclick="gpsTrack()" title="Mi ubicación" data-label="Mi ubicación" aria-label="Activar mi ubicación" aria-pressed="false"><i class="fa-solid fa-location-crosshairs"></i></button><button class="nv-mtbtn" onclick="map.setView([23.6345,-102.5528],5)" title="Vista nacional" data-label="Vista nacional" aria-label="Centrar mapa en México"><i class="fa-solid fa-map-location-dot"></i></button><button id="satellite-toggle" class="nv-mtbtn" onclick="toggleSatellite()" title="Vista satélite" data-label="Vista satélite" aria-label="Cambiar a vista satélite" aria-pressed="false"><i class="fa-solid fa-satellite"></i></button><button id="traffic-toggle" class="nv-mtbtn" onclick="toggleTraffic()" title="Tráfico en vivo" data-label="Tráfico en vivo" aria-label="Mostrar tráfico en vivo" aria-pressed="false"><i class="fa-solid fa-traffic-light"></i></button><button id="heat-toggle" class="nv-mtbtn" onclick="toggleSecurityHeat()" title="Mapa de calor de seguridad" data-label="Calor de seguridad" aria-label="Mostrar mapa de calor de incidencias de seguridad" aria-pressed="false"><i class="fa-solid fa-fire"></i></button><button id="theme-toggle" class="nv-mtbtn" onclick="toggleTheme()" title="Cambiar tema" data-label="Cambiar tema" aria-label="Cambiar modo claro u oscuro" aria-pressed="false"><i class="fa-solid fa-moon"></i></button>'; L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div); return div; } });
 (baseMapMode === 'satellite' ? satelliteLayer : lightLayer).addTo(map);
 map.addLayer(alertAreaLayer); map.addLayer(markers); map.addLayer(staticLayer);
 let routeLineLayer = L.layerGroup(); map.addLayer(routeLineLayer);
@@ -1982,6 +1987,82 @@ function toggleCasetas(force) {
   localStorage.setItem('nv_casetas',next?'1':'0');
 }
 setTimeout(()=>{ if(localStorage.getItem('nv_casetas')==='1') toggleCasetas(true); },100);
+
+// MAPA DE CALOR DE SEGURIDAD
+// Agrupa las incidencias de seguridad por municipio (o celda geográfica si no
+// hay municipio) y dibuja un área cuyo tamaño/color/opacidad refleja cantidad y
+// tipo. No inventa un pin exacto: representa concentración.
+const SECURITY_EVENT_COLORS = {
+  security_incident:'#DC2626', protest:'#E11D48', blockage:'#E11D48', closure:'#E11D48',
+  crash:'#EA580C', road_hazard:'#D97706', emergency:'#DC2626'
+};
+function securityEventLabel(type) {
+  return ({security_incident:'Seguridad',protest:'Protesta',blockage:'Bloqueo',closure:'Cierre',crash:'Accidente',road_hazard:'Riesgo en vía',emergency:'Emergencia'})[type] || 'Incidencia';
+}
+function securityHeatColor(group) {
+  const dominant=Object.entries(group.types).sort((a,b)=>b[1]-a[1])[0];
+  return SECURITY_EVENT_COLORS[dominant?dominant[0]:'security_incident'] || '#DC2626';
+}
+function securityHeatGroups(list) {
+  const groups=new Map();
+  (list||[]).filter(a=>a && hasAlertPoint(a) && a.category==='security' && a.location_precision!=='state').forEach(a=>{
+    const lat=Number(a.lat), lon=Number(a.lon);
+    if(!Number.isFinite(lat)||!Number.isFinite(lon)) return;
+    const mun=String(a.municipality||'').trim();
+    const st=String(a.state||'').trim();
+    const key=(mun||st)?normAcc(mun+'|'+st):lat.toFixed(1)+','+lon.toFixed(1);
+    let g=groups.get(key);
+    if(!g){ g={lat:0,lon:0,count:0,types:{},municipality:mun,state:st}; groups.set(key,g); }
+    g.lat+=lat; g.lon+=lon; g.count++;
+    const type=String(a.event_type||'security_incident');
+    g.types[type]=(g.types[type]||0)+1;
+  });
+  return [...groups.values()].map(g=>({ ...g, lat:g.lat/g.count, lon:g.lon/g.count }));
+}
+function buildSecurityHeat() {
+  securityHeatLayer.clearLayers();
+  const groups=securityHeatGroups(alerts);
+  groups.forEach(g=>{
+    const radius=Math.min(45000, 7000 + (g.count-1)*3000);
+    const color=securityHeatColor(g);
+    const fillOpacity=Math.min(.5, .14 + g.count*.05);
+    const breakdown=Object.entries(g.types).sort((a,b)=>b[1]-a[1]).slice(0,4)
+      .map(([t,n])=>`${securityEventLabel(t)}: ${n}`).join(' · ');
+    L.circle([g.lat,g.lon],{ radius, color, weight:0, fillColor:color, fillOpacity, interactive:true })
+      .bindTooltip(`<b>${g.count} incidencia${g.count===1?'':'s'} de seguridad</b><br>${escapeHtml([g.municipality,g.state].filter(Boolean).join(', ')||'Zona sin municipio')}${breakdown?'<br>'+breakdown:''}`,{ direction:'top' })
+      .addTo(securityHeatLayer);
+  });
+  const legend=document.getElementById('heat-legend');
+  if(legend) {
+    const total=groups.reduce((n,g)=>n+g.count,0);
+    const slot=legend.querySelector('[data-heat-count]');
+    if(slot) slot.textContent=String(total);
+  }
+}
+function refreshSecurityHeat() {
+  if(!securityHeatEnabled) return;
+  buildSecurityHeat();
+  if(securityHeatLayer.getLayers().length) {
+    if(!map.hasLayer(securityHeatLayer)) map.addLayer(securityHeatLayer);
+    document.getElementById('heat-legend')?.classList.add('open');
+  } else if(map.hasLayer(securityHeatLayer)) {
+    map.removeLayer(securityHeatLayer);
+  }
+}
+function toggleSecurityHeat(force) {
+  const next=typeof force==='boolean'?force:!securityHeatEnabled;
+  securityHeatEnabled=next;
+  const btn=document.getElementById('heat-toggle');
+  const legend=document.getElementById('heat-legend');
+  if(next) {
+    buildSecurityHeat();
+    if(securityHeatLayer.getLayers().length) map.addLayer(securityHeatLayer);
+  } else if(map.hasLayer(securityHeatLayer)) map.removeLayer(securityHeatLayer);
+  if(btn){ btn.classList.toggle('active',next); btn.setAttribute('aria-pressed',String(next)); }
+  if(legend) legend.classList.toggle('open',next&&securityHeatLayer.getLayers().length>0);
+  localStorage.setItem('nv_security_heat',next?'1':'0');
+}
+setTimeout(()=>{ if(localStorage.getItem('nv_security_heat')==='1') toggleSecurityHeat(true); },120);
 
 function setBaseMap(mode) {
   baseMapMode = mode === 'satellite' ? 'satellite' : 'streets';
@@ -2684,6 +2765,9 @@ function precisionLabel(a) {
   if(a.location_precision === 'kilometer_rnc') return 'Poste kilométrico aproximado';
   if(a.location_precision === 'kilometer_rnc_estimated') return 'Kilómetro estimado entre postes RNC';
   if(a.location_precision === 'kilometer_static') return 'Kilómetro estimado en corredor';
+  if(a.location_precision === 'road_approximate') return 'Área aproximada sobre la vía';
+  if(a.location_precision === 'municipality_approximate') return 'Área del municipio · sin punto exacto';
+  if(a.location_precision === 'area_security') return 'Concentración de seguridad por municipio';
   if(a.location_precision === 'intersection') return 'Intersección localizada';
   if(a.precision === 'carretera') return 'Ajustado a carretera';
   if(a.precision === 'kilometro') return 'Kilómetro calculado';
@@ -2714,6 +2798,9 @@ function estimatedRadiusMeters(a) {
   if(a.location_precision === 'kilometer_rnc_estimated') return 2000;
   if(a.location_precision === 'kilometer_static') return 500;
   if(a.location_precision === 'intersection') return 250;
+  if(a.location_precision === 'road_approximate') return 2500;
+  if(a.location_precision === 'municipality_approximate') return 8000;
+  if(a.location_precision === 'area_security') return 12000;
   return ({ punto:200, carretera:500, kilometro:a.location_precision === 'kilometer_rnc' ? 1500 : 500, tramo:2500, zona:3000, municipio:6000, estado:15000 }[a.precision] || 3000);
 }
 function estimatedRadiusLabel(a) {
@@ -2741,7 +2828,7 @@ function showAlertFocus(a) {
   document.getElementById('sac-location').textContent=a.location || 'Ubicación aproximada';
   const knownRef=alertKnownReference(a);
   document.getElementById('sac-meta').textContent=`${alertSourceLabel(a)} · ${precisionLabel(a)}${knownRef?' · Referencia: '+knownRef:''} · ${reportedTimeLabel(a.time)}`;
-  document.querySelector('#selected-alert-card .sac-actions .btn-outline')?.toggleAttribute('hidden',a.location_precision === 'corridor_reference');
+  document.querySelector('#selected-alert-card .sac-actions .btn-outline')?.toggleAttribute('hidden',['corridor_reference','area_security'].includes(a.location_precision));
   const icon=document.getElementById('sac-icon'); icon.style.background=visual.color; icon.innerHTML=`<i class="fa-solid ${visual.icon}"></i>`;
   banner.classList.add('open'); card.classList.add('open');
 }
@@ -2786,6 +2873,9 @@ function activateWithKeyboard(event, action) {
 }
 function addMarkerToMap(alert) {
   if(!hasAlertPoint(alert)) return;
+  // La seguridad que solo se ubica por municipio no se pinta como pin: se
+  // representa con el mapa de calor (concentración), no con un punto exacto.
+  if(alert.location_precision === 'area_security') return;
   const isSec = alert.category === 'security';
   const expired = isAlertExpired(alert);
   const visual = incidentVisual(alert); const color=visual.color;
@@ -2824,7 +2914,7 @@ function alertCardHTML(a) {
     </div>
     <b class="ac-title">${escapeHtml(a.title)}</b>
     <div class="ac-location"><i class="fa-solid fa-location-dot"></i><span>${escapeHtml(a.location || 'Ubicación aproximada')}</span></div>
-    <div class="ac-tags"><span class="precision-chip"><i class="fa-solid fa-crosshairs"></i> ${precisionLabel(a)}${hasAlertPoint(a) && estimatedRadiusMeters(a) ? ' · radio '+estimatedRadiusLabel(a) : ''}</span>${referenceChipHTML(a)}${distanceChip}${trafficChip}${syncChip}${stale}${hasAlertPoint(a) && a.location_precision !== 'corridor_reference' ? `<button class="card-nav" onclick="event.stopPropagation(); navigateToAlert(${a.id})"><i class="fa-solid fa-diamond-turn-right"></i> Ir</button>` : ''}</div>
+    <div class="ac-tags"><span class="precision-chip"><i class="fa-solid fa-crosshairs"></i> ${precisionLabel(a)}${hasAlertPoint(a) && estimatedRadiusMeters(a) ? ' · radio '+estimatedRadiusLabel(a) : ''}</span>${referenceChipHTML(a)}${distanceChip}${trafficChip}${syncChip}${stale}${hasAlertPoint(a) && !['corridor_reference','area_security'].includes(a.location_precision) ? `<button class="card-nav" onclick="event.stopPropagation(); navigateToAlert(${a.id})"><i class="fa-solid fa-diamond-turn-right"></i> Ir</button>` : ''}</div>
     <div class="ac-source"><i class="fa-solid fa-circle-info"></i><span>${alertSourceLabel(a)} · ${alertTimingLabel(a)}</span><span class="ac-actions"><button onclick="event.stopPropagation(); toggleLike(${a.id})" id="btn-heart-${a.id}" class="ac-action${a.liked ? ' liked' : ''}" title="Guardar alerta" aria-label="Guardar alerta"><i class="fa-solid fa-heart"></i></button><button onclick="event.stopPropagation(); shareAlert(${a.id})" class="ac-action share" title="Compartir" aria-label="Compartir alerta"><i class="fa-brands fa-whatsapp"></i></button><button onclick="event.stopPropagation(); removeAlert(${a.id})" class="ac-action delete" title="Eliminar" aria-label="Eliminar alerta"><i class="fa-solid fa-xmark"></i></button></span></div>
   `;
 }
@@ -2848,6 +2938,7 @@ function updateLists() {
   });
   document.getElementById('count-road').innerText = roadList.childElementCount;
   document.getElementById('count-security').innerText = secList.childElementCount;
+  refreshSecurityHeat();
   renderDrawer();
 }
 function renderDrawer() {
@@ -2855,7 +2946,7 @@ function renderDrawer() {
   rebuildU();
   refreshRisAuto();
 }
-function filterMapMarkers(context) { markers.clearLayers(); alertAreaLayer.clearLayers(); alerts.forEach(a => { if(context === 'all' || a.category === context) addMarkerToMap(a); }); }
+function filterMapMarkers(context) { markers.clearLayers(); alertAreaLayer.clearLayers(); alerts.forEach(a => { if(context === 'all' || a.category === context) addMarkerToMap(a); }); refreshSecurityHeat(); }
 function shareAlert(id) {
     const alert = alerts.find(a => a.id === id); if(!alert) return;
     const mapLink = hasAlertPoint(alert) ? LINKS.gmapsLink.replace('{lat}', alert.lat).replace('{lon}', alert.lon) : (alert.source_url || location.href);
@@ -3154,6 +3245,8 @@ function centralPrecisionToUi(rawPrecision,status,confidence) {
   if(['exact','toll_reference'].includes(raw)) return 'punto';
   if(['kilometer_rnc','kilometer_rnc_estimated','kilometer_static','kilometer'].includes(raw)) return 'kilometro';
   if(raw==='corridor_reference') return 'tramo';
+  if(raw==='road_approximate') return 'carretera';
+  if(['municipality_approximate','area_security'].includes(raw)) return 'municipio';
   if(raw==='intersection') return 'punto';
   if(['reference','road'].includes(raw)) return 'carretera';
   if(raw==='zone') return 'zona';
@@ -3176,7 +3269,7 @@ function centralAlertToUi(row,receivedAt=0) {
     id:centralNumericId(row.id||row.external_id), central_id:row.id, external_id:row.external_id,
     lat:row.latitude == null ? null : Number(row.latitude), lon:row.longitude == null ? null : Number(row.longitude), category:row.category,
     title:row.title, detail:row.detail||row.title, location:row.location_label||[row.road,row.municipality,row.state].filter(Boolean).join(', '),
-    state:row.state||'', precision, km:row.kilometer ?? null, location_precision:locationPrecision||null,
+    state:row.state||'', municipality:row.municipality||'', precision, km:row.kilometer ?? null, location_precision:locationPrecision||null,
     location_confidence:confidence, location_provider:'central', road_snapped:false,
     time:new Date(row.event_at), published_at:row.event_at, detected_at:row.created_at||null, received_at:receivedAt,
     event_type:row.event_type||null, traffic_status:row.traffic_status||null,
@@ -3242,7 +3335,7 @@ function alertsLikelySame(local,central) {
 async function loadCentralAlerts() {
   if(!supabaseClient) return;
   const since=new Date(Date.now()-24*3600*1000).toISOString();
-  const {data,error}=await supabaseClient.from('alerts').select('id,external_id,title,detail,category,severity,state,municipality,road,kilometer,location_label,latitude,longitude,location_confidence,location_precision,location_status,source_name,source_url,event_at,created_at').gte('event_at',since).order('event_at',{ascending:false}).limit(500);
+  const {data,error}=await supabaseClient.from('alerts').select('id,external_id,title,detail,category,severity,state,municipality,road,kilometer,location_label,latitude,longitude,location_confidence,location_precision,location_status,event_type,traffic_status,source_name,source_url,event_at,created_at').gte('event_at',since).order('event_at',{ascending:false}).limit(500);
   if(error||!Array.isArray(data)) return;
   const previous=new Map(alerts.filter(a=>a.central_id).map(a=>[a.central_id,Number(a.received_at)||0]));
   const central=data.map(row=>centralAlertToUi(row,previous.get(row.id)||0));
