@@ -1366,7 +1366,7 @@ function strictLocationDecision(ai, geo, context={}) {
 // área (radio), nunca como pin exacto.
 //   · Seguridad que solo llega a municipio/zona → `area_security` (sin pin,
 //     alimenta el mapa de calor por municipio y tipo).
-//   · Resto → `road_approximate` / `municipality_approximate` (pin + radio).
+//   · Resto → `road_approximate` / `municipality_approximate` (área + radio, sin pin).
 function approximateLocationFallback(ai, geo) {
   if (!geo || !Number.isFinite(Number(geo.latitude)) || !Number.isFinite(Number(geo.longitude))) return null;
   const precision=String(geo.precision || '').toLowerCase();
