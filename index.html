@@ -1176,6 +1176,23 @@ body.operator-mode #panorama-view{display:none!important}
 .pano-kpi b{display:block;font-size:26px;line-height:1;font-weight:900;letter-spacing:-.03em;color:var(--k)}
 .pano-kpi span{display:block;margin-top:6px;color:var(--text-muted);font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
 .pano-kpi i{position:absolute;right:10px;top:10px;color:var(--k);opacity:.32;font-size:14px}
+.pano-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:7px 8px;border:1px solid var(--border);border-radius:12px;background:var(--card-bg)}
+.pano-chips{display:flex;align-items:center;gap:6px;min-width:0;overflow-x:auto;scrollbar-width:none;padding:1px}
+.pano-chips::-webkit-scrollbar{display:none}
+.pano-chip{width:auto;display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;padding:7px 10px;border:1px solid var(--border);border-radius:999px;background:transparent;color:var(--text-muted);font-size:10px;font-weight:800;line-height:1;box-shadow:none;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s,border-color .15s}
+.pano-chip:hover{background:var(--card-hover);box-shadow:none;filter:none}
+.pano-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.pano-chip b{min-width:16px;padding:1px 5px;border-radius:999px;background:rgba(148,163,184,.16);color:inherit;font-size:9px;text-align:center}
+.pano-chip.active b{background:rgba(255,255,255,.22)}
+.pano-tools{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.pano-sort{display:inline-flex;align-items:center;gap:5px;height:31px;padding:0 9px;border:1px solid var(--border);border-radius:999px;background:var(--card-bg);color:var(--text-muted)}
+.pano-sort i{font-size:9px}
+.pano-sort select{width:auto;min-width:0;height:29px;margin:0;padding:0 16px 0 0;border:0;border-radius:0;background:transparent;color:var(--text);font-family:inherit;font-size:10px;font-weight:800;outline:none;box-shadow:none;cursor:pointer}
+.pano-unlocated-btn{width:auto;display:inline-flex;align-items:center;gap:5px;height:31px;padding:0 9px;border:1px dashed var(--border);border-radius:999px;background:transparent;color:var(--text-muted);font-size:9px;font-weight:800;box-shadow:none;cursor:pointer;white-space:nowrap}
+.pano-unlocated-btn:hover{background:var(--card-hover);box-shadow:none;filter:none}
+.pano-unlocated-btn.active{color:#B45309;border-color:rgba(245,158,11,.48);background:rgba(245,158,11,.1)}
+.pano-unlocated-btn[hidden]{display:none}
+body.user-mode:not(.dark-mode) .pano-toolbar,body.user-mode:not(.dark-mode) .pano-sort{background:#fff}
 .pano-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(300px,.8fr);gap:14px;margin-top:14px;align-items:start}
 .pano-grid > *{min-width:0}
 .pano-main,.pano-block,.pano-highlights{min-width:0}
@@ -1236,6 +1253,12 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
   .pano-highlights{grid-template-columns:1fr}
   .pano-side{display:flex}
   .pano-block{padding:12px}
+  .pano-toolbar{flex-wrap:wrap;gap:7px;padding:7px}
+  .pano-chips{flex-basis:100%;order:1;flex-wrap:wrap;overflow:visible}
+  .pano-chip{padding:6px 9px}
+  .pano-tools{width:100%;order:2;justify-content:space-between;flex-wrap:wrap}
+  .pano-sort{flex:1;justify-content:center}
+  .pano-sort select{flex:1}
 }
 @media(max-width:420px){
   .pano-kpi{padding:10px}
@@ -1365,6 +1388,20 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
 
       <div id="pano-kpis" class="pano-kpis" aria-label="Resumen de alertas"></div>
 
+      <div class="pano-toolbar" aria-label="Filtros y orden del panorama">
+        <div class="pano-chips" id="pano-type-filters" role="group" aria-label="Filtrar por tipo de incidencia"></div>
+        <div class="pano-tools">
+          <button class="pano-unlocated-btn" type="button" id="pano-unlocated-btn" onclick="togglePanoUnlocated()" hidden></button>
+          <label class="pano-sort">
+            <i class="fa-solid fa-arrow-down-wide-short" aria-hidden="true"></i>
+            <select id="pano-sort" onchange="setPanoSort(this.value)" aria-label="Ordenar alertas">
+              <option value="relevance">Relevancia</option>
+              <option value="recent">Más recientes</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
       <div class="pano-grid">
         <div class="pano-main">
           <section class="pano-block">
@@ -1372,8 +1409,8 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
             <div id="pano-highlights" class="pano-highlights"></div>
             <button class="pano-more" type="button" onclick="openAlertCenter()"><i class="fa-solid fa-list-check"></i> Ver el centro de alertas completo</button>
           </section>
-          <section class="pano-block">
-            <div class="pano-block-head"><h2>Últimas alertas</h2><span>Más recientes</span></div>
+          <section class="pano-block" id="pano-feed-block">
+            <div class="pano-block-head"><h2>Últimas alertas</h2><span id="pano-feed-meta">Más recientes</span></div>
             <div id="pano-feed" class="pano-feed"></div>
           </section>
         </div>
@@ -4219,6 +4256,72 @@ function locationTier(a) {
 }
 function isNavigableAlert(a) { return locationTier(a) === 'exact'; }
 
+/* Panorama: filtros por tipo, orden y alertas sin ubicación útil.
+   Las alertas que solo traen estado (sin municipio, vía, km ni punto) no
+   aportan al viajero: se ocultan por defecto y nunca se dibujan en el mapa. */
+let panoType = 'all';
+let panoSort = 'relevance';
+let panoShowUnlocated = false;
+const PANO_TYPES = [
+  { key:'all', label:'Todas', icon:'fa-layer-group' },
+  { key:'road', label:'Viales', icon:'fa-road' },
+  { key:'security', label:'Seguridad', icon:'fa-shield-halved' },
+  { key:'accident', label:'Accidentes', icon:'fa-car-burst' },
+  { key:'blockage', label:'Bloqueos', icon:'fa-road-barrier' },
+  { key:'weather', label:'Clima', icon:'fa-cloud-showers-heavy' }
+];
+function panoUsefulLocation(a) {
+  if(!a) return false;
+  const tier = locationTier(a);
+  if(tier === 'exact') return true;
+  const state = String(a.state || '').trim();
+  const municipality = String(a.municipality || '').trim();
+  if(municipality) {
+    const nMunicipality = normAcc(municipality);
+    const nState = normAcc(state);
+    if(!nState || nMunicipality !== nState) return true;
+  }
+  if(tier === 'area' && hasAlertPoint(a) && String(a.location_precision || '').toLowerCase() !== 'unlocated') return true;
+  const location = String(a.location || '').trim();
+  if(!location) return false;
+  if(/^(sin ubicaci[oó]n|ubicaci[oó]n (aproximada|no disponible|desconocida)|m[eé]xico|nacional)$/i.test(location)) return false;
+  const nLoc = normAcc(location), nState = normAcc(state);
+  if(nState && (nLoc === nState || nLoc === normAcc(state + ' mexico') || nLoc === normAcc('mexico ' + state))) return false;
+  return true;
+}
+function panoMatchesType(a) {
+  if(panoType === 'all') return true;
+  if(panoType === 'road') return a.category === 'road';
+  if(panoType === 'security') return a.category === 'security';
+  if(panoType === 'accident') return roadIncidentType(a) === 'Accidente';
+  if(panoType === 'blockage') return isBlockageAlert(a);
+  if(panoType === 'weather') return roadIncidentType(a) === 'Clima / Vía';
+  return true;
+}
+function panoTypeCounts(list) {
+  const counts = { all:list.length, road:0, security:0, accident:0, blockage:0, weather:0 };
+  list.forEach(a => {
+    if(a.category === 'road') counts.road++;
+    if(a.category === 'security') counts.security++;
+    if(roadIncidentType(a) === 'Accidente') counts.accident++;
+    if(isBlockageAlert(a)) counts.blockage++;
+    if(roadIncidentType(a) === 'Clima / Vía') counts.weather++;
+  });
+  return counts;
+}
+function setPanoType(type) {
+  panoType = PANO_TYPES.some(t => t.key === type) ? type : 'all';
+  renderPanorama();
+}
+function setPanoSort(value) {
+  panoSort = value === 'recent' ? 'recent' : 'relevance';
+  renderPanorama();
+}
+function togglePanoUnlocated() {
+  panoShowUnlocated = !panoShowUnlocated;
+  renderPanorama();
+}
+
 let appView = 'panorama';
 function setAppView(view) {
   appView = view === 'map' ? 'map' : 'panorama';
@@ -4241,7 +4344,12 @@ function panoRiskScore(a) {
   if(a.category === 'security') score += 30;
   if(isBlockageAlert(a)) score += 25;
   if(a.trafico === 'detenido') score += 15;
-  if(locationTier(a) === 'none') score -= 10;
+  const tier = locationTier(a);
+  if(tier === 'exact') score += 10;
+  if(tier === 'none') score -= 20;
+  if(isAlertExpired(a)) score -= 35;
+  const ageHours = (Date.now() - new Date(a.time).getTime()) / 3600000;
+  if(Number.isFinite(ageHours)) score += Math.max(0, 24 - ageHours) * 0.6;
   return score;
 }
 function panoCountBy(list, keyFn) {
@@ -4266,12 +4374,21 @@ function panoFillList(id, items, emptyText) {
 }
 function renderPanorama() {
   const host = document.getElementById('panorama-view'); if(!host) return;
-  const list = (alerts || []).filter(a => a && a.title && !a.ignored);
-  const ordered = [...list].sort((a,b) => {
+  const allAlerts = (alerts || []).filter(a => a && a.title && !a.ignored);
+  const locatedAlerts = allAlerts.filter(panoUsefulLocation);
+  const unlocatedCount = allAlerts.length - locatedAlerts.length;
+  const list = panoShowUnlocated ? allAlerts : locatedAlerts;
+  const filtered = list.filter(panoMatchesType);
+  const ordered = [...filtered].sort((a,b) => {
+    const timeA = new Date(a.time).getTime() || 0;
+    const timeB = new Date(b.time).getTime() || 0;
+    if(panoSort === 'recent') return timeB - timeA;
     const risk = panoRiskScore(b) - panoRiskScore(a);
     if(risk) return risk;
-    return (new Date(b.time).getTime() || 0) - (new Date(a.time).getTime() || 0);
+    return timeB - timeA;
   });
+  const matchCount = filtered.length;
+  const total = list.length;
   const road = list.filter(a => a.category === 'road').length;
   const security = list.filter(a => a.category === 'security').length;
   const blockages = list.filter(isBlockageAlert).length;
@@ -4284,7 +4401,21 @@ function renderPanorama() {
   const areaOnMap = list.filter(a => locationTier(a) === 'area' && a.location_precision !== 'area_security').length;
   const heatOnly = area - areaOnMap;
   const none = list.filter(a => locationTier(a) === 'none').length;
-  const total = list.length;
+
+  const counts = panoTypeCounts(list);
+  const chipsBox = document.getElementById('pano-type-filters');
+  if(chipsBox) chipsBox.innerHTML = PANO_TYPES.map(t => `<button type="button" class="pano-chip${panoType === t.key ? ' active' : ''}" data-pano-type="${t.key}" aria-pressed="${panoType === t.key}" onclick="setPanoType('${t.key}')"><i class="fa-solid ${t.icon}" aria-hidden="true"></i>${t.label} <b>${counts[t.key] || 0}</b></button>`).join('');
+  const unlocatedBtn = document.getElementById('pano-unlocated-btn');
+  if(unlocatedBtn) {
+    unlocatedBtn.hidden = !unlocatedCount;
+    unlocatedBtn.classList.toggle('active', panoShowUnlocated);
+    unlocatedBtn.innerHTML = panoShowUnlocated
+      ? `<i class="fa-solid fa-eye" aria-hidden="true"></i> Ocultar ${unlocatedCount} sin ubicación`
+      : `<i class="fa-solid fa-eye-slash" aria-hidden="true"></i> ${unlocatedCount} sin ubicación`;
+    unlocatedBtn.title = panoShowUnlocated ? 'Ocultar las alertas sin ubicación útil' : 'Mostrar las alertas sin ubicación útil';
+  }
+  const sortSel = document.getElementById('pano-sort');
+  if(sortSel && sortSel.value !== panoSort) sortSel.value = panoSort;
 
   const kpis = [
     { value: total, label: 'Alertas activas', color: '#38BDF8', icon: 'fa-triangle-exclamation' },
@@ -4301,23 +4432,35 @@ function renderPanorama() {
     const syncDate = centralWorkerLastSuccess ? new Date(centralWorkerLastSuccess) : null;
     const syncAge = syncDate && Number.isFinite(syncDate.getTime()) ? Math.max(0, Math.round((Date.now() - syncDate.getTime()) / 60000)) : null;
     const syncTxt = syncAge === null ? 'Datos de las fuentes conectadas.' : `Última sincronización ${syncAge < 1 ? 'hace menos de un minuto' : `hace ${syncAge} min`}.`;
+    const hiddenTxt = unlocatedCount
+      ? (panoShowUnlocated
+          ? ` · Incluye <b>${unlocatedCount}</b> alerta${unlocatedCount === 1 ? '' : 's'} sin ubicación.`
+          : ` · <b>${unlocatedCount}</b> alerta${unlocatedCount === 1 ? '' : 's'} sin ubicación útil ${unlocatedCount === 1 ? 'oculta' : 'ocultas'}.`)
+      : '';
     sub.innerHTML = total
-      ? `<b>${total}</b> alertas activas · <b>${exact}</b> con pin exacto y <b>${area}</b> en zona aproximada. ${syncTxt}`
+      ? `<b>${total}</b> alertas activas · <b>${exact}</b> con pin exacto y <b>${area}</b> en zona aproximada. ${syncTxt}${hiddenTxt}`
       : `Todavía no hay alertas cargadas. ${syncTxt}`;
   }
   const mostRecent = [...list].sort((a,b) => (new Date(b.time).getTime() || 0) - (new Date(a.time).getTime() || 0))[0];
   const highlights = ordered.slice(0,4);
-  const highlighted = new Set(highlights.map(a => a.id));
-  const feed = [...list]
-    .filter(a => !highlighted.has(a.id))
-    .sort((a,b) => (new Date(b.time).getTime() || 0) - (new Date(a.time).getTime() || 0))
+  const highlighted = new Set(highlights.map(a => String(a.id)));
+  const feed = ordered
+    .filter(a => !highlighted.has(String(a.id)))
     .slice(0,6);
+  const sortLabel = panoSort === 'recent' ? 'Más recientes' : 'Mayor relevancia';
 
   const updated = document.getElementById('pano-updated');
   if(updated) updated.textContent = mostRecent ? `Actualizado ${formatRelativeAlertTime(mostRecent.time).toLowerCase()}` : 'Sin datos';
+  const feedMeta = document.getElementById('pano-feed-meta');
+  if(feedMeta) feedMeta.textContent = matchCount ? `${feed.length} de ${matchCount} · ${sortLabel}` : `0 resultados · ${sortLabel}`;
+  const feedBlock = document.getElementById('pano-feed-block');
+  if(feedBlock) feedBlock.style.display = feed.length ? '' : 'none';
 
-  panoFillList('pano-highlights', highlights, 'No hay alertas relevantes en este momento.');
-  panoFillList('pano-feed', feed, 'No hay más alertas para mostrar.');
+  const emptyText = !allAlerts.length
+    ? 'Todavía no hay alertas cargadas.'
+    : (!list.length ? 'Las alertas disponibles no tienen una ubicación útil. Usa el botón para verlas.' : 'No hay alertas de este tipo en este momento.');
+  panoFillList('pano-highlights', highlights, emptyText);
+  panoFillList('pano-feed', feed, matchCount ? 'No hay más alertas para mostrar.' : emptyText);
 
   const route = document.getElementById('pano-route');
   if(route) {
@@ -4337,7 +4480,7 @@ function renderPanorama() {
   const gps = document.getElementById('pano-gps');
   if(gps) {
     if(myPosition) {
-      const within50 = ordered.filter(a => { const d = alertDistanceKm(a); return d !== null && d <= 50; }).length;
+      const within50 = list.filter(a => { const d = alertDistanceKm(a); return d !== null && d <= 50; }).length;
       gps.innerHTML = `<p>GPS activo. <b>${within50}</b> alerta(s) a menos de 50 km de ti.</p>
         <button class="pano-btn" type="button" onclick="toggleGpsTracking()"><i class="fa-solid fa-location-crosshairs"></i> Actualizar ubicación</button>`;
     } else {
