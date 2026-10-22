@@ -106,10 +106,11 @@ test('server.js sirve los assets del parche y vercel.json los despliega', async 
   }
 
   const vercel = JSON.parse(fs.readFileSync(path.join(ROOT, 'vercel.json'), 'utf8'));
-  const builds = new Set((vercel.builds || []).map((b) => b.src));
-  for (const src of ['manifest.webmanifest', 'service-worker.js', 'fusion/*', '*.png', '*.webp']) {
-    assert.ok(builds.has(src), 'vercel.json debe incluir el build ' + src);
-  }
+  // `builds`/`routes` son legacy y hacen que Vercel ignore las cabeceras
+  // globales; el proyecto debe usar la configuración moderna.
+  assert.equal(vercel.builds, undefined, 'vercel.json no debe usar builds legacy');
+  assert.equal(vercel.routes, undefined, 'vercel.json no debe usar routes legacy');
+  assert.ok((vercel.rewrites || []).some((r) => r.source === '/acerca' && r.destination === '/acerca.html'), 'vercel.json debe conservar la ruta /acerca');
 
   const globalHeaders = (vercel.headers || []).find((h) => h.source === '/(.*)');
   assert.ok(globalHeaders, 'vercel.json debe tener cabeceras globales para Vercel');

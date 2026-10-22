@@ -1,19 +1,5 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "*.html", "use": "@vercel/static" },
-    { "src": "casetas-data.js", "use": "@vercel/static" },
-    { "src": "red-vial.js", "use": "@vercel/static" },
-    { "src": "manifest.webmanifest", "use": "@vercel/static" },
-    { "src": "service-worker.js", "use": "@vercel/static" },
-    { "src": "fusion/*", "use": "@vercel/static" },
-    { "src": "*.png", "use": "@vercel/static" },
-    { "src": "*.webp", "use": "@vercel/static" },
-    { "src": "*.svg", "use": "@vercel/static" },
-    { "src": "robots.txt", "use": "@vercel/static" },
-    { "src": "sitemap.xml", "use": "@vercel/static" },
-    { "src": "api/*.js", "use": "@vercel/node" }
-  ],
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "headers": [
     {
       "source": "/(.*)",
@@ -51,11 +37,7 @@
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=86400" }]
     }
   ],
-  "routes": [
-    { "src": "/", "dest": "/index.html" },
-    { "src": "/acerca", "dest": "/acerca.html" },
-    { "src": "/acerca.html", "dest": "/acerca.html" },
-    { "src": "/api/(.*)", "dest": "/api/$1.js" },
-    { "handle": "filesystem" }
+  "rewrites": [
+    { "source": "/acerca", "destination": "/acerca.html" }
   ]
 }
