@@ -232,7 +232,9 @@ Incluye `render.yaml`. Configura el servicio web y variables de entorno correspo
 - **Rate limiting**: Límites por IP con limpieza automática para evitar agotamiento de memoria.
 - **Timing-safe comparison**: Comparación de tokens a tiempo constante para prevenir ataques de temporización.
 - **Validación estricta**: Sanitización de payloads, límites de tamaño, roles/modelos permitidos.
-- **Headers de seguridad**: CSP, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, HSTS (en HTTPS).
+- **Headers de seguridad**: CSP en modo `Report-Only` (no bloqueante), `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security` (en HTTPS) y `X-Permitted-Cross-Domain-Policies`.
+- **SRI**: los CSS/JS versionados de unpkg, cdnjs y jsDelivr usan `integrity` + `crossorigin`. Google Fonts queda fuera porque su CSS es dinámico.
+- **CSP pendiente de enforce**: la política todavía permite `'unsafe-inline'` porque `index.html` incluye scripts y handlers inline. Antes de pasarla a bloqueante hay que externalizarlos o aplicar nonces/hashes. Mientras tanto, `Report-Only` sirve para detectar orígenes y violaciones en producción.
 - **Supabase RLS**: Si usas Supabase, **habilita obligatoriamente Row Level Security (RLS)** en las tablas y define políticas adecuadas. Usa únicamente la `anonKey` (nunca Service Role Key) en el cliente.
 
 ## Contribución
@@ -242,6 +244,21 @@ Incluye `render.yaml`. Configura el servicio web y variables de entorno correspo
 3. Asegúrate de que los tests pasan (`node --test`)
 4. Verifica sintaxis (`npm run check`)
 5. Envía un Pull Request
+
+## Assets y caché
+
+- La portada usa `landing-city-v1.webp` (≈219 KB) con `landing-city-v1.png` como fallback para navegadores sin WebP.
+- Los assets de Fusión están versionados en `index.html`: `fusion/fusion.css?v=7`, `fusion/fusion.js?v=10` y `polish.css?v=1`. Al modificarlos, sube el `?v=` correspondiente.
+- El service worker usa `zv-fusion-vN`; al cambiar el shell o los assets, sube también `VERSION` en `service-worker.js` para limpiar caches antiguas.
+- Vercel y `server.js` cachean `/fusion/*` como inmutable. No publiques cambios de esos archivos sin cambiar el `?v=` de `index.html`.
+
+## Verificación antes de publicar
+
+1. `npm run check`
+2. `npm test`
+3. Preview de Vercel: cabeceras, `/service-worker.js`, manifest, WebP y modo offline.
+4. Lighthouse/axe en móvil y escritorio, incluyendo modo nocturno.
+5. Confirmar que no se suben `.env`, ZIPs, parches ni archivos temporales.
 
 ## Licencia
 

@@ -1,0 +1,26 @@
+{
+  "name": "Zero Vial — Panorama vial y de seguridad de México",
+  "short_name": "Zero Vial",
+  "description": "Alertas viales y de seguridad en carretera con fuentes identificadas, ubicación aproximada y modo viaje sin conexión.",
+  "lang": "es-MX",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "any",
+  "background_color": "#05070A",
+  "theme_color": "#05070A",
+  "categories": ["travel", "navigation", "utilities", "productivity"],
+  "icons": [
+    { "src": "/favicon-256.png", "sizes": "256x256", "type": "image/png", "purpose": "any" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" },
+    { "src": "/favicon.png", "sizes": "any", "type": "image/png", "purpose": "any" },
+    { "src": "/zero-mark-v2.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Modo Viaje (HUD)", "short_name": "Modo Viaje", "url": "/?fusion=trip" },
+    { "name": "Calculadora de peajes", "short_name": "Peajes", "url": "/?fusion=tolls" },
+    { "name": "Zonas de seguridad", "short_name": "Seguridad", "url": "/?fusion=security" }
+  ]
+}

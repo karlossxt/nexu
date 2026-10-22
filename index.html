@@ -22,17 +22,25 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Zero Vial","url":"https://www.zero-vial.com.mx/","applicationCategory":"TravelApplication","operatingSystem":"Web","description":"Panorama de incidencias viales y de seguridad en las carreteras de México, actualizado periódicamente."}</script>
 
 <!-- Leaflet & Plugins -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
-<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" integrity="sha384-wgw+aLYNQ7dlhK47ZPK7FRACiq7ROZwgFNg0m04avm4CaXS+Z9Y7nMu8yNjBKYC+" crossorigin="anonymous"/>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" integrity="sha384-eXVCORTRlv4FUUgS/xmOyr66XBVraen8ATNLMESp92FKXLAMiKkerixTiBvXriZr" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" integrity="sha384-n6BdBD4Ahcb9IGZDgjgv0hV2a/y2WOCf1n0kEMZDpZySy/Hv1QMAtLIrC3y9oIZD" crossorigin="anonymous" />
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js" integrity="sha384-Le/Ab4WG5Ezkdf4RS5P5eZrpmvNgcZ4QcTozVDXGoOsTxGroBLM4e9OSqeh6V26n" crossorigin="anonymous"></script>
 <!-- FontAwesome & Chart.js -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" integrity="sha384-vsrfeLOOY6KuIYKDlmVH5UiBmgIdB1oEf7p01YgWHuqmOHfZr374+odEv96n9tNC" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous"></script>
 <script src="/casetas-data.js" defer></script>
+
+<!-- FUSIÓN VíaSegura (PWA + features vanilla) -->
+<link rel="manifest" href="/manifest.webmanifest" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Zero Vial" />
+<meta name="mobile-web-app-capable" content="yes" />
+<script src="/fusion/tolls-data.js?v=1" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -326,8 +334,8 @@ body.user-mode #userfilter{ position:static; display:flex; gap:6px; padding:0; b
 /* HOY NO CIRCULA + REPORTE */
 #circula{ display:none; position:static; align-items:center; min-width:0; max-width:310px; padding:7px 10px; border-radius:11px; font-size:10px; font-weight:800; box-shadow:none; backdrop-filter:blur(6px); cursor:pointer; }
 body.user-mode #circula{ display:flex; }
-#circula.ok{ background:rgba(30,142,62,.15); color:var(--success); border:1px solid rgba(30,142,62,.45); }
-#circula.no{ background:rgba(217,48,37,.15); color:var(--danger); border:1px solid rgba(217,48,37,.45); }
+#circula.ok{ background:rgba(30,142,62,.15); color:#6EE7B7; border:1px solid rgba(30,142,62,.45); }
+#circula.no{ background:rgba(217,48,37,.15); color:#FCA5A5; border:1px solid rgba(217,48,37,.45); }
 #report-modal{ display:none; position:fixed; inset:0; z-index:10001; background:rgba(0,0,0,.55); align-items:center; justify-content:center; padding:16px; }
 #report-modal-card{ width:100%; max-width:520px; max-height:90vh; overflow-y:auto; background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:18px; box-shadow:0 20px 60px rgba(0,0,0,.4); }
 #report-body{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:14px 0; }
@@ -347,6 +355,7 @@ body.user-mode #circula{ display:flex; }
 
 /* Compact city login, inspired by the supplied full-screen reference. */
 #landing{padding:32px 20px;align-items:center;background:#16304d url('/landing-city-v1.png') center 58%/cover no-repeat;isolation:isolate;}
+@supports (background-image: image-set(url('/landing-city-v1.webp') type('image/webp'))){#landing{background-image:image-set(url('/landing-city-v1.webp') type('image/webp'),url('/landing-city-v1.png') type('image/png'));}}
 #landing:before{position:fixed;inset:0;opacity:1;mask-image:none;background:linear-gradient(180deg,rgba(9,24,48,.27),rgba(7,18,34,.48)),radial-gradient(ellipse at center,rgba(5,17,33,.54),transparent 75%);z-index:-1;}
 #landing-card{width:100%;max-width:420px;padding:26px 22px 22px;border:1px solid rgba(255,255,255,.16);border-radius:18px;background:rgba(9,23,42,.48);box-shadow:0 20px 70px rgba(0,0,0,.22);backdrop-filter:blur(8px);overflow:visible;}
 #landing-card:before{display:none;}
@@ -430,7 +439,7 @@ body.operator-mode .u-panel, body.operator-mode .u-modal{ display:none !importan
 .pl-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 14px 8px; }
 .pc-card{ background:#131822; border:1px solid #1E293B; border-radius:8px; padding:10px 12px; }
 .pc-card b{ display:block; font-size:26px; font-weight:800; line-height:1.1; }
-.pc-card span{ font-size:9.5px; text-transform:uppercase; letter-spacing:.05em; color:#6B7280; font-weight:700; }
+.pc-card span{ font-size:9.5px; text-transform:uppercase; letter-spacing:.05em; color:#9CA3AF; font-weight:700; }
 .v-blue{ color:#2563EB; } .v-orange{ color:#F97316; } .v-red{ color:#EF4444; } .v-mag{ color:#D946EF; }
 .pl-filters{ padding:0 14px; display:grid; grid-template-columns:1fr 1fr; gap:7px; }
 .uf-row{ display:flex; align-items:center; gap:6px; min-height:38px; box-sizing:border-box; background:#131822; border:1px solid #1E293B; border-radius:8px; padding:7px 8px; margin:0; font-size:11px; color:#fff; }
@@ -462,12 +471,13 @@ body.left-rail #panel-left .u-rail{ display:flex; }
 /* === PANEL DERECHO (FEED) === */
 .pr-top{ padding:10px 12px 0; }
 .pr-topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
-.pr-title{ font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:#6B7280; font-weight:700; display:flex; gap:6px; align-items:center; }
+.pr-title{ font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:#9CA3AF; font-weight:700; display:flex; gap:6px; align-items:center; }
 .pr-badge{ background:#2563EB; color:#fff; font-size:9px; padding:2px 8px; border-radius:4px; font-weight:800; }
 .pr-tabs{ display:flex; border-bottom:1px solid #1E293B; }
-.pr-tab{ flex:1; padding:10px 2px; font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:#6B7280; cursor:pointer; text-align:center; border-bottom:2px solid transparent; font-weight:700; }
+.pr-tab{ flex:1; padding:10px 2px; font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:#9CA3AF; cursor:pointer; text-align:center; border-bottom:2px solid transparent; font-weight:700; }
 .pr-tab i{ margin-right:3px; }
-.pr-tab.active{ color:#2563EB; border-bottom-color:#2563EB; }
+.pr-tab.active{ color:#93C5FD; border-bottom-color:#93C5FD; }
+#feed-empty-msg{ color:#9CA3AF; }
 .pr-body{ flex:1; overflow-y:auto; }
 .pr-sec{ display:none; padding:12px; }
 .pr-sec.active{ display:block; }
@@ -960,7 +970,7 @@ body.user-mode .pl-dropdowns select{background-color:rgba(6,31,58,.92);border-co
 body.user-mode .future-tool{background:linear-gradient(90deg,rgba(8,43,77,.95),rgba(5,58,66,.72));border-color:rgba(35,167,154,.38);border-radius:11px}
 body.user-mode .soon-badge.available{color:#6EE7B7;background:rgba(16,185,129,.16);border-color:rgba(16,185,129,.38)}
 body.user-mode .pr-title{color:#D9E9F8}
-body.user-mode .pr-badge{border-radius:12px;background:#1478FF}
+body.user-mode .pr-badge{border-radius:12px;background:#1D4ED8}
 body.user-mode .pr-search{background:rgba(7,35,64,.94);border-color:rgba(53,121,188,.4)}
 body.user-mode .feed-sort{background-color:rgba(7,35,64,.94);border-color:rgba(53,121,188,.4)}
 body.user-mode .pl-actions{border-top-color:rgba(53,121,188,.25)}
@@ -1059,7 +1069,8 @@ body.user-mode:not(.dark-mode) .nv-topbar .nt-btn:not(.active):hover{color:#fff;
 body.user-mode:not(.dark-mode) .pl-section{color:#4D9FE7}
 body.user-mode:not(.dark-mode) .pc-card{background:#FFFFFF;border-color:#C7D8E7;box-shadow:0 2px 8px rgba(31,65,91,.05)}
 body.user-mode:not(.dark-mode) .pc-card b{color:#172033}
-body.user-mode:not(.dark-mode) .pc-card span{color:#73879A}
+body.user-mode:not(.dark-mode) .pc-card span{color:#4B5563}
+body.user-mode:not(.dark-mode) .uf-count{color:#4B5563}
 body.user-mode:not(.dark-mode) .future-tool{background:linear-gradient(90deg,#E8F6FB,#E7F8F3);border-color:#9ED6CF;color:#18384B}
 body.user-mode:not(.dark-mode) .future-tool b{color:#18384B}
 body.user-mode:not(.dark-mode) .future-tool small{color:#60758A}
@@ -1068,8 +1079,12 @@ body.user-mode:not(.dark-mode) .pa-main{color:#526D83;border-color:#B8CDDE;backg
 body.user-mode:not(.dark-mode) .pa-main:hover{color:#175CA8;border-color:#68A9E7;background:#EEF7FF}
 body.user-mode:not(.dark-mode) .pr-title{color:#1B3650}
 body.user-mode:not(.dark-mode) .pr-tabs{border-color:#C4D8E7}
-body.user-mode:not(.dark-mode) .pr-tab{color:#71869A}
-body.user-mode:not(.dark-mode) .pr-tab.active{color:#1478FF}
+body.user-mode:not(.dark-mode) .pr-tab{color:#4B5563}
+body.user-mode:not(.dark-mode) .pr-tab.active{color:#1D4ED8}
+body.user-mode:not(.dark-mode) #feed-empty-msg{color:#4B5563}
+body.user-mode:not(.dark-mode) .ph-btn.red{color:#B91C1C;border-color:#B91C1C}
+body.user-mode:not(.dark-mode) .leaflet-control-attribution{opacity:1;background:rgba(255,255,255,.92);color:#4B5563}
+body.user-mode:not(.dark-mode) .leaflet-control-attribution a{color:#1D4ED8}
 body.user-mode:not(.dark-mode) .pr-search,body.user-mode:not(.dark-mode) .feed-sort{background:#FFFFFF;border-color:#BFD3E3;color:#23384D}
 body.user-mode:not(.dark-mode) .alert-card{background:#FFFFFF;border-color:#C9D9E6;box-shadow:0 2px 8px rgba(31,65,91,.06)}
 body.user-mode:not(.dark-mode) .alert-card:hover{background:#FAFCFE}
@@ -1235,6 +1250,9 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
   .nv-topbar .nt-btn span:not(.nt-count){display:none}
 }
 </style>
+<!-- FUSIÓN VíaSegura · estilos de las features nuevas -->
+<link rel="stylesheet" href="/fusion/fusion.css?v=7" />
+<link rel="stylesheet" href="/fusion/polish.css?v=1" />
 </head>
 <body>
 
@@ -1391,13 +1409,13 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
     <nav class="nt-nav">
       <button class="nt-btn active" data-app-view="panorama" onclick="showPanoramaView()" title="Panorama nacional" aria-label="Panorama nacional"><i class="fa-solid fa-house"></i><span>Panorama</span></button>
       <button class="nt-btn" data-app-view="map" onclick="showMapView();clearAlertFocus()" title="Mapa de alertas" aria-label="Mapa de alertas"><i class="fa-solid fa-map-location-dot"></i><span>Mapa</span></button>
-      <button class="nt-btn" onclick="showMapView();document.body.classList.remove('right-rail');switchPR('feed')" title="Alertas recibidas desde que abriste Zero Vial" aria-label="Alertas"><i class="fa-solid fa-triangle-exclamation"></i><span>Alertas</span><em id="nv-top-count" class="nt-count" aria-label="Alertas nuevas en esta sesión">0</em></button>
+      <button class="nt-btn" onclick="showMapView();document.body.classList.remove('right-rail');switchPR('feed')" title="Alertas recibidas desde que abriste Zero Vial" aria-label="Alertas, 0 nuevas"><i class="fa-solid fa-triangle-exclamation"></i><span>Alertas</span><em id="nv-top-count" class="nt-count" aria-label="Alertas nuevas en esta sesión">0</em></button>
       <button class="nt-btn" onclick="openAlertCenter()" title="Centro de alertas" aria-label="Centro de alertas"><i class="fa-solid fa-list-check"></i><span>Centro</span></button>
       <button class="nt-btn" onclick="showMapView();document.body.classList.remove('right-rail');switchPR('ris')" title="Radar vial" aria-label="Radar vial"><i class="fa-solid fa-chart-line"></i><span>Radar Vial</span></button>
       <button class="nt-btn" onclick="openDirModal()" title="Directorio de emergencias" aria-label="Directorio de emergencias"><i class="fa-solid fa-phone-volume"></i><span>Directorio</span></button>
       <button class="nt-btn feature-soon" onclick="showComingSoon('Grupos de operación')" title="Grupos de operación" aria-label="Grupos de operación"><i class="fa-solid fa-comments"></i><span>Grupos</span></button>
     </nav>
-    <div id="circula" role="button" tabindex="0" aria-label="Ver detalles del programa Hoy No Circula" onclick="openHncModal()" onkeydown="activateWithKeyboard(event, openHncModal)" title="Ver detalles del Hoy No Circula">
+    <div id="circula" role="button" tabindex="0" onclick="openHncModal()" onkeydown="activateWithKeyboard(event, openHncModal)" title="Ver detalles del Hoy No Circula">
       <span class="hnc-dot" id="circula-dot"></span>
       <span id="circula-msg"></span>
       <span id="circula-count" class="hnc-count"></span>
@@ -1406,8 +1424,8 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
     <div class="nt-actions">
       <button id="audience-top" class="nt-btn audience-top" onclick="toggleAudience()" title="Cambiar tipo de experiencia"><i class="fa-solid fa-car-side"></i><span>Viajero</span></button>
       <button class="nt-btn" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar modo claro u oscuro"><i class="fa-solid fa-circle-half-stroke"></i></button>
-      <button id="account-button" class="nt-btn nt-login" onclick="openAuthModal()"><i class="fa-solid fa-circle-user"></i><span>Iniciar sesión</span></button>
-      <button class="nt-btn active" onclick="openEntryModal()"><i class="fa-solid fa-plus"></i><span>Reportar</span></button>
+      <button id="account-button" class="nt-btn nt-login" onclick="openAuthModal()" aria-label="Iniciar sesión"><i class="fa-solid fa-circle-user"></i><span>Iniciar sesión</span></button>
+      <button class="nt-btn active" onclick="openEntryModal()" aria-label="Reportar"><i class="fa-solid fa-plus"></i><span>Reportar</span></button>
     </div>
   </header>
   <nav class="mobile-app-nav" aria-label="Navegación móvil">
@@ -1596,7 +1614,7 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
         <div class="pr-title"><i class="fa-solid fa-wave-square" style="color:#2563EB;"></i> Alertas actualizadas <span class="pr-badge"><i class="fa-solid fa-bell"></i> Monitoreo</span></div>
         <button class="pc-btn" onclick="toggleRight()" title="Colapsar panel"><i class="fa-solid fa-angles-right"></i></button>
       </div>
-      <div class="pr-tabs">
+      <div class="pr-tabs" role="tablist">
         <div class="pr-tab active" data-tab="feed" onclick="switchPR('feed')"><i class="fa-solid fa-bolt"></i> Live</div>
         <div class="pr-tab" data-tab="ris" onclick="switchPR('ris')"><i class="fa-solid fa-chart-pie"></i> Radar</div>
         <div class="pr-tab" data-tab="reportes" onclick="switchPR('reportes')"><i class="fa-solid fa-file-contract"></i> Reportes</div>
@@ -1606,7 +1624,7 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
       <div class="pr-sec active" data-sec="feed">
         <div class="feed-tools"><div class="pr-search"><i class="fa-solid fa-magnifying-glass"></i><input id="feed-search" placeholder="Buscar alertas, lugar, estado..." oninput="rebuildU()"></div><select id="feed-sort" class="feed-sort" onchange="setFeedSort(this.value)" title="Ordenar alertas"><option value="recent">Más recientes</option><option value="near">Más cercanas</option><option value="risk">Mayor riesgo</option><option value="precision">Mayor precisión</option></select></div>
         <div id="feed-list"></div>
-        <div id="feed-empty"><i class="fa-solid fa-shield-halved"></i><div id="feed-empty-msg">Sin alertas coincidentes con los filtros activos</div><button class="empty-reset" onclick="resetUserFilters()"><i class="fa-solid fa-rotate-left"></i> Restablecer filtros</button></div>
+        <div id="feed-empty"><i class="fa-solid fa-shield-halved"></i><div id="feed-empty-msg">Sin alertas coincidentes con los filtros activos</div><button class="empty-reset" onclick="resetUserFilters()"><i class="fa-solid fa-rotate-left"></i> Restablecer filtros</button><button class="empty-reset" id="feed-retry" onclick="retryFeed(this)" style="display:none"><i class="fa-solid fa-arrows-rotate"></i> Reintentar sincronización</button></div>
       </div>
       <div class="pr-sec" data-sec="ris">
         <div class="ris-auto"><i class="fa-solid fa-chart-line"></i><div>Analiza las alertas recibidas por <b>país, estado, categoría y periodo</b>.</div></div>
@@ -3591,7 +3609,7 @@ async function loadUserRole() {
 }
 function updateAccountButton() {
   const button=document.getElementById('account-button'); if(!button) return;
-  const label=button.querySelector('span'); if(label) label.textContent=zeroVialUser?(zeroVialUser.email||'Mi cuenta'):'Iniciar sesión';
+  const label=button.querySelector('span'); if(label) { label.textContent=zeroVialUser?(zeroVialUser.email||'Mi cuenta'):'Iniciar sesión'; button.setAttribute('aria-label', label.textContent || 'Cuenta'); }
   const prefs=document.getElementById('auth-preferences'); if(prefs) prefs.style.display=zeroVialUser?'block':'none';
 }
 function setAuthMode(mode) {
@@ -4442,7 +4460,7 @@ function refreshCounters() {
   }).length;
   const redZones = criticalPoints.filter(p => riskPointType(p) === 'red_zone').length;
   const roadRisks = criticalPoints.filter(p => riskPointType(p) === 'road_risk').length;
-  const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+  const set = (id, v) => { const el = document.getElementById(id); if(!el) return; el.textContent = v; if(id === 'nv-top-count') { const btn = el.closest('button'); if(btn) btn.setAttribute('aria-label', 'Alertas, ' + v + ' nuevas'); } };
   set('pc-total', road + sec); set('pc-road', road); set('pc-sec', sec); set('pc-imp', imp);
   set('nv-top-count', sessionAlerts.length);
   set('nc-road', road); set('nc-sec', sec); set('nc-blockages', blockages); set('nc-imp', redZones); set('nc-risk', roadRisks);
@@ -4462,6 +4480,13 @@ function rebuildU() {
   else if(map.hasLayer(staticLayer)) map.removeLayer(staticLayer);
   if(fl) { fl.innerHTML = ''; sortVisibleAlerts(vis).forEach(a => fl.appendChild(makeAlertCard(a))); }
   if(fe) fe.style.display = vis.length ? 'none' : 'block';
+  {
+    // Si no hay alertas en absoluto, "Restablecer filtros" no ayuda: se ofrece reintentar la sincronización.
+    const rr=document.querySelector('#feed-empty .empty-reset:not(#feed-retry)'), rb=document.getElementById('feed-retry');
+    const noData=!alerts.length;
+    if(rr) rr.style.display = noData ? 'none' : '';
+    if(rb) rb.style.display = noData ? '' : 'none';
+  }
   if(em) {
     const syncAge=centralWorkerLastSuccess ? Math.max(0,Math.round((Date.now()-new Date(centralWorkerLastSuccess).getTime())/60000)) : null;
     const syncCopy=syncAge===null?'':' Última sincronización: '+(syncAge<1?'hace menos de un minuto':`hace ${syncAge} min`)+'.';
@@ -4469,6 +4494,13 @@ function rebuildU() {
   }
   refreshCounters();
   if(document.body.classList.contains('user-mode')) renderPanorama();
+}
+
+async function retryFeed(btn) {
+  if(btn) { btn.disabled=true; btn.classList.add('is-busy'); }
+  try { await refreshCentralWorkerHealth(); await loadCentralAlerts(); }
+  catch(e) { try{ log('No se pudo reintentar la sincronización','err'); }catch(_){} }
+  finally { if(btn) { btn.disabled=false; btn.classList.remove('is-busy'); } }
 }
 
 function alertSeverity(a) {
@@ -5208,5 +5240,8 @@ function enhanceAccessibility() {
 enhanceAccessibility();
 setLandingAuthMode('login');
 </script>
+
+<!-- FUSIÓN VíaSegura · motor de features (Modo Viaje, Nocturno, PWA, Peajes, Analítica, PDF, Push) -->
+<script src="/fusion/fusion.js?v=10" defer></script>
 </body>
 </html>

@@ -1,0 +1,94 @@
+/* ============================================================================
+   ZERO VIAL · Capa de pulido (se carga DESPUÉS de index.html y fusion.css)
+   Objetivo: legibilidad, objetivos táctiles, navegación móvil y accesibilidad
+   SIN tocar la lógica ni el layout base. Todo es sobrescritura acotada.
+   Para revertir: quitar el <link> a este archivo en index.html.
+   ============================================================================ */
+
+/* ---------- 1. Legibilidad: ningún texto funcional por debajo de ~10.5 px ----------
+   Antes: 8–10 px en reloj, estado vial, banner de invitado, etiquetas de KPIs,
+   pestañas del panel derecho y barra inferior móvil. */
+#circula-msg,
+.pl-clock, #ub-time, #ub-date { font-size: 11.5px; }
+.pc-card > span { font-size: 11px; letter-spacing: .04em; }          /* etiquetas de KPIs */
+.future-tool small, #gps-detail { font-size: 11px; line-height: 1.35; }
+.soon-badge { font-size: 10.5px; padding: 3px 8px; }
+.pr-badge { font-size: 10.5px; }
+.pr-tab { font-size: 12px; }
+.nt-count { font-size: 10.5px; min-width: 16px; }
+.mobile-app-nav span { font-size: 11.5px; }
+
+/* Banner de invitado */
+#guest-banner { font-size: 12.5px; line-height: 1.4; }
+#guest-banner span { font-size: 12.5px; }
+#guest-banner button { font-size: 12px; min-height: 32px; padding: 6px 12px; }
+@media (max-width: 700px) {
+  /* Antes se encogía a ~190 px y el texto se partía en 5 líneas */
+  #guest-banner { left: 10px; right: 10px; transform: none; max-width: none; }
+}
+
+/* ---------- 2. Objetivos táctiles (mínimo cómodo para el pulgar) ---------- */
+.pc-btn, .nt-btn, .fz-night-btn { min-width: 36px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
+.ph-btn, .lp-state, .lp-range, .pa-main, .feed-sort { min-height: 38px; }
+@media (pointer: coarse), (max-width: 700px) {
+  .pc-btn, .nt-btn, .fz-night-btn { min-width: 44px; min-height: 44px; }
+  .ph-btn, .lp-state, .lp-range, .pa-main, .feed-sort, .pr-tab { min-height: 44px; }
+  #guest-banner button { min-height: 40px; }
+  .mobile-app-nav button, .mobile-app-nav a { min-height: 56px; }
+}
+
+/* ---------- 3. Accesos de Fusión: de 5 botones apilados a un solo botón en móvil ----------
+   Antes: una segunda barra de 5 íconos sobre la barra inferior, tapando el mapa. */
+.fz-fab .fz-fab-toggle { display: none; }
+@media (max-width: 900px) {
+  .fz-fab {
+    left: auto; right: 14px; transform: none;
+    bottom: 82px;
+    flex-direction: column-reverse; align-items: flex-end; gap: 10px;
+  }
+  .fz-fab .fz-fab-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 52px; height: 52px; border-radius: 50%;
+    background: linear-gradient(135deg, #06b6d4, #2563EB); border-color: #22d3ee; color: #fff;
+  }
+  .fz-fab .fz-fab-toggle i { transition: transform .2s ease; }
+  .fz-fab.fz-fab-open .fz-fab-toggle i { transform: rotate(135deg); }
+  .fz-fab .fz-fab-item {
+    display: none; width: 46px; height: 46px;
+    opacity: 0; transform: translateY(8px) scale(.9);
+  }
+  .fz-fab.fz-fab-open .fz-fab-item { display: inline-flex; align-items: center; justify-content: center; animation: fz-fab-in .18s ease forwards; }
+  .fz-fab.fz-fab-open .fz-fab-item:nth-of-type(2) { animation-delay: .02s; }
+  .fz-fab.fz-fab-open .fz-fab-item:nth-of-type(3) { animation-delay: .04s; }
+  .fz-fab.fz-fab-open .fz-fab-item:nth-of-type(4) { animation-delay: .06s; }
+  .fz-fab.fz-fab-open .fz-fab-item:nth-of-type(5) { animation-delay: .08s; }
+  .fz-fab.fz-fab-open .fz-fab-item:nth-of-type(6) { animation-delay: .10s; }
+}
+@keyframes fz-fab-in { to { opacity: 1; transform: none; } }
+
+/* ---------- 4. Costo de ruta: aviso de casetas sin tarifa ---------- */
+.fz-route-warn {
+  grid-column: 1 / -1; display: flex; gap: 8px; align-items: flex-start;
+  margin-top: 8px; padding: 8px 10px; border-radius: 10px;
+  font-size: 12px; line-height: 1.4;
+  color: #92400e; background: rgba(245, 158, 11, .14); border: 1px solid rgba(245, 158, 11, .45);
+}
+.fz-route-warn i { margin-top: 2px; flex: none; }
+body.road-high-contrast .fz-route-warn { color: #ffd400; background: #1a1400; border-color: #ffd400; }
+
+/* ---------- 5. Botón "Reintentar sincronización" ---------- */
+#feed-retry.is-busy { opacity: .7; pointer-events: none; }
+#feed-retry.is-busy i { animation: fz-spin .8s linear infinite; }
+@keyframes fz-spin { to { transform: rotate(360deg); } }
+
+/* ---------- 6. Foco visible para teclado (antes solo existía en modo nocturno) ---------- */
+:focus-visible { outline: 2px solid #22d3ee; outline-offset: 2px; border-radius: 6px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offset: 0; }
+
+/* ---------- 7. Respeta "reducir movimiento" del sistema ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *:not(.fa-spin), *:not(.fa-spin)::before, *:not(.fa-spin)::after {
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important; scroll-behavior: auto !important;
+  }
+}
