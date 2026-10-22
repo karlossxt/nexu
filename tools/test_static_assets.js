@@ -114,6 +114,7 @@ test('server.js sirve los assets del parche y vercel.json los despliega', async 
     assert.ok(builds.has(src), 'vercel.json debe incluir el build ' + src);
   }
   assert.ok((vercel.rewrites || []).some((r) => r.source === '/acerca' && r.destination === '/acerca.html'), 'vercel.json debe conservar la ruta /acerca');
+  assert.ok((vercel.rewrites || []).some((r) => r.source === '/api/(.*)' && r.destination === '/api/$1.js'), 'vercel.json debe enrutar las funciones /api');
 
   const globalHeaders = (vercel.headers || []).find((h) => h.source === '/(.*)');
   assert.ok(globalHeaders, 'vercel.json debe tener cabeceras globales para Vercel');
@@ -126,6 +127,7 @@ test('server.js sirve los assets del parche y vercel.json los despliega', async 
   assert.match(headerMap['Content-Security-Policy-Report-Only'] || '', /default-src 'self'/);
   assert.match(headerMap['Content-Security-Policy-Report-Only'] || '', /object-src 'none'/);
   assert.match(headerMap['Permissions-Policy'] || '', /geolocation=\(self\)/);
+  assert.doesNotMatch(headerMap['Permissions-Policy'] || '', /notifications/, 'notifications no es una feature válida de Permissions-Policy');
 
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.webmanifest'), 'utf8'));
   assert.equal(manifest.orientation, 'any', 'la PWA no debe quedar bloqueada en vertical');

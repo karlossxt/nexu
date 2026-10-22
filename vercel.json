@@ -23,7 +23,7 @@
         { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
         { "key": "X-Permitted-Cross-Domain-Policies", "value": "none" },
         { "key": "Strict-Transport-Security", "value": "max-age=15552000" },
-        { "key": "Permissions-Policy", "value": "geolocation=(self), notifications=(self), camera=(), microphone=()" },
+        { "key": "Permissions-Policy", "value": "geolocation=(self), camera=(), microphone=()" },
         { "key": "Content-Security-Policy-Report-Only", "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; connect-src 'self' https: wss:; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' blob: https:" }
       ]
     },
@@ -52,6 +52,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1.js" },
     { "source": "/acerca", "destination": "/acerca.html" }
   ]
 }
