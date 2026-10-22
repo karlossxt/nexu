@@ -226,6 +226,12 @@ test('las peticiones /api/ no se interceptan', async () => {
   assert.equal(h.request('/api/feed', { mode: 'cors' }), undefined);
 });
 
+test('las credenciales de despliegue en /.well-known/ no se cachean', async () => {
+  const h = createHarness();
+  await h.install();
+  assert.equal(h.request('/.well-known/vercel/jwe', { mode: 'cors' }), undefined);
+});
+
 test('un 5xx de navegación cae a la copia cacheada', async () => {
   const h = createHarness();
   await h.install();

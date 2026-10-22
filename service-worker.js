@@ -6,7 +6,7 @@
    - Tiles / fuentes: cache-first.
    - Nunca cachea peticiones de API (POST/GET dinámicos) ni Supabase.
    ============================================================================ */
-const VERSION = 'zv-fusion-v13';
+const VERSION = 'zv-fusion-v14';
 const RUNTIME_MAX_ENTRIES = 400; // tope para tiles/CDN: evita llenar el almacenamiento del móvil
 const SHELL_CACHE = VERSION + '-shell';
 const RUNTIME_CACHE = VERSION + '-runtime';
@@ -93,8 +93,8 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // No interceptar APIs dinámicas ni websockets
-  if (isApi(url) || url.protocol === 'chrome-extension:') return;
+  // No interceptar APIs dinámicas, credenciales de despliegue ni websockets
+  if (isApi(url) || url.pathname.startsWith('/.well-known/') || url.protocol === 'chrome-extension:') return;
 
   // Navegación (documentos): network-first, offline -> index cacheado
   if (req.mode === 'navigate') {
