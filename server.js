@@ -44,6 +44,24 @@ const MAX_BODY = 64 * 1024;
 const MAX_PER_MIN = 40;
 const UPSTREAM_TIMEOUT_MS = 30_000;
 
+// Se publica en modo Report-Only hasta migrar los scripts y handlers inline.
+// El objetivo es detectar orígenes necesarios sin bloquear la aplicación.
+const CSP_REPORT_ONLY = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'self'",
+  "form-action 'self'",
+  "script-src 'self' 'unsafe-inline' https:",
+  "style-src 'self' 'unsafe-inline' https:",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data: https:",
+  "connect-src 'self' https: wss:",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "media-src 'self' blob: https:"
+].join('; ');
+
 const groqLimiter = createRateLimiter({ maxPerMin: MAX_PER_MIN, maxEntries: 2000 });
 
 // Solo estos archivos son públicos. Todo lo demás da 404.
@@ -52,6 +70,8 @@ const PUBLIC_FILES = new Set([
   'red-vial.js', 'favicon.png', 'favicon-256.png', 'apple-touch-icon.png',
   'logo11.png', 'logo11-white.png', 'zero-logo.png', 'zero-mark.png',
   'zero-mark-v2.svg', 'sitemap.xml', 'robots.txt', 'casetas-data.js',
+  'manifest.webmanifest', 'service-worker.js', 'landing-city-v1.png', 'landing-city-v1.webp',
+  'fusion/fusion.css', 'fusion/polish.css', 'fusion/fusion.js', 'fusion/tolls-data.js',
   ...String(ENV.EXTRA_PUBLIC_FILES || '').split(',').map(s => s.trim()).filter(Boolean)
 ]);
 
@@ -61,8 +81,10 @@ const MIME = {
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.png': 'image/png',
+  '.webp': 'image/webp',
   '.ico': 'image/x-icon',
   '.svg': 'image/svg+xml',
+  '.webmanifest': 'application/manifest+json; charset=utf-8',
   '.txt': 'text/plain; charset=utf-8',
   '.xml': 'application/xml; charset=utf-8'
 };
@@ -211,9 +233,15 @@ function serveStatic(req, res, url) {
       return res.end('404 Not Found');
     }
     const ext = path.extname(rel).toLowerCase();
+    const swHeaders = rel === 'service-worker.js' ? { 'Service-Worker-Allowed': '/' } : {};
+    const cacheControl = (ext === '.html' || rel === 'service-worker.js') ? 'no-cache'
+      : rel.indexOf('fusion/') === 0 ? 'public, max-age=31536000, immutable'
+      : /^landing-city-v1\.(png|webp)$/.test(rel) ? 'public, max-age=604800, stale-while-revalidate=86400'
+      : 'public, max-age=3600';
     res.writeHead(200, {
+      ...swHeaders,
       'Content-Type': MIME[ext] || 'application/octet-stream',
-      'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=3600'
+      'Cache-Control': cacheControl
     });
     res.end(req.method === 'HEAD' ? undefined : data);
   });
@@ -223,6 +251,9 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+  res.setHeader('Strict-Transport-Security', 'max-age=15552000');
+  res.setHeader('Content-Security-Policy-Report-Only', CSP_REPORT_ONLY);
 
   let url;
   try { url = new URL(req.url, `http://${req.headers.host || 'localhost'}`); }
