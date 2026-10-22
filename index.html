@@ -2083,7 +2083,6 @@ let securityHeatEnabled = false;
 let staticLayer = L.layerGroup(); 
 let risLayer = L.layerGroup();
 let risMarkerLayer = L.markerClusterGroup({ disableClusteringAtZoom: 13, maxClusterRadius: 45 }); 
-let routeControl = null;
 let trafficLayer = null;
 let trafficEnabled = false;
 let casetasLayer = L.markerClusterGroup({ disableClusteringAtZoom: 13, maxClusterRadius: 42 });
@@ -3421,22 +3420,20 @@ function pointToSegmentKm(lat, lon, aLat, aLon, bLat, bLon) { const R=6371, toRa
 function distToPolylineKm(lat, lon, coords) { let best=Infinity; for(let i=0;i<coords.length-1;i++){ const d=pointToSegmentKm(lat, lon, coords[i].lat, coords[i].lng, coords[i+1].lat, coords[i+1].lng); if(d<best) best=d; } return best===Infinity? null : best; }
 function recentRouteAlerts() { return alerts.filter(a => hasAlertPoint(a) && !isAlertExpired(a)); }
 function updateRouteAlerts(coords) {
-  const box = document.getElementById('routeAlerts'); const rbox = document.getElementById('routeBoxAlerts');
   const mbox = document.getElementById('routeModalAlerts');
-  if(!box && !rbox && !mbox) return;
+  if(!mbox) return;
   routeNearAlerts = [];
   const defMsg = '<div style="font-size:12px;color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Analizando entorno...</div>';
-  if(box) box.innerHTML = defMsg; if(rbox) rbox.innerHTML = defMsg; if(mbox) mbox.innerHTML = defMsg;
-  if(!coords || !coords.length) { if(box) box.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Sin datos de ruta.</div>'; if(rbox) rbox.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Sin datos de ruta.</div>'; if(mbox) mbox.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Sin datos de ruta.</div>'; return; }
+  mbox.innerHTML = defMsg;
+  if(!coords || !coords.length) { mbox.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Sin datos de ruta.</div>'; return; }
   recentRouteAlerts().forEach(a => { const d = distToPolylineKm(a.lat, a.lon, coords); if(d !== null && d <= ROUTE_BUFFER_KM) routeNearAlerts.push(Object.assign({}, a, { distKm: d })); });
   routeNearAlerts.sort((x,y) => x.distKm - y.distKm);
-  const html = routeNearAlerts.length
+  mbox.innerHTML = routeNearAlerts.length
     ? routeNearAlerts.map(a => {
         const color = a.category === 'security' ? '#d93025' : trafficStyle(a.trafico || 'moderado').color;
         return `<div class="route-alert-item" onclick="openAlertDetail(${a.id})"><div class="ra-dot" style="background:${color}"></div><div class="ra-info"><b>${escapeHtml(a.title)}</b><span>${escapeHtml(a.location)} · a ${a.distKm.toFixed(1)} km</span></div></div>`;
       }).join('')
     : `<div style="font-size:12px;color:var(--success);">✅ Sin alertas de las últimas 6 horas en un radio de ${ROUTE_BUFFER_KM} km de la ruta.</div>`;
-  if(box) box.innerHTML = html; if(rbox) rbox.innerHTML = html; if(mbox) mbox.innerHTML = html;
 }
 async function applyServerConfig() {
   if(enforceCanonicalOrigin()) return;
@@ -5328,7 +5325,6 @@ function showSelectedRoute() {
   closeModal('route-modal');
 }
 function clearUserRoute() {
-  if(routeControl) { map.removeControl(routeControl); routeControl = null; }
   routeLineLayer.clearLayers();
   activeRoute = null; routeOptions = []; routeSel = 0; routeNearAlerts = []; routeOriginCoords = null; routeDestinationCoords = null;
   const oi = document.getElementById('rm-origin'), di = document.getElementById('rm-dest');
@@ -5337,8 +5333,6 @@ function clearUserRoute() {
   if(cards) cards.innerHTML = '<div style="color:#6B7280;font-size:12px;">Escribe origen y destino, después pulsa <b>Buscar rutas</b>.</div>';
   const ra = document.getElementById('routeModalAlerts');
   if(ra) ra.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Las alertas aparecerán al seleccionar una ruta.</div>';
-  const stats = document.getElementById('routeStats'); if(stats) stats.innerText = '';
-  const legacyAlerts = document.getElementById('routeAlerts'); if(legacyAlerts) legacyAlerts.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Traza una ruta para analizar el entorno.</div>';
   document.querySelectorAll('.rm-qbtn').forEach(b => b.classList.remove('active'));
   map.setView([23.6345, -102.5528], 5);
   log('🧹 Ruta eliminada del mapa.', 'info');
