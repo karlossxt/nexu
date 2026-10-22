@@ -1540,7 +1540,7 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
   <div id="panel-ris" class="panel-container">
     <div class="panel-header"><div class="panel-title" style="color:var(--ris)"><i class="fa-solid fa-chart-line"></i> Radar Vial</div></div>
     <div class="panel-body">
-        <div class="ris-controls"><select id="op-ris-state"></select><select id="op-ris-type"><option value="all">Todas las incidencias</option><option value="road">Incidencias viales</option><option value="security">Incidencias de seguridad</option></select><select id="op-ris-time"><option value="0">Todo el periodo</option><option value="1">Última hora</option><option value="3">Últimas 3 horas</option><option value="6">Últimas 6 horas</option><option value="12">Últimas 12 horas</option><option value="24">Últimas 24 horas</option></select></div>
+        <div class="ris-controls"><select id="op-ris-state"></select><select id="op-ris-type"><option value="all">Todas las incidencias</option><option value="road">Incidencias viales</option><option value="security">Incidencias de seguridad</option></select><select id="op-ris-time"><option value="0">Todo el periodo (90 días)</option><option value="1">Última hora</option><option value="3">Últimas 3 horas</option><option value="6">Últimas 6 horas</option><option value="12">Últimas 12 horas</option><option value="24">Últimas 24 horas</option><option value="168">Últimos 7 días</option><option value="720">Últimos 30 días</option><option value="2160">Últimos 90 días</option></select></div>
         <button class="ris-graph-btn" onclick="graphRis('op')"><i class="fa-solid fa-chart-column"></i> Graficar</button>
         <div class="ris-summary"><div class="ris-stat"><b id="op-ris-total">0</b><span>Total</span></div><div class="ris-stat"><b id="op-ris-road">0</b><span>Viales</span></div><div class="ris-stat"><b id="op-ris-security">0</b><span>Seguridad</span></div></div>
         <div class="chart-container"><canvas id="chartStates"></canvas></div>
@@ -1560,21 +1560,9 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
 
   <div id="panel-road" class="panel-container"><div class="panel-header"><div class="panel-title" style="color:var(--warn)">Monitor Vial</div><div class="badge" id="count-road">0</div></div><div class="panel-body"><div id="list-road" class="alert-list"></div></div></div>
   <div id="panel-security" class="panel-container"><div class="panel-header"><div class="panel-title" style="color:var(--danger)">Monitor Seguridad</div><div class="badge" id="count-security">0</div></div><div class="panel-body"><div id="list-security" class="alert-list"></div><h4 style="font-size:12px; color:var(--critical);">PUNTOS CRÍTICOS</h4><div id="list-critical" class="alert-list"></div></div></div>
-  <div id="panel-route" class="panel-container">
-    <div class="panel-header"><div class="panel-title">Planificador</div></div>
-    <div class="panel-body">
-      <label>Origen</label><input id="routeOrigin" placeholder="Ej. Celaya" />
-      <label>Destino</label><input id="routeDest" placeholder="Ej. Querétaro" />
-      <button onclick="calculateRoute()">Trazar Ruta</button>
-      <button onclick="clearMapRoute()" class="btn-outline" style="margin-top:10px">Limpiar</button>
-      <div id="routeStats" style="margin-top:15px; font-weight:bold; color:var(--accent); text-align:center;"></div>
-      <div style="font-size:11px; font-weight:bold; color:var(--text-muted); margin:18px 0 8px 0;">⚠ ALERTAS CERCA DE TU RUTA</div>
-      <div id="routeAlerts"><div style="font-size:12px; color:var(--text-muted);">Traza una ruta para analizar el entorno.</div></div>
-    </div>
-  </div>
   <div id="panel-analysis" class="panel-container"><div class="panel-header"><div class="panel-title" style="color:#b388ff">IA Supervisor</div></div><div class="panel-body"><button onclick="generateRiskReport()" style="background:#6200ea; color:#fff;">Analizar Riesgos</button><div id="aiReport" class="ai-box" style="margin-top:15px;">Esperando ruta...</div></div></div>
   <div id="panel-admin" class="panel-container"><div class="panel-header"><div class="panel-title">Gestión Personal</div></div><div class="panel-body"><div style="font-size:13px;line-height:1.55;color:var(--text-muted);">Módulo en desarrollo. Aquí podrás administrar personal, permisos y seguimiento únicamente con consentimiento.</div><button class="btn-outline" style="width:100%;margin-top:12px;" onclick="showComingSoon('Gestión Personal')">Conocer lo que viene</button></div></div>
-  <div id="panel-reports" class="panel-container"><div class="panel-header"><div class="panel-title">Reportes</div></div><div class="panel-body"><button onclick="reportCard()" style="margin-bottom:10px;"><i class="fa-solid fa-download"></i> Generar reporte del día</button><button onclick="downloadReportCSV()" class="btn-outline" style="margin-bottom:10px;"><i class="fa-solid fa-file-csv"></i> Descargar CSV</button><button onclick="downloadReportHTML()" class="btn-outline" style="margin-bottom:20px;"><i class="fa-solid fa-file-lines"></i> Descargar HTML</button><label>Administración de datos</label><button onclick="confirmClearAlerts()" class="btn-danger"><i class="fa-solid fa-trash-can"></i> Eliminar todas las alertas</button></div></div>
+  <div id="panel-reports" class="panel-container"><div class="panel-header"><div class="panel-title">Reportes</div></div><div class="panel-body"><label>Periodo del reporte</label><select id="rep-range" onchange="setReportRange(this.value)" style="margin-bottom:12px;"><option value="24">Últimas 24 horas</option><option value="168">Últimos 7 días</option><option value="720">Últimos 30 días</option><option value="2160" selected>Últimos 90 días</option></select><button onclick="reportCard()" style="margin-bottom:10px;"><i class="fa-solid fa-download"></i> Generar reporte del periodo</button><button onclick="downloadReportCSV()" class="btn-outline" style="margin-bottom:10px;"><i class="fa-solid fa-file-csv"></i> Descargar CSV</button><button onclick="downloadReportHTML()" class="btn-outline" style="margin-bottom:20px;"><i class="fa-solid fa-file-lines"></i> Descargar HTML</button><label>Administración de datos</label><button onclick="confirmClearAlerts()" class="btn-danger"><i class="fa-solid fa-trash-can"></i> Eliminar todas las alertas</button></div></div>
   
   <div id="panel-monitor" class="panel-container">
     <div class="panel-header"><div class="panel-title" style="color:var(--accent)">Personal Activo</div><div class="badge" style="background:var(--success); color:white; padding:2px 8px; border-radius:4px; font-size:12px;">Activos</div></div>
@@ -1665,7 +1653,7 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
       </div>
       <div class="pr-sec" data-sec="ris">
         <div class="ris-auto"><i class="fa-solid fa-chart-line"></i><div>Analiza las alertas recibidas por <b>país, estado, categoría y periodo</b>.</div></div>
-        <div class="ris-controls"><select id="u-ris-state"></select><select id="u-ris-type"><option value="all">Todas las incidencias</option><option value="road">Incidencias viales</option><option value="security">Incidencias de seguridad</option></select><select id="u-ris-time"><option value="0">Todo el periodo</option><option value="1">Última hora</option><option value="3">Últimas 3 horas</option><option value="6">Últimas 6 horas</option><option value="12">Últimas 12 horas</option><option value="24">Últimas 24 horas</option></select></div>
+        <div class="ris-controls"><select id="u-ris-state"></select><select id="u-ris-type"><option value="all">Todas las incidencias</option><option value="road">Incidencias viales</option><option value="security">Incidencias de seguridad</option></select><select id="u-ris-time"><option value="0">Todo el periodo (90 días)</option><option value="1">Última hora</option><option value="3">Últimas 3 horas</option><option value="6">Últimas 6 horas</option><option value="12">Últimas 12 horas</option><option value="24">Últimas 24 horas</option><option value="168">Últimos 7 días</option><option value="720">Últimos 30 días</option><option value="2160">Últimos 90 días</option></select></div>
         <button class="ris-graph-btn" onclick="graphRis('u')"><i class="fa-solid fa-chart-column"></i> Graficar</button>
         <div class="ris-summary"><div class="ris-stat"><b id="u-ris-total">0</b><span>Total</span></div><div class="ris-stat"><b id="u-ris-road">0</b><span>Viales</span></div><div class="ris-stat"><b id="u-ris-security">0</b><span>Seguridad</span></div></div>
         <div id="ris-empty" style="color:#6B7280; font-size:12px; padding:20px 4px; display:none;"><i class="fa-solid fa-inbox"></i> No hay alertas para los filtros elegidos.</div>
@@ -1675,9 +1663,11 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
         <div class="chart-container" style="height:180px;"><canvas id="uc-types"></canvas></div>
       </div>
       <div class="pr-sec" data-sec="reportes">
-        <div class="pr-search"><i class="fa-solid fa-note-sticky"></i><input value="Reporte del día" disabled style="opacity:.6"></div>
-        <div class="reports-note"><i class="fa-solid fa-circle-info"></i> Las exportaciones incluyen las alertas que coincidan con los filtros activos de estado, periodo y categoría.</div>
-        <button onclick="reportCard()" style="border-radius:8px; margin-bottom:10px;"><i class="fa-solid fa-download"></i> Resumen del día</button>
+        <div class="pr-search"><i class="fa-solid fa-note-sticky"></i><input value="Reporte del periodo" disabled style="opacity:.6"></div>
+        <div class="reports-note"><i class="fa-solid fa-circle-info"></i> Las exportaciones incluyen hasta 90 días de alertas y respetan los filtros activos de estado, periodo y categoría.</div>
+        <label style="font-size:10px;color:#667085;margin:0 0 5px;">Periodo del reporte</label>
+        <select id="rep-range-u" onchange="setReportRange(this.value)" style="width:100%;margin-bottom:10px;padding:9px 10px;border-radius:8px;"><option value="24">Últimas 24 horas</option><option value="168">Últimos 7 días</option><option value="720">Últimos 30 días</option><option value="2160" selected>Últimos 90 días</option></select>
+        <button onclick="reportCard()" style="border-radius:8px; margin-bottom:10px;"><i class="fa-solid fa-download"></i> Resumen del periodo</button>
         <button onclick="downloadReportCSV()" class="btn-outline" style="border-radius:8px; margin-bottom:10px;"><i class="fa-solid fa-file-csv"></i> Descargar CSV</button>
         <button onclick="downloadReportHTML()" class="btn-outline" style="border-radius:8px;"><i class="fa-solid fa-file-lines"></i> Descargar HTML</button>
       </div>
@@ -1874,7 +1864,7 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
       <div class="acn-toolbar">
         <select id="acn-category" onchange="renderAlertCenter()"><option value="all">Todas las categorías</option><option value="road">Viales</option><option value="security">Seguridad</option><option value="blockage">Solo bloqueos</option></select>
         <select id="acn-severity" onchange="renderAlertCenter()"><option value="all">Toda prioridad</option><option value="critical">Crítica</option><option value="high">Alta</option><option value="medium">Media</option></select>
-        <select id="acn-time" onchange="renderAlertCenter()"><option value="1">Última hora</option><option value="3" selected>Últimas 3 horas</option><option value="24">Últimas 24 horas</option></select>
+        <select id="acn-time" onchange="renderAlertCenter()"><option value="1">Última hora</option><option value="3" selected>Últimas 3 horas</option><option value="24">Últimas 24 horas</option><option value="168">Últimos 7 días</option><option value="720">Últimos 30 días</option><option value="2160">Últimos 90 días</option></select>
         <select id="acn-state" onchange="renderAlertCenter()"><option value="">Todo México</option></select>
         <input id="acn-search" oninput="renderAlertCenter()" placeholder="Buscar carretera, kilómetro, estado o incidente…">
       </div>
@@ -1903,7 +1893,7 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
   <div id="report-modal">
     <div id="report-modal-card">
       <div class="am-head">
-        <span class="am-chip">📄 Reporte del día</span>
+        <span class="am-chip" id="rep-period-chip">📄 Últimos 90 días</span>
         <button class="am-x" onclick="closeReport()" title="Cerrar">✕</button>
       </div>
       <div id="report-body">
@@ -2083,7 +2073,7 @@ const LINKS = {
 
 let alerts = []; 
 let criticalPoints = [];
-let risPoints = []; 
+
 let activeRoute = null; 
 let routeNearAlerts = []; 
 let markers = L.markerClusterGroup({ disableClusteringAtZoom: 16 });
@@ -2091,7 +2081,8 @@ let alertAreaLayer = L.layerGroup();
 let securityHeatLayer = L.layerGroup();
 let securityHeatEnabled = false;
 let staticLayer = L.layerGroup(); 
-let risLayer = L.layerGroup(); 
+let risLayer = L.layerGroup();
+let risMarkerLayer = L.markerClusterGroup({ disableClusteringAtZoom: 13, maxClusterRadius: 45 }); 
 let routeControl = null;
 let trafficLayer = null;
 let trafficEnabled = false;
@@ -2146,6 +2137,11 @@ let centralWorkerStats = {};
 const MAX_NOTIFICATION_AGE_MS = 15 * 60 * 1000;
 let centralAlertsTimer = null;
 let centralAlertsChannel = null;
+const HISTORY_DAYS = 90;
+const HISTORY_MAX_ROWS = 6000;
+let historicalAlerts = [];
+let historicalLoadedAt = 0;
+let historicalLoadPromise = null;
 const zeroVialSessionStartedAt = Date.now();
 let userPreferences = { categories:['road','security'], severities:['critical','high','medium','low'], states:[], radius_km:50, time_window_hours:3, blockages_only:false, push_enabled:false };
 let correctionAlertId = null;
@@ -2451,8 +2447,8 @@ function switchPanel(id) {
   document.getElementById(`panel-${id}`).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   event.currentTarget.classList.add('active');
-  map.removeLayer(risLayer); map.removeLayer(alertAreaLayer); map.removeLayer(markers); map.removeLayer(staticLayer);
-  if (id === 'ris') { graphRis('op', true); map.addLayer(risLayer); }
+  map.removeLayer(risLayer); map.removeLayer(risMarkerLayer); map.removeLayer(alertAreaLayer); map.removeLayer(markers); map.removeLayer(staticLayer);
+  if (id === 'ris') { graphRis('op', true).catch(()=>{}); map.addLayer(risLayer); map.addLayer(risMarkerLayer); }
   else if (id === 'road') { map.addLayer(alertAreaLayer); map.addLayer(markers); filterMapMarkers('road'); }
   else if (id === 'security') { map.addLayer(alertAreaLayer); map.addLayer(markers); map.addLayer(staticLayer); filterMapMarkers('security'); }
   else if (id === 'config') { map.addLayer(staticLayer); }
@@ -2957,7 +2953,7 @@ async function processAlert(key, text, sourceName='Fuente RSS', publishedAt='', 
   } catch(e) { log(`❌ Error al procesar: ${String((e && e.message) || e)}. Reintentaré el próximo ciclo.`, 'warn'); unsee(key); }
 }
 
-function removeAlert(id) { alerts = alerts.filter(a => a.id !== id); markers.clearLayers(); alertAreaLayer.clearLayers(); alerts.forEach(a => addMarkerToMap(a)); updateLists(); persistAlerts(); }
+function removeAlert(id) { alerts = alerts.filter(a => a.id !== id); historicalAlerts = historicalAlerts.filter(a => a.id !== id); markers.clearLayers(); alertAreaLayer.clearLayers(); alerts.forEach(a => addMarkerToMap(a)); updateLists(); persistAlerts(); }
 function looksLikePersonalReporter(sourceName) {
   const source = String(sourceName || '').replace(/^@/, '').replace(/[_-]+/g, ' ').trim();
   if(!source) return false;
@@ -3034,7 +3030,7 @@ function alertDistanceKm(a) {
   return myPosition && hasAlertPoint(a) && a.location_precision !== 'corridor_reference' ? haversineKm(myPosition.lat, myPosition.lon, a.lat, a.lon) : null;
 }
 function navigateToAlert(id) {
-  const a = alerts.find(x => x.id === id);
+  const a = findAlertById(id);
   if(!isNavigableAlert(a)) {
     if(a) trafficMessage('Esta alerta solo tiene una ubicación aproximada. Revisa la zona o abre la fuente; no hay un punto exacto al cual navegar.', true);
     return;
@@ -3197,7 +3193,7 @@ function renderDrawer() {
 }
 function filterMapMarkers(context) { markers.clearLayers(); alertAreaLayer.clearLayers(); alerts.forEach(a => { if(context === 'all' || a.category === context) addMarkerToMap(a); }); refreshSecurityHeat(); }
 function shareAlert(id) {
-    const alert = alerts.find(a => a.id === id); if(!alert) return;
+    const alert = findAlertById(id); if(!alert) return;
     const mapLink = isNavigableAlert(alert) ? LINKS.gmapsLink.replace('{lat}', alert.lat).replace('{lon}', alert.lon) : (alert.source_url || location.href);
     const trafico = alert.category === 'road' && alert.trafico ? `\n🚦 *Tráfico:* ${trafficStyle(alert.trafico).label}` : '';
     const text = `🚨 *ZERO VIAL - ALERTA* 🚨\n\n📌 *Evento:* ${alert.title}\n📍 *Ubicación:* ${alert.location}${trafico}\n📰 *${alertSourceLabel(alert)}*\n🔗 *Ver:* ${mapLink}`;
@@ -3237,14 +3233,14 @@ function detectionDelayLabel(a) {
   return `Detectado ${delay<1?'en menos de 1 min':`${delay} min después de su publicación`}`;
 }
 function toggleLike(id) {
-  const a = alerts.find(x => x.id === id); if(!a) return;
+  const a = findAlertById(id); if(!a) return;
   a.liked = !a.liked;
   document.querySelectorAll('#btn-heart-' + id).forEach(h => h.classList.toggle('liked', a.liked));
   persistAlerts();
   openAlertDetail(id);
 }
 function openAlertDetail(id) {
-  const a = alerts.find(x => x.id === id); if(!a) return;
+  const a = findAlertById(id); if(!a) return;
   currentAlertId = id;
   showAlertFocus(a);
   document.getElementById('am-title').textContent = a.title;
@@ -3322,7 +3318,7 @@ async function saveLocationCorrection() {
   trafficMessage(zeroVialUser?'Corrección enviada para validación.':'Corrección guardada. Inicia sesión para sincronizarla.');
 }
 function centerAlert() {
-  const a = alerts.find(x => x.id === currentAlertId); if(!hasAlertPoint(a)) return;
+  const a = findAlertById(currentAlertId); if(!hasAlertPoint(a)) return;
   map.setView([a.lat, a.lon], locationTier(a)==='area'?10:15); closeAlertModal();
 }
 document.getElementById('alert-modal') && document.getElementById('alert-modal').addEventListener('click', e => { if(e.target === e.currentTarget) closeAlertModal(); });
@@ -3333,18 +3329,21 @@ function renderDirectory() { renderDirectoryInto('directory-list'); }
 function filterDirectoryIn(containerId, queryElId) { const query = document.getElementById(queryElId).value.toLowerCase(); document.getElementById(containerId).querySelectorAll('.contact-card').forEach(card => { card.style.display = card.dataset.name.includes(query) ? 'flex' : 'none'; }); }
 function filterDirectory() { filterDirectoryIn('directory-list', 'dirSearch'); }
 function buildStateFilter() { const sel = document.getElementById('lp-state'); if(!sel) return; sel.innerHTML = '<option value="">📍 Todos los estados</option>'; MEXICO_STATES.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); }); }
-function processRis(data, canvasSId, canvasTId, fit) { risPoints = data; risLayer.clearLayers(); data.forEach(p => { const icon = L.divIcon({ className: 'custom-pin', html: `<div style="background:#00bcd4; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; border:2px solid white;"><i class="fa-solid fa-clock-rotate-left"></i></div>`, iconSize: [26, 26], iconAnchor: [13, 26] }); const m = L.marker([p.lat, p.lon], {icon}); m.bindPopup(`<div style='color:#00838f'><b>Radar Vial: ${p.type}</b><br>${p.desc}</div>`); risLayer.addLayer(m); }); const statsState = {}, statsType = {}; data.forEach(p => { statsState[p.state] = (statsState[p.state] || 0) + 1; statsType[p.type] = (statsType[p.type] || 0) + 1; }); renderChartsInto(canvasSId, canvasTId, statsState, statsType); log(`📊 Radar Vial procesado.`, 'success'); map.addLayer(risLayer); if(fit && risLayer.getLayers().length) map.fitBounds(risLayer.getBounds(), { padding: [50, 50] }); return { statsState, statsType }; }
 function securityType(t) { const s = (t || '').toLowerCase(); if(/bloqueo|manifestaci|protesta|marcha|planton|cierre total/.test(s)) return 'Bloqueo / Manifestación'; if(/asalto|robo|atraco|secuestro|extorsi/.test(s)) return 'Asalto / Robo'; if(/balacera|tiroteo|disparo|enfrentamiento|ataque|ejecuci|narcobloqueo|quema|veta/.test(s)) return 'Ataque Armado'; if(/opera|detenci|polic|guardia|federal|fiscal|militar/.test(s)) return 'Operativo Policial'; return 'Otro'; }
 function roadIncidentType(a) { const s = ((a.title || '') + ' ' + (a.detail || '')).toLowerCase(); if(/choque|accidente|volcadura|derrape/.test(s)) return 'Accidente'; if(/bloqueo|cierre|manifestaci/.test(s)) return 'Cierre / Bloqueo'; if(/obra|mantenimiento|reducci/.test(s)) return 'Obras'; if(/tráfico|trafico|carga|congesti|detenido/.test(s)) return 'Tráfico'; if(/lluvia|niebla|inundaci|derrumbe|deslave/.test(s)) return 'Clima / Vía'; return 'Otra vial'; }
 function buildRisFilters() {
   ['u','op'].forEach(prefix => { const sel=document.getElementById(prefix+'-ris-state'); if(!sel) return; sel.innerHTML='<option value="">Todo México</option>'; MEXICO_STATES.forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o); }); });
 }
-function graphRis(prefix='u', quiet=false) {
+async function graphRis(prefix='u', quiet=false) {
   const state = document.getElementById(prefix+'-ris-state')?.value || '';
   const type = document.getElementById(prefix+'-ris-type')?.value || 'all';
   const hours = +(document.getElementById(prefix+'-ris-time')?.value || 0);
   const norm = s => normAcc(s || '');
-  const selected = alerts.filter(a => {
+  let source = alerts;
+  if(hours === 0 || hours > 24) {
+    try { source = await ensureHistoricalAlerts(); } catch(e) { source = alerts; }
+  }
+  const selected = source.filter(a => {
     if(type !== 'all' && a.category !== type) return false;
     if(state && !norm((a.state || '') + ' ' + (a.location || '')).includes(norm(state))) return false;
     if(hours && Date.now() - new Date(a.time).getTime() > hours*3600000) return false;
@@ -3353,6 +3352,7 @@ function graphRis(prefix='u', quiet=false) {
   const st = {}, ty = {};
   selected.forEach(a => { const s=a.state || 'Sin estado'; const t=a.category === 'security' ? securityType(a.title+' '+(a.detail||'')) : roadIncidentType(a); st[s]=(st[s]||0)+1; ty[t]=(ty[t]||0)+1; });
   risLayer.clearLayers();
+  risMarkerLayer.clearLayers();
   selected.filter(hasAlertPoint).forEach(a => {
     const color=a.category==='security'?'#EF4444':'#F97316';
     // Mismo criterio que el mapa principal: una zona aproximada no se dibuja como pin.
@@ -3365,7 +3365,7 @@ function graphRis(prefix='u', quiet=false) {
       return;
     }
     const icon=L.divIcon({className:'custom-pin',html:`<div style="background:${color};width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:white;border:2px solid white;"><i class="fa-solid ${a.category==='security'?'fa-shield-halved':'fa-car-burst'}"></i></div>`,iconSize:[24,24],iconAnchor:[12,24]});
-    L.marker([a.lat,a.lon],{icon}).bindPopup(`<b>${escapeHtml(a.title)}</b><br>${escapeHtml(a.location || '')}<br><small>${escapeHtml(alertSourceLabel(a))}</small>`).addTo(risLayer);
+    L.marker([a.lat,a.lon],{icon}).bindPopup(`<b>${escapeHtml(a.title)}</b><br>${escapeHtml(a.location || '')}<br><small>${escapeHtml(alertSourceLabel(a))}</small>`).addTo(risMarkerLayer);
   });
   const ids = prefix === 'u' ? ['uc-states','uc-types'] : ['chartStates','chartTypes'];
   renderChartsInto(ids[0], ids[1], st, ty);
@@ -3374,7 +3374,7 @@ function graphRis(prefix='u', quiet=false) {
   if(prefix === 'u') { const emp=document.getElementById('ris-empty'); if(emp) emp.style.display=selected.length?'none':'block'; }
   if(!quiet) log(`📊 Radar Vial: ${selected.length} incidencia(s) graficadas${state ? ' en '+state : ' en México'}.`, 'success');
 }
-function refreshRisAuto() { graphRis('u', true); if(document.getElementById('panel-ris')?.classList.contains('active')) graphRis('op', true); }
+function refreshRisAuto() { graphRis('u', true).catch(()=>{}); if(document.getElementById('panel-ris')?.classList.contains('active')) graphRis('op', true).catch(()=>{}); }
 function riskPointType(p) { return p && (p.risk_type === 'road_risk' || p.type === 'road_risk') ? 'road_risk' : 'red_zone'; }
 function loadCriticalPoints() { const input = document.getElementById('criticalPointsInput').value; try { const points = JSON.parse(input); if(!Array.isArray(points)) throw new Error('Se esperaba una lista'); localStorage.setItem('steele_critical', input); criticalPoints = points.filter(p => p && Number.isFinite(+p.lat) && Number.isFinite(+p.lon) && p.title).map(p => ({ ...p, lat:+p.lat, lon:+p.lon, risk_type:riskPointType(p) })); applyFilter(''); rebuildU(); log(`✅ Zonas cargadas: ${criticalPoints.length}.`, 'success'); } catch(e) { log("Error JSON de zonas de riesgo", 'err'); } }
 function renderRiskPoints(keyword='') {
@@ -3415,17 +3415,6 @@ function applyFilter(keyword) {
   document.querySelectorAll('#state-grid button').forEach(btn => btn.style.color = btn.textContent === keyword ? '#fff' : '');
   renderRiskPoints(keyword); }
 async function detectModels() { try { const res = await fetch('/api/groq?action=models'); const data = await res.json(); const select = document.getElementById('modelSelect'); const rsel = document.getElementById('reportModelSelect'); const saved = rsel ? rsel.value : ''; select.innerHTML = ''; if(rsel){ rsel.innerHTML=''; const o0=document.createElement('option'); o0.value=''; o0.text='(igual que alertas)'; rsel.appendChild(o0); } const preferred = ['openai/gpt-oss-20b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'allam-2-7b']; const models = (data.data || []).map(x => (typeof x === 'string' ? x : x.id)); const addOpt = (id, target) => { const o = document.createElement('option'); o.value = id; o.text = id; target.appendChild(o); }; preferred.forEach(p => { if(models.includes(p)) { addOpt(p, select); if(rsel) addOpt(p, rsel); } }); models.forEach(id => { if(!preferred.includes(id)) { addOpt(id, select); if(rsel) addOpt(id, rsel); } }); if(rsel && saved) rsel.value = saved; if(select.options.length === 0) log("Sin modelos disponibles", 'warn'); else { log(`✅ Modelos cargados (${select.options.length}).`, 'success'); saveConfig(); } } catch(e) { log(`Error detección (necesitas servidor)`,'err'); } }
-async function calculateRoute() {
-  const o=document.getElementById('routeOrigin').value.trim(), d=document.getElementById('routeDest').value.trim();
-  if(!o || !d) return;
-  if(routeControl) { map.removeControl(routeControl); routeControl=null; }
-  try {
-    const [origin,destination]=await Promise.all([geocodeRoutePoint(o),geocodeRoutePoint(d)]);
-    routeControl=L.Routing.control({ waypoints:[L.latLng(origin.lat,origin.lon),L.latLng(destination.lat,destination.lon)], router:L.Routing.osrmv1({serviceUrl:LINKS.osrm}), lineOptions:{styles:[{color:'#b388ff',opacity:.8,weight:6}]}, createMarker:()=>null, addWaypoints:false, fitSelectedRoutes:true }).addTo(map);
-    routeControl.on('routesfound',e=>{ activeRoute=e.routes[0]; const stats=`${(activeRoute.summary.totalDistance/1000).toFixed(1)} km | ${(activeRoute.summary.totalTime/60).toFixed(0)} min`; document.getElementById('routeStats').innerText=stats; const rb=document.getElementById('routeBoxStats'); if(rb) rb.innerText=stats; updateRouteAlerts(activeRoute.coordinates); });
-  } catch(e) { log('No pudimos localizar el origen o destino. Agrega municipio y estado.', 'error'); }
-}
-
 const ROUTE_BUFFER_KM = 8;
 function haversineKm(lat1, lon1, lat2, lon2) { const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180, a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2; return 2*R*Math.asin(Math.sqrt(a)); }
 function pointToSegmentKm(lat, lon, aLat, aLon, bLat, bLon) { const R=6371, toRad=v=>v*Math.PI/180, lat0=(lat+aLat+bLat)/3; const x=toRad(lon)*Math.cos(toRad(lat0))*R, y=toRad(lat)*R; const ax=toRad(aLon)*Math.cos(toRad(lat0))*R, ay=toRad(aLat)*R; const bx=toRad(bLon)*Math.cos(toRad(lat0))*R, by=toRad(bLat)*R; const dx=bx-ax, dy=by-ay; const t=(dx===0&&dy===0)?0:Math.max(0, Math.min(1, ((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy))); return Math.hypot(x-(ax+t*dx), y-(ay+t*dy)); }
@@ -3594,11 +3583,52 @@ function alertsLikelySame(local,central) {
   const sameSource=normAcc(local.source_name)===normAcc(central.source_name);
   return titleScore>=.5||(sameSource&&titleScore>=.35&&locationScore>=.3);
 }
+const CENTRAL_ALERT_FIELDS='id,external_id,title,detail,category,severity,state,municipality,road,kilometer,location_label,latitude,longitude,location_confidence,location_precision,location_status,event_type,traffic_status,source_name,source_url,event_at,created_at';
+async function fetchCentralAlertRows(since,maxRows=500) {
+  if(!supabaseClient) return [];
+  const rows=[];
+  const pageSize=Math.min(1000,maxRows);
+  for(let from=0;from<maxRows;from+=pageSize) {
+    const to=Math.min(from+pageSize,maxRows)-1;
+    const {data,error}=await supabaseClient.from('alerts').select(CENTRAL_ALERT_FIELDS).gte('event_at',since).order('event_at',{ascending:false}).range(from,to);
+    if(error||!Array.isArray(data)) break;
+    rows.push(...data);
+    if(data.length<pageSize) break;
+  }
+  return rows;
+}
+async function ensureHistoricalAlerts(force=false) {
+  if(!supabaseClient) return alerts;
+  if(!force && historicalAlerts.length && Date.now()-historicalLoadedAt<30*60*1000) return historicalAlerts;
+  if(historicalLoadPromise) return historicalLoadPromise;
+  historicalLoadPromise=(async()=>{
+    try {
+      const since=new Date(Date.now()-HISTORY_DAYS*24*3600*1000).toISOString();
+      const rows=await fetchCentralAlertRows(since,HISTORY_MAX_ROWS);
+      if(rows.length) {
+        historicalAlerts=rows.map(row=>centralAlertToUi(row,0));
+        historicalLoadedAt=Date.now();
+      }
+    } catch(e) {}
+    return historicalAlerts.length?historicalAlerts:alerts;
+  })().finally(()=>{ historicalLoadPromise=null; });
+  return historicalLoadPromise;
+}
+function reportSourceAlerts() {
+  if(!historicalAlerts.length) return alerts;
+  const historicalIds=new Set(historicalAlerts.map(a=>a.central_id).filter(Boolean));
+  const liveCentral=alerts.filter(a=>a.central_id&&!historicalIds.has(a.central_id));
+  const local=alerts.filter(a=>!a.central_id);
+  return [...historicalAlerts,...liveCentral,...local];
+}
+function findAlertById(id) {
+  return alerts.find(a=>a.id===id) || historicalAlerts.find(a=>a.id===id) || null;
+}
 async function loadCentralAlerts() {
   if(!supabaseClient) return;
   const since=new Date(Date.now()-24*3600*1000).toISOString();
-  const {data,error}=await supabaseClient.from('alerts').select('id,external_id,title,detail,category,severity,state,municipality,road,kilometer,location_label,latitude,longitude,location_confidence,location_precision,location_status,event_type,traffic_status,source_name,source_url,event_at,created_at').gte('event_at',since).order('event_at',{ascending:false}).limit(500);
-  if(error||!Array.isArray(data)) return;
+  const data=await fetchCentralAlertRows(since,500);
+  if(!data.length) return;
   const previous=new Map(alerts.filter(a=>a.central_id).map(a=>[a.central_id,Number(a.received_at)||0]));
   const central=data.map(row=>centralAlertToUi(row,previous.get(row.id)||0));
   const local=alerts.filter(a=>!a.central_id && !unsafeLegacyHybridLocation(a));
@@ -3626,6 +3656,9 @@ async function loadCentralAlerts() {
 }
 async function initCentralAlerts() {
   await Promise.all([refreshCentralWorkerHealth(),loadCentralAlerts()]);
+  // El histórico de 90 días se carga aparte para no descargarlo cada minuto.
+  // Se usa en reportes, Centro de Alertas y Radar Vial.
+  setTimeout(()=>{ ensureHistoricalAlerts().catch(()=>{}); },1200);
   // Polling robusto: evita depender de Realtime/WebSocket para el mapa público.
   // Las alertas centrales se refrescan cada minuto aunque Realtime esté caído,
   // bloqueado por red corporativa o deshabilitado en Supabase.
@@ -4103,14 +4136,46 @@ function tickClock() {
 }
 setInterval(tickClock, 1000); tickClock();
 
-// === REPORTE DEL DÍA ===
-function reportAlerts() { return document.body.classList.contains('user-mode') ? alerts.filter(matchesFilters) : alerts; }
-function reportCard() {
+// === REPORTES (hasta 90 días) ===
+let reportRangeHours = 2160;
+function reportRangeLabel(hours=reportRangeHours) {
+  if(hours>=2160) return 'Últimos 90 días';
+  if(hours>=720) return 'Últimos 30 días';
+  if(hours>=168) return 'Últimos 7 días';
+  if(hours>=24) return 'Últimas 24 horas';
+  return `Últimas ${hours} horas`;
+}
+function setReportRange(value) {
+  reportRangeHours=Number(value)||2160;
+  ['rep-range','rep-range-u'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=String(reportRangeHours); });
+  const chip=document.getElementById('rep-period-chip'); if(chip) chip.textContent='📄 '+reportRangeLabel();
+  const modal=document.getElementById('report-modal');
+  if(modal&&modal.style.display==='flex') reportCard();
+}
+function reportAlerts() {
+  const source=reportSourceAlerts();
+  const cutoff=reportRangeHours?Date.now()-reportRangeHours*3600000:0;
+  return source.filter(a => {
+    if(!a||!a.title) return false;
+    const time=new Date(a.time).getTime();
+    if(cutoff&&(!Number.isFinite(time)||time<cutoff)) return false;
+    if(uType!=='all'&&a.category!==uType) return false;
+    if(a.category==='security'&&!nfState.security) return false;
+    if(a.category==='road'&&!nfState.road) return false;
+    if(nfState.blockagesOnly&&!isBlockageAlert(a)) return false;
+    if(userPreferences?.severities?.length&&!userPreferences.severities.includes(alertSeverity(a))) return false;
+    if(uState&&!((a.state||'').toLowerCase().includes(uState.toLowerCase())||(a.location||'').toLowerCase().includes(uState.toLowerCase()))) return false;
+    return true;
+  });
+}
+async function reportCard() {
+  await ensureHistoricalAlerts();
   const data = reportAlerts();
   document.getElementById('rep-road').textContent = data.filter(a => a.category === 'road').length;
   document.getElementById('rep-sec').textContent = data.filter(a => a.category === 'security').length;
   document.getElementById('rep-imp').textContent = data.filter(a => a.importante).length;
   document.getElementById('rep-stop').textContent = data.filter(a => a.category === 'road' && a.trafico === 'detenido').length;
+  const chip=document.getElementById('rep-period-chip'); if(chip) chip.textContent='📄 '+reportRangeLabel();
   const list = document.getElementById('rep-list');
   list.innerHTML = '';
   [...data].sort((a,b) => new Date(b.time) - new Date(a.time)).slice(0, 15).forEach(a => list.appendChild(makeAlertCard(a)));
@@ -4118,24 +4183,26 @@ function reportCard() {
 }
 function closeReport() { document.getElementById('report-modal').style.display = 'none'; }
 document.getElementById('report-modal') && document.getElementById('report-modal').addEventListener('click', e => { if(e.target === e.currentTarget) closeReport(); });
-function downloadReportCSV() {
-  const rows = [['hora','categoria','trafico','importante','titulo','ubicacion','estado','lat','lon']];
-  [...reportAlerts()].sort((a,b) => b.time - a.time).forEach(a => rows.push([
+async function downloadReportCSV() {
+  await ensureHistoricalAlerts();
+  const rows = [['hora','categoria','trafico','importante','titulo','ubicacion','estado','municipio','lat','lon']];
+  [...reportAlerts()].sort((a,b) => new Date(b.time) - new Date(a.time)).forEach(a => rows.push([
     csvCell(formatAlertTime(a.time)), a.category, a.trafico || '', a.importante ? 'Si' : 'No',
-    csvCell(a.title), csvCell(a.location), csvCell(a.state || ''), a.lat, a.lon
+    csvCell(a.title), csvCell(a.location), csvCell(a.state || ''), csvCell(a.municipality || ''), a.lat, a.lon
   ]));
   const csv = '\ufeff' + rows.map(r => r.join(',')).join('\n');
   saveBlob(csv, 'text/csv', 'zero-vial-reporte-' + new Date().toISOString().slice(0,10) + '.csv');
 }
-function downloadReportHTML() {
+async function downloadReportHTML() {
+  await ensureHistoricalAlerts();
   const data = reportAlerts();
   const hoy = new Date().toLocaleString('es-MX', { dateStyle: 'full' });
   const roads = data.filter(a => a.category === 'road').length;
   const secs = data.filter(a => a.category === 'security').length;
   const imps = data.filter(a => a.importante).length;
   const stops = data.filter(a => a.category === 'road' && a.trafico === 'detenido').length;
-  const rows = [...data].sort((a,b) => b.time - a.time).map(a =>
-    `<tr><td>${escapeHtml(formatAlertTime(a.time))}</td><td>${a.category === 'security' ? 'Seguridad' : 'Vial'}</td><td>${escapeHtml(a.trafico || '-')}</td><td>${a.importante ? '⚠' : '—'}</td><td>${escapeHtml(a.title || '')}</td><td>${escapeHtml(a.location || '')}</td><td>${escapeHtml(a.state || '')}</td></tr>`
+  const rows = [...data].sort((a,b) => new Date(b.time) - new Date(a.time)).map(a =>
+    `<tr><td>${escapeHtml(formatAlertTime(a.time))}</td><td>${a.category === 'security' ? 'Seguridad' : 'Vial'}</td><td>${escapeHtml(a.trafico || '-')}</td><td>${a.importante ? '⚠' : '—'}</td><td>${escapeHtml(a.title || '')}</td><td>${escapeHtml(a.location || '')}</td><td>${escapeHtml(a.state || '')}</td><td>${escapeHtml(a.municipality || '')}</td></tr>`
   ).join('');
   const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Zero Vial · Reporte</title><style>
     body{font-family:Segoe UI,Arial,sans-serif;margin:28px;color:#222}
@@ -4148,14 +4215,14 @@ function downloadReportHTML() {
     th,td{border:1px solid #d5dbe3;padding:6px 8px;text-align:left}
     th{background:#eef1f5}@media print{body{margin:8mm}}
     </style></head><body>
-    <h1>ZERO VIAL</h1><h2>Reporte generado: ${escapeHtml(hoy)}</h2>
+    <h1>ZERO VIAL</h1><h2>${escapeHtml(reportRangeLabel())} · Reporte generado: ${escapeHtml(hoy)}</h2>
     <div class="stats">
       <div class="card"><b>${roads}</b><span>Viales</span></div>
       <div class="card"><b>${secs}</b><span>Seguridad</span></div>
       <div class="card"><b>${imps}</b><span>Importantes</span></div>
       <div class="card"><b>${stops}</b><span>Tráfico detenido</span></div>
     </div>
-    <table><tr><th>Hora</th><th>Categoría</th><th>Tráfico</th><th>Imp.</th><th>Título</th><th>Ubicación</th><th>Estado</th></tr>${rows}
+    <table><tr><th>Hora</th><th>Categoría</th><th>Tráfico</th><th>Imp.</th><th>Título</th><th>Ubicación</th><th>Estado</th><th>Municipio</th></tr>${rows}
     </table></body></html>`;
   saveBlob(html, 'text/html', 'zero-vial-reporte-' + new Date().toISOString().slice(0,10) + '.html');
 }
@@ -4223,8 +4290,7 @@ function isFreshForNotification(a) {
 function refreshAlertAges() {
   markers.clearLayers(); alertAreaLayer.clearLayers(); alerts.forEach(a => addMarkerToMap(a)); updateLists();
 }
-function clearMapRoute() { if(routeControl) { map.removeControl(routeControl); routeControl = null; activeRoute = null; } routeLineLayer && routeLineLayer.clearLayers(); routeNearAlerts = []; document.getElementById('routeStats').innerText = ""; const b=document.getElementById('routeAlerts'); if(b) b.innerHTML='<div style="font-size:12px;color:var(--text-muted);">Traza una ruta para analizar el entorno.</div>'; const rb2=document.getElementById('routeBoxStats'); if(rb2) rb2.innerText=''; const rbt=document.getElementById('routeBoxAlerts'); if(rbt) rbt.innerHTML=''; document.getElementById('aiReport').innerText = "Esperando ruta..."; }
-async function generateRiskReport() { const box = document.getElementById('aiReport'); if(!activeRoute) { box.innerText = "Traza ruta."; return; } box.innerText = "Analizando..."; box.classList.add('typing'); const nearInfo = routeNearAlerts.map(a => `- [a ${a.distKm.toFixed(1)} km de la ruta] ${a.category}: ${a.title} (${a.location})`).join('\n'); const incidents = nearInfo || (alerts.map(a => `- ${a.category}: ${a.title} (${a.location})`).join('\n')) || "Sin incidentes recientes."; const riskPoints = criticalPoints.map(p => `- ZONA ROJA: ${p.title} (${p.desc})`).join('\n'); const prompt = `Analiza ruta ${document.getElementById('routeOrigin').value} a ${document.getElementById('routeDest').value}. Alertas Vivas: ${incidents}. Puntos Criticos: ${riskPoints}. Da veredicto seguridad.`; const report = await consultGroq(prompt, (document.getElementById('reportModelSelect') || {}).value || 'openai/gpt-oss-120b'); box.classList.remove('typing'); box.innerText = report || "Error."; }
+async function generateRiskReport() { const box = document.getElementById('aiReport'); if(!activeRoute) { box.innerText = "Traza ruta."; return; } box.innerText = "Analizando..."; box.classList.add('typing'); const nearInfo = routeNearAlerts.map(a => `- [a ${a.distKm.toFixed(1)} km de la ruta] ${a.category}: ${a.title} (${a.location})`).join('\n'); const incidents = nearInfo || (alerts.map(a => `- ${a.category}: ${a.title} (${a.location})`).join('\n')) || "Sin incidentes recientes."; const riskPoints = criticalPoints.map(p => `- ZONA ROJA: ${p.title} (${p.desc})`).join('\n'); const prompt = `Analiza ruta ${document.getElementById('rm-origin')?.value || 'origen'} a ${document.getElementById('rm-dest')?.value || 'destino'}. Alertas Vivas: ${incidents}. Puntos Criticos: ${riskPoints}. Da veredicto seguridad.`; const report = await consultGroq(prompt, (document.getElementById('reportModelSelect') || {}).value || 'openai/gpt-oss-120b'); box.classList.remove('typing'); box.innerText = report || "Error."; }
 
 /* =========================================
    ZERO VIAL v23 UI · FILTROS, MODALES Y RUTAS
@@ -4659,10 +4725,10 @@ function locationQuality(a) {
   if(score >= .58 && a.precision !== 'estado') return {label:'Precisión media',cls:''};
   return {label:'Ubicación aproximada',cls:'low'};
 }
-function buildAlertCenterStates() {
+function buildAlertCenterStates(source=alerts) {
   const sel=document.getElementById('acn-state'); if(!sel) return;
   const current=sel.value;
-  const states=[...new Set(alerts.map(a=>a.state).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+  const states=[...new Set(source.map(a=>a.state).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
   sel.innerHTML='<option value="">Todo México</option>'+states.map(s=>`<option value="${s}">${s}</option>`).join('');
   if(states.includes(current)) sel.value=current;
 }
@@ -4687,7 +4753,9 @@ function alertCenterRanking(targetId, entries, emptyLabel) {
 }
 function renderAlertCenterAnalytics(visible,hours) {
   const caption=document.getElementById('acn-analysis-caption');
-  if(caption) caption.textContent=`${visible.length} alerta${visible.length===1?'':'s'} · últimas ${hours===1?'hora':hours+' horas'} · datos del filtro actual`;
+  const days=Math.round(hours/24);
+  const windowText=hours>=24?`${days} día${days===1?'':'s'}`:hours===1?'hora':`${hours} horas`;
+  if(caption) caption.textContent=`${visible.length} alerta${visible.length===1?'':'s'} · ${windowText} · datos del filtro actual`;
   const countBy=(items,keyFn)=>items.reduce((out,item)=>{ const key=keyFn(item)||'Sin identificar'; out[key]=(out[key]||0)+1; return out; },{});
   const states=countBy(visible,a=>a.state||'Sin estado');
   const sources=countBy(visible,a=>alertSourceLabel(a).replace(/^Fuente:\s*/i,'')||'Sin identificar');
@@ -4696,10 +4764,10 @@ function renderAlertCenterAnalytics(visible,hours) {
   if(typeof Chart==='undefined') return;
   ['acn-trend-chart','acn-category-chart','acn-quality-chart'].forEach(id=>{ if(chartInstances[id]){ chartInstances[id].destroy(); delete chartInstances[id]; } });
   const dark=document.body.classList.contains('dark-mode'), text=dark?'#CBD5E1':'#667085', grid=dark?'rgba(148,163,184,.12)':'rgba(71,84,103,.10)';
-  const end=Date.now(), bins=hours<=1?6:hours<=3?6:8, binMs=hours*3600000/bins;
+  const end=Date.now(), bins=hours<=1?6:hours<=24?8:12, binMs=hours*3600000/bins;
   const trend=Array.from({length:bins},()=>0);
   visible.forEach(a=>{ const age=end-new Date(a.time).getTime(), index=bins-1-Math.floor(age/binMs); if(index>=0&&index<bins) trend[index]++; });
-  const labels=trend.map((_,i)=>{ const date=new Date(end-(bins-1-i)*binMs); return date.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}); });
+  const labels=trend.map((_,i)=>{ const date=new Date(end-(bins-1-i)*binMs); return hours>=24?date.toLocaleDateString('es-MX',{day:'2-digit',month:'short'}):date.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}); });
   const common={responsive:true,maintainAspectRatio:false,animation:{duration:250},plugins:{legend:{labels:{color:text,font:{size:10},boxWidth:10}}}};
   const trendCanvas=document.getElementById('acn-trend-chart');
   if(trendCanvas) chartInstances['acn-trend-chart']=new Chart(trendCanvas,{type:'line',data:{labels,datasets:[{label:'Alertas',data:trend,borderColor:'#1570EF',backgroundColor:'rgba(21,112,239,.13)',fill:true,tension:.35,pointRadius:2}]},options:{...common,plugins:{legend:{display:false}},scales:{x:{ticks:{color:text,font:{size:9}},grid:{display:false}},y:{beginAtZero:true,ticks:{color:text,precision:0},grid:{color:grid}}}}});
@@ -4728,15 +4796,17 @@ function alertDetailDisplay(a) {
   return detail;
 }
 
-function renderAlertCenter() {
+async function renderAlertCenter() {
   const list=document.getElementById('acn-list'); if(!list) return;
-  buildAlertCenterStates(); renderDiagnostics();
   const cat=document.getElementById('acn-category')?.value||'all';
   const sev=document.getElementById('acn-severity')?.value||'all';
   const hours=Number(document.getElementById('acn-time')?.value||3);
   const state=document.getElementById('acn-state')?.value||'';
   const q=(document.getElementById('acn-search')?.value||'').toLowerCase();
-  const visible=alerts.filter(a=>{
+  let source=alerts;
+  if(hours>24){ try { source=await ensureHistoricalAlerts(); } catch(e) { source=alerts; } }
+  buildAlertCenterStates(source); renderDiagnostics();
+  const visible=source.filter(a=>{
     if(cat==='blockage'&&!isBlockageAlert(a)) return false;
     if(['road','security'].includes(cat)&&a.category!==cat) return false;
     if(sev!=='all'&&alertSeverity(a)!==sev) return false;
@@ -4747,8 +4817,10 @@ function renderAlertCenter() {
   }).sort((a,b)=>new Date(b.time)-new Date(a.time));
   renderAlertCenterAnalytics(visible,hours);
   if(!visible.length){list.innerHTML='<div class="acn-empty"><i class="fa-solid fa-inbox"></i><p>No hay alertas para estos filtros.</p></div>';return;}
+  const MAX_ACN=200, shown=visible.slice(0,MAX_ACN);
+  const more=visible.length>MAX_ACN?`<div class="acn-empty" style="padding:12px">Mostrando las ${MAX_ACN} más recientes de ${visible.length}. Acota el periodo o los filtros para ver el resto.</div>`:'';
   const sevMeta={critical:['Prioridad crítica','#EF4444'],high:['Prioridad alta','#F97316'],medium:['Prioridad media','#F59E0B']};
-  list.innerHTML=visible.map(a=>{
+  list.innerHTML=more+shown.map(a=>{
     const level=alertSeverity(a),meta=sevMeta[level],loc=locationQuality(a),distance=alertDistanceKm(a);
     return `<article class="acn-card" style="--sev:${meta[1]}">
       <div class="acn-card-top"><span class="acn-badge">${meta[0]}</span><span class="acn-badge" style="--sev:#027A48">Fuente identificada</span>${a.km?`<span class="acn-badge" style="--sev:#1570EF">km ${a.km}</span>`:''}<time><i class="fa-regular fa-clock"></i> ${reportedTimeLabel(a.time)}</time></div>
@@ -4769,7 +4841,7 @@ function closeAlertCenter(){
   closeModal('alert-center-modal');
   document.body.classList.remove('alert-center-open');
 }
-function showCenterAlertOnMap(id){ const a=alerts.find(x=>x.id===id); if(!hasAlertPoint(a))return; closeAlertCenter(); showMapView(); showAlertFocus(a); map.setView([a.lat,a.lon],locationTier(a)==='area'?10:Math.max(map.getZoom(),14)); }
+function showCenterAlertOnMap(id){ const a=findAlertById(id); if(!hasAlertPoint(a))return; closeAlertCenter(); showMapView(); showAlertFocus(a); map.setView([a.lat,a.lon],locationTier(a)==='area'?10:Math.max(map.getZoom(),14)); }
 function openModal(id) { const m = document.getElementById(id); if(m) m.classList.add('open'); }
 function closeModal(id) { const m = document.getElementById(id); if(m) m.classList.remove('open'); }
 document.querySelectorAll('.u-modal').forEach(m => m.addEventListener('click', ev => {
