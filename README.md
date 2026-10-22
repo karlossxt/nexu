@@ -14,7 +14,7 @@ Zero Vial es una plataforma de alertas viales en tiempo real para México. Agreg
 
 ## Requisitos
 
-- [Node.js](https://nodejs.org/) >= 20
+- [Node.js](https://nodejs.org/) >= 24 (usa `node:sqlite` en los tests y herramientas de revisión)
 - Clave de API de [Groq](https://console.groq.com/keys)
 - (Opcional) Clave de [Google Maps Platform](https://console.cloud.google.com/google/maps-apis/) para mejorar geocodificación/snapping
 - (Opcional) Clave de [Geoapify](https://www.geoapify.com/) como proveedor principal de geocodificación
