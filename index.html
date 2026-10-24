@@ -230,27 +230,8 @@ button:focus-visible, [role="button"]:focus-visible, .alert-card:focus-visible, 
 .landing-mode.user{ border:none; background:linear-gradient(105deg,#FFC02E,#FF9600); color:#101214; box-shadow:0 9px 25px rgba(255,176,0,.2); }
 .landing-mode.full{ border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.08); color:#fff; }
 .landing-mode small{ display:block; margin-top:3px; font-size:10px; font-weight:500; opacity:.75; }
-.audience-gate{ display:none; position:fixed; inset:0; z-index:24000; align-items:center; justify-content:center; padding:20px; overflow:auto; background:radial-gradient(circle at 15% 20%,rgba(25,199,232,.14),transparent 30%),radial-gradient(circle at 85% 80%,rgba(255,176,0,.14),transparent 28%),#05070A; }
-.audience-gate.open{ display:flex; }
-.audience-gate-card{ width:min(760px,100%); padding:30px; border:1px solid rgba(255,255,255,.14); border-radius:24px; color:#EEF4FA; background:linear-gradient(145deg,rgba(17,25,35,.98),rgba(5,8,12,.98)); box-shadow:0 30px 90px rgba(0,0,0,.62); text-align:center; }
-.audience-gate-mark{ width:58px; height:58px; display:grid; place-items:center; margin:0 auto 14px; border-radius:18px; color:#061116; background:linear-gradient(145deg,#7DDFF1,#19C7E8); font-size:23px; }
-.audience-gate-card h2{ margin:0 0 7px; font-size:25px; }
-.audience-gate-card>p{ margin:0 auto 22px; max-width:560px; color:#9EABB8; font-size:13px; line-height:1.55; }
-.audience-picker{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-.audience-choice{ min-height:190px; padding:22px; display:flex; flex-direction:column; align-items:flex-start; text-align:left; gap:10px; color:#DDE7F0; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.14); border-radius:18px; box-shadow:none; }
-.audience-choice:hover{ transform:translateY(-2px); border-color:rgba(125,223,241,.55); background:rgba(255,255,255,.07); }
-.audience-choice>i{ width:42px; height:42px; display:grid; place-items:center; border-radius:12px; color:#061116; background:#7DDFF1; font-size:18px; }
-.audience-choice.company>i{ background:#FFB000; }
-.audience-choice b{ font-size:17px; }
-.audience-choice small{ display:block; margin-top:5px; color:#98A7B6; font-size:11px; font-weight:500; line-height:1.45; }
-.audience-choice em{ margin-top:auto; color:#7DDFF1; font-size:10px; font-style:normal; font-weight:800; letter-spacing:.04em; }
-.audience-choice.company em{ color:#FFC44D; }
-.audience-later{ width:auto; margin:17px auto 0; padding:7px 12px; color:#95A3B1; background:transparent; border:0; box-shadow:none; font-size:11px; }
-.audience-later:hover{ color:#fff; box-shadow:none; }
 .company-only{ display:none!important; }
-body.company-audience .company-only{ display:flex!important; }
 body.user-mode .feature-soon{ display:none!important; }
-.audience-top{ border-color:var(--border); background:var(--card-bg); color:var(--text); }
 .onboarding{ display:none; position:fixed; inset:0; z-index:25000; align-items:center; justify-content:center; padding:18px; background:rgba(2,6,12,.72); backdrop-filter:blur(8px); }
 .onboarding.open{ display:flex; }
 .onboarding-card{ width:min(460px,100%); padding:24px; border:1px solid rgba(255,255,255,.14); border-radius:20px; color:#EEF4FA; background:linear-gradient(145deg,#111923,#070A0F); box-shadow:0 30px 80px rgba(0,0,0,.55); }
@@ -423,12 +404,6 @@ body.operator-mode .u-panel, body.operator-mode .u-modal{ display:none !importan
 .pl-head{ padding:0 14px; }
 .pl-brand{ display:flex; align-items:center; gap:9px; font-weight:800; letter-spacing:2px; font-size:14px; color:#fff; }
 .pl-logo{ width:24px; height:24px; border-radius:6px; background:#2563EB; box-shadow:0 0 14px rgba(37,99,235,.7); display:grid; place-items:center; font-size:13px; }
-.pl-btns{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:13px; }
-.ph-btn{ padding:9px 0; border-radius:8px; font-size:11px; font-weight:700; letter-spacing:.03em; background:transparent; cursor:pointer; border:1px solid; }
-.ph-btn.blue{ color:#2563EB; border-color:#2563EB; }
-.ph-btn.blue:hover{ background:rgba(37,99,235,.14); }
-.ph-btn.red{ color:#EF4444; border-color:#EF4444; }
-.ph-btn.red:hover{ background:rgba(239,68,68,.14); }
 .pl-status{ display:flex; align-items:center; gap:8px; margin:13px 0 2px; font-size:11px; }
 #ub-status{ color:#10B981; font-weight:700; display:flex; align-items:center; gap:5px; }
 #ub-status.off{ color:#6B7280; }
@@ -519,6 +494,7 @@ body.user-mode.left-rail #panel-left{ top:84px; }
 .nt-brand span{ color:var(--accent); }
 .pl-logo-img{ width:34px; height:34px; object-fit:cover; border-radius:8px; background:#fff; }
 .nt-nav{ display:flex; align-items:center; gap:5px; flex:1; }
+.nt-sep{ width:1px; height:24px; flex:0 0 auto; margin:0 2px; background:var(--border); }
 .nt-btn{ position:relative; width:auto; min-height:40px; padding:8px 11px; display:flex; align-items:center; justify-content:center; gap:7px; border:1px solid transparent; border-radius:11px; color:var(--text-muted); background:transparent; box-shadow:none; font-size:11px; }
 .nt-btn:hover{ color:var(--accent); background:rgba(37,99,235,.09); box-shadow:none; }
 .nt-btn.active{ color:#fff; background:var(--accent); }
@@ -877,6 +853,7 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
   .nt-brand{ min-width:auto; }
   .nt-brand strong{ display:none; }
   .nt-btn span:not(.nt-count){ display:none; }
+  .nt-sep{ display:none; }
   .focus-banner{ width:430px; min-width:0; }
   .selected-alert-card{ width:auto; min-width:0; }
 }
@@ -943,9 +920,6 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
   .landing-logo{ width:min(260px,92%); height:160px; }
   .landing-fields,.landing-auth-actions{ grid-template-columns:1fr; }
   .landing-access{ padding:11px; }
-  .audience-gate-card{ padding:24px 16px; }
-  .audience-picker{ grid-template-columns:1fr; }
-  .audience-choice{ min-height:142px; }
   .landing-modes{ grid-template-columns:1fr; }
   .landing-mode{ min-height:54px; }
   .toast-important{ left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom)); max-width:none; }
@@ -985,8 +959,6 @@ body.user-mode .pl-content::-webkit-scrollbar-track,body.user-mode .pr-body::-we
 body.user-mode .pl-content::-webkit-scrollbar-thumb,body.user-mode .pr-body::-webkit-scrollbar-thumb{background:rgba(91,145,197,.48);border-radius:8px}
 body.user-mode .pl-content>*{min-width:0;max-width:100%;box-sizing:border-box}
 body.user-mode .pl-head{padding:0 12px}
-body.user-mode .pl-btns{gap:7px;margin-top:8px}
-body.user-mode .ph-btn{padding:8px 4px;min-width:0}
 body.user-mode .pl-status{margin:9px 0 0;gap:5px;flex-wrap:wrap}
 body.user-mode .pl-clock{font-size:9px}
 body.user-mode .pl-section{padding:11px 12px 5px}
@@ -1082,7 +1054,6 @@ body.user-mode:not(.dark-mode) .pr-tabs{border-color:#C4D8E7}
 body.user-mode:not(.dark-mode) .pr-tab{color:#4B5563}
 body.user-mode:not(.dark-mode) .pr-tab.active{color:#1D4ED8}
 body.user-mode:not(.dark-mode) #feed-empty-msg{color:#4B5563}
-body.user-mode:not(.dark-mode) .ph-btn.red{color:#B91C1C;border-color:#B91C1C}
 body.user-mode:not(.dark-mode) .leaflet-control-attribution{opacity:1;background:rgba(255,255,255,.92);color:#4B5563}
 body.user-mode:not(.dark-mode) .leaflet-control-attribution a{color:#1D4ED8}
 body.user-mode:not(.dark-mode) .pr-search,body.user-mode:not(.dark-mode) .feed-sort{background:#FFFFFF;border-color:#BFD3E3;color:#23384D}
@@ -1309,23 +1280,6 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
   </div>
 </div>
 
-<div id="audience-gate" class="audience-gate" role="dialog" aria-modal="true" aria-labelledby="audience-gate-title">
-  <div class="audience-gate-card">
-    <div class="audience-gate-mark"><i class="fa-solid fa-road"></i></div>
-    <h2 id="audience-gate-title">¿Cómo usarás Zero Vial?</h2>
-    <p>Te mostraremos primero las herramientas que realmente necesitas. Podrás cambiar esta elección cuando quieras.</p>
-    <div class="audience-picker">
-      <button class="audience-choice" onclick="chooseAudience('traveler')">
-        <i class="fa-solid fa-car-side"></i><span><b>Uso personal</b><small>Consulta el panorama de alertas, el estado del tráfico y las condiciones de tus trayectos. El mapa queda a un toque.</small></span><em>ENTRAR COMO VIAJERO →</em>
-      </button>
-      <button class="audience-choice company" onclick="chooseAudience('company')">
-        <i class="fa-solid fa-building"></i><span><b>Uso empresarial</b><small>Accede a análisis, reportes y herramientas operativas. Las funciones en desarrollo quedan agrupadas.</small></span><em>ENTRAR COMO EMPRESA →</em>
-      </button>
-    </div>
-    <button class="audience-later" onclick="chooseAudience('traveler')">Decidir después · usar vista personal</button>
-  </div>
-</div>
-
 <div id="onboarding" class="onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
   <div class="onboarding-card">
     <div id="onboarding-icon" class="onboarding-icon"><i class="fa-solid fa-house"></i></div>
@@ -1342,29 +1296,23 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
     <span class="brand-text">ZERO VIAL</span>
   </div>
   
-  <div class="nav-item active" onclick="switchPanel('config')"><div class="nav-icon"><i class="fa-solid fa-sliders"></i></div><span class="nav-label">Configuración</span></div>
-  <div class="nav-separator"></div>
-  
-  <div class="nav-item" onclick="switchPanel('ris')"><div class="nav-icon" style="color:var(--ris)"><i class="fa-solid fa-chart-pie"></i></div><span class="nav-label" style="color:var(--ris)">Radar Vial</span></div>
-  <div class="nav-item" onclick="switchPanel('filters')"><div class="nav-icon"><i class="fa-solid fa-filter"></i></div><span class="nav-label">Segmentación</span></div>
-  
   <div class="nav-item" onclick="switchPanel('road')"><div class="nav-icon"><i class="fa-solid fa-triangle-exclamation"></i></div><span class="nav-label">Alertas Viales</span></div>
   <div class="nav-item" onclick="switchPanel('security')"><div class="nav-icon"><i class="fa-solid fa-shield-cat"></i></div><span class="nav-label">Seguridad</span></div>
-  
   <div class="nav-item" onclick="openRouteModal()"><div class="nav-icon"><i class="fa-solid fa-route"></i></div><span class="nav-label">Rutas</span></div>
-  <div class="nav-item company-only" onclick="switchPanel('analysis')"><div class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div><span class="nav-label">IA Análisis</span></div>
   <div class="nav-separator"></div>
-  
+
+  <div class="nav-item" onclick="switchPanel('ris')"><div class="nav-icon" style="color:var(--ris)"><i class="fa-solid fa-chart-pie"></i></div><span class="nav-label" style="color:var(--ris)">Radar Vial</span></div>
+  <div class="nav-item" onclick="switchPanel('filters')"><div class="nav-icon"><i class="fa-solid fa-filter"></i></div><span class="nav-label">Segmentación</span></div>
   <div class="nav-item" onclick="switchPanel('directory')"><div class="nav-icon"><i class="fa-solid fa-address-book"></i></div><span class="nav-label">Directorio</span></div>
-  <div class="nav-item company-only feature-soon" onclick="showComingSoon('Gestión Personal')"><div class="nav-icon"><i class="fa-solid fa-address-card"></i></div><span class="nav-label">Gestión Personal · En desarrollo</span></div>
   <div class="nav-item company-only" onclick="switchPanel('reports')"><div class="nav-icon"><i class="fa-solid fa-file-contract"></i></div><span class="nav-label">Reportes</span></div>
-  
+  <div class="nav-item company-only" onclick="switchPanel('analysis')"><div class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div><span class="nav-label">IA Análisis</span></div>
+  <div class="nav-item company-only feature-soon" onclick="showComingSoon('Gestión Personal')"><div class="nav-icon"><i class="fa-solid fa-address-card"></i></div><span class="nav-label">Gestión Personal · En desarrollo</span></div>
+  <div class="nav-item company-only" onclick="switchPanel('monitor')"><div class="nav-icon" style="color:var(--accent)"><i class="fa-solid fa-user-group"></i></div><span class="nav-label" style="color:var(--accent)">Personal Activo</span></div>
+
   <div style="flex:1"></div>
+  <div class="nav-item active" onclick="switchPanel('config')"><div class="nav-icon"><i class="fa-solid fa-sliders"></i></div><span class="nav-label">Configuración</span></div>
   <div class="nav-item operator-access" onclick="toggleOperator()" style="border-top:1px solid var(--border);">
     <div class="nav-icon"><i class="fa-solid fa-user"></i></div><span class="nav-label">Modo Usuario</span>
-  </div>
-  <div class="nav-item company-only" onclick="switchPanel('monitor')" style="border-top:1px solid var(--border); background:rgba(26,115,232,0.05);">
-    <div class="nav-icon" style="color:var(--accent)"><i class="fa-solid fa-user-group"></i></div><span class="nav-label" style="color:var(--accent)">Personal Activo</span>
   </div>
 </nav>
 
@@ -1448,6 +1396,7 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
       <button class="nt-btn" data-app-view="map" onclick="showMapView();clearAlertFocus()" title="Mapa de alertas" aria-label="Mapa de alertas"><i class="fa-solid fa-map-location-dot"></i><span>Mapa</span></button>
       <button class="nt-btn" onclick="showMapView();document.body.classList.remove('right-rail');switchPR('feed')" title="Alertas recibidas desde que abriste Zero Vial" aria-label="Alertas, 0 nuevas"><i class="fa-solid fa-triangle-exclamation"></i><span>Alertas</span><em id="nv-top-count" class="nt-count" aria-label="Alertas nuevas en esta sesión">0</em></button>
       <button class="nt-btn" onclick="openAlertCenter()" title="Centro de alertas" aria-label="Centro de alertas"><i class="fa-solid fa-list-check"></i><span>Centro</span></button>
+      <span class="nt-sep" aria-hidden="true"></span>
       <button class="nt-btn" onclick="showMapView();document.body.classList.remove('right-rail');switchPR('ris')" title="Radar vial" aria-label="Radar vial"><i class="fa-solid fa-chart-line"></i><span>Radar Vial</span></button>
       <button class="nt-btn" onclick="openDirModal()" title="Directorio de emergencias" aria-label="Directorio de emergencias"><i class="fa-solid fa-phone-volume"></i><span>Directorio</span></button>
       <button class="nt-btn feature-soon" onclick="showComingSoon('Grupos de operación')" title="Grupos de operación" aria-label="Grupos de operación"><i class="fa-solid fa-comments"></i><span>Grupos</span></button>
@@ -1459,7 +1408,6 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
       <i class="fa-solid fa-chevron-right hnc-more"></i>
     </div>
     <div class="nt-actions">
-      <button id="audience-top" class="nt-btn audience-top" onclick="toggleAudience()" title="Cambiar tipo de experiencia"><i class="fa-solid fa-car-side"></i><span>Viajero</span></button>
       <button class="nt-btn" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar modo claro u oscuro"><i class="fa-solid fa-circle-half-stroke"></i></button>
       <button id="account-button" class="nt-btn nt-login" onclick="openAuthModal()" aria-label="Iniciar sesión"><i class="fa-solid fa-circle-user"></i><span>Iniciar sesión</span></button>
       <button class="nt-btn active" onclick="openEntryModal()" aria-label="Reportar"><i class="fa-solid fa-plus"></i><span>Reportar</span></button>
@@ -1578,15 +1526,18 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
     <div class="pl-topbar"><button class="pc-btn" onclick="toggleLeft()" title="Colapsar panel" aria-label="Colapsar panel izquierdo"><i class="fa-solid fa-angles-left"></i></button></div>
     <div class="pl-content">
       <div class="pl-head">
-        <div class="pl-btns">
-          <button class="ph-btn blue" onclick="openWeatherModal()" title="Clima y condiciones en tramos carreteros"><i class="fa-solid fa-cloud-sun"></i> Clima Vial</button>
-          <button class="ph-btn red" onclick="openDirModal()" title="Directorio de emergencias"><i class="fa-solid fa-tower-broadcast"></i> Emergencias</button>
-        </div>
         <div class="pl-status">
           <span id="ub-status"><i class="fa-solid fa-circle-notch fa-spin"></i> Arrancando...</span>
           <span class="pl-clock"><span id="ub-time">--:--</span> · <span id="ub-date">—</span></span>
           <button class="pl-gear operator-access" onclick="toggleOperator()" title="Centro de Operaciones" aria-label="Abrir Centro de Operaciones"><i class="fa-solid fa-user-gear"></i></button>
         </div>
+      </div>
+      <div class="pl-section"><i class="fa-solid fa-toolbox"></i> HERRAMIENTAS</div>
+      <div class="future-tools">
+        <button class="future-tool" onclick="openRouteModal()"><span class="ft-icon"><i class="fa-solid fa-route"></i></span><span><b>Planificador de rutas</b><small>Compara trayectos e incidencias cercanas</small></span></button>
+        <button class="future-tool" onclick="openWeatherModal()"><span class="ft-icon"><i class="fa-solid fa-cloud-sun"></i></span><span><b>Clima Vial</b><small>Condiciones en tramos carreteros</small></span></button>
+        <button class="future-tool" onclick="openDirModal()"><span class="ft-icon"><i class="fa-solid fa-tower-broadcast"></i></span><span><b>Emergencias</b><small>Directorio de contactos oficiales</small></span></button>
+        <button class="future-tool" onclick="showMapView();switchPR('reportes')"><span class="ft-icon"><i class="fa-solid fa-file-contract"></i></span><span><b>Reportes</b><small>Exporta el periodo y los filtros activos</small></span></button>
       </div>
       <div class="pl-section">ESTADO GLOBAL</div>
       <div class="pl-grid">
@@ -1614,10 +1565,6 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
           <option value="24">🗓 Últimas 24 horas</option>
         </select>
       </div>
-      <div class="pl-section">HERRAMIENTAS</div>
-      <div class="future-tools">
-        <button class="future-tool" onclick="openRouteModal()"><span class="ft-icon"><i class="fa-solid fa-route"></i></span><span><b>Planificador de rutas</b><small>Compara trayectos e incidencias cercanas</small></span><span class="soon-badge available">Disponible</span></button>
-      </div>
       <div style="flex:1"></div>
       <div class="pl-actions">
         <button class="pa-main" onclick="resetUserFilters()"><i class="fa-solid fa-filter-circle-xmark"></i> Restablecer filtros</button>
@@ -1625,6 +1572,7 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
     </div>
     <div class="u-rail">
       <button onclick="toggleLeft()" title="Expandir panel" aria-label="Expandir panel izquierdo"><i class="fa-solid fa-angles-right"></i></button>
+      <button onclick="openWeatherModal()" title="Clima Vial" aria-label="Abrir clima vial"><i class="fa-solid fa-cloud-sun"></i></button>
       <button onclick="openDirModal()" title="Emergencias" aria-label="Abrir directorio de emergencias"><i class="fa-solid fa-tower-broadcast"></i></button>
       <button onclick="openRouteModal()" title="Planificador de rutas" aria-label="Abrir planificador de rutas"><i class="fa-solid fa-route"></i></button>
       <button onclick="openEntryModal()" title="Ingresar alerta" aria-label="Ingresar una alerta"><i class="fa-solid fa-plus"></i></button>
@@ -2390,7 +2338,6 @@ window.onload = function() {
   uxResponsive();
   hncTick();
   setInterval(hncTick, 1000);
-  document.body.classList.remove('company-audience');
   log("Sistema Zero Vial listo.");
   setTimeout(autoBoot, 400);
 };
@@ -3789,7 +3736,7 @@ async function submitAuth() {
   closeModal('auth-modal');
   continueAfterAuthentication();
 }
-async function logoutZeroVial() { if(supabaseClient) await supabaseClient.auth.signOut(); zeroVialUser=null; zeroVialRole='user'; setGuestMode(false); applyRoleAccess(); updateAccountButton(); closeModal('auth-modal'); document.getElementById('audience-gate')?.classList.remove('open'); sessionStorage.removeItem('steele_entered'); const landing=document.getElementById('landing'); if(landing) landing.style.display='flex'; }
+async function logoutZeroVial() { if(supabaseClient) await supabaseClient.auth.signOut(); zeroVialUser=null; zeroVialRole='user'; setGuestMode(false); applyRoleAccess(); updateAccountButton(); closeModal('auth-modal'); sessionStorage.removeItem('steele_entered'); const landing=document.getElementById('landing'); if(landing) landing.style.display='flex'; }
 async function requestPasswordRecovery(emailOverride='',messageFn=authMessage) {
   if(!supabaseClient) return messageFn('Supabase todavía no está configurado.',true);
   const email=(emailOverride||document.getElementById('auth-email').value).trim().toLowerCase();
@@ -3910,33 +3857,13 @@ const onboardingSteps=[
   {icon:'house',title:'Empieza por el panorama',copy:'Revisa el estado del país, las alertas más relevantes y la confianza de cada ubicación. El mapa queda a un toque.'},
   {icon:'triangle-exclamation',title:'Revisa las alertas',copy:'Abre cada alerta para ver su fuente, antigüedad y nivel de precisión de la ubicación.'},
   {icon:'filter',title:'Ajusta los filtros',copy:'Elige estado, periodo, categoría o sólo bloqueos para concentrarte en lo que necesitas.'},
-  {icon:'sliders',title:'Personaliza después',copy:'Guarda tus preferencias al iniciar sesión. Las herramientas empresariales aparecen sólo en la vista Empresa.'}
+  {icon:'sliders',title:'Personaliza después',copy:'Guarda tus preferencias al iniciar sesión para recuperarlas en cualquier dispositivo.'}
 ];
 let onboardingStep=0;
-function audienceStorageKey() {
-  return zeroVialUser?.id ? `zero_vial_audience_${zeroVialUser.id}` : 'zero_vial_audience';
-}
-function setAudience(value,quiet=false) {
-  const audience=value==='company'?'company':'traveler';
-  document.body.classList.toggle('company-audience',audience==='company');
-  localStorage.setItem(audienceStorageKey(),audience);
-  const top=document.getElementById('audience-top');
-  if(top) top.innerHTML=audience==='company'?'<i class="fa-solid fa-building"></i><span>Empresa</span>':'<i class="fa-solid fa-car-side"></i><span>Viajero</span>';
-  if(!quiet&&audience==='company') trafficMessage('Vista Empresa activada. Las herramientas en desarrollo están agrupadas en “Lo que viene”.');
-}
 function continueAfterAuthentication() {
-  const saved=localStorage.getItem(audienceStorageKey());
+  try { Object.keys(localStorage).filter(k=>k.startsWith('zero_vial_audience')).forEach(k=>localStorage.removeItem(k)); } catch(e) {}
   const landing=document.getElementById('landing'); if(landing) landing.style.display='none';
-  if(saved==='traveler'||saved==='company') { setAudience(saved,true); return enterPlatform('user'); }
-  document.getElementById('audience-gate')?.classList.add('open');
-}
-function chooseAudience(value) {
-  setAudience(value,true);
-  document.getElementById('audience-gate')?.classList.remove('open');
   enterPlatform('user');
-}
-function toggleAudience() {
-  document.getElementById('audience-gate')?.classList.add('open');
 }
 function renderOnboarding() {
   const step=onboardingSteps[onboardingStep];
