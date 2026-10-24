@@ -230,6 +230,26 @@ button:focus-visible, [role="button"]:focus-visible, .alert-card:focus-visible, 
 .landing-mode.user{ border:none; background:linear-gradient(105deg,#FFC02E,#FF9600); color:#101214; box-shadow:0 9px 25px rgba(255,176,0,.2); }
 .landing-mode.full{ border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.08); color:#fff; }
 .landing-mode small{ display:block; margin-top:3px; font-size:10px; font-weight:500; opacity:.75; }
+.start-gate{ display:none; position:fixed; inset:0; z-index:24000; align-items:center; justify-content:center; padding:20px; overflow:auto; background:radial-gradient(circle at 15% 20%,rgba(25,199,232,.14),transparent 30%),radial-gradient(circle at 85% 80%,rgba(16,185,129,.12),transparent 28%),#05070A; }
+.start-gate.open{ display:flex; }
+.start-card{ width:min(760px,100%); padding:30px; border:1px solid rgba(255,255,255,.14); border-radius:24px; color:#EEF4FA; background:linear-gradient(145deg,rgba(17,25,35,.98),rgba(5,8,12,.98)); box-shadow:0 30px 90px rgba(0,0,0,.62); text-align:center; }
+.start-mark{ width:58px; height:58px; display:grid; place-items:center; margin:0 auto 14px; border-radius:18px; color:#061116; background:linear-gradient(145deg,#7DDFF1,#19C7E8); font-size:23px; }
+.start-card h2{ margin:0 0 7px; font-size:25px; }
+.start-card>p{ margin:0 auto 22px; max-width:580px; color:#9EABB8; font-size:13px; line-height:1.55; }
+.start-picker{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.start-choice{ min-height:180px; padding:22px; display:flex; flex-direction:column; align-items:flex-start; text-align:left; gap:10px; color:#DDE7F0; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.14); border-radius:18px; box-shadow:none; }
+.start-choice:hover{ transform:translateY(-2px); border-color:rgba(125,223,241,.55); background:rgba(255,255,255,.07); }
+.start-choice>i{ width:42px; height:42px; display:grid; place-items:center; border-radius:12px; color:#061116; background:#7DDFF1; font-size:18px; }
+.start-choice.analysis>i{ background:#A7F3D0; }
+.start-choice b{ font-size:17px; }
+.start-choice small{ display:block; margin-top:5px; color:#98A7B6; font-size:11px; font-weight:500; line-height:1.45; }
+.start-choice em{ margin-top:auto; color:#7DDFF1; font-size:10px; font-style:normal; font-weight:800; letter-spacing:.04em; }
+.start-choice.analysis em{ color:#6EE7B7; }
+.start-note{ margin:16px auto 0!important; max-width:580px; color:#8FA0AF!important; font-size:10.5px!important; line-height:1.5!important; }
+.start-note a{ color:#7DDFF1; font-weight:700; text-decoration:none; }
+.start-note a:hover{ text-decoration:underline; }
+.start-later{ width:auto; margin:12px auto 0; padding:7px 12px; color:#95A3B1; background:transparent; border:0; box-shadow:none; font-size:11px; }
+.start-later:hover{ color:#fff; box-shadow:none; }
 .company-only{ display:none!important; }
 body.user-mode .feature-soon{ display:none!important; }
 .onboarding{ display:none; position:fixed; inset:0; z-index:25000; align-items:center; justify-content:center; padding:18px; background:rgba(2,6,12,.72); backdrop-filter:blur(8px); }
@@ -922,6 +942,9 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
   .landing-access{ padding:11px; }
   .landing-modes{ grid-template-columns:1fr; }
   .landing-mode{ min-height:54px; }
+  .start-card{ padding:24px 16px; }
+  .start-picker{ grid-template-columns:1fr; }
+  .start-choice{ min-height:142px; }
   .toast-important{ left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom)); max-width:none; }
   .ris-controls{ grid-template-columns:1fr; }
   .feed-tools{ grid-template-columns:1fr; }
@@ -1277,6 +1300,24 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
       <div id="landing-message" class="landing-message" role="status" aria-live="polite"></div>
     </div>
     <div class="landing-foot"><a href="/acerca.html">Conoce Zero Vial</a> · <a href="/ayuda.html">Ayuda</a> · <a href="/servicios.html">Servicios</a> · <a href="/terminos.html">Términos</a> · <a href="/privacidad.html">Privacidad</a></div>
+  </div>
+</div>
+
+<div id="start-gate" class="start-gate" role="dialog" aria-modal="true" aria-labelledby="start-gate-title">
+  <div class="start-card">
+    <div class="start-mark"><i class="fa-solid fa-road"></i></div>
+    <h2 id="start-gate-title">¿Cómo usarás Zero Vial?</h2>
+    <p>Elige tu punto de partida. La vista de empresa todavía no está disponible, pero puedes comenzar con las herramientas actuales.</p>
+    <div class="start-picker">
+      <button class="start-choice traveler" onclick="chooseStartMode('traveler')">
+        <i class="fa-solid fa-car-side"></i><span><b>Viajero</b><small>Panorama nacional, rutas, clima y alertas cercanas para tus trayectos.</small></span><em>ENTRAR COMO VIAJERO →</em>
+      </button>
+      <button class="start-choice analysis" onclick="chooseStartMode('analysis')">
+        <i class="fa-solid fa-chart-line"></i><span><b>Análisis vial</b><small>Abre directo el mapa, el radar y los reportes para revisar incidencias y periodos.</small></span><em>ENTRAR A ANÁLISIS →</em>
+      </button>
+    </div>
+    <p class="start-note">¿Buscas uso empresarial? Aún estamos preparando esa vista. <a href="/servicios.html" target="_blank" rel="noopener">Conoce lo que estamos construyendo</a>.</p>
+    <button class="start-later" onclick="chooseStartMode('traveler')">Decidir después · usar panorama</button>
   </div>
 </div>
 
@@ -1960,6 +2001,7 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
         <div><label>Gravedad mínima</label><select id="pref-severity"><option value="low">Todas</option><option value="medium">Media o mayor</option><option value="high">Alta o crítica</option><option value="critical">Sólo crítica</option></select></div>
         <div class="full"><label>Estado</label><select id="pref-state"><option value="">Todo México</option></select></div>
         <div class="full"><label>Radio cuando el GPS esté activo</label><select id="pref-radius"><option value="10">10 km</option><option value="25">25 km</option><option value="50">50 km</option><option value="100">100 km</option><option value="250">250 km</option></select></div>
+        <div class="full"><label>Vista inicial al entrar</label><select id="pref-start-view"><option value="traveler">Panorama</option><option value="analysis">Mapa y radar</option></select></div>
       </div>
       <button id="pref-save" onclick="saveUserPreferences()"><i class="fa-solid fa-floppy-disk"></i> Guardar preferencias</button>
       <div id="pref-message" class="correction-preview" style="display:none;margin-top:10px"></div>
@@ -3736,7 +3778,7 @@ async function submitAuth() {
   closeModal('auth-modal');
   continueAfterAuthentication();
 }
-async function logoutZeroVial() { if(supabaseClient) await supabaseClient.auth.signOut(); zeroVialUser=null; zeroVialRole='user'; setGuestMode(false); applyRoleAccess(); updateAccountButton(); closeModal('auth-modal'); sessionStorage.removeItem('steele_entered'); const landing=document.getElementById('landing'); if(landing) landing.style.display='flex'; }
+async function logoutZeroVial() { if(supabaseClient) await supabaseClient.auth.signOut(); zeroVialUser=null; zeroVialRole='user'; setGuestMode(false); applyRoleAccess(); updateAccountButton(); closeModal('auth-modal'); document.getElementById('start-gate')?.classList.remove('open'); sessionStorage.removeItem('steele_entered'); const landing=document.getElementById('landing'); if(landing) landing.style.display='flex'; }
 async function requestPasswordRecovery(emailOverride='',messageFn=authMessage) {
   if(!supabaseClient) return messageFn('Supabase todavía no está configurado.',true);
   const email=(emailOverride||document.getElementById('auth-email').value).trim().toLowerCase();
@@ -3803,6 +3845,7 @@ function renderPreferencesForm() {
   document.getElementById('pref-severity').value=preferenceSeverityFloor(p.severities);
   document.getElementById('pref-state').value=p.states?.[0]||'';
   document.getElementById('pref-radius').value=String(p.radius_km||50);
+  document.getElementById('pref-start-view').value=getStartMode();
 }
 function applyUserPreferences() {
   const p=userPreferences;
@@ -3842,6 +3885,7 @@ async function saveUserPreferences() {
     time_window_hours:Number(document.getElementById('pref-time').value)||3,
     blockages_only:document.getElementById('pref-blockages').checked, push_enabled:false
   };
+  setStartMode(document.getElementById('pref-start-view').value);
   localStorage.setItem('zero_vial_preferences',JSON.stringify(userPreferences));
   applyUserPreferences();
   if(!supabaseClient||!zeroVialUser) return prefMessage('Preferencias guardadas en este dispositivo.');
@@ -3860,27 +3904,60 @@ const onboardingSteps=[
   {icon:'sliders',title:'Personaliza después',copy:'Guarda tus preferencias al iniciar sesión para recuperarlas en cualquier dispositivo.'}
 ];
 let onboardingStep=0;
+function currentOnboardingSteps() {
+  if(getStartMode() !== 'analysis') return onboardingSteps;
+  const steps=onboardingSteps.slice();
+  steps[0]={icon:'map-location-dot',title:'Empieza por el mapa',copy:'Revisa las alertas sobre el territorio y usa el radar para comparar periodos, estados y tipos de incidencia.'};
+  return steps;
+}
+function startModeStorageKey() {
+  return zeroVialUser?.id ? `zero_vial_start_mode_${zeroVialUser.id}` : 'zero_vial_start_mode';
+}
+function getStartMode() {
+  return localStorage.getItem(startModeStorageKey()) === 'analysis' ? 'analysis' : 'traveler';
+}
+function hasStartMode() {
+  return localStorage.getItem(startModeStorageKey()) !== null;
+}
+function setStartMode(value) {
+  localStorage.setItem(startModeStorageKey(), value === 'analysis' ? 'analysis' : 'traveler');
+}
+function openStartGate() {
+  document.getElementById('start-gate')?.classList.add('open');
+}
+function chooseStartMode(value) {
+  setStartMode(value);
+  document.getElementById('start-gate')?.classList.remove('open');
+  enterPlatform('user');
+}
 function continueAfterAuthentication() {
   try { Object.keys(localStorage).filter(k=>k.startsWith('zero_vial_audience')).forEach(k=>localStorage.removeItem(k)); } catch(e) {}
+  if(zeroVialUser?.id && !localStorage.getItem(startModeStorageKey())) {
+    const guestMode=localStorage.getItem('zero_vial_start_mode');
+    if(guestMode) localStorage.setItem(startModeStorageKey(), guestMode);
+  }
   const landing=document.getElementById('landing'); if(landing) landing.style.display='none';
+  if(!hasStartMode()) { openStartGate(); return; }
   enterPlatform('user');
 }
 function renderOnboarding() {
-  const step=onboardingSteps[onboardingStep];
+  const steps=currentOnboardingSteps();
+  const step=steps[onboardingStep];
   document.getElementById('onboarding-icon').innerHTML=`<i class="fa-solid fa-${step.icon}"></i>`;
   document.getElementById('onboarding-title').textContent=step.title;
   document.getElementById('onboarding-copy').textContent=step.copy;
-  document.getElementById('onboarding-progress').innerHTML=onboardingSteps.map((_,i)=>`<span class="${i<=onboardingStep?'active':''}"></span>`).join('');
+  document.getElementById('onboarding-progress').innerHTML=steps.map((_,i)=>`<span class="${i<=onboardingStep?'active':''}"></span>`).join('');
   document.getElementById('onboarding-back').style.visibility=onboardingStep?'visible':'hidden';
-  document.getElementById('onboarding-next').textContent=onboardingStep===onboardingSteps.length-1?'Terminar':'Siguiente';
+  document.getElementById('onboarding-next').textContent=onboardingStep===steps.length-1?'Terminar':'Siguiente';
 }
 function maybeStartOnboarding() {
   if(localStorage.getItem('zero_vial_onboarding_done')) return;
   onboardingStep=0; renderOnboarding(); document.getElementById('onboarding')?.classList.add('open');
 }
 function moveOnboarding(direction) {
-  if(direction>0&&onboardingStep===onboardingSteps.length-1) return finishOnboarding();
-  onboardingStep=Math.max(0,Math.min(onboardingSteps.length-1,onboardingStep+direction)); renderOnboarding();
+  const steps=currentOnboardingSteps();
+  if(direction>0&&onboardingStep===steps.length-1) return finishOnboarding();
+  onboardingStep=Math.max(0,Math.min(steps.length-1,onboardingStep+direction)); renderOnboarding();
 }
 function finishOnboarding() {
   localStorage.setItem('zero_vial_onboarding_done','1'); document.getElementById('onboarding')?.classList.remove('open');
@@ -3892,7 +3969,12 @@ function enterPlatform(mode='user') {
   localStorage.setItem('nv_mode', operator ? 'operator' : 'user');
   document.body.classList.toggle('user-mode', !operator);
   document.body.classList.toggle('operator-mode', operator);
-  setAppView(operator ? 'map' : 'panorama');
+  const startMode = getStartMode();
+  if(operator) setAppView('map');
+  else {
+    setAppView(startMode === 'analysis' ? 'map' : 'panorama');
+    if(startMode === 'analysis') { document.body.classList.remove('right-rail'); switchPR('ris'); }
+  }
   map.invalidateSize();
   if(!operator) { uxResponsive(); rebuildU(); }
   setTimeout(maybeStartOnboarding,350);
