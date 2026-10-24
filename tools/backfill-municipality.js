@@ -216,7 +216,7 @@ async function main() {
   const geoCache = loadGeoCache();
   let cacheDirty = false;
   const report = [];
-  let offset = OFFSET;
+  let fetchOffset = OFFSET;
   let scanned = 0;
   let proposed = 0;
   let stateMatched = 0;
@@ -230,90 +230,95 @@ async function main() {
   let reverseCalls = 0;
   let reusedPoints = 0;
 
-  while (scanned < LIMIT) {
-    const limit = Math.min(PAGE_SIZE, LIMIT - scanned);
-    const rows = await fetchPage(offset, limit);
+  // Se recolectan todas las filas antes de escribir. Paginar con offset
+  // mientras se actualiza municipality hace que las filas actualizadas
+  // desaparezcan del filtro y el offset salte alertas pendientes.
+  const pendingRows = [];
+  while (pendingRows.length < LIMIT) {
+    const limit = Math.min(PAGE_SIZE, LIMIT - pendingRows.length);
+    const rows = await fetchPage(fetchOffset, limit);
     if (!Array.isArray(rows) || rows.length === 0) break;
-    for (const row of rows) {
-      scanned++;
-      const lat = Number(row.latitude);
-      const lon = Number(row.longitude);
-      if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-        noMunicipality++;
-        report.push({ id:row.id, title:row.title, status:'invalid_coordinates' });
-        continue;
+    pendingRows.push(...rows);
+    fetchOffset += rows.length;
+    if (rows.length < limit) break;
+  }
+  for (const row of pendingRows) {
+    scanned++;
+    const lat = Number(row.latitude);
+    const lon = Number(row.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      noMunicipality++;
+      report.push({ id:row.id, title:row.title, status:'invalid_coordinates' });
+      continue;
+    }
+    try {
+      // Varias alertas comparten el mismo punto (duplicados de fuentes o del
+      // mismo tramo). Se resuelve una sola vez por coordenada.
+      const cacheKey = `${lat.toFixed(5)},${lon.toFixed(5)}`;
+      let result;
+      if (geoCache.has(cacheKey)) {
+        result = geoCache.get(cacheKey);
+        reusedPoints++;
+      } else {
+        result = await reverseMunicipality(lat, lon);
+        geoCache.set(cacheKey, result);
+        cacheDirty = true;
+        reverseCalls++;
+        if (DELAY_MS) await sleep(DELAY_MS);
       }
-      try {
-        // Varias alertas comparten el mismo punto (duplicados de fuentes o del
-        // mismo tramo). Se resuelve una sola vez por coordenada.
-        const cacheKey = `${lat.toFixed(5)},${lon.toFixed(5)}`;
-        let result;
-        if (geoCache.has(cacheKey)) {
-          result = geoCache.get(cacheKey);
-          reusedPoints++;
-        } else {
-          result = await reverseMunicipality(lat, lon);
-          geoCache.set(cacheKey, result);
-          cacheDirty = true;
-          reverseCalls++;
-          if (DELAY_MS) await sleep(DELAY_MS);
-        }
 
-        const rowState = clean(row.state);
-        const reverseState = clean(result?.state);
-        const municipality = usableMunicipality(result?.municipality, rowState || reverseState);
-        const mismatch = rowState && reverseState &&
-          normalizeStateKey(rowState) !== normalizeStateKey(reverseState);
-        let status;
-        let printedMessage = '';
+      const rowState = clean(row.state);
+      const reverseState = clean(result?.state);
+      const municipality = usableMunicipality(result?.municipality, rowState || reverseState);
+      const mismatch = rowState && reverseState &&
+        normalizeStateKey(rowState) !== normalizeStateKey(reverseState);
+      let status;
+      let printedMessage = '';
 
-        if (!municipality) {
-          status = 'no_municipality';
-          noMunicipality++;
-          printedMessage = `- sin municipio  ${row.id}  ${clean(row.title).slice(0, 90)}`;
-        } else if (mismatch) {
-          status = 'state_mismatch';
-          stateMismatch++;
-          printedMessage = `! estado ${rowState} != ${reverseState} · ${municipality}  ${row.id}  ${clean(row.title).slice(0, 90)}`;
-        } else {
-          status = rowState ? 'state_matched' : 'state_unverified';
-          proposed++;
-          if (rowState) stateMatched++;
-          else stateUnverified++;
-          printedMessage = `- ${municipality}${reverseState && !rowState ? ' · ' + reverseState : ''}  ${row.id}  ${clean(row.title).slice(0, 90)}`;
-          if (APPLY) {
-            if (!rowState && !ALLOW_UNVERIFIED_STATE) {
-              status = 'held_unverified_state';
-              heldUnverifiedState++;
-            } else {
-              await updateAlert(row, municipality, reverseState);
-              updated++;
-            }
+      if (!municipality) {
+        status = 'no_municipality';
+        noMunicipality++;
+        printedMessage = `- sin municipio  ${row.id}  ${clean(row.title).slice(0, 90)}`;
+      } else if (mismatch) {
+        status = 'state_mismatch';
+        stateMismatch++;
+        printedMessage = `! estado ${rowState} != ${reverseState} · ${municipality}  ${row.id}  ${clean(row.title).slice(0, 90)}`;
+      } else {
+        status = rowState ? 'state_matched' : 'state_unverified';
+        proposed++;
+        if (rowState) stateMatched++;
+        else stateUnverified++;
+        printedMessage = `- ${municipality}${reverseState && !rowState ? ' · ' + reverseState : ''}  ${row.id}  ${clean(row.title).slice(0, 90)}`;
+        if (APPLY) {
+          if (!rowState && !ALLOW_UNVERIFIED_STATE) {
+            status = 'held_unverified_state';
+            heldUnverifiedState++;
+          } else {
+            await updateAlert(row, municipality, reverseState);
+            updated++;
           }
         }
-
-        report.push({
-          id: row.id,
-          title: row.title,
-          road: row.road,
-          kilometer: row.kilometer,
-          row_state: rowState || null,
-          reverse_state: reverseState || null,
-          municipality: municipality || null,
-          status
-        });
-        if (printed < MAX_PRINT) {
-          console.log(printedMessage);
-          printed++;
-        }
-      } catch (error) {
-        failed++;
-        report.push({ id:row.id, title:row.title, status:'error', error:error.message });
-        console.error(`! ${row.id}: ${error.message}`);
       }
+
+      report.push({
+        id: row.id,
+        title: row.title,
+        road: row.road,
+        kilometer: row.kilometer,
+        row_state: rowState || null,
+        reverse_state: reverseState || null,
+        municipality: municipality || null,
+        status
+      });
+      if (printed < MAX_PRINT) {
+        console.log(printedMessage);
+        printed++;
+      }
+    } catch (error) {
+      failed++;
+      report.push({ id:row.id, title:row.title, status:'error', error:error.message });
+      console.error(`! ${row.id}: ${error.message}`);
     }
-    offset += rows.length;
-    if (rows.length < limit) break;
   }
 
   if (cacheDirty) saveGeoCache(geoCache);
