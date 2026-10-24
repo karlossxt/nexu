@@ -13,7 +13,10 @@
 const fs = require('fs');
 const path = require('path');
 const { normalizeStateKey } = require('../lib/state-match');
-const { addressMunicipality, googleMunicipality, geoapifyMunicipality } = require('../lib/municipality');
+const { addressMunicipality, googleMunicipality, geoapifyMunicipality, isMunicipalityLike } = require('../lib/municipality');
+const { stateFromPostalLabel } = require('../lib/postal-state');
+const { geoDistanceKm, normalizeRoad } = require('../lib/road-match');
+const RNC = require('../worker/rnc-loader');
 
 const ROOT = path.join(__dirname, '..');
 
@@ -58,6 +61,8 @@ const DELAY_MS = GOOGLE_KEY || GEOAPIFY_KEY
   : Math.max(1000, numberOption('delay', 1100));
 const SINCE = option('since', '');
 const ALLOW_UNVERIFIED_STATE = hasFlag('allow-unverified-state');
+const ALLOW_VERIFIED_LOCATION = hasFlag('allow-verified-location');
+const RNC_MAX_DISTANCE_KM = Math.max(0, numberOption('rnc-max-distance-km', 1));
 const CACHE_PATH = option('cache', '');
 const REPORT_PATH = option('report', '');
 
@@ -87,9 +92,27 @@ function saveGeoCache(cache) {
 
 function usableMunicipality(value, state) {
   const municipality = clean(value);
-  if (!municipality) return '';
+  if (!municipality || !isMunicipalityLike(municipality)) return '';
   if (normalizeStateKey(municipality) === 'cdmx' && normalizeStateKey(state) === 'cdmx') return '';
   return municipality;
+}
+
+function rncVerification(row, lat, lon) {
+  if (!row.road || row.kilometer == null) return { verified: false, distance: null, label: null };
+  const km = Number(row.kilometer);
+  if (!Number.isFinite(km)) return { verified: false, distance: null, label: null };
+  const hit = RNC.resolveNetworkKilometer(row.road, km);
+  if (!hit) return { verified: false, distance: null, label: null };
+  const distance = geoDistanceKm(lat, lon, hit.latitude, hit.longitude);
+  const hitRoad = String(hit.label || '').split(/\s*·\s*/)[0];
+  const labelRoad = String(row.location_label || '').split(/\s*·\s*/)[0];
+  const exactRoad = normalizeRoad(row.road) === normalizeRoad(hitRoad);
+  const exactLabel = normalizeRoad(labelRoad) === normalizeRoad(hitRoad);
+  return {
+    verified: distance <= RNC_MAX_DISTANCE_KM && (exactRoad || exactLabel),
+    distance,
+    label: hit.label || null
+  };
 }
 
 function stateFromGoogle(result = {}) {
@@ -221,10 +244,13 @@ async function main() {
   let proposed = 0;
   let stateMatched = 0;
   let stateUnverified = 0;
+  let labelStateMatched = 0;
+  let rncVerified = 0;
   let stateMismatch = 0;
   let noMunicipality = 0;
   let updated = 0;
   let heldUnverifiedState = 0;
+  let heldVerifiedLocation = 0;
   let failed = 0;
   let printed = 0;
   let reverseCalls = 0;
@@ -272,7 +298,18 @@ async function main() {
       const municipality = usableMunicipality(result?.municipality, rowState || reverseState);
       const mismatch = rowState && reverseState &&
         normalizeStateKey(rowState) !== normalizeStateKey(reverseState);
+      const labelState = !rowState && reverseState ? stateFromPostalLabel(row.location_label) : '';
+      const rnc = !rowState && reverseState && !mismatch
+        ? rncVerification(row, lat, lon)
+        : { verified: false, distance: null, label: null };
+      // El código postal corrobora el estado, pero si la coordenada está lejos
+      // del punto RNC de la vía/km declarados, no se usa como respaldo.
+      const labelStateVerified = !!labelState &&
+        normalizeStateKey(labelState) === normalizeStateKey(reverseState) &&
+        (rnc.distance == null || rnc.distance <= RNC_MAX_DISTANCE_KM);
+      const locationVerified = !rowState && !!reverseState && (labelStateVerified || rnc.verified);
       let status;
+      let heldReason = '';
       let printedMessage = '';
 
       if (!municipality) {
@@ -284,15 +321,29 @@ async function main() {
         stateMismatch++;
         printedMessage = `! estado ${rowState} != ${reverseState} · ${municipality}  ${row.id}  ${clean(row.title).slice(0, 90)}`;
       } else {
-        status = rowState ? 'state_matched' : 'state_unverified';
+        if (rowState) {
+          status = 'state_matched';
+          stateMatched++;
+        } else if (labelStateVerified) {
+          status = 'label_state_matched';
+          labelStateMatched++;
+        } else if (rnc.verified) {
+          status = 'rnc_verified';
+          rncVerified++;
+        } else {
+          status = 'state_unverified';
+          stateUnverified++;
+        }
         proposed++;
-        if (rowState) stateMatched++;
-        else stateUnverified++;
         printedMessage = `- ${municipality}${reverseState && !rowState ? ' · ' + reverseState : ''}  ${row.id}  ${clean(row.title).slice(0, 90)}`;
         if (APPLY) {
-          if (!rowState && !ALLOW_UNVERIFIED_STATE) {
+          const allowed = !!rowState || ALLOW_UNVERIFIED_STATE ||
+            (ALLOW_VERIFIED_LOCATION && locationVerified);
+          if (!allowed) {
             status = 'held_unverified_state';
             heldUnverifiedState++;
+            if (locationVerified) heldVerifiedLocation++;
+            heldReason = locationVerified ? 'verified_location_disabled' : 'state_unverified';
           } else {
             await updateAlert(row, municipality, reverseState);
             updated++;
@@ -308,6 +359,12 @@ async function main() {
         row_state: rowState || null,
         reverse_state: reverseState || null,
         municipality: municipality || null,
+        label_state: labelState || null,
+        label_state_verified: labelStateVerified,
+        rnc_verified: rnc.verified,
+        rnc_distance_km: rnc.distance,
+        rnc_label: rnc.label,
+        held_reason: heldReason || null,
         status
       });
       if (printed < MAX_PRINT) {
@@ -327,17 +384,25 @@ async function main() {
     fs.writeFileSync(REPORT_PATH, JSON.stringify(report, null, 2));
   }
 
+  const wouldUpdate = stateMatched +
+    (ALLOW_UNVERIFIED_STATE ? stateUnverified : 0) +
+    ((ALLOW_UNVERIFIED_STATE || ALLOW_VERIFIED_LOCATION) ? labelStateMatched + rncVerified : 0);
+
   console.log('');
   console.log(JSON.stringify({
     scanned,
     proposed,
     state_matched: stateMatched,
     state_unverified: stateUnverified,
+    label_state_matched: labelStateMatched,
+    rnc_verified: rncVerified,
     state_mismatch: stateMismatch,
     no_municipality: noMunicipality,
     updated: APPLY ? updated : 0,
     held_unverified_state: heldUnverifiedState,
-    would_update: stateMatched + (ALLOW_UNVERIFIED_STATE ? stateUnverified : 0),
+    held_verified_location: heldVerifiedLocation,
+    would_update: APPLY ? 0 : wouldUpdate,
+    rnc_max_distance_km: RNC_MAX_DISTANCE_KM,
     failed,
     reverse_calls: reverseCalls,
     points_reused: reusedPoints,

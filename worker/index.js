@@ -3,7 +3,7 @@
 const { createHash } = require('crypto');
 const { geoDistanceKm, roadMatches, reverseGoogleRoad } = require('../lib/road-match');
 const { normalizeStateKey: stateKey, stateMatches } = require('../lib/state-match');
-const { addressMunicipality, googleMunicipality, geoapifyMunicipality } = require('../lib/municipality');
+const { addressMunicipality, googleMunicipality, geoapifyMunicipality, isMunicipalityLike } = require('../lib/municipality');
 const RED_VIAL = require('./red-vial');
 const CASETAS = require('./casetas');
 const { resolveRncPost, resolveRncEstimatedKm } = require('./rnc-km-anchors');
@@ -114,7 +114,7 @@ function retryDelayMs(response, body) {
 
 function usableMunicipality(municipality, state) {
   const value = clean(municipality);
-  if (!value) return '';
+  if (!value || !isMunicipalityLike(value)) return '';
   // En CDMX, "Ciudad de México/CDMX/Distrito Federal" describe la entidad, no una alcaldía.
   // Mantenerlo como municipio hace que los geocodificadores tiendan al centro de la ciudad.
   if (stateKey(value) === 'cdmx' && stateKey(state) === 'cdmx') return '';
