@@ -248,9 +248,15 @@ Incluye `render.yaml`. Configura el servicio web y variables de entorno correspo
 ## Assets y caché
 
 - La portada usa `landing-city-v1.webp` (≈219 KB) con `landing-city-v1.png` como fallback para navegadores sin WebP.
-- Los assets de Fusión están versionados en `index.html`: `fusion/fusion.css?v=7`, `fusion/fusion.js?v=10` y `polish.css?v=1`. Al modificarlos, sube el `?v=` correspondiente.
+- Los assets de Fusión están versionados en `index.html`: `fusion/fusion.css?v=22`, `fusion/fusion.js?v=20` y `polish.css?v=2`. Al modificarlos, sube el `?v=` correspondiente.
 - El service worker usa `zv-fusion-vN`; al cambiar el shell o los assets, sube también `VERSION` en `service-worker.js` para limpiar caches antiguas.
 - Vercel y `server.js` cachean `/fusion/*` como inmutable. No publiques cambios de esos archivos sin cambiar el `?v=` de `index.html`.
+
+## Interfaz de Fusión
+
+- En escritorio, las 8 herramientas se muestran en una barra fija bajo la cabecera, agrupadas en **Viaje**, **Costos**, **Seguridad** y **Avisos**. No hay FAB ni menú desplegable.
+- En móvil (`≤700 px`), el botón **Fusión** de la barra inferior abre una hoja táctil con las mismas herramientas; cada acceso mide al menos 56 px y el cierre 48 px.
+- La barra y la hoja comparten el mismo catálogo de herramientas en `fusion/fusion.js`, así que cualquier cambio de accesos debe hacerse en `FUSION_GROUPS`.
 
 ## Verificación antes de publicar
 
