@@ -183,7 +183,7 @@ test('offline: los assets con ?v= usan el shell precargado', async () => {
   const h = createHarness();
   await h.install();
   h.setOnline(false);
-  const res = await h.request('/fusion/fusion.js?v=10');
+  const res = await h.request('/fusion/fusion.js?v=20');
   assert.ok(res, 'el asset versionado debe resolverse desde caché');
   assert.match(await res.text(), /fusion\/fusion\.js/);
 });
