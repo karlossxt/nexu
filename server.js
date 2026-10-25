@@ -155,6 +155,17 @@ async function runVercelStyle(modulePath, req, res, url) {
     query: Object.fromEntries(url.searchParams),
     socket: req.socket,
   };
+  if (req.method === 'POST') {
+    const chunks = [];
+    let size = 0;
+    for await (const c of req) {
+      size += c.length;
+      if (size > 256 * 1024) return sendJson(res, 413, { error: 'cuerpo demasiado grande' });
+      chunks.push(c);
+    }
+    const raw = Buffer.concat(chunks).toString('utf8');
+    try { adaptReq.body = JSON.parse(raw); } catch { adaptReq.body = raw; }
+  }
   await handler(adaptReq, adaptRes);
 }
 
@@ -262,7 +273,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (url.pathname === '/api/groq') return await handleGroq(req, res, url);
     if (url.pathname === '/api/config') return handleConfig(res);
-    if (url.pathname === '/api/feed' || url.pathname === '/api/geocode') {
+    if (url.pathname === '/api/feed' || url.pathname === '/api/geocode' || url.pathname === '/api/agenda') {
       try {
         return await runVercelStyle('./' + url.pathname.slice(1) + '.js', req, res, url);
       } catch (e) {

@@ -1403,6 +1403,23 @@ body.user-mode:not(.dark-mode) .leaflet-container a.leaflet-popup-close-button{ 
 
 /* ===== Tarjeta de alerta seleccionada en el mapa ===== */
 .selected-alert-card{ --sac-color:#1478FF; border-left:4px solid var(--sac-color); }
+
+/* ===== IMPORTAR AGENDA (operadores) ===== */
+.agenda-import-btn{ display:none; }
+body.operator-authorized .agenda-import-btn{ display:inline-flex; }
+.agenda-card{ max-width:680px; }
+.agenda-card textarea{ width:100%; min-height:160px; resize:vertical; font:12.5px/1.45 ui-monospace,Menlo,Consolas,monospace; }
+.agenda-list{ display:flex; flex-direction:column; gap:7px; max-height:48vh; overflow-y:auto; margin:10px 0; }
+.agenda-row{ display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:center; padding:9px 10px; border:1px solid var(--border,#1E293B); border-radius:10px; background:rgba(148,163,184,.06); cursor:pointer; text-transform:none; letter-spacing:normal; font-weight:400; font-size:12px; color:var(--text,#fff); margin:0; }
+.agenda-row input[type=checkbox]{ width:18px; height:18px; margin:0; }
+.agenda-main{ min-width:0; display:flex; flex-direction:column; gap:2px; }
+.agenda-main b{ font-size:12.5px; font-weight:700; color:var(--text,#fff); text-transform:none; letter-spacing:normal; overflow-wrap:anywhere; }
+.agenda-main small{ font-size:11px; font-weight:500; color:var(--text-muted,#9CA3AF); text-transform:none; letter-spacing:normal; overflow-wrap:anywhere; }
+.agenda-main small.ok{ color:#22C55E; } .agenda-main small.warn{ color:#F59E0B; }
+.agenda-row select{ width:auto; min-width:110px; padding:6px 8px; font-size:11px; }
+.agenda-actions{ display:flex; gap:8px; justify-content:space-between; }
+.agenda-actions button{ flex:1; }
+@media(max-width:560px){ .agenda-row{ grid-template-columns:auto 1fr; } .agenda-row select{ grid-column:2; } }
 </style>
 <!-- FUSIÓN VíaSegura · estilos de las features nuevas -->
 <link rel="stylesheet" href="/fusion/fusion.css?v=22" />
@@ -1637,6 +1654,7 @@ body.user-mode:not(.dark-mode) .leaflet-container a.leaflet-popup-close-button{ 
     <div class="nt-actions">
       <button class="nt-btn" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar modo claro u oscuro"><i class="fa-solid fa-circle-half-stroke"></i></button>
       <button id="account-button" class="nt-btn nt-login" onclick="openAuthModal()" aria-label="Iniciar sesión"><i class="fa-solid fa-circle-user"></i><span>Iniciar sesión</span></button>
+      <button id="agenda-import-btn" class="nt-btn agenda-import-btn" onclick="openAgendaImport()" title="Importar agenda de movilizaciones (operadores)" aria-label="Importar agenda de movilizaciones"><i class="fa-solid fa-calendar-check"></i><span>Agenda</span></button>
       <button class="nt-btn active" onclick="openEntryModal()" aria-label="Reportar"><i class="fa-solid fa-plus"></i><span>Reportar</span></button>
     </div>
   </header>
@@ -2150,6 +2168,31 @@ body.user-mode:not(.dark-mode) .leaflet-container a.leaflet-popup-close-button{ 
       <button id="am-center" onclick="centerAlert()"><i class="fa-solid fa-location-crosshairs"></i> Centrar en el mapa</button>
       <button id="am-share" onclick="shareAlert(currentAlertId)"><i class="fa-brands fa-whatsapp"></i> Compartir</button>
       <button id="am-correct" onclick="openLocationCorrection(currentAlertId)" class="btn-outline am-wide"><i class="fa-solid fa-location-pen"></i> Corregir ubicación</button>
+    </div>
+  </div>
+</div>
+
+<div id="agenda-modal" class="u-modal">
+  <div class="u-modal-card agenda-card">
+    <div class="m-head"><i class="fa-solid fa-calendar-check" style="color:#2563EB;"></i> Importar agenda de movilizaciones<button class="m-x" onclick="closeModal('agenda-modal')" aria-label="Cerrar importación"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
+    <div class="m-body">
+      <div id="agenda-step-1">
+        <div class="correction-note">Pega el texto de la agenda diaria (SSC CDMX). Se detectan las movilizaciones, se localizan en el mapa y las revisas antes de publicar. Los casos sensibles se publican sin nombres ni detalles de la demanda.</div>
+        <label for="agenda-text">Texto de la agenda</label>
+        <textarea id="agenda-text" rows="9" placeholder="AGENDA DE MOVILIZACIONES 23 DE OCTUBRE 2026&#10;&#10;MARCHAS&#10;..."></textarea>
+        <label for="agenda-source">Enlace de la fuente (opcional, https)</label>
+        <input id="agenda-source" type="url" placeholder="https://...">
+        <button id="agenda-parse-btn" onclick="agendaParse()"><i class="fa-solid fa-magnifying-glass-location"></i> Analizar y localizar</button>
+      </div>
+      <div id="agenda-step-2" style="display:none;">
+        <div id="agenda-summary" class="correction-note"></div>
+        <div id="agenda-list" class="agenda-list"></div>
+        <div class="agenda-actions">
+          <button class="btn-outline" onclick="agendaBack()"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+          <button id="agenda-publish-btn" onclick="agendaPublish()"><i class="fa-solid fa-cloud-arrow-up"></i> Publicar seleccionadas</button>
+        </div>
+      </div>
+      <div id="agenda-msg" class="correction-preview" style="display:none;margin-top:10px"></div>
     </div>
   </div>
 </div>
@@ -2844,7 +2887,20 @@ async function parseFeedItems(url) {
 const SEEN_TTL = 6 * 3600 * 1000; // no reprocesar el mismo título dentro de 6h
 const ALERT_EXPIRE_MS = 6 * 3600 * 1000;
 const FEED_MAX_AGE_MS = 24 * 3600 * 1000; // nunca convertir noticias de otros días en alertas nuevas
-function isAlertExpired(a) { try { return Date.now() - new Date(a.time).getTime() > ALERT_EXPIRE_MS; } catch(e) { return false; } }
+// Movilizaciones programadas (agenda SSC): México no usa horario de verano, CDMX = UTC-6 fijo.
+function scheduledDayEnd(iso) {
+  const ms = Date.parse(iso); if(!Number.isFinite(ms)) return null;
+  const d = new Date(ms - 6*3600*1000);
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1) + 6*3600*1000;
+}
+function isScheduledActive(a) { return !!(a && a.scheduled && Number.isFinite(a.scheduled_end) && Date.now() <= a.scheduled_end); }
+function scheduledHasRoadImpact(a) { return /afectaci[oó]n de vialidades/i.test(String(a && a.detail || '')) && !/sin afectaci[oó]n/i.test(String(a && a.detail || '')); }
+function isAlertExpired(a) {
+  try {
+    if(a && a.scheduled) return !isScheduledActive(a);
+    return Date.now() - new Date(a.time).getTime() > ALERT_EXPIRE_MS;
+  } catch(e) { return false; }
+}
 function isSeen(key) {
   try {
     const list = JSON.parse(localStorage.getItem('nv_seen') || '[]');
@@ -3302,7 +3358,7 @@ function showAlertFocus(a) {
   document.getElementById('sac-title').textContent=a.title || 'Incidente vial';
   document.getElementById('sac-location').textContent=a.location || 'Ubicación aproximada';
   const knownRef=alertKnownReference(a);
-  document.getElementById('sac-meta').textContent=`${alertSourceLabel(a)} · ${precisionLabel(a)}${knownRef?' · Referencia: '+knownRef:''} · ${reportedTimeLabel(a.time)}`;
+  document.getElementById('sac-meta').textContent=`${alertSourceLabel(a)} · ${precisionLabel(a)}${knownRef?' · Referencia: '+knownRef:''} · ${alertWhenLabel(a)}`;
   document.querySelector('#selected-alert-card .sac-actions .btn-outline')?.toggleAttribute('hidden', !isNavigableAlert(a));
   card.style.setProperty('--sac-color', visual.color);
   const icon=document.getElementById('sac-icon'); icon.style.background=visual.color; icon.innerHTML=`<i class="fa-solid ${visual.icon}"></i>`;
@@ -3320,7 +3376,8 @@ function navigateFocusedAlert() { if(currentAlertId!=null) navigateToAlert(curre
 function shareFocusedAlert() { if(currentAlertId!=null) shareAlert(currentAlertId); }
 function incidentVisual(alert) {
   const text=((alert.title || '')+' '+(alert.detail || '')).toLowerCase();
-  if(isAlertExpired(alert)) return { color:'#64748B', icon:'fa-clock-rotate-left', label:'Alerta anterior' };
+  if(isAlertExpired(alert)) return { color:'#64748B', icon:'fa-clock-rotate-left', label:alert.scheduled ? 'Movilización finalizada' : 'Alerta anterior' };
+  if(alert.scheduled) return { color:'#2563EB', icon:'fa-people-group', label:'Movilización programada' };
   if(/incendio|fuego|explosi/.test(text)) return { color:'#DC2626', icon:'fa-fire', label:'Incendio' };
   if(/inundaci|encharcamiento|desbord|lluvia|granizo|tormenta/.test(text)) return { color:'#0284C7', icon:'fa-cloud-showers-heavy', label:'Lluvia / inundación' };
   if(/niebla|neblina|humo/.test(text)) return { color:'#0E7490', icon:'fa-smog', label:'Visibilidad reducida' };
@@ -3374,8 +3431,10 @@ function activateWithKeyboard(event, action) {
 const SEV_LABELS={critical:'Crítica',high:'Alta',medium:'Media'};
 function popupHeadHTML(alert) {
   const v=incidentVisual(alert), sev=alertSeverity(alert), expired=isAlertExpired(alert);
-  const sevChip=(!expired&&sev!=='medium')?`<span class="pop-sev ${sev}">Gravedad ${SEV_LABELS[sev]}</span>`:'';
-  return `<div class="pop-head"><span class="pop-type" style="--incident:${v.color}"><i class="fa-solid ${v.icon}"></i> ${v.label}</span>${sevChip}<time class="pop-time">${reportedTimeLabel(alert.time)}</time></div>`;
+  const sevChip=alert.scheduled
+    ? ((!expired&&scheduledHasRoadImpact(alert))?`<span class="pop-sev high">Posible afectación vial</span>`:'')
+    : ((!expired&&sev!=='medium')?`<span class="pop-sev ${sev}">Gravedad ${SEV_LABELS[sev]}</span>`:'');
+  return `<div class="pop-head"><span class="pop-type" style="--incident:${v.color}"><i class="fa-solid ${v.icon}"></i> ${v.label}</span>${sevChip}<time class="pop-time">${alertWhenLabel(alert)}</time></div>`;
 }
 function addMarkerToMap(alert) {
   if(!hasAlertPoint(alert)) return;
@@ -3441,7 +3500,7 @@ function alertCardHTML(a) {
   return `
     <div class="ac-head">
       <span class="ac-icon" style="--incident:${visual.color}"><i class="fa-solid ${visual.icon}"></i></span>
-      <span class="ac-kind"><b style="color:${visual.color}!important">${visual.label}</b><time datetime="${new Date(a.time).toISOString()}">${reportedTimeLabel(a.time)}</time></span>
+      <span class="ac-kind"><b style="color:${visual.color}!important">${visual.label}</b><time datetime="${new Date(a.time).toISOString()}">${alertWhenLabel(a)}</time></span>
       ${a.importante ? '<span class="traffic-chip" style="background:rgba(239,68,68,.12);color:#EF4444">Importante</span>' : ''}
     </div>
     <b class="ac-title">${escapeHtml(a.title)}</b>
@@ -3507,8 +3566,20 @@ async function fetchWeather(lat, lon) {
     weatherCache[key] = w; return w;
   } catch(e) { return null; }
 }
+function alertWhenLabel(a) {
+  if(!a || !a.scheduled) return reportedTimeLabel(a && a.time);
+  const tz = { timeZone:'America/Mexico_City' };
+  const ev = new Date(a.time), now = new Date();
+  const dayKey = d => d.toLocaleDateString('en-CA', tz);
+  const tomorrow = new Date(now.getTime() + 86400000);
+  const day = dayKey(ev) === dayKey(now) ? 'hoy' : dayKey(ev) === dayKey(tomorrow) ? 'mañana' : ev.toLocaleDateString('es-MX', { ...tz, day:'numeric', month:'short' });
+  if(!isScheduledActive(a)) return 'Programada · ya finalizó';
+  if(a.all_day) return `Programada ${day} · durante el día`;
+  return `Programada ${day} · ${ev.toLocaleTimeString('es-MX', { ...tz, hour:'2-digit', minute:'2-digit', hour12:false })} h`;
+}
 function formatAlertTime(t) { return new Date(t).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }); }
 function alertTimingLabel(a) {
+  if(a && a.scheduled) return alertWhenLabel(a);
   const published=`Publicado ${formatRelativeAlertTime(a.time)}`;
   if(!a.detected_at) return published;
   const delay=Math.max(0,Math.round((new Date(a.detected_at).getTime()-new Date(a.time).getTime())/60000));
@@ -3534,7 +3605,7 @@ function openAlertDetail(id) {
   document.getElementById('am-loc').textContent = (a.precision && a.precision !== 'punto' ? (a.precision === 'tramo' && a.corridor ? '🛣️ ' + a.corridor + ' · km' : '📍 aprox ' + a.precision) + ' · ' : '') + a.location;
   document.getElementById('am-desc').textContent = a.detail || 'Sin descripción detallada.';
   document.getElementById('am-desc').textContent += (a.state ? '\n📍 Estado: ' + a.state : '');
-  document.getElementById('am-time').textContent = `${formatAlertTime(a.time)} · ${detectionDelayLabel(a)}`;
+  document.getElementById('am-time').textContent = a.scheduled ? alertWhenLabel(a) : `${formatAlertTime(a.time)} · ${detectionDelayLabel(a)}`;
   document.getElementById('am-source').textContent = alertSourceLabel(a);
   document.getElementById('am-precision').textContent = precisionLabel(a) + (a.km !== null && a.km !== undefined && a.km !== '' ? ' · km reportado ' + a.km : '');
   if(hasAlertPoint(a) && estimatedRadiusMeters(a)) document.getElementById('am-precision').textContent += ' · área estimada: radio ' + estimatedRadiusLabel(a);
@@ -3550,8 +3621,12 @@ function openAlertDetail(id) {
   card.style.setProperty('--am-color', visual.color);
   document.getElementById('am-icon').innerHTML = `<i class="fa-solid ${visual.icon}"></i>`;
   const sevEl = document.getElementById('am-sev'), sev = alertSeverity(a);
-  if(!isAlertExpired(a) && sev !== 'medium') { sevEl.textContent = 'Gravedad ' + (sev === 'critical' ? 'crítica' : 'alta'); sevEl.style.display = 'inline-block'; sevEl.style.background = sev === 'critical' ? '#DC2626' : '#F59E0B'; sevEl.style.color = '#fff'; }
+  if(a.scheduled) {
+    if(!isAlertExpired(a) && scheduledHasRoadImpact(a)) { sevEl.textContent = 'Posible afectación vial'; sevEl.style.display = 'inline-block'; sevEl.style.background = '#F59E0B'; sevEl.style.color = '#fff'; }
+    else sevEl.style.display = 'none';
+  } else if(!isAlertExpired(a) && sev !== 'medium') { sevEl.textContent = 'Gravedad ' + (sev === 'critical' ? 'crítica' : 'alta'); sevEl.style.display = 'inline-block'; sevEl.style.background = sev === 'critical' ? '#DC2626' : '#F59E0B'; sevEl.style.color = '#fff'; }
   else sevEl.style.display = 'none';
+  const whenLabel = document.querySelector('#am-time')?.closest('.am-meta-item')?.querySelector('small'); if(whenLabel) whenLabel.textContent = a.scheduled ? 'Horario' : 'Reportado';
   const cat = document.getElementById('am-cat');
   cat.textContent = visual.label;
   cat.style.background = `color-mix(in srgb, ${visual.color} 16%, transparent)`;
@@ -3566,6 +3641,98 @@ function openAlertDetail(id) {
     else w.textContent = 'Clima no disponible';
   }); else w.textContent='Clima no disponible sin ubicación verificada';
   document.getElementById('alert-modal').style.display = 'flex';
+}
+
+// === IMPORTAR AGENDA DE MOVILIZACIONES (solo operadores/admin) ===
+let agendaEvents = [];
+function agendaMsg(text, kind) {
+  const box = document.getElementById('agenda-msg'); if(!box) return;
+  box.style.display = text ? 'block' : 'none'; box.textContent = text || '';
+  box.style.color = kind === 'err' ? 'var(--danger,#EF4444)' : kind === 'ok' ? '#22C55E' : 'var(--text-muted)';
+}
+function openAgendaImport() {
+  if(!['operator','admin'].includes(zeroVialRole)) return trafficMessage('La importación de agenda requiere una cuenta de operador.');
+  agendaBack(); agendaMsg('');
+  openModal('agenda-modal');
+}
+function agendaBack() {
+  document.getElementById('agenda-step-1').style.display = '';
+  document.getElementById('agenda-step-2').style.display = 'none';
+}
+async function agendaCall(payload) {
+  const sess = supabaseClient ? (await supabaseClient.auth.getSession()).data.session : null;
+  if(!sess) throw new Error('Inicia sesión con tu cuenta de operador.');
+  const res = await fetch('/api/agenda', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer ' + sess.access_token }, body:JSON.stringify(payload) });
+  const data = await res.json().catch(() => ({}));
+  if(!res.ok) throw new Error(data.error || 'Error ' + res.status);
+  return data;
+}
+function agendaInCdmx(lat, lon) { return lat >= 19.0 && lat <= 19.65 && lon >= -99.4 && lon <= -98.9; }
+async function agendaGeocode(ev) {
+  try {
+    const g = await geocodeBest(ev.geocodeQuery, { expectedState:'Ciudad de México', snapToRoad:false });
+    if(!g || !isInMexico(g.lat, g.lon)) return null;
+    if(!agendaInCdmx(g.lat, g.lon)) return { note:'La ubicación quedó fuera de la CDMX; revísala.' };
+    const zone = !!(g.approximate || g.locationType === 'city_fallback' || /APPROXIMATE|GEOMETRIC_CENTER/i.test(g.locationType || ''));
+    return { geo:{ latitude:g.lat, longitude:g.lon, precision:zone ? 'zone' : 'exact', confidence:g.confidence || 0.5 } };
+  } catch(e) { return null; }
+}
+async function agendaParse() {
+  const text = document.getElementById('agenda-text').value;
+  const btn = document.getElementById('agenda-parse-btn');
+  if(!text.trim()) return agendaMsg('Pega el texto de la agenda.', 'err');
+  btn.disabled = true; agendaMsg('Analizando agenda…');
+  try {
+    const out = await agendaCall({ action:'parse', text });
+    agendaEvents = out.events || [];
+    if(!agendaEvents.length) { agendaMsg((out.warnings || [])[0] || 'No se detectaron movilizaciones.', 'err'); return; }
+    let done = 0;
+    const queue = agendaEvents.slice();
+    const worker = async () => {
+      while(queue.length) {
+        const ev = queue.shift();
+        const r = await agendaGeocode(ev);
+        if(r && r.geo) ev.geo = r.geo; else ev.geoNote = (r && r.note) || 'No se localizó; se publicará solo en la lista.';
+        done++; agendaMsg(`Localizando ${done} de ${agendaEvents.length}…`);
+      }
+    };
+    await Promise.all([worker(), worker(), worker()]);
+    agendaRender(out);
+    agendaMsg('');
+  } catch(e) { agendaMsg(e.message || 'No se pudo analizar la agenda.', 'err'); }
+  finally { btn.disabled = false; }
+}
+function agendaRender(out) {
+  document.getElementById('agenda-step-1').style.display = 'none';
+  document.getElementById('agenda-step-2').style.display = '';
+  const located = agendaEvents.filter(e => e.geo).length;
+  document.getElementById('agenda-summary').innerHTML = `<b>${agendaEvents.length}</b> movilizaciones del <b>${escapeHtml(out.date || 'fecha sin detectar')}</b> · ${located} localizadas en el mapa.${(out.warnings || []).length ? '<br>' + out.warnings.map(escapeHtml).join('<br>') : ''}`;
+  const sevLabel = { low:'Sin afectación', medium:'Media', high:'Alta', critical:'Crítica' };
+  document.getElementById('agenda-list').innerHTML = agendaEvents.map((e, i) => `
+    <label class="agenda-row">
+      <input type="checkbox" data-i="${i}" checked>
+      <span class="agenda-main">
+        <b>${escapeHtml(e.publicName ? e.publicName : 'Caso anonimizado')}${e.placeCount > 1 ? ` · punto ${e.placeIndex + 1}/${e.placeCount}` : ''}</b>
+        <small>${escapeHtml(e.allDay ? 'Durante el día' : (e.time ? e.time + ' h' : 'Horario por confirmar'))} · ${escapeHtml(e.kind)} · ${escapeHtml(e.place.split(',')[0])}${e.aforo ? ' · aforo ' + e.aforo : ''}</small>
+        <small class="${e.geo ? 'ok' : 'warn'}">${e.geo ? '📍 Localizada' : '⚠ ' + escapeHtml(e.geoNote || 'Sin ubicación')}${e.sensitive ? ' · 🔒 anonimizada' : ''}${e.roadImpact ? ' · 🚧 posible afectación vial' : ''}</small>
+      </span>
+      <select data-sev="${i}" aria-label="Prioridad">${['low','medium','high','critical'].map(v => `<option value="${v}"${v === e.severity ? ' selected' : ''}>${sevLabel[v]}</option>`).join('')}</select>
+    </label>`).join('');
+}
+async function agendaPublish() {
+  const chosen = [...document.querySelectorAll('#agenda-list input[type=checkbox]:checked')].map(cb => {
+    const i = Number(cb.dataset.i), ev = { ...agendaEvents[i] };
+    const sel = document.querySelector(`#agenda-list select[data-sev="${i}"]`); if(sel) ev.severity = sel.value;
+    return ev;
+  });
+  if(!chosen.length) return agendaMsg('Selecciona al menos una movilización.', 'err');
+  const btn = document.getElementById('agenda-publish-btn'); btn.disabled = true; agendaMsg('Publicando…');
+  try {
+    const out = await agendaCall({ action:'publish', events:chosen, sourceUrl:(document.getElementById('agenda-source').value || '').trim() || undefined });
+    agendaMsg(`Listo: ${out.saved} movilizaciones publicadas${out.skipped ? ` (${out.skipped} omitidas por validación)` : ''}.`, 'ok');
+    try { await ensureHistoricalAlerts(true); await loadCentralAlerts(); updateLists(); if(typeof renderPanorama === 'function') renderPanorama(); } catch(e) {}
+  } catch(e) { agendaMsg(e.message || 'No se pudo publicar.', 'err'); }
+  finally { btn.disabled = false; }
 }
 function closeAlertModal() { document.getElementById('alert-modal').style.display = 'none'; }
 document.addEventListener('keydown', e => { if(e.key === 'Escape') { const m = document.getElementById('alert-modal'); if(m && m.style.display === 'flex') closeAlertModal(); } });
@@ -3642,7 +3809,7 @@ async function graphRis(prefix='u', quiet=false) {
   const selected = source.filter(a => {
     if(type !== 'all' && a.category !== type) return false;
     if(state && !norm((a.state || '') + ' ' + (a.location || '')).includes(norm(state))) return false;
-    if(hours && Date.now() - new Date(a.time).getTime() > hours*3600000) return false;
+    if(hours && !isScheduledActive(a) && Date.now() - new Date(a.time).getTime() > hours*3600000) return false;
     return true;
   });
   const st = {}, ty = {};
@@ -3811,7 +3978,9 @@ function centralAlertToUi(row,receivedAt=0) {
   // proveedor solo devolvió un punto genérico de la autopista.
   const locationPrecision=row.location_precision==='intersection' && row.kilometer != null && row.road ? 'corridor_reference' : row.location_precision;
   const precision=centralPrecisionToUi(locationPrecision,row.location_status,confidence);
+  const scheduled=row.event_type==='scheduled_mobilization';
   return {
+    scheduled, all_day:scheduled&&row.traffic_status==='allday', scheduled_end:scheduled?scheduledDayEnd(row.event_at):null, severity_level:severity,
     id:centralNumericId(row.id||row.external_id), central_id:row.id, external_id:row.external_id,
     lat:row.latitude == null ? null : Number(row.latitude), lon:row.longitude == null ? null : Number(row.longitude), category:row.category,
     title:row.title, detail:row.detail||row.title, location:row.location_label||[row.road,row.municipality,row.state].filter(Boolean).join(', '),
@@ -3819,10 +3988,10 @@ function centralAlertToUi(row,receivedAt=0) {
     location_confidence:confidence, location_provider:'central', road_snapped:false,
     time:new Date(row.event_at), published_at:row.event_at, detected_at:row.created_at||null, received_at:receivedAt,
     event_type:row.event_type||null, traffic_status:row.traffic_status||null,
-    trafico:row.category==='road'
+    trafico:row.category==='road'&&!scheduled
       ? ({flowing:'fluido',restored:'fluido',slow:'moderado',partial:'moderado',blocked:'detenido',closed:'detenido'}[row.traffic_status] || (severity==='critical'?'detenido':severity==='high'?'moderado':'fluido'))
       : null,
-    importante:['critical','high'].includes(severity), source_type:'media', source_name:row.source_name||'Fuente verificada',
+    importante:!scheduled&&['critical','high'].includes(severity), source_type:'media', source_name:row.source_name||'Fuente verificada',
     source_url:row.source_url||'', verification_status:row.location_status==='verified'?'verified':'automatic', liked:false
   };
 }
@@ -4955,7 +5124,7 @@ function matchesFilters(a) {
   if(nfState.blockagesOnly && !isBlockageAlert(a)) return false;
   if(userPreferences?.severities?.length && !userPreferences.severities.includes(alertSeverity(a))) return false;
   if(uState && !((a.state || '').toLowerCase().includes(uState.toLowerCase()) || (a.location || '').toLowerCase().includes(uState.toLowerCase()))) return false;
-  if(uRange > 0 && (Date.now() - new Date(a.time).getTime()) > uRange * 3600 * 1000) return false;
+  if(uRange > 0 && !isScheduledActive(a) && (Date.now() - new Date(a.time).getTime()) > uRange * 3600 * 1000) return false;
   if(myPosition && userPreferences?.radius_km > 0) {
     const distance=alertDistanceKm(a);
     if(distance!==null && distance>Number(userPreferences.radius_km)) return false;
@@ -5028,6 +5197,7 @@ async function retryFeed(btn) {
 }
 
 function alertSeverity(a) {
+  if(a && a.scheduled) return scheduledHasRoadImpact(a) && ['high','critical'].includes(a.severity_level) ? 'high' : 'medium';
   if(a.importante || (isBlockageAlert(a) && a.trafico === 'detenido')) return 'critical';
   if(a.category === 'security' || isBlockageAlert(a) || a.trafico === 'detenido') return 'high';
   return 'medium';
@@ -5128,7 +5298,7 @@ async function renderAlertCenter() {
     if(cat==='blockage'&&!isBlockageAlert(a)) return false;
     if(['road','security'].includes(cat)&&a.category!==cat) return false;
     if(sev!=='all'&&alertSeverity(a)!==sev) return false;
-    if(hours&&(Date.now()-new Date(a.time).getTime())>hours*3600*1000) return false;
+    if(hours&&!isScheduledActive(a)&&(Date.now()-new Date(a.time).getTime())>hours*3600*1000) return false;
     if(state&&a.state!==state) return false;
     if(q&&!((a.title||'').toLowerCase().includes(q)||(a.location||'').toLowerCase().includes(q)||(a.detail||'').toLowerCase().includes(q))) return false;
     return true;

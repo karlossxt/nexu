@@ -275,3 +275,15 @@ Incluye `render.yaml`. Configura el servicio web y variables de entorno correspo
 - La lógica de matching vial está optimizada para nomenclatura y códigos de carretera mexicanos.
 - Los datasets estáticos (`red-vial.js`, `casetas-data.js`) son generados offline. No se reconstruyen en tiempo de ejecución.
 - Para evitar falsos positivos entre rutas paralelas, el sistema prioriza coincidencia por código de ruta + tokens nominales + estado/corredor.
+
+## Importar la agenda de movilizaciones (SSC CDMX)
+
+Los operadores pueden publicar la **Agenda de movilizaciones** diaria como alertas programadas.
+
+1. **Variables de entorno (servidor):** `SUPABASE_SERVICE_ROLE_KEY` y, si usas otro proyecto, `SUPABASE_URL`. En Vercel márcala como **Secret**; nunca la expongas al navegador. Si falta, `/api/agenda` responde 503 con un mensaje claro.
+2. **Permisos:** solo cuentas con `role = 'operator'` o `'admin'` en la tabla `profiles`. El servidor valida la sesión de Supabase en cada petición.
+3. **Uso:** con una cuenta de operador aparece el botón **Agenda** en la barra superior. Pega el texto → *Analizar y localizar* → revisa y ajusta la prioridad → *Publicar seleccionadas*. Publicar de nuevo la misma agenda **actualiza** las alertas, no las duplica.
+4. **Sin migración SQL:** las filas usan `event_type = 'scheduled_mobilization'` y `traffic_status = 'scheduled' | 'allday'`. Vencen al terminar el día (hora CDMX, UTC-6), no a las 6 horas como los incidentes.
+5. **Privacidad:** el texto de "Demanda" **no se publica**. Solo se deriva una categoría general. Los casos sensibles (víctimas, violencia, acoso, desapariciones) se publican sin nombre ni detalle, y el servidor los vuelve a anonimizar aunque el cliente intente lo contrario.
+6. **Severidad:** sale del aforo y de si se anuncia afectación vial o hay recorrido (≥200 personas con afectación = alta). El operador puede cambiarla antes de publicar.
+7. **Pruebas:** `lib/agenda-parser.test.js` (lector, con un ejemplo real en `lib/fixtures/`) y `tools/test_agenda_api.js` (autenticación, rol y anonimización con Supabase simulado).
