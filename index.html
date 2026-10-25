@@ -1351,6 +1351,58 @@ body.user-mode:not(.dark-mode) #ahora-view .acn-toolbar select,body.user-mode:no
   #ahora-alerts-block { scroll-margin-top:136px; }
   body.user-mode .leaflet-top.leaflet-right { top:114px; }
 }
+
+/* ===== PINES · icono sobre disco blanco, más legible ===== */
+.incident-pin-shape .pin-inner{ fill:#fff; }
+.incident-pin i{ color:var(--pin); font-size:18px; top:38.5%; text-shadow:none; }
+.incident-pin.compact i{ font-size:13px; }
+body.user-mode .incident-pin i{ font-size:18px; }
+body.user-mode .incident-pin.compact i{ font-size:13px; }
+.incident-pin-shape .pin-inner{ r:13.4; }
+
+/* ===== BOTONES DE CIERRE · visibles y fáciles de tocar ===== */
+body .m-x, body .am-x, body .fb-close, body .fz-modal-head .fz-x{
+  display:inline-grid; place-items:center; flex:0 0 auto; width:38px; height:38px; padding:0; margin-left:auto;
+  border-radius:50%; border:1px solid var(--border,#1E293B); background:rgba(148,163,184,.16);
+  color:var(--text,#fff); font-size:16px; line-height:1; cursor:pointer; transition:background .15s,color .15s,transform .15s,border-color .15s;
+}
+body .m-x:hover, body .am-x:hover, body .fb-close:hover, body .fz-modal-head .fz-x:hover{ background:#EF4444; border-color:#EF4444; color:#fff; transform:scale(1.06); }
+body .m-x:focus-visible, body .am-x:focus-visible, body .fb-close:focus-visible, body .fz-modal-head .fz-x:focus-visible{ outline:3px solid #38BDF8; outline-offset:2px; }
+body .fb-close{ margin-left:0; }
+body.user-mode:not(.dark-mode) .m-x, body.user-mode:not(.dark-mode) .am-x, body.user-mode:not(.dark-mode) .fb-close{ background:#EEF2F7; border-color:#CBD5E1; color:#172033; }
+@media (pointer:coarse){ body .m-x, body .am-x, body .fb-close, body .fz-modal-head .fz-x{ width:44px; height:44px; } }
+.leaflet-container a.leaflet-popup-close-button{ top:8px; right:8px; width:28px; height:28px; padding:0; border-radius:50%; display:grid; place-items:center; font:700 20px/1 system-ui,sans-serif; color:#475569; background:rgba(148,163,184,.2); transition:.15s; }
+.leaflet-container a.leaflet-popup-close-button:hover{ background:#EF4444; color:#fff; }
+body.user-mode .leaflet-container a.leaflet-popup-close-button{ color:#E2E8F0; }
+body.user-mode:not(.dark-mode) .leaflet-container a.leaflet-popup-close-button{ color:#334155; }
+.leaflet-popup-content{ padding-right:18px; }
+
+/* ===== DETALLE DE ALERTA · tarjeta renovada ===== */
+#alert-modal-card{ --am-color:#F97316; max-width:460px; padding:0; overflow-x:hidden; border-top:4px solid var(--am-color); }
+.am-hero{ display:flex; align-items:flex-start; gap:12px; padding:16px 16px 4px; }
+.am-icon{ flex:0 0 46px; width:46px; height:46px; display:grid; place-items:center; border-radius:14px; background:var(--am-color); color:#fff; font-size:20px; box-shadow:0 6px 16px color-mix(in srgb,var(--am-color) 45%,transparent); }
+.am-hero-copy{ flex:1; min-width:0; }
+.am-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.am-hero #am-title{ margin:7px 0 0; font-size:17px; line-height:1.3; overflow-wrap:anywhere; }
+#alert-modal-card .am-loc{ margin:6px 16px 10px; display:flex; gap:6px; align-items:flex-start; }
+#alert-modal-card .am-desc{ margin:0 16px 12px; max-height:28vh; overflow-y:auto; border-left:3px solid var(--am-color); border-radius:8px; }
+.am-meta-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 16px 14px; }
+.am-meta-item{ display:flex; align-items:flex-start; gap:9px; padding:9px 10px; border:1px solid var(--border); border-radius:10px; background:var(--card-bg,transparent); min-width:0; }
+.am-meta-item > i{ margin-top:2px; width:16px; text-align:center; color:var(--am-color); font-size:14px; }
+.am-meta-item small{ display:block; font-size:10px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--text-muted); }
+.am-meta-item span{ display:block; font-size:12px; color:var(--text); line-height:1.35; overflow-wrap:anywhere; }
+.am-meta-item.am-wide, .am-actions .am-wide{ grid-column:1/-1; }
+#alert-modal-card .am-actions{ display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 16px 16px; }
+#alert-modal-card .am-actions button{ min-height:42px; display:flex; align-items:center; justify-content:center; gap:7px; font-size:12.5px; font-weight:700; }
+#alert-modal-card .am-actions .am-primary{ grid-column:1/-1; min-height:46px; background:var(--am-color); border-color:var(--am-color); color:#fff; font-size:14px; }
+@media(max-width:560px){
+  #alert-modal-card{ border-radius:18px 18px 0 0; }
+  .am-meta-grid{ grid-template-columns:1fr; }
+  #alert-modal-card .am-actions{ padding-bottom:calc(16px + env(safe-area-inset-bottom)); }
+}
+
+/* ===== Tarjeta de alerta seleccionada en el mapa ===== */
+.selected-alert-card{ --sac-color:#1478FF; border-left:4px solid var(--sac-color); }
 </style>
 <!-- FUSIÓN VíaSegura · estilos de las features nuevas -->
 <link rel="stylesheet" href="/fusion/fusion.css?v=22" />
@@ -1601,7 +1653,7 @@ body.user-mode:not(.dark-mode) #ahora-view .acn-toolbar select,body.user-mode:no
     <span class="fb-icon"><i class="fa-solid fa-location-crosshairs"></i></span>
     <span class="fb-copy"><small>INCIDENTE ENFOCADO EN EL MAPA</small><b id="focus-title">—</b></span>
     <button class="fb-action" onclick="centerFocusedAlert()"><i class="fa-solid fa-crosshairs"></i> Centrar</button>
-    <button class="fb-close" onclick="clearAlertFocus()" aria-label="Cerrar incidente enfocado">×</button>
+    <button class="fb-close" onclick="clearAlertFocus()" aria-label="Cerrar incidente enfocado"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
   </section>
   <section id="selected-alert-card" class="selected-alert-card" aria-live="polite" aria-atomic="true">
     <span id="sac-icon" class="sac-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
@@ -1823,7 +1875,7 @@ body.user-mode:not(.dark-mode) #ahora-view .acn-toolbar select,body.user-mode:no
         </div>
         <div class="wm-head-right">
           <button onclick="weatherRefresh()" class="w-pill" title="Actualizar ahora" aria-label="Actualizar condiciones meteorológicas"><i class="fa-solid fa-rotate"></i></button>
-          <button class="m-x" onclick="closeWeatherModal()">✕</button>
+          <button class="m-x" onclick="closeWeatherModal()"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
         </div>
       </div>
 
@@ -1869,7 +1921,7 @@ body.user-mode:not(.dark-mode) #ahora-view .acn-toolbar select,body.user-mode:no
   <!-- MODAL: HOY NO CIRCULA -->
   <div id="hnc-modal" class="u-modal">
     <div class="u-modal-card" style="max-width:480px;">
-      <div class="m-head"><i class="fa-solid fa-car-side" style="color:#38BDF8;"></i> Hoy No Circula<span id="hnc-day" class="hnc-day"></span><button class="m-x" onclick="closeHncModal()">✕</button></div>
+      <div class="m-head"><i class="fa-solid fa-car-side" style="color:#38BDF8;"></i> Hoy No Circula<span id="hnc-day" class="hnc-day"></span><button class="m-x" onclick="closeHncModal()"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
       <div class="m-body">
         <div id="hnc-main" class="hnc-main"></div>
         <div class="hnc-timer" id="hnc-timer"></div>
@@ -1889,7 +1941,7 @@ body.user-mode:not(.dark-mode) #ahora-view .acn-toolbar select,body.user-mode:no
   <!-- MODAL: REPORTAR INCIDENTE (ASISTENTE DE 4 PASOS) -->
   <div id="entry-modal" class="u-modal">
     <div class="u-modal-card ent-card">
-      <div class="m-head"><i class="fa-solid fa-plus" style="color:#2563EB;"></i> Reportar incidente<button class="m-x" onclick="closeEntryModal()" aria-label="Cerrar reporte">✕</button></div>
+      <div class="m-head"><i class="fa-solid fa-plus" style="color:#2563EB;"></i> Reportar incidente<button class="m-x" onclick="closeEntryModal()" aria-label="Cerrar reporte"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
       <div class="m-body ent-body">
         <div class="ent-progress" aria-hidden="true">
           <span class="ent-progress-seg active"></span>
@@ -1989,7 +2041,7 @@ body.user-mode:not(.dark-mode) #ahora-view .acn-toolbar select,body.user-mode:no
   <!-- MODAL: DIRECTORIO DE EMERGENCIAS -->
   <div id="dir-modal" class="u-modal">
     <div class="u-modal-card" style="max-width:520px;">
-      <div class="m-head"><i class="fa-solid fa-tower-broadcast" style="color:#EF4444;"></i> Directorio de Emergencias<button class="m-x" onclick="closeModal('dir-modal')">✕</button></div>
+      <div class="m-head"><i class="fa-solid fa-tower-broadcast" style="color:#EF4444;"></i> Directorio de Emergencias<button class="m-x" onclick="closeModal('dir-modal')"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
       <div class="m-body">
         <div class="m-banner"><i class="fa-solid fa-triangle-exclamation" style="margin-top:1px;"></i><div>Protocolo de avería: <b>1.</b> Orillate con precaución. <b>2.</b> Luces de emergencia y chaleco reflectivo. <b>3.</b> Contacta la línea indicada.</div></div>
         <div class="dir-chips" id="dir-chips">
@@ -2003,7 +2055,7 @@ body.user-mode:not(.dark-mode) #ahora-view .acn-toolbar select,body.user-mode:no
   <!-- MODAL: GENERADOR DE RUTAS -->
   <div id="route-modal" class="u-modal">
     <div class="u-modal-card" style="max-width:480px;">
-      <div class="m-head"><i class="fa-solid fa-route" style="color:#2563EB;"></i> Generador de Rutas<button class="m-x" onclick="closeModal('route-modal')">✕</button></div>
+      <div class="m-head"><i class="fa-solid fa-route" style="color:#2563EB;"></i> Generador de Rutas<button class="m-x" onclick="closeModal('route-modal')"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
       <div class="m-body">
         <div class="rm-fields">
           <div class="rm-field">
@@ -2049,7 +2101,7 @@ body.user-mode:not(.dark-mode) #ahora-view .acn-toolbar select,body.user-mode:no
     <div id="report-modal-card">
       <div class="am-head">
         <span class="am-chip" id="rep-period-chip">📄 Últimos 90 días</span>
-        <button class="am-x" onclick="closeReport()" title="Cerrar">✕</button>
+        <button class="am-x" onclick="closeReport()" title="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
       </div>
       <div id="report-body">
         <div class="rep-stat">
@@ -2071,34 +2123,40 @@ body.user-mode:not(.dark-mode) #ahora-view .acn-toolbar select,body.user-mode:no
 </div>
 
 <div id="alert-modal">
-  <div id="alert-modal-card">
-    <div class="am-head">
-      <span id="am-cat" class="am-chip">Vial</span>
-      <span id="am-traffic" class="am-chip" style="display:none;">—</span>
-      <button class="am-x" onclick="closeAlertModal()" title="Cerrar">✕</button>
+  <div id="alert-modal-card" role="dialog" aria-modal="true" aria-labelledby="am-title">
+    <div class="am-hero">
+      <span id="am-icon" class="am-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+      <div class="am-hero-copy">
+        <div class="am-chips">
+          <span id="am-cat" class="am-chip">Vial</span>
+          <span id="am-traffic" class="am-chip" style="display:none;">—</span>
+          <span id="am-sev" class="am-chip" style="display:none;">—</span>
+        </div>
+        <h3 id="am-title"></h3>
+      </div>
+      <button class="am-x" onclick="closeAlertModal()" title="Cerrar" aria-label="Cerrar detalle de la alerta"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
     </div>
-    <h3 id="am-title"></h3>
     <div class="am-loc" id="am-loc"></div>
     <div class="am-desc" id="am-desc"></div>
-    <div class="am-meta">
-      <div>🕐 <span id="am-time"></span></div>
-      <div>📰 <span id="am-source"></span></div>
-      <div>🎯 <span id="am-precision"></span></div>
-      <div id="am-distance-row" style="display:none;">📏 <span id="am-distance"></span></div>
-      <div>🌤 <span id="am-weather">Cargando clima...</span></div>
+    <div class="am-meta-grid">
+      <div class="am-meta-item"><i class="fa-regular fa-clock"></i><div><small>Reportado</small><span id="am-time"></span></div></div>
+      <div class="am-meta-item"><i class="fa-regular fa-newspaper"></i><div><small>Fuente</small><span id="am-source"></span></div></div>
+      <div class="am-meta-item"><i class="fa-solid fa-bullseye"></i><div><small>Precisión</small><span id="am-precision"></span></div></div>
+      <div class="am-meta-item" id="am-distance-row" style="display:none;"><i class="fa-solid fa-route"></i><div><small>Distancia</small><span id="am-distance"></span></div></div>
+      <div class="am-meta-item am-wide"><i class="fa-solid fa-cloud-sun"></i><div><small>Clima en el lugar</small><span id="am-weather">Cargando clima...</span></div></div>
     </div>
     <div class="am-actions">
+      <button id="am-navigate" class="am-primary" onclick="navigateToAlert(currentAlertId)"><i class="fa-solid fa-diamond-turn-right"></i> Cómo llegar</button>
       <button id="am-center" onclick="centerAlert()"><i class="fa-solid fa-location-crosshairs"></i> Centrar en el mapa</button>
-      <button id="am-navigate" onclick="navigateToAlert(currentAlertId)"><i class="fa-solid fa-diamond-turn-right"></i> Cómo llegar</button>
       <button id="am-share" onclick="shareAlert(currentAlertId)"><i class="fa-brands fa-whatsapp"></i> Compartir</button>
-      <button id="am-correct" onclick="openLocationCorrection(currentAlertId)" class="btn-outline"><i class="fa-solid fa-location-pen"></i> Corregir ubicación</button>
+      <button id="am-correct" onclick="openLocationCorrection(currentAlertId)" class="btn-outline am-wide"><i class="fa-solid fa-location-pen"></i> Corregir ubicación</button>
     </div>
   </div>
 </div>
 
 <div id="correction-modal" class="u-modal">
   <div class="u-modal-card">
-    <div class="m-head"><i class="fa-solid fa-location-pen" style="color:#38BDF8"></i> Corregir ubicación<button class="m-x" onclick="closeModal('correction-modal')">✕</button></div>
+    <div class="m-head"><i class="fa-solid fa-location-pen" style="color:#38BDF8"></i> Corregir ubicación<button class="m-x" onclick="closeModal('correction-modal')"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
     <div class="m-body">
       <div class="correction-note">La corrección quedará pendiente de validación. Conservaremos el punto original para comparar y mejorar la precisión futura.</div>
       <label>Buscar dirección, carretera o kilómetro</label>
@@ -2117,7 +2175,7 @@ body.user-mode:not(.dark-mode) #ahora-view .acn-toolbar select,body.user-mode:no
 
 <div id="auth-modal" class="u-modal">
   <div class="u-modal-card">
-    <div class="m-head"><i class="fa-solid fa-circle-user" style="color:#38BDF8"></i> Cuenta Zero Vial<button class="m-x" onclick="closeModal('auth-modal')">✕</button></div>
+    <div class="m-head"><i class="fa-solid fa-circle-user" style="color:#38BDF8"></i> Cuenta Zero Vial<button class="m-x" onclick="closeModal('auth-modal')"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
     <div class="m-body">
       <div class="auth-switch"><button id="auth-login-tab" class="active" onclick="setAuthMode('login')">Iniciar sesión</button><button id="auth-register-tab" onclick="setAuthMode('register')">Crear cuenta</button></div>
       <label>Correo electrónico</label><input id="auth-email" type="email" autocomplete="email" placeholder="correo@ejemplo.com">
@@ -2139,7 +2197,7 @@ body.user-mode:not(.dark-mode) #ahora-view .acn-toolbar select,body.user-mode:no
 
 <div id="recovery-modal" class="u-modal">
   <div class="u-modal-card">
-    <div class="m-head"><i class="fa-solid fa-key" style="color:#FFB000"></i> Crear nueva contraseña<button class="m-x" onclick="cancelPasswordRecovery()">✕</button></div>
+    <div class="m-head"><i class="fa-solid fa-key" style="color:#FFB000"></i> Crear nueva contraseña<button class="m-x" onclick="cancelPasswordRecovery()"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
     <div class="m-body">
       <div class="pref-note">El enlace fue validado. Escribe una contraseña nueva para tu cuenta de Zero Vial.</div>
       <label>Nueva contraseña</label><input id="recovery-password" type="password" autocomplete="new-password" minlength="8" placeholder="Mínimo 8 caracteres">
@@ -2152,7 +2210,7 @@ body.user-mode:not(.dark-mode) #ahora-view .acn-toolbar select,body.user-mode:no
 
 <div id="preferences-modal" class="u-modal">
   <div class="u-modal-card">
-    <div class="m-head"><i class="fa-solid fa-sliders" style="color:#38BDF8"></i> Preferencias de alertas<button class="m-x" onclick="closeModal('preferences-modal')">✕</button></div>
+    <div class="m-head"><i class="fa-solid fa-sliders" style="color:#38BDF8"></i> Preferencias de alertas<button class="m-x" onclick="closeModal('preferences-modal')"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
     <div class="m-body">
       <div class="pref-note">Elige únicamente la información que necesitas. Puedes cambiar estas preferencias en cualquier momento.</div>
       <label>Tipos de alerta</label>
@@ -3246,6 +3304,7 @@ function showAlertFocus(a) {
   const knownRef=alertKnownReference(a);
   document.getElementById('sac-meta').textContent=`${alertSourceLabel(a)} · ${precisionLabel(a)}${knownRef?' · Referencia: '+knownRef:''} · ${reportedTimeLabel(a.time)}`;
   document.querySelector('#selected-alert-card .sac-actions .btn-outline')?.toggleAttribute('hidden', !isNavigableAlert(a));
+  card.style.setProperty('--sac-color', visual.color);
   const icon=document.getElementById('sac-icon'); icon.style.background=visual.color; icon.innerHTML=`<i class="fa-solid ${visual.icon}"></i>`;
   banner.classList.add('open'); card.classList.add('open');
 }
@@ -3262,12 +3321,15 @@ function shareFocusedAlert() { if(currentAlertId!=null) shareAlert(currentAlertI
 function incidentVisual(alert) {
   const text=((alert.title || '')+' '+(alert.detail || '')).toLowerCase();
   if(isAlertExpired(alert)) return { color:'#64748B', icon:'fa-clock-rotate-left', label:'Alerta anterior' };
-  if(/incendio|fuego|explosi/.test(text)) return { color:'#DC2626', icon:'fa-fire-flame-curved', label:'Incendio' };
-  if(/inundaci|encharcamiento|desbord/.test(text)) return { color:'#0284C7', icon:'fa-water', label:'Inundación' };
-  if(/bloqueo|cierre|manifestaci|protesta/.test(text)) return { color:'#E11D48', icon:'fa-road-barrier', label:'Bloqueo' };
-  if(/asalto|robo|balacera|arma|homicidio|secuestro/.test(text)) return { color:'#7C3AED', icon:'fa-shield-halved', label:'Seguridad' };
-  if(/volcadura|choque|accidente|colisi/.test(text)) return { color:'#EA580C', icon:'fa-car-burst', label:'Accidente' };
-  if(/tráfico|trafico|congesti|carga vehicular/.test(text)) return { color:'#D97706', icon:'fa-car-side', label:'Tráfico' };
+  if(/incendio|fuego|explosi/.test(text)) return { color:'#DC2626', icon:'fa-fire', label:'Incendio' };
+  if(/inundaci|encharcamiento|desbord|lluvia|granizo|tormenta/.test(text)) return { color:'#0284C7', icon:'fa-cloud-showers-heavy', label:'Lluvia / inundación' };
+  if(/niebla|neblina|humo/.test(text)) return { color:'#0E7490', icon:'fa-smog', label:'Visibilidad reducida' };
+  if(/obra|mantenimiento|reparaci|repavimenta/.test(text)) return { color:'#CA8A04', icon:'fa-person-digging', label:'Obras' };
+  if(/bloqueo|cierre|manifestaci|protesta/.test(text)) return { color:'#E11D48', icon:'fa-ban', label:'Bloqueo' };
+  if(/asalto|robo|balacera|arma|disparo|homicidio|secuestro/.test(text)) return { color:'#7C3AED', icon:'fa-shield-halved', label:'Seguridad' };
+  if(/volcadura|choque|accidente|colisi|atropell/.test(text)) return { color:'#EA580C', icon:'fa-car-burst', label:'Accidente' };
+  if(/aver[ií]|descompuest|varado|falla mec|desponch/.test(text)) return { color:'#0D9488', icon:'fa-wrench', label:'Vehículo averiado' };
+  if(/tráfico|trafico|congesti|carga vehicular|lento/.test(text)) return { color:'#D97706', icon:'fa-traffic-light', label:'Tráfico' };
   return alert.category === 'security' ? { color:'#DC2626', icon:'fa-user-shield', label:'Seguridad' } : { color:'#F97316', icon:'fa-triangle-exclamation', label:'Incidencia vial' };
 }
 const INCIDENT_PIN_PATH='M22 52.2c-1.3 0-2.3-.5-3.3-1.6C14.6 46 4 33.9 4 20.9 4 10.9 12.1 2.8 22 2.8s18 8.1 18 18.1c0 13-10.6 25.1-14.7 29.7-1 1.1-2 1.6-3.3 1.6Z';
@@ -3472,7 +3534,7 @@ function openAlertDetail(id) {
   document.getElementById('am-loc').textContent = (a.precision && a.precision !== 'punto' ? (a.precision === 'tramo' && a.corridor ? '🛣️ ' + a.corridor + ' · km' : '📍 aprox ' + a.precision) + ' · ' : '') + a.location;
   document.getElementById('am-desc').textContent = a.detail || 'Sin descripción detallada.';
   document.getElementById('am-desc').textContent += (a.state ? '\n📍 Estado: ' + a.state : '');
-  document.getElementById('am-time').textContent = `Reportado: ${formatAlertTime(a.time)} · ${detectionDelayLabel(a)}`;
+  document.getElementById('am-time').textContent = `${formatAlertTime(a.time)} · ${detectionDelayLabel(a)}`;
   document.getElementById('am-source').textContent = alertSourceLabel(a);
   document.getElementById('am-precision').textContent = precisionLabel(a) + (a.km !== null && a.km !== undefined && a.km !== '' ? ' · km reportado ' + a.km : '');
   if(hasAlertPoint(a) && estimatedRadiusMeters(a)) document.getElementById('am-precision').textContent += ' · área estimada: radio ' + estimatedRadiusLabel(a);
@@ -3481,12 +3543,19 @@ function openAlertDetail(id) {
   if(knownReference) document.getElementById('am-precision').textContent += ' · referencia: ' + knownReference;
   if(hasAlertPoint(a) && a.location_confidence != null && Number.isFinite(Number(a.location_confidence))) document.getElementById('am-precision').textContent += ' · confianza ' + Math.round(Number(a.location_confidence) * 100) + '%';
   const distance = alertDistanceKm(a);
-  document.getElementById('am-distance-row').style.display = distance === null ? 'none' : 'block';
+  document.getElementById('am-distance-row').style.display = distance === null ? 'none' : 'flex';
   document.getElementById('am-distance').textContent = distance === null ? '' : `${distance < 10 ? distance.toFixed(1) : Math.round(distance)} km desde tu ubicación${locationTier(a)==='area' ? ' (centro de la zona)' : ''}`;
+  const visual = incidentVisual(a);
+  const card = document.getElementById('alert-modal-card');
+  card.style.setProperty('--am-color', visual.color);
+  document.getElementById('am-icon').innerHTML = `<i class="fa-solid ${visual.icon}"></i>`;
+  const sevEl = document.getElementById('am-sev'), sev = alertSeverity(a);
+  if(!isAlertExpired(a) && sev !== 'medium') { sevEl.textContent = 'Gravedad ' + (sev === 'critical' ? 'crítica' : 'alta'); sevEl.style.display = 'inline-block'; sevEl.style.background = sev === 'critical' ? '#DC2626' : '#F59E0B'; sevEl.style.color = '#fff'; }
+  else sevEl.style.display = 'none';
   const cat = document.getElementById('am-cat');
-  cat.textContent = a.category === 'security' ? 'Seguridad' : 'Vial';
-  cat.style.background = a.category === 'security' ? 'rgba(217,48,37,.12)' : 'rgba(30,142,62,.12)';
-  cat.style.color = a.category === 'security' ? '#d93025' : '#1e8e3e';
+  cat.textContent = visual.label;
+  cat.style.background = `color-mix(in srgb, ${visual.color} 16%, transparent)`;
+  cat.style.color = visual.color;
   const tr = document.getElementById('am-traffic');
   if(a.category === 'road' && a.trafico) { const t = trafficStyle(a.trafico); tr.textContent = t.label; tr.style.display = 'inline-block'; tr.style.background = t.bg; tr.style.color = t.color; }
   else { tr.style.display = 'none'; }
@@ -3499,6 +3568,8 @@ function openAlertDetail(id) {
   document.getElementById('alert-modal').style.display = 'flex';
 }
 function closeAlertModal() { document.getElementById('alert-modal').style.display = 'none'; }
+document.addEventListener('keydown', e => { if(e.key === 'Escape') { const m = document.getElementById('alert-modal'); if(m && m.style.display === 'flex') closeAlertModal(); } });
+document.addEventListener('click', e => { if(e.target && e.target.id === 'alert-modal') closeAlertModal(); });
 function correctionMessage(message,error=false) {
   const box=document.getElementById('corr-preview'); if(!box) return;
   box.textContent=message; box.style.color=error?'var(--danger)':'var(--text-muted)';
