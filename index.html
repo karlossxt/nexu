@@ -230,26 +230,6 @@ button:focus-visible, [role="button"]:focus-visible, .alert-card:focus-visible, 
 .landing-mode.user{ border:none; background:linear-gradient(105deg,#FFC02E,#FF9600); color:#101214; box-shadow:0 9px 25px rgba(255,176,0,.2); }
 .landing-mode.full{ border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.08); color:#fff; }
 .landing-mode small{ display:block; margin-top:3px; font-size:10px; font-weight:500; opacity:.75; }
-.start-gate{ display:none; position:fixed; inset:0; z-index:24000; align-items:center; justify-content:center; padding:20px; overflow:auto; background:radial-gradient(circle at 15% 20%,rgba(25,199,232,.14),transparent 30%),radial-gradient(circle at 85% 80%,rgba(16,185,129,.12),transparent 28%),#05070A; }
-.start-gate.open{ display:flex; }
-.start-card{ width:min(760px,100%); padding:30px; border:1px solid rgba(255,255,255,.14); border-radius:24px; color:#EEF4FA; background:linear-gradient(145deg,rgba(17,25,35,.98),rgba(5,8,12,.98)); box-shadow:0 30px 90px rgba(0,0,0,.62); text-align:center; }
-.start-mark{ width:58px; height:58px; display:grid; place-items:center; margin:0 auto 14px; border-radius:18px; color:#061116; background:linear-gradient(145deg,#7DDFF1,#19C7E8); font-size:23px; }
-.start-card h2{ margin:0 0 7px; font-size:25px; }
-.start-card>p{ margin:0 auto 22px; max-width:580px; color:#9EABB8; font-size:13px; line-height:1.55; }
-.start-picker{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-.start-choice{ min-height:180px; padding:22px; display:flex; flex-direction:column; align-items:flex-start; text-align:left; gap:10px; color:#DDE7F0; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.14); border-radius:18px; box-shadow:none; }
-.start-choice:hover{ transform:translateY(-2px); border-color:rgba(125,223,241,.55); background:rgba(255,255,255,.07); }
-.start-choice>i{ width:42px; height:42px; display:grid; place-items:center; border-radius:12px; color:#061116; background:#7DDFF1; font-size:18px; }
-.start-choice.analysis>i{ background:#A7F3D0; }
-.start-choice b{ font-size:17px; }
-.start-choice small{ display:block; margin-top:5px; color:#98A7B6; font-size:11px; font-weight:500; line-height:1.45; }
-.start-choice em{ margin-top:auto; color:#7DDFF1; font-size:10px; font-style:normal; font-weight:800; letter-spacing:.04em; }
-.start-choice.analysis em{ color:#6EE7B7; }
-.start-note{ margin:16px auto 0!important; max-width:580px; color:#8FA0AF!important; font-size:10.5px!important; line-height:1.5!important; }
-.start-note a{ color:#7DDFF1; font-weight:700; text-decoration:none; }
-.start-note a:hover{ text-decoration:underline; }
-.start-later{ width:auto; margin:12px auto 0; padding:7px 12px; color:#95A3B1; background:transparent; border:0; box-shadow:none; font-size:11px; }
-.start-later:hover{ color:#fff; box-shadow:none; }
 .company-only{ display:none!important; }
 body.user-mode .feature-soon{ display:none!important; }
 .onboarding{ display:none; position:fixed; inset:0; z-index:25000; align-items:center; justify-content:center; padding:18px; background:rgba(2,6,12,.72); backdrop-filter:blur(8px); }
@@ -511,6 +491,16 @@ body.left-rail #panel-left .u-rail{ display:flex; }
 .incident-pin.is-selected{ transform:translateY(-2px) scale(1.07); }
 .incident-pin.is-selected::before{ opacity:1; transform:translate(-50%,-50%) scale(1); }
 .incident-pin.is-selected .incident-pin-shape{ filter:drop-shadow(0 8px 10px rgba(15,23,42,.44)); }
+/* PINES · gravedad visible */
+.incident-pin .pin-sev{ position:absolute; top:-3px; right:-3px; z-index:3; width:16px; height:16px; border-radius:50%; border:2px solid #fff; background:#F59E0B; color:#fff; font:800 10px/12px system-ui,sans-serif; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,.35); }
+.incident-pin .pin-sev.critical{ background:#DC2626; }
+.incident-pin.compact .pin-sev{ width:13px; height:13px; font-size:8px; line-height:9px; }
+.incident-cluster .cluster-crit{ position:absolute; top:-5px; right:-5px; min-width:18px; height:18px; padding:0 4px; border-radius:9px; background:#DC2626; color:#fff; border:2px solid #fff; font:800 10px/14px system-ui,sans-serif; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,.35); }
+.pop-head{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:7px; }
+.pop-type{ display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:999px; font-size:10.5px; font-weight:800; color:var(--incident,#F97316); background:color-mix(in srgb,var(--incident,#F97316) 14%,transparent); border:1px solid color-mix(in srgb,var(--incident,#F97316) 40%,transparent); }
+.pop-sev{ padding:3px 8px; border-radius:999px; font-size:10.5px; font-weight:800; color:#fff; background:#F59E0B; }
+.pop-sev.critical{ background:#DC2626; }
+.pop-time{ margin-left:auto; font-size:10.5px; color:#80868b; }
 .incident-pin.compact{ width:31px; height:38px; }
 .incident-pin.compact i{ font-size:12px; }
 .incident-cluster-wrap{ background:transparent; border:0; }
@@ -607,13 +597,6 @@ body.user-mode:not(.dark-mode) .ac-location{ color:#667085; }
 .u-modal{ display:none; position:fixed; inset:0; z-index:12000; background:rgba(2,4,8,.72); align-items:center; justify-content:center; padding:16px; }
 .u-modal.open{ display:flex; }
 .u-modal-card{ width:100%; max-width:440px; max-height:90vh; overflow-y:auto; background:#0C1017; border:1px solid #1E293B; border-radius:14px; box-shadow:0 20px 70px rgba(0,0,0,.6); color:#fff; }
-.alert-center{ align-items:stretch; justify-content:stretch; padding:0; background:#F5F7FA; color:#172033; overflow:auto; }
-.alert-center-shell{ width:100%; min-height:100%; box-sizing:border-box; }
-.acn-header{ position:sticky; top:0; z-index:2; display:flex; align-items:center; gap:12px; padding:15px 22px; background:rgba(255,255,255,.97); border-bottom:1px solid #D8E1EC; box-shadow:0 3px 14px rgba(15,23,42,.08); }
-.acn-title{ flex:1; min-width:0; }
-.acn-title h2{ margin:0; font-size:20px; }
-.acn-title p{ margin:4px 0 0; color:#667085; font-size:11px; }
-.acn-close{ width:38px; height:38px; padding:0; border-radius:10px; background:#F1F5F9; color:#475467; }
 .acn-toolbar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:12px 22px; background:#fff; border-bottom:1px solid #E4E7EC; }
 .acn-toolbar select,.acn-toolbar input{ width:auto; min-width:145px; margin:0; padding:9px 11px; border-radius:9px; background:#fff; color:#172033; border-color:#D0D5DD; }
 .acn-toolbar input{ flex:1; min-width:210px; }
@@ -652,18 +635,12 @@ body.user-mode:not(.dark-mode) .ac-location{ color:#667085; }
 .loc-confidence{ color:#027A48; font-weight:800; }
 .loc-confidence.low{ color:#B54708; }
 .acn-empty{ padding:50px; text-align:center; color:#667085; }
-body.dark-mode .alert-center{ background:#080C12; color:#F8FAFC; }
-body.dark-mode .acn-header,body.dark-mode .acn-toolbar,body.dark-mode .diag-card,body.dark-mode .acn-card,body.dark-mode .acn-chart,body.dark-mode .acn-rank-card{ background:#0F151F; border-color:#263244; color:#F8FAFC; }
+body.dark-mode .acn-toolbar,body.dark-mode .diag-card,body.dark-mode .acn-card,body.dark-mode .acn-chart,body.dark-mode .acn-rank-card{ background:#0F151F; border-color:#263244; color:#F8FAFC; }
 body.dark-mode .acn-toolbar select,body.dark-mode .acn-toolbar input{ background:#151E2C; border-color:#344054; color:#F8FAFC; }
 body.dark-mode .acn-chart h4,body.dark-mode .acn-rank-card h4,body.dark-mode .acn-analytics-head span,body.dark-mode .acn-rank-row{ color:#98A2B3; }
 body.dark-mode .acn-rank-bar{ background:#263244; }
 @media(max-width:980px){ .acn-charts{grid-template-columns:1fr 1fr}.acn-chart:first-child{grid-column:1/-1}.acn-ranking{grid-template-columns:1fr 1fr} }
 @media(max-width:700px){
-  .alert-center{ height:100dvh; overscroll-behavior:contain; }
-  .acn-header{ padding:11px 12px; position:sticky; }
-  .acn-title h2{ font-size:16px; line-height:1.2; }
-  .acn-title p{ display:none; }
-  .acn-close{ width:42px; height:42px; flex:0 0 auto; }
   .acn-toolbar{ display:grid; grid-template-columns:1fr 1fr; padding:10px; gap:7px; position:sticky; top:65px; z-index:1; box-shadow:0 4px 12px rgba(15,23,42,.06); }
   .acn-toolbar select,.acn-toolbar input{ width:100%; min-width:0; min-height:43px; font-size:12px; }
   .acn-toolbar input{ grid-column:1/-1; }
@@ -747,6 +724,68 @@ body.user-mode:not(.dark-mode) .geo-option{ color:#172033; border-color:#E5E7EB;
 .rm-cancel{ background:#131822; color:#9CA3AF; }
 .rm-main{ background:#2563EB; color:#fff; }
 .rm-main:hover{ filter:brightness(1.12); }
+
+/* ASISTENTE DE REPORTE */
+.ent-card{ max-width:520px; color:var(--text,#fff); }
+.ent-body{ padding-bottom:8px; color:var(--text,#fff); }
+.ent-progress{ display:flex; gap:5px; margin:0 0 9px; }
+.ent-progress-seg{ flex:1; height:4px; border-radius:999px; background:var(--border,#1E293B); transition:background .18s ease; }
+.ent-progress-seg.done{ background:#10B981; }
+.ent-progress-seg.active{ background:#2563EB; }
+.ent-step-meta{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:14px; color:var(--text-muted,#9CA3AF); font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
+.ent-step-meta b{ color:#60A5FA; font-weight:800; }
+.ent-step{ display:none; }
+.ent-step.active{ display:block; animation:entStepIn .18s ease; }
+@keyframes entStepIn{ from{ opacity:0; transform:translateY(4px); } to{ opacity:1; transform:none; } }
+.ent-step-title{ margin:0 0 12px; color:var(--text,#fff); font-size:14px; line-height:1.3; }
+.ent-optional{ color:var(--text-muted,#6B7280); font-size:9.5px; font-weight:600; letter-spacing:0; text-transform:none; }
+.ent-seg{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+.ent-seg-btn{ display:flex; align-items:center; justify-content:center; gap:7px; min-height:42px; padding:9px 10px; border:1px solid var(--border,#1E293B); border-radius:10px; background:var(--card-bg,#131822); color:var(--text-muted,#9CA3AF); font-size:12px; font-weight:800; cursor:pointer; transition:border-color .15s,background .15s,color .15s; }
+.ent-seg-btn i{ font-size:13px; }
+.ent-seg-btn.active{ border-color:#2563EB; background:rgba(37,99,235,.16); color:#93C5FD; }
+.ent-body input,.ent-body select,.ent-body textarea{ margin-bottom:13px; }
+.ent-body textarea{ font-family:inherit; }
+.ent-grid2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.ent-field{ min-width:0; }
+.ent-field label{ display:block; margin:0 0 6px; }
+.ent-hint{ display:flex; align-items:flex-start; gap:7px; margin:2px 0 0; color:var(--text-muted,#9CA3AF); font-size:10.5px; line-height:1.45; }
+.ent-hint i{ margin-top:1px; color:#38BDF8; }
+.ent-sev{ display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-bottom:14px; }
+.ent-sev-btn{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; min-height:62px; padding:8px 5px; border:1px solid var(--border,#1E293B); border-radius:10px; background:var(--card-bg,#131822); color:var(--text-muted,#9CA3AF); font-size:10px; font-weight:800; text-align:center; cursor:pointer; transition:border-color .15s,background .15s,color .15s; }
+.ent-sev-btn i{ font-size:15px; }
+.ent-sev-btn.active[data-sev="info"]{ border-color:#38BDF8; background:rgba(56,189,248,.14); color:#7DD3FC; }
+.ent-sev-btn.active[data-sev="precaucion"]{ border-color:#F59E0B; background:rgba(245,158,11,.14); color:#FBBF24; }
+.ent-sev-btn.active[data-sev="importante"]{ border-color:#EF4444; background:rgba(239,68,68,.14); color:#F87171; }
+.ent-summary{ display:flex; flex-direction:column; margin-bottom:12px; overflow:hidden; border:1px solid var(--border,#1E293B); border-radius:12px; background:var(--card-bg,#131822); }
+.ent-summary-row{ display:grid; grid-template-columns:104px minmax(0,1fr); gap:10px; padding:10px 12px; border-bottom:1px solid var(--border,#1E293B); font-size:11.5px; line-height:1.45; }
+.ent-summary-row:last-child{ border-bottom:0; }
+.ent-summary-row > span{ padding-top:2px; color:var(--text-muted,#6B7280); font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }
+.ent-summary-row > b{ color:var(--text,#fff); font-weight:600; overflow-wrap:anywhere; }
+.ent-error{ display:none; align-items:flex-start; gap:7px; margin:0 0 12px; padding:9px 11px; border:1px solid rgba(239,68,68,.45); border-radius:9px; background:rgba(239,68,68,.12); color:#FCA5A5; font-size:11px; line-height:1.45; }
+.ent-error.show{ display:flex; }
+.ent-error i{ margin-top:1px; }
+.ent-foot{ border-top:1px solid var(--border,#1E293B); }
+.ent-foot .rm-cancel,.ent-foot .rm-main{ display:flex; align-items:center; justify-content:center; gap:7px; }
+.ent-foot .rm-main[disabled],.ent-foot .rm-cancel[disabled]{ opacity:.6; cursor:wait; }
+.ent-hidden{ display:none !important; }
+#entry-modal.ent-security .ent-lane-field,#entry-modal.ent-security .ent-traffic-field{ display:none; }
+@media(max-width:520px){
+  .ent-grid2{ grid-template-columns:1fr; gap:0; }
+  .ent-sev{ grid-template-columns:1fr; }
+  .ent-sev-btn{ flex-direction:row; min-height:44px; }
+  .ent-summary-row{ grid-template-columns:1fr; gap:3px; }
+  .ent-summary-row > span{ padding-top:0; }
+}
+body.user-mode:not(.dark-mode) .ent-step-meta b{ color:#1D65D8; }
+body.user-mode:not(.dark-mode) .ent-seg-btn,
+body.user-mode:not(.dark-mode) .ent-sev-btn{ background:#F7F9FC; border-color:#D8E1EC; color:#475467; }
+body.user-mode:not(.dark-mode) .ent-seg-btn.active{ background:rgba(37,99,235,.10); border-color:#2563EB; color:#1D4ED8; }
+body.user-mode:not(.dark-mode) .ent-sev-btn.active[data-sev="info"]{ background:rgba(2,132,199,.10); border-color:#0284C7; color:#0369A1; }
+body.user-mode:not(.dark-mode) .ent-sev-btn.active[data-sev="precaucion"]{ background:rgba(217,119,6,.10); border-color:#D97706; color:#B45309; }
+body.user-mode:not(.dark-mode) .ent-sev-btn.active[data-sev="importante"]{ background:rgba(220,38,38,.10); border-color:#DC2626; color:#B42318; }
+body.user-mode:not(.dark-mode) .ent-summary{ background:#F7F9FC; border-color:#D8E1EC; }
+body.user-mode:not(.dark-mode) .ent-summary-row{ border-color:#E4E7EC; }
+body.user-mode:not(.dark-mode) .ent-error{ background:#FEF3F2; border-color:#FDA29B; color:#B42318; }
 
 /* FLOTANTES DEL MAPA */
 #circula{ position:static; z-index:5000; padding:7px 10px; border-radius:10px; font-size:10px; font-weight:800; box-shadow:none; backdrop-filter:blur(6px); cursor:pointer; transition:filter .15s; }
@@ -957,9 +996,6 @@ body.user-mode.left-rail .leaflet-bottom.leaflet-left{ margin-left:56px; }
   .landing-access{ padding:11px; }
   .landing-modes{ grid-template-columns:1fr; }
   .landing-mode{ min-height:54px; }
-  .start-card{ padding:24px 16px; }
-  .start-picker{ grid-template-columns:1fr; }
-  .start-choice{ min-height:142px; }
   .toast-important{ left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom)); max-width:none; }
   .ris-controls{ grid-template-columns:1fr; }
   .feed-tools{ grid-template-columns:1fr; }
@@ -1107,18 +1143,6 @@ body.user-mode:not(.dark-mode) .leaflet-control-zoom a:hover{background:#1478FF;
 body.user-mode:not(.dark-mode) .traffic-legend{background:rgba(7,31,52,.94);border-color:rgba(82,142,194,.45);color:#EAF4FC}
 body.user-mode.dark-mode .future-tool b,body.user-mode.dark-mode .future-tool small{color:inherit}
 
-/* === FIX MÓVIL · CENTRO DE ALERTAS === */
-@media (max-width:700px){
-  body.alert-center-open{overflow:hidden;overscroll-behavior:none}
-  #alert-center-modal.alert-center{position:fixed;inset:0;width:100vw;height:100dvh;max-height:100dvh;padding:0;overflow:hidden;align-items:stretch;justify-content:stretch;z-index:14000;touch-action:pan-y}
-  #alert-center-modal .alert-center-shell{height:100dvh;min-height:0;max-height:100dvh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:calc(18px + env(safe-area-inset-bottom));box-sizing:border-box}
-  #alert-center-modal .acn-header{top:0;padding:12px 14px;padding-top:calc(12px + env(safe-area-inset-top));z-index:5}
-  #alert-center-modal .acn-close{flex:0 0 42px;width:42px;height:42px}
-  #alert-center-modal .acn-toolbar{padding:10px 14px;gap:7px}
-  #alert-center-modal .acn-toolbar input,#alert-center-modal .acn-toolbar select{width:100%;min-width:0;box-sizing:border-box}
-  #alert-center-modal .diag-grid,#alert-center-modal .acn-analytics,#alert-center-modal .acn-list{max-width:100%;box-sizing:border-box}
-}
-
 /* === CAPA CASETAS === */
 .toll-marker{width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:#16A34A;color:#fff;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);font-size:11px}
 .toll-popup b{display:block;margin-bottom:3px}.toll-popup small{color:#64748B}
@@ -1133,7 +1157,7 @@ body.user-mode:not(.dark-mode) .casetas-filter{color:#067647;background:#ECFDF3;
   body.user-mode #map{height:100%;width:100%}
   .mobile-app-nav{position:fixed;left:0;right:0;bottom:0;height:64px;padding:0 max(6px,env(safe-area-inset-right)) env(safe-area-inset-bottom) max(6px,env(safe-area-inset-left));box-sizing:content-box;background:rgba(5,7,10,.96);border-top:1px solid rgba(148,163,184,.22);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);z-index:12000;align-items:stretch;justify-content:space-around}
   body.user-mode .mobile-app-nav{display:flex}
-  .mobile-app-nav button{appearance:none;border:0;background:transparent;color:#94A3B8;box-shadow:none;margin:0;padding:7px 4px 5px;width:20%;min-width:0;min-height:56px;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:700 10px/1 'Inter',sans-serif;touch-action:manipulation}
+  .mobile-app-nav button{appearance:none;border:0;background:transparent;color:#94A3B8;box-shadow:none;margin:0;padding:7px 4px 5px;width:16.6667%;min-width:0;min-height:56px;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:700 10px/1 'Inter',sans-serif;touch-action:manipulation}
   .mobile-app-nav button i{font-size:19px;line-height:1}
   .mobile-app-nav button:active,.mobile-app-nav button.active{color:#60A5FA;background:rgba(37,99,235,.10)}
   body.user-mode:not(.dark-mode) .mobile-app-nav{background:rgba(255,255,255,.96);border-top-color:#D8E1EC}
@@ -1157,18 +1181,26 @@ body.user-mode:not(.dark-mode) .casetas-filter{color:#067647;background:#ECFDF3;
 /* ============================================
    ZERO VIAL · PANORAMA (HOME) + HONESTIDAD DE UBICACIÓN
    ============================================ */
-#panorama-view{display:none;flex:1;min-width:0;height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
-body.view-panorama #panorama-view{display:block}
-body.view-panorama .main-content{display:block;overflow:hidden}
-body.view-panorama #map,
-body.view-panorama #panel-left,
-body.view-panorama #panel-right,
-body.view-panorama #traffic-legend,
-body.view-panorama #heat-legend,
-body.view-panorama #panel-launcher,
-body.view-panorama #focus-banner,
-body.view-panorama #selected-alert-card{display:none!important}
-body.operator-mode #panorama-view{display:none!important}
+#ahora-view,#zonas-view{display:none;flex:1;min-width:0;height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+body.view-ahora #ahora-view,body.view-zonas #zonas-view{display:block}
+body.view-ahora .main-content,body.view-zonas .main-content{display:block;overflow:hidden}
+body.view-ahora #map,
+body.view-ahora #panel-left,
+body.view-ahora #panel-right,
+body.view-ahora #traffic-legend,
+body.view-ahora #heat-legend,
+body.view-ahora #panel-launcher,
+body.view-ahora #focus-banner,
+body.view-ahora #selected-alert-card,
+body.view-zonas #map,
+body.view-zonas #panel-left,
+body.view-zonas #panel-right,
+body.view-zonas #traffic-legend,
+body.view-zonas #heat-legend,
+body.view-zonas #panel-launcher,
+body.view-zonas #focus-banner,
+body.view-zonas #selected-alert-card{display:none!important}
+body.operator-mode #ahora-view,body.operator-mode #zonas-view{display:none!important}
 .pano-wrap{width:100%;max-width:1320px;margin:0 auto;padding:86px 18px 28px;box-sizing:border-box}
 .pano-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:15px}
 .pano-kicker{display:flex;align-items:center;gap:7px;color:#38BDF8;font-size:10px;font-weight:900;letter-spacing:.09em;text-transform:uppercase}
@@ -1282,10 +1314,47 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
 @media(min-width:701px) and (max-width:1439px){
   .nv-topbar .nt-btn span:not(.nt-count){display:none}
 }
+
+/* === AHORA · Centro de alertas embebido === */
+#ahora-alerts-block{scroll-margin-top:84px}
+#ahora-view .acn-toolbar{padding:0;margin:0 0 10px;background:transparent;border:0;position:static;box-shadow:none}
+#ahora-view .acn-toolbar select,#ahora-view .acn-toolbar input{background:var(--card-bg);color:var(--text);border-color:var(--border)}
+#ahora-view .acn-list{max-width:none;margin:0;padding:0}
+#ahora-view .acn-analytics{max-width:none;margin:14px 0 0;padding:0}
+#ahora-view .diag-grid{max-width:none;margin:0;padding:0}
+#ahora-view .acn-card{background:var(--card-bg);border-color:color-mix(in srgb,var(--sev) 55%,var(--border));box-shadow:none;color:var(--text)}
+#ahora-view .acn-card h3{color:var(--text)}
+#ahora-view .acn-card p{color:var(--text-muted)}
+#ahora-view .acn-card-top time{color:var(--text-muted)}
+#ahora-view .acn-card-foot{border-top-color:var(--border);color:var(--text-muted)}
+#ahora-view .acn-card-foot .source{color:var(--accent)}
+#ahora-view .acn-badge{background:color-mix(in srgb,var(--sev) 16%,var(--card-bg))}
+#ahora-view .acn-chart,#ahora-view .acn-rank-card,#ahora-view .diag-card{background:var(--card-bg);border-color:var(--border)}
+#ahora-view .acn-chart h4,#ahora-view .acn-rank-card h4,#ahora-view .acn-analytics-head span,#ahora-view .acn-rank-row,#ahora-view .diag-card span{color:var(--text-muted)}
+#ahora-view .acn-analytics-head h3{color:var(--text)}
+#ahora-view .acn-rank-bar{background:rgba(148,163,184,.16)}
+#ahora-view .acn-empty{color:var(--text-muted)}
+#ahora-view .ahora-health{margin-top:14px;padding:10px 12px;border:1px dashed var(--border);border-radius:12px}
+#ahora-view .ahora-health summary{cursor:pointer;color:var(--text-muted);font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+#ahora-view .ahora-health summary i{margin-right:6px;color:var(--accent)}
+#ahora-view .ahora-health .diag-grid{margin-top:10px}
+body.user-mode:not(.dark-mode) #ahora-view .acn-toolbar select,body.user-mode:not(.dark-mode) #ahora-view .acn-toolbar input{background:#fff}
+@media(max-width:700px){#ahora-alerts-block{scroll-margin-top:10px}}
+/* La barra de Fusión ocupa una segunda fila fija bajo la cabecera. */
+@media (min-width:701px){
+  body.user-mode .u-panel,
+  body.user-mode #panel-left,
+  body.user-mode.left-rail #panel-left { top:124px; }
+  body.user-mode .focus-banner,
+  #guest-banner { top:124px; }
+  .pano-wrap { padding-top:138px; }
+  #ahora-alerts-block { scroll-margin-top:136px; }
+  body.user-mode .leaflet-top.leaflet-right { top:114px; }
+}
 </style>
 <!-- FUSIÓN VíaSegura · estilos de las features nuevas -->
-<link rel="stylesheet" href="/fusion/fusion.css?v=7" />
-<link rel="stylesheet" href="/fusion/polish.css?v=1" />
+<link rel="stylesheet" href="/fusion/fusion.css?v=22" />
+<link rel="stylesheet" href="/fusion/polish.css?v=2" />
 </head>
 <body>
 
@@ -1319,28 +1388,10 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
   </div>
 </div>
 
-<div id="start-gate" class="start-gate" role="dialog" aria-modal="true" aria-labelledby="start-gate-title">
-  <div class="start-card">
-    <div class="start-mark"><i class="fa-solid fa-road"></i></div>
-    <h2 id="start-gate-title">¿Cómo usarás Zero Vial?</h2>
-    <p>Elige tu punto de partida. La vista de empresa todavía no está disponible, pero puedes comenzar con las herramientas actuales.</p>
-    <div class="start-picker">
-      <button class="start-choice traveler" onclick="chooseStartMode('traveler')">
-        <i class="fa-solid fa-car-side"></i><span><b>Viajero</b><small>Panorama nacional, rutas, clima y alertas cercanas para tus trayectos.</small></span><em>ENTRAR COMO VIAJERO →</em>
-      </button>
-      <button class="start-choice analysis" onclick="chooseStartMode('analysis')">
-        <i class="fa-solid fa-chart-line"></i><span><b>Análisis vial</b><small>Abre directo el mapa, el radar y los reportes para revisar incidencias y periodos.</small></span><em>ENTRAR A ANÁLISIS →</em>
-      </button>
-    </div>
-    <p class="start-note">¿Buscas uso empresarial? Aún estamos preparando esa vista. <a href="/servicios.html" target="_blank" rel="noopener">Conoce lo que estamos construyendo</a>.</p>
-    <button class="start-later" onclick="chooseStartMode('traveler')">Decidir después · usar panorama</button>
-  </div>
-</div>
-
 <div id="onboarding" class="onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
   <div class="onboarding-card">
     <div id="onboarding-icon" class="onboarding-icon"><i class="fa-solid fa-house"></i></div>
-    <h2 id="onboarding-title">Empieza por el panorama</h2>
+    <h2 id="onboarding-title">Empieza por Ahora</h2>
     <p id="onboarding-copy">Revisa el estado del país, las alertas más relevantes y la confianza de cada ubicación. El mapa queda a un toque.</p>
     <div id="onboarding-progress" class="onboarding-progress" aria-hidden="true"></div>
     <div class="onboarding-actions"><button class="onboarding-skip" onclick="finishOnboarding()">Omitir</button><button id="onboarding-back" class="btn-outline" onclick="moveOnboarding(-1)">Anterior</button><button id="onboarding-next" onclick="moveOnboarding(1)">Siguiente</button></div>
@@ -1376,13 +1427,13 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
 <div class="main-content">
   <div id="map"></div>
 
-  <!-- PANORAMA · VISTA PRINCIPAL (el mapa queda como pestaña) -->
-  <section id="panorama-view" aria-label="Panorama nacional">
+  <!-- AHORA · VISTA PRINCIPAL (el mapa queda como pestaña) -->
+  <section id="ahora-view" aria-label="Ahora">
     <div class="pano-wrap">
       <header class="pano-hero">
         <div>
-          <div class="pano-kicker"><i class="fa-solid fa-satellite-dish"></i> Panorama nacional</div>
-          <h1>Qué está pasando en las carreteras</h1>
+          <div class="pano-kicker"><i class="fa-solid fa-satellite-dish"></i> Ahora en las carreteras</div>
+          <h1>Qué está pasando ahora</h1>
           <p class="pano-sub" id="pano-sub">Cargando el pulso del país…</p>
         </div>
         <div class="pano-actions">
@@ -1410,13 +1461,39 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
       <div class="pano-grid">
         <div class="pano-main">
           <section class="pano-block">
-            <div class="pano-block-head"><h2>Ahora mismo</h2><span id="pano-updated"></span></div>
+            <div class="pano-block-head"><h2>Lo más importante</h2><span id="pano-updated"></span></div>
             <div id="pano-highlights" class="pano-highlights"></div>
-            <button class="pano-more" type="button" onclick="openAlertCenter()"><i class="fa-solid fa-list-check"></i> Ver el centro de alertas completo</button>
           </section>
-          <section class="pano-block" id="pano-feed-block">
-            <div class="pano-block-head"><h2>Últimas alertas</h2><span id="pano-feed-meta">Más recientes</span></div>
-            <div id="pano-feed" class="pano-feed"></div>
+          <section class="pano-block" id="ahora-alerts-block">
+            <div class="pano-block-head"><h2>Alertas en vivo</h2><span id="ahora-alerts-meta">Cargando…</span></div>
+            <div class="acn-toolbar ahora-filters" aria-label="Filtros de alertas">
+              <select id="acn-category" onchange="renderAlertCenter()"><option value="all">Todas las categorías</option><option value="road">Viales</option><option value="security">Seguridad</option><option value="blockage">Solo bloqueos</option></select>
+              <select id="acn-severity" onchange="renderAlertCenter()"><option value="all">Toda prioridad</option><option value="critical">Crítica</option><option value="high">Alta</option><option value="medium">Media</option></select>
+              <select id="acn-time" onchange="renderAlertCenter()"><option value="1">Última hora</option><option value="3" selected>Últimas 3 horas</option><option value="24">Últimas 24 horas</option><option value="168">Últimos 7 días</option><option value="720">Últimos 30 días</option><option value="2160">Últimos 90 días</option></select>
+              <select id="acn-state" onchange="renderAlertCenter()"><option value="">Todo México</option></select>
+              <input id="acn-search" oninput="renderAlertCenter()" placeholder="Buscar carretera, kilómetro, estado o incidente…" aria-label="Buscar alertas">
+            </div>
+            <div id="acn-list" class="acn-list ahora-list" aria-live="polite"></div>
+            <section class="acn-analytics" aria-label="Análisis de alertas filtradas">
+              <div class="acn-analytics-head">
+                <h3><i class="fa-solid fa-chart-line" style="color:#1570EF"></i> Análisis de las alertas visibles</h3>
+                <span id="acn-analysis-caption">Los gráficos respetan los filtros seleccionados.</span>
+              </div>
+              <button class="acn-analysis-toggle" onclick="toggleAlertCenterAnalytics(this)" aria-expanded="false"><i class="fa-solid fa-chevron-down"></i> <span>Mostrar gráficas</span></button>
+              <div class="acn-charts">
+                <article class="acn-chart"><h4>Actividad en el periodo</h4><div class="acn-chart-body"><canvas id="acn-trend-chart"></canvas></div></article>
+                <article class="acn-chart"><h4>Categorías</h4><div class="acn-chart-body"><canvas id="acn-category-chart"></canvas></div></article>
+                <article class="acn-chart"><h4>Prioridad y precisión</h4><div class="acn-chart-body"><canvas id="acn-quality-chart"></canvas></div></article>
+              </div>
+              <div class="acn-ranking">
+                <article class="acn-rank-card"><h4>Estados con más alertas</h4><div id="acn-state-ranking"></div></article>
+                <article class="acn-rank-card"><h4>Fuentes principales</h4><div id="acn-source-ranking"></div></article>
+              </div>
+            </section>
+            <details class="ahora-health">
+              <summary><i class="fa-solid fa-heart-pulse"></i> Salud de los datos</summary>
+              <div id="diag-grid" class="diag-grid"></div>
+            </details>
           </section>
         </div>
 
@@ -1446,15 +1523,56 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
     </div>
   </section>
 
+  <!-- ZONAS Y ANÁLISIS · contenedor de la siguiente fase -->
+  <section id="zonas-view" aria-label="Zonas y análisis">
+    <div class="pano-wrap">
+      <header class="pano-hero">
+        <div>
+          <div class="pano-kicker"><i class="fa-solid fa-layer-group"></i> Zonas y análisis</div>
+          <h1>Riesgo por zona y series históricas</h1>
+          <p class="pano-sub">Esta vista reunirá Radar Vial, Zonas de seguridad y Análisis histórico. Mientras terminamos la integración, cada herramienta sigue disponible desde aquí.</p>
+        </div>
+      </header>
+      <div class="pano-grid">
+        <div class="pano-main">
+          <section class="pano-block">
+            <div class="pano-block-head"><h2>Herramientas disponibles</h2><span>Acceso temporal</span></div>
+            <div class="pano-highlights">
+              <article class="pano-card">
+                <h3><i class="fa-solid fa-chart-line"></i> Radar Vial</h3>
+                <p class="pano-sub">Concentración de incidentes y corredores con mayor riesgo.</p>
+                <button class="pano-btn primary" type="button" onclick="openLegacyRadar()"><i class="fa-solid fa-chart-line"></i> Abrir Radar Vial</button>
+              </article>
+              <article class="pano-card">
+                <h3><i class="fa-solid fa-shield-halved"></i> Zonas de seguridad</h3>
+                <p class="pano-sub">Incidentes de seguridad agrupados por zona y precisión geográfica.</p>
+                <button class="pano-btn" type="button" onclick="if(window.Fusion&&Fusion.security)Fusion.security.open()"><i class="fa-solid fa-shield-halved"></i> Abrir zonas</button>
+              </article>
+              <article class="pano-card">
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> Análisis histórico</h3>
+                <p class="pano-sub">Tendencias, horas pico y comparativas de periodos anteriores.</p>
+                <button class="pano-btn" type="button" onclick="if(window.Fusion&&Fusion.security&&Fusion.security.openHistory)Fusion.security.openHistory()"><i class="fa-solid fa-clock-rotate-left"></i> Abrir histórico</button>
+              </article>
+            </div>
+          </section>
+        </div>
+        <aside class="pano-side" aria-label="Sobre esta vista">
+          <section class="pano-card">
+            <h3><i class="fa-solid fa-circle-info"></i> Siguiente paso</h3>
+            <p class="pano-sub">Estamos unificando filtros, mapas y análisis en una sola vista. Hasta entonces, estos accesos conservan el comportamiento actual.</p>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </section>
+
   <header class="nv-topbar" aria-label="Navegación principal">
     <div class="nt-brand"><img class="nt-logo" src="data:image/webp;base64,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" alt=""><strong>ZERO <span>VIAL</span></strong></div>
     <nav class="nt-nav">
-      <button class="nt-btn active" data-app-view="panorama" onclick="showPanoramaView()" title="Panorama nacional" aria-label="Panorama nacional"><i class="fa-solid fa-house"></i><span>Panorama</span></button>
+      <button class="nt-btn active" data-app-view="ahora" onclick="showAhoraView()" title="Ahora" aria-label="Ahora"><i class="fa-solid fa-house"></i><span>Ahora</span></button>
       <button class="nt-btn" data-app-view="map" onclick="showMapView();clearAlertFocus()" title="Mapa de alertas" aria-label="Mapa de alertas"><i class="fa-solid fa-map-location-dot"></i><span>Mapa</span></button>
-      <button class="nt-btn" onclick="showMapView();document.body.classList.remove('right-rail');switchPR('feed')" title="Alertas recibidas desde que abriste Zero Vial" aria-label="Alertas, 0 nuevas"><i class="fa-solid fa-triangle-exclamation"></i><span>Alertas</span><em id="nv-top-count" class="nt-count" aria-label="Alertas nuevas en esta sesión">0</em></button>
-      <button class="nt-btn" onclick="openAlertCenter()" title="Centro de alertas" aria-label="Centro de alertas"><i class="fa-solid fa-list-check"></i><span>Centro</span></button>
+      <button class="nt-btn" data-app-view="zonas" onclick="showZonasView()" title="Zonas y análisis" aria-label="Zonas y análisis"><i class="fa-solid fa-layer-group"></i><span>Zonas y análisis</span></button>
       <span class="nt-sep" aria-hidden="true"></span>
-      <button class="nt-btn" onclick="showMapView();document.body.classList.remove('right-rail');switchPR('ris')" title="Radar vial" aria-label="Radar vial"><i class="fa-solid fa-chart-line"></i><span>Radar Vial</span></button>
       <button class="nt-btn" onclick="openDirModal()" title="Directorio de emergencias" aria-label="Directorio de emergencias"><i class="fa-solid fa-phone-volume"></i><span>Directorio</span></button>
       <button class="nt-btn feature-soon" onclick="showComingSoon('Grupos de operación')" title="Grupos de operación" aria-label="Grupos de operación"><i class="fa-solid fa-comments"></i><span>Grupos</span></button>
     </nav>
@@ -1471,10 +1589,11 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
     </div>
   </header>
   <nav class="mobile-app-nav" aria-label="Navegación móvil">
-  <button type="button" class="active" data-app-view="panorama" onclick="showPanoramaView()" aria-label="Inicio"><i class="fa-solid fa-house"></i><span>Inicio</span></button>
-  <button type="button" onclick="openAlertCenter()" aria-label="Alertas"><i class="fa-solid fa-triangle-exclamation"></i><span>Alertas</span></button>
+  <button type="button" class="active" data-app-view="ahora" onclick="showAhoraView()" aria-label="Ahora"><i class="fa-solid fa-house"></i><span>Ahora</span></button>
+  <button type="button" data-app-view="zonas" onclick="showZonasView()" aria-label="Zonas y análisis"><i class="fa-solid fa-layer-group"></i><span>Zonas</span></button>
   <button type="button" onclick="openRouteModal()" aria-label="Ruta"><i class="fa-solid fa-route"></i><span>Ruta</span></button>
   <button type="button" data-app-view="map" onclick="showMapView()" aria-label="Mapa"><i class="fa-solid fa-map-location-dot"></i><span>Mapa</span></button>
+  <button type="button" onclick="window.Fusion && Fusion.fusion.open()" aria-label="Fusión" aria-haspopup="dialog" aria-controls="fz-fusion-sheet" aria-expanded="false"><i class="fa-solid fa-bolt"></i><span>Fusión</span></button>
   <button type="button" onclick="openAuthModal()" aria-label="Perfil"><i class="fa-solid fa-circle-user"></i><span>Perfil</span></button>
 </nav>
   <div id="guest-banner"><i class="fa-solid fa-circle-info"></i><span>Modo invitado: tus preferencias sólo se guardan en este dispositivo.</span><button onclick="openAuthModal()"><i class="fa-solid fa-user-plus"></i> Crear cuenta</button></div>
@@ -1767,36 +1886,102 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
     </div>
   </div>
 
-  <!-- MODAL: INGRESAR ALERTA -->
+  <!-- MODAL: REPORTAR INCIDENTE (ASISTENTE DE 4 PASOS) -->
   <div id="entry-modal" class="u-modal">
-    <div class="u-modal-card">
-      <div class="m-head"><i class="fa-solid fa-plus" style="color:#2563EB;"></i> Ingresar Alerta<button class="m-x" onclick="closeEntryModal()">✕</button></div>
-      <div class="m-body">
-        <label>Título del evento</label>
-        <input id="ent-title" placeholder="Ej. Accidente en km 45 de la M40" />
-        <label>Categoría</label>
-        <select id="ent-cat">
-          <option value="road">🚗 Vial</option>
-          <option value="security">🛡 Seguridad</option>
-        </select>
-        <label>Ubicación (se geocodifica)</label>
-        <input id="ent-loc" placeholder="Ej. Querétaro, M40" />
-        <label>Estado</label>
-        <select id="ent-state"></select>
-        <label>Tráfico (solo vial)</label>
-        <select id="ent-trafico">
-          <option value="">— Sin dato —</option>
-          <option value="fluido">Flujo normal</option>
-          <option value="moderado">Moderado / reducción de carriles</option>
-          <option value="detenido">Detenido / bloqueo total</option>
-        </select>
-        <label>Detalle</label>
-        <textarea id="ent-detail" placeholder="Descripción breve (máx 280 caracteres)" style="height:64px; resize:vertical;"></textarea>
-        <label style="display:flex; align-items:center; gap:8px; margin-top:4px;"><input type="checkbox" id="ent-imp" style="width:auto; margin:0; width:15px; height:15px;"> Alerta importante (alto riesgo)</label>
+    <div class="u-modal-card ent-card">
+      <div class="m-head"><i class="fa-solid fa-plus" style="color:#2563EB;"></i> Reportar incidente<button class="m-x" onclick="closeEntryModal()" aria-label="Cerrar reporte">✕</button></div>
+      <div class="m-body ent-body">
+        <div class="ent-progress" aria-hidden="true">
+          <span class="ent-progress-seg active"></span>
+          <span class="ent-progress-seg"></span>
+          <span class="ent-progress-seg"></span>
+          <span class="ent-progress-seg"></span>
+        </div>
+        <div class="ent-step-meta" aria-live="polite"><span id="ent-step-count">Paso 1 de 4</span><b id="ent-step-name">Tipo de incidente</b></div>
+        <div id="ent-error" class="ent-error" role="alert"><i class="fa-solid fa-circle-exclamation"></i><span></span></div>
+
+        <section class="ent-step active" data-step="1" aria-labelledby="ent-step-title-1">
+          <h3 class="ent-step-title" id="ent-step-title-1">Tipo de incidente</h3>
+          <div class="ent-seg" role="group" aria-label="Categoría del incidente">
+            <button type="button" class="ent-seg-btn active" data-cat="road" onclick="setEntryCat('road')"><i class="fa-solid fa-car"></i> Vial</button>
+            <button type="button" class="ent-seg-btn" data-cat="security" onclick="setEntryCat('security')"><i class="fa-solid fa-shield-halved"></i> Seguridad</button>
+          </div>
+          <select id="ent-cat" class="ent-hidden" tabindex="-1" aria-hidden="true">
+            <option value="road">Vial</option>
+            <option value="security">Seguridad</option>
+          </select>
+          <label for="fz-g-sub">Tipo de incidente</label>
+          <select id="fz-g-sub"></select>
+          <label for="ent-title">Título breve <span class="ent-optional">(opcional)</span></label>
+          <input id="ent-title" placeholder="Ej. Accidente en km 45 de la M40" autocomplete="off" />
+        </section>
+
+        <section class="ent-step" data-step="2" aria-labelledby="ent-step-title-2">
+          <h3 class="ent-step-title" id="ent-step-title-2">Ubicación</h3>
+          <label for="ent-loc">Ubicación</label>
+          <input id="ent-loc" placeholder="Ej. Querétaro, M40" autocomplete="off" />
+          <label for="ent-state">Estado</label>
+          <select id="ent-state"></select>
+          <p class="ent-hint"><i class="fa-solid fa-circle-info"></i><span>La ubicación se validará al publicar. Puedes escribir una ciudad, carretera o punto de referencia.</span></p>
+        </section>
+
+        <section class="ent-step" data-step="3" aria-labelledby="ent-step-title-3">
+          <h3 class="ent-step-title" id="ent-step-title-3">Gravedad, carril y acción</h3>
+          <label>Gravedad</label>
+          <div class="ent-sev" role="group" aria-label="Gravedad del incidente">
+            <button type="button" class="ent-sev-btn" data-sev="info" onclick="setEntrySeverity('info')"><i class="fa-solid fa-circle-info"></i><span>Informativa</span></button>
+            <button type="button" class="ent-sev-btn active" data-sev="precaucion" onclick="setEntrySeverity('precaucion')"><i class="fa-solid fa-triangle-exclamation"></i><span>Precaución</span></button>
+            <button type="button" class="ent-sev-btn" data-sev="importante" onclick="setEntrySeverity('importante')"><i class="fa-solid fa-circle-exclamation"></i><span>Importante</span></button>
+          </div>
+          <input type="hidden" id="fz-g-sev" value="precaucion" />
+          <div class="ent-grid2">
+            <div class="ent-field ent-lane-field">
+              <label for="fz-g-lane">Carril afectado</label>
+              <select id="fz-g-lane">
+                <option value="No aplica">No aplica</option>
+                <option value="Carril izquierdo">Carril izquierdo</option>
+                <option value="Carril central">Carril central</option>
+                <option value="Carril derecho">Carril derecho</option>
+                <option value="Acotamiento">Acotamiento</option>
+                <option value="Todos los carriles">Todos los carriles</option>
+                <option value="Cierre total">Cierre total</option>
+              </select>
+            </div>
+            <div class="ent-field">
+              <label for="fz-g-act">Acción recomendada</label>
+              <select id="fz-g-act">
+                <option value="No aplica">No aplica</option>
+                <option value="Reducir velocidad">Reducir velocidad</option>
+                <option value="Precaución al circular">Precaución al circular</option>
+                <option value="Usar ruta alterna">Usar ruta alterna</option>
+                <option value="Evitar la zona">Evitar la zona</option>
+                <option value="Detenerse en zona segura">Detenerse en zona segura</option>
+              </select>
+            </div>
+          </div>
+          <div class="ent-field ent-traffic-field">
+            <label for="ent-trafico">Tráfico (solo vial)</label>
+            <select id="ent-trafico">
+              <option value="">— Sin dato —</option>
+              <option value="fluido">Flujo normal</option>
+              <option value="moderado">Moderado / reducción de carriles</option>
+              <option value="detenido">Detenido / bloqueo total</option>
+            </select>
+          </div>
+          <label for="ent-detail">Descripción <span class="ent-optional">(opcional)</span></label>
+          <textarea id="ent-detail" maxlength="280" placeholder="Descripción breve (máx 280 caracteres)" style="height:64px; resize:vertical;"></textarea>
+          <input type="checkbox" id="ent-imp" class="ent-hidden" tabindex="-1" aria-hidden="true" />
+        </section>
+
+        <section class="ent-step" data-step="4" aria-labelledby="ent-step-title-4">
+          <h3 class="ent-step-title" id="ent-step-title-4">Confirmar</h3>
+          <div id="ent-summary" class="ent-summary"></div>
+          <p class="ent-hint"><i class="fa-solid fa-location-dot"></i><span>Al publicar se validará la ubicación y se enviará la alerta a la comunidad.</span></p>
+        </section>
       </div>
-      <div class="rm-foot" style="border-top:none; padding-top:0;">
-        <button class="rm-cancel" onclick="closeEntryModal()">Cancelar</button>
-        <button class="rm-main" onclick="submitEntryAlert()"><i class="fa-solid fa-paper-plane"></i> Publicar</button>
+      <div class="rm-foot ent-foot">
+        <button type="button" class="rm-cancel" id="ent-back" onclick="entryBack()">Cancelar</button>
+        <button type="button" class="rm-main" id="ent-next" onclick="entryNext()">Continuar <i class="fa-solid fa-arrow-right"></i></button>
       </div>
     </div>
   </div>
@@ -1856,41 +2041,6 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
         <button class="rm-cancel" onclick="closeModal('route-modal')">Cancelar</button>
         <button class="rm-main" onclick="showSelectedRoute()"><i class="fa-solid fa-map-location-dot"></i> Ver en el mapa</button>
       </div>
-    </div>
-  </div>
-
-  <div id="alert-center-modal" class="u-modal alert-center">
-    <div class="alert-center-shell">
-      <header class="acn-header">
-        <i class="fa-solid fa-triangle-exclamation" style="color:#F59E0B;font-size:20px"></i>
-        <div class="acn-title"><h2>Centro de Alertas Viales y de Seguridad</h2><p>Incidencias consolidadas con fuente, antigüedad y nivel de precisión geográfica.</p></div>
-        <button class="acn-close" onclick="closeAlertCenter()" aria-label="Cerrar Centro de Alertas"><i class="fa-solid fa-xmark"></i></button>
-      </header>
-      <div class="acn-toolbar">
-        <select id="acn-category" onchange="renderAlertCenter()"><option value="all">Todas las categorías</option><option value="road">Viales</option><option value="security">Seguridad</option><option value="blockage">Solo bloqueos</option></select>
-        <select id="acn-severity" onchange="renderAlertCenter()"><option value="all">Toda prioridad</option><option value="critical">Crítica</option><option value="high">Alta</option><option value="medium">Media</option></select>
-        <select id="acn-time" onchange="renderAlertCenter()"><option value="1">Última hora</option><option value="3" selected>Últimas 3 horas</option><option value="24">Últimas 24 horas</option><option value="168">Últimos 7 días</option><option value="720">Últimos 30 días</option><option value="2160">Últimos 90 días</option></select>
-        <select id="acn-state" onchange="renderAlertCenter()"><option value="">Todo México</option></select>
-        <input id="acn-search" oninput="renderAlertCenter()" placeholder="Buscar carretera, kilómetro, estado o incidente…">
-      </div>
-      <div id="diag-grid" class="diag-grid"></div>
-      <section class="acn-analytics" aria-label="Análisis de alertas filtradas">
-        <div class="acn-analytics-head">
-          <h3><i class="fa-solid fa-chart-line" style="color:#1570EF"></i> Análisis de las alertas visibles</h3>
-          <span id="acn-analysis-caption">Los gráficos respetan los filtros seleccionados.</span>
-        </div>
-        <button class="acn-analysis-toggle" onclick="toggleAlertCenterAnalytics(this)" aria-expanded="false"><i class="fa-solid fa-chevron-down"></i> <span>Mostrar gráficas</span></button>
-        <div class="acn-charts">
-          <article class="acn-chart"><h4>Actividad en el periodo</h4><div class="acn-chart-body"><canvas id="acn-trend-chart"></canvas></div></article>
-          <article class="acn-chart"><h4>Categorías</h4><div class="acn-chart-body"><canvas id="acn-category-chart"></canvas></div></article>
-          <article class="acn-chart"><h4>Prioridad y precisión</h4><div class="acn-chart-body"><canvas id="acn-quality-chart"></canvas></div></article>
-        </div>
-        <div class="acn-ranking">
-          <article class="acn-rank-card"><h4>Estados con más alertas</h4><div id="acn-state-ranking"></div></article>
-          <article class="acn-rank-card"><h4>Fuentes principales</h4><div id="acn-source-ranking"></div></article>
-        </div>
-      </section>
-      <main id="acn-list" class="acn-list"></main>
     </div>
   </div>
 
@@ -2017,7 +2167,7 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
         <div><label>Gravedad mínima</label><select id="pref-severity"><option value="low">Todas</option><option value="medium">Media o mayor</option><option value="high">Alta o crítica</option><option value="critical">Sólo crítica</option></select></div>
         <div class="full"><label>Estado</label><select id="pref-state"><option value="">Todo México</option></select></div>
         <div class="full"><label>Radio cuando el GPS esté activo</label><select id="pref-radius"><option value="10">10 km</option><option value="25">25 km</option><option value="50">50 km</option><option value="100">100 km</option><option value="250">250 km</option></select></div>
-        <div class="full"><label>Vista inicial al entrar</label><select id="pref-start-view"><option value="traveler">Panorama</option><option value="analysis">Mapa y radar</option></select></div>
+        <div class="full"><label>Vista inicial al entrar</label><select id="pref-start-view"><option value="traveler">Ahora</option><option value="analysis">Mapa y radar</option></select></div>
       </div>
       <button id="pref-save" onclick="saveUserPreferences()"><i class="fa-solid fa-floppy-disk"></i> Guardar preferencias</button>
       <div id="pref-message" class="correction-preview" style="display:none;margin-top:10px"></div>
@@ -2094,6 +2244,8 @@ function incidentClusterIcon(cluster) {
   const road = children.filter(m => m.category !== 'security').length;
   const security = count - road;
   const allExpired = count > 0 && children.every(m => m.expired);
+  const critical = children.filter(m => m.severity === 'critical' && !m.expired).length;
+  const critBadge = critical ? `<span class="cluster-crit" title="${critical} crítica${critical>1?'s':''}">${critical>99?'99+':critical}</span>` : '';
   const securityDominant = security > road;
   const color = allExpired ? '#64748B' : securityDominant ? '#DC2626' : '#F97316';
   const icon = allExpired ? 'fa-clock-rotate-left' : securityDominant ? 'fa-shield-halved' : 'fa-triangle-exclamation';
@@ -2102,7 +2254,7 @@ function incidentClusterIcon(cluster) {
   const countLabel = count > 999 ? '999+' : String(count);
   return L.divIcon({
     className: 'incident-cluster-wrap',
-    html: `<div class="incident-cluster" style="--cluster:${color};--cluster-soft:${colorWithAlpha(color, .2)};--cluster-size:${size}px" title="${countLabel} ${label.toLowerCase()}"><i class="fa-solid ${icon}"></i><b>${countLabel}</b></div>`,
+    html: `<div class="incident-cluster" style="--cluster:${color};--cluster-soft:${colorWithAlpha(color, .2)};--cluster-size:${size}px" title="${countLabel} ${label.toLowerCase()}"><i class="fa-solid ${icon}"></i><b>${countLabel}</b>${critBadge}</div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2]
   });
@@ -2185,7 +2337,6 @@ const HISTORY_MAX_ROWS = 6000;
 let historicalAlerts = [];
 let historicalLoadedAt = 0;
 let historicalLoadPromise = null;
-const zeroVialSessionStartedAt = Date.now();
 let userPreferences = { categories:['road','security'], severities:['critical','high','medium','low'], states:[], radius_km:50, time_window_hours:3, blockages_only:false, push_enabled:false };
 let correctionAlertId = null;
 const chartInstances = {};
@@ -2395,6 +2546,8 @@ function log(msg, type='info') {
 }
 
 window.onload = function() {
+  // La entrada siempre es en modo usuario: se descarta cualquier modo operador persistido.
+  try { localStorage.removeItem('nv_mode'); } catch(e) {}
   // Restaurar alertas de la sesión (máx 24h)
   try {
     const savedAlerts = localStorage.getItem('nv_alerts');
@@ -3120,11 +3273,13 @@ function incidentVisual(alert) {
 const INCIDENT_PIN_PATH='M22 52.2c-1.3 0-2.3-.5-3.3-1.6C14.6 46 4 33.9 4 20.9 4 10.9 12.1 2.8 22 2.8s18 8.1 18 18.1c0 13-10.6 25.1-14.7 29.7-1 1.1-2 1.6-3.3 1.6Z';
 function incidentPinIcon(alert, compact=false) {
   const visual=incidentVisual(alert), expired=isAlertExpired(alert);
-  const classes=['incident-pin',compact?'compact':'',alert.importante?'important':'',expired?'expired':''].filter(Boolean).join(' ');
+  const sev=alertSeverity(alert);
+  const classes=['incident-pin',compact?'compact':'',alert.importante?'important':'',expired?'expired':'',(!expired&&sev!=='medium')?'sev-'+sev:''].filter(Boolean).join(' ');
+  const sevBadge=(!expired&&sev!=='medium')?`<span class="pin-sev ${sev}" aria-hidden="true">${sev==='critical'?'!':''}</span>`:'';
   const width=compact?31:44, height=compact?38:54;
   return L.divIcon({
     className:'incident-pin-wrap',
-    html:`<div class="${classes}" data-alert-id="${alert.id}" style="--pin:${visual.color}" title="${visual.label}"><svg class="incident-pin-shape" viewBox="0 0 44 54" aria-hidden="true" focusable="false"><path d="${INCIDENT_PIN_PATH}"></path><circle class="pin-inner" cx="22" cy="20.9" r="12.7"></circle></svg><i class="fa-solid ${visual.icon}" aria-hidden="true"></i></div>`,
+    html:`<div class="${classes}" data-alert-id="${alert.id}" style="--pin:${visual.color}" title="${visual.label}"><svg class="incident-pin-shape" viewBox="0 0 44 54" aria-hidden="true" focusable="false"><path d="${INCIDENT_PIN_PATH}"></path><circle class="pin-inner" cx="22" cy="20.9" r="12.7"></circle></svg><i class="fa-solid ${visual.icon}" aria-hidden="true"></i>${sevBadge}</div>`,
     iconSize:[width,height],
     iconAnchor:[width/2,height-2],
     popupAnchor:[0,-(height-4)]
@@ -3154,6 +3309,12 @@ function activateWithKeyboard(event, action) {
   event.preventDefault();
   action();
 }
+const SEV_LABELS={critical:'Crítica',high:'Alta',medium:'Media'};
+function popupHeadHTML(alert) {
+  const v=incidentVisual(alert), sev=alertSeverity(alert), expired=isAlertExpired(alert);
+  const sevChip=(!expired&&sev!=='medium')?`<span class="pop-sev ${sev}">Gravedad ${SEV_LABELS[sev]}</span>`:'';
+  return `<div class="pop-head"><span class="pop-type" style="--incident:${v.color}"><i class="fa-solid ${v.icon}"></i> ${v.label}</span>${sevChip}<time class="pop-time">${reportedTimeLabel(alert.time)}</time></div>`;
+}
 function addMarkerToMap(alert) {
   if(!hasAlertPoint(alert)) return;
   // La seguridad que solo se ubica por municipio no se pinta como pin: se
@@ -3173,6 +3334,7 @@ function addMarkerToMap(alert) {
     });
     area.bindTooltip(`Zona aproximada · ${precisionLabel(alert)} · ${radiusLabel}`, {direction:'top'});
     area.bindPopup(`<div style="max-width:240px;">
+      ${popupHeadHTML(alert)}
       <b>${escapeHtml(alert.title)}</b><br>
       <span style="color:#5f6368;font-size:12px;">${escapeHtml(alert.location || 'Zona aproximada')}</span>
       <div class="location-meta"><span class="precision-chip"><i class="fa-solid fa-crosshairs"></i> ${precisionLabel(alert)}</span><span class="distance-chip"><i class="fa-solid fa-circle-dot"></i> Área de referencia: ${radiusLabel}</span>${referenceChipHTML(alert)}</div>
@@ -3197,12 +3359,13 @@ function addMarkerToMap(alert) {
   const stale = expired ? `<div style="margin-top:5px;"><span class="traffic-chip" style="background:rgba(154,160,166,.2); color:#80868b;">🕓 Hace más de 6h</span></div>` : '';
   m.bindPopup(`
     <div style="max-width:240px;">
+      ${popupHeadHTML(alert)}
       <b>${escapeHtml(alert.title)}</b><br>
       <span style="color:#5f6368;font-size:12px;">${escapeHtml(alert.location)}</span>${nota}${chip}${stale}
       <div class="alert-source"><i class="fa-solid fa-circle-info"></i> ${escapeHtml(alertSourceLabel(alert))}</div>
       <br><div style="display:flex;gap:6px;"><button onclick="openAlertDetail(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:none;border-radius:6px;background:#1976d2;color:#fff;cursor:pointer;font-size:12px;font-weight:600;">Ver detalle</button>${radius?`<button onclick="navigateToAlert(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:1px solid #2563EB;border-radius:6px;background:transparent;color:#60A5FA;cursor:pointer;font-size:12px;font-weight:600;">Cómo llegar</button>`:''}</div>
     </div>`);
-  m.category = alert.category; m.expired = expired; markers.addLayer(m);
+  m.category = alert.category; m.expired = expired; m.severity = alertSeverity(alert); markers.addLayer(m);
 }
 function alertCardHTML(a) {
   const t = trafficStyle(a.trafico || 'moderado');
@@ -3853,7 +4016,7 @@ async function submitAuth() {
   closeModal('auth-modal');
   continueAfterAuthentication();
 }
-async function logoutZeroVial() { if(supabaseClient) await supabaseClient.auth.signOut(); zeroVialUser=null; zeroVialRole='user'; setGuestMode(false); applyRoleAccess(); updateAccountButton(); closeModal('auth-modal'); document.getElementById('start-gate')?.classList.remove('open'); sessionStorage.removeItem('steele_entered'); const landing=document.getElementById('landing'); if(landing) landing.style.display='flex'; }
+async function logoutZeroVial() { if(supabaseClient) await supabaseClient.auth.signOut(); zeroVialUser=null; zeroVialRole='user'; setGuestMode(false); applyRoleAccess(); updateAccountButton(); closeModal('auth-modal'); sessionStorage.removeItem('steele_entered'); const landing=document.getElementById('landing'); if(landing) landing.style.display='flex'; }
 async function requestPasswordRecovery(emailOverride='',messageFn=authMessage) {
   if(!supabaseClient) return messageFn('Supabase todavía no está configurado.',true);
   const email=(emailOverride||document.getElementById('auth-email').value).trim().toLowerCase();
@@ -3973,7 +4136,7 @@ async function autoBoot() {
   await applyServerConfig();
 }
 const onboardingSteps=[
-  {icon:'house',title:'Empieza por el panorama',copy:'Revisa el estado del país, las alertas más relevantes y la confianza de cada ubicación. El mapa queda a un toque.'},
+  {icon:'house',title:'Empieza por Ahora',copy:'Revisa el estado del país, las alertas más relevantes y la confianza de cada ubicación. El mapa queda a un toque.'},
   {icon:'triangle-exclamation',title:'Revisa las alertas',copy:'Abre cada alerta para ver su fuente, antigüedad y nivel de precisión de la ubicación.'},
   {icon:'filter',title:'Ajusta los filtros',copy:'Elige estado, periodo, categoría o sólo bloqueos para concentrarte en lo que necesitas.'},
   {icon:'sliders',title:'Personaliza después',copy:'Guarda tus preferencias al iniciar sesión para recuperarlas en cualquier dispositivo.'}
@@ -3991,19 +4154,8 @@ function startModeStorageKey() {
 function getStartMode() {
   return localStorage.getItem(startModeStorageKey()) === 'analysis' ? 'analysis' : 'traveler';
 }
-function hasStartMode() {
-  return localStorage.getItem(startModeStorageKey()) !== null;
-}
 function setStartMode(value) {
   localStorage.setItem(startModeStorageKey(), value === 'analysis' ? 'analysis' : 'traveler');
-}
-function openStartGate() {
-  document.getElementById('start-gate')?.classList.add('open');
-}
-function chooseStartMode(value) {
-  setStartMode(value);
-  document.getElementById('start-gate')?.classList.remove('open');
-  enterPlatform('user');
 }
 function continueAfterAuthentication() {
   try { Object.keys(localStorage).filter(k=>k.startsWith('zero_vial_audience')).forEach(k=>localStorage.removeItem(k)); } catch(e) {}
@@ -4012,7 +4164,6 @@ function continueAfterAuthentication() {
     if(guestMode) localStorage.setItem(startModeStorageKey(), guestMode);
   }
   const landing=document.getElementById('landing'); if(landing) landing.style.display='none';
-  if(!hasStartMode()) { openStartGate(); return; }
   enterPlatform('user');
 }
 function renderOnboarding() {
@@ -4047,7 +4198,7 @@ function enterPlatform(mode='user') {
   const startMode = getStartMode();
   if(operator) setAppView('map');
   else {
-    setAppView(startMode === 'analysis' ? 'map' : 'panorama');
+    setAppView(startMode === 'analysis' ? 'map' : 'ahora');
     if(startMode === 'analysis') { document.body.classList.remove('right-rail'); switchPR('ris'); }
   }
   map.invalidateSize();
@@ -4061,13 +4212,13 @@ function setLiveStatus(on) { if(on&&centralWorkerLastSuccess) return updateCentr
 function toggleOperator() {
   if(!['operator','admin'].includes(zeroVialRole)) {
     document.body.classList.add('user-mode'); document.body.classList.remove('operator-mode');
-    setAppView('panorama');
+    setAppView('ahora');
     return trafficMessage('El Centro de Operaciones requiere una cuenta autorizada.');
   }
   const isUser = document.body.classList.toggle('user-mode');
   document.body.classList.toggle('operator-mode', !isUser);
   localStorage.setItem('nv_mode', isUser ? 'user' : 'operator');
-  setAppView(isUser ? 'panorama' : 'map');
+  setAppView(isUser ? 'ahora' : 'map');
   map.invalidateSize();
   if(isUser) { uxResponsive(); rebuildU(); }
 }
@@ -4469,20 +4620,41 @@ function togglePanoUnlocated() {
   renderPanorama();
 }
 
-let appView = 'panorama';
+let appView = 'ahora';
+let nowAlertsTimer = null;
+function scheduleNowAlerts(delay = 0) {
+  clearTimeout(nowAlertsTimer);
+  nowAlertsTimer = setTimeout(() => {
+    if(appView === 'ahora' && typeof renderAlertCenter === 'function') {
+      try { Promise.resolve(renderAlertCenter()).catch(() => {}); } catch(e) {}
+    }
+  }, delay);
+}
 function setAppView(view) {
-  appView = view === 'map' ? 'map' : 'panorama';
-  const panorama = appView === 'panorama';
-  document.body.classList.toggle('view-panorama', panorama);
-  document.body.classList.toggle('view-map', !panorama);
+  appView = view === 'map' ? 'map' : (view === 'zonas' ? 'zonas' : 'ahora');
+  const isAhora = appView === 'ahora';
+  const isZonas = appView === 'zonas';
+  document.body.classList.toggle('view-ahora', isAhora);
+  document.body.classList.toggle('view-zonas', isZonas);
+  document.body.classList.toggle('view-map', appView === 'map');
   document.querySelectorAll('[data-app-view]').forEach(el => el.classList.toggle('active', el.dataset.appView === appView));
-  if(panorama) {
+  if(isAhora) {
     renderPanorama();
+    scheduleNowAlerts(0);
+  } else if(isZonas) {
+    // La integración de Radar Vial, zonas y analítica llega en la siguiente fase.
   } else {
     setTimeout(() => { try { map.invalidateSize(); } catch(e) {} }, 60);
   }
 }
-function showPanoramaView() { setAppView('panorama'); }
+function showAhoraView() { setAppView('ahora'); }
+function showZonasView() { setAppView('zonas'); }
+function showPanoramaView() { showAhoraView(); }
+function openLegacyRadar() {
+  showMapView();
+  document.body.classList.remove('right-rail');
+  switchPR('ris');
+}
 function showMapView() { setAppView('map'); clearAlertFocus(); }
 
 function panoRiskScore(a) {
@@ -4520,7 +4692,7 @@ function panoFillList(id, items, emptyText) {
   items.forEach(a => box.appendChild(makeAlertCard(a)));
 }
 function renderPanorama() {
-  const host = document.getElementById('panorama-view'); if(!host) return;
+  const host = document.getElementById('ahora-view'); if(!host) return;
   const allAlerts = (alerts || []).filter(a => a && a.title && !a.ignored);
   const locatedAlerts = allAlerts.filter(panoUsefulLocation);
   const unlocatedCount = allAlerts.length - locatedAlerts.length;
@@ -4534,7 +4706,6 @@ function renderPanorama() {
     if(risk) return risk;
     return timeB - timeA;
   });
-  const matchCount = filtered.length;
   const total = list.length;
   const road = list.filter(a => a.category === 'road').length;
   const security = list.filter(a => a.category === 'security').length;
@@ -4590,24 +4761,14 @@ function renderPanorama() {
   }
   const mostRecent = [...list].sort((a,b) => (new Date(b.time).getTime() || 0) - (new Date(a.time).getTime() || 0))[0];
   const highlights = ordered.slice(0,4);
-  const highlighted = new Set(highlights.map(a => String(a.id)));
-  const feed = ordered
-    .filter(a => !highlighted.has(String(a.id)))
-    .slice(0,6);
-  const sortLabel = panoSort === 'recent' ? 'Más recientes' : 'Mayor relevancia';
 
   const updated = document.getElementById('pano-updated');
   if(updated) updated.textContent = mostRecent ? `Actualizado ${formatRelativeAlertTime(mostRecent.time).toLowerCase()}` : 'Sin datos';
-  const feedMeta = document.getElementById('pano-feed-meta');
-  if(feedMeta) feedMeta.textContent = matchCount ? `${feed.length} de ${matchCount} · ${sortLabel}` : `0 resultados · ${sortLabel}`;
-  const feedBlock = document.getElementById('pano-feed-block');
-  if(feedBlock) feedBlock.style.display = feed.length ? '' : 'none';
 
   const emptyText = !allAlerts.length
     ? 'Todavía no hay alertas cargadas.'
     : (!list.length ? 'Las alertas disponibles no tienen una ubicación útil. Usa el botón para verlas.' : 'No hay alertas de este tipo en este momento.');
   panoFillList('pano-highlights', highlights, emptyText);
-  panoFillList('pano-feed', feed, matchCount ? 'No hay más alertas para mostrar.' : emptyText);
 
   const route = document.getElementById('pano-route');
   if(route) {
@@ -4669,6 +4830,7 @@ async function refreshPanorama(btn) {
   } finally {
     if(btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Actualizar'; }
     renderPanorama();
+    if(appView === 'ahora') scheduleNowAlerts(0);
   }
 }
 
@@ -4737,7 +4899,6 @@ function refreshCounters() {
   const road = requestedAlerts.filter(a => a.category === 'road').length;
   const sec = requestedAlerts.filter(a => a.category === 'security').length;
   const imp = requestedAlerts.filter(a => a.importante).length;
-  const sessionAlerts = requestedAlerts.filter(a => Number(a.received_at || a.id || 0) >= zeroVialSessionStartedAt);
   // El contador de bloqueos debe respetar los mismos filtros activos
   // (estado, periodo, categorías, severidad, radio y búsqueda), pero sin
   // depender del propio switch "Solo bloqueos".
@@ -4750,9 +4911,8 @@ function refreshCounters() {
   }).length;
   const redZones = criticalPoints.filter(p => riskPointType(p) === 'red_zone').length;
   const roadRisks = criticalPoints.filter(p => riskPointType(p) === 'road_risk').length;
-  const set = (id, v) => { const el = document.getElementById(id); if(!el) return; el.textContent = v; if(id === 'nv-top-count') { const btn = el.closest('button'); if(btn) btn.setAttribute('aria-label', 'Alertas, ' + v + ' nuevas'); } };
+  const set = (id, v) => { const el = document.getElementById(id); if(!el) return; el.textContent = v; };
   set('pc-total', road + sec); set('pc-road', road); set('pc-sec', sec); set('pc-imp', imp);
-  set('nv-top-count', sessionAlerts.length);
   set('nc-road', road); set('nc-sec', sec); set('nc-blockages', blockages); set('nc-imp', redZones); set('nc-risk', roadRisks);
 }
 function rebuildU() {
@@ -4783,7 +4943,10 @@ function rebuildU() {
     em.textContent = vis.length ? '' : (alerts.length ? 'No hay alertas que coincidan con tus filtros. Amplía el periodo o selecciona Todo México.' : centralWorkerHealthy ? 'Sin incidencias disponibles en este momento.'+syncCopy : centralWorkerState==='running' ? 'Las fuentes se están sincronizando. Intenta nuevamente en unos momentos.' : 'No fue posible confirmar la sincronización. La información puede estar desactualizada.');
   }
   refreshCounters();
-  if(document.body.classList.contains('user-mode')) renderPanorama();
+  if(document.body.classList.contains('user-mode')) {
+    renderPanorama();
+    if(appView === 'ahora') scheduleNowAlerts(0);
+  }
 }
 
 async function retryFeed(btn) {
@@ -4877,8 +5040,10 @@ function alertDetailDisplay(a) {
   return detail;
 }
 
+let acnRenderSeq=0;
 async function renderAlertCenter() {
   const list=document.getElementById('acn-list'); if(!list) return;
+  const seq=++acnRenderSeq;
   const cat=document.getElementById('acn-category')?.value||'all';
   const sev=document.getElementById('acn-severity')?.value||'all';
   const hours=Number(document.getElementById('acn-time')?.value||3);
@@ -4886,6 +5051,7 @@ async function renderAlertCenter() {
   const q=(document.getElementById('acn-search')?.value||'').toLowerCase();
   let source=alerts;
   if(hours>24){ try { source=await ensureHistoricalAlerts(); } catch(e) { source=alerts; } }
+  if(seq !== acnRenderSeq) return;
   buildAlertCenterStates(source); renderDiagnostics();
   const visible=source.filter(a=>{
     if(cat==='blockage'&&!isBlockageAlert(a)) return false;
@@ -4896,6 +5062,8 @@ async function renderAlertCenter() {
     if(q&&!((a.title||'').toLowerCase().includes(q)||(a.location||'').toLowerCase().includes(q)||(a.detail||'').toLowerCase().includes(q))) return false;
     return true;
   }).sort((a,b)=>new Date(b.time)-new Date(a.time));
+  const nowMeta=document.getElementById('ahora-alerts-meta');
+  if(nowMeta) nowMeta.textContent = visible.length ? `${visible.length} alerta${visible.length===1?'':'s'} para estos filtros` : '0 resultados';
   renderAlertCenterAnalytics(visible,hours);
   if(!visible.length){list.innerHTML='<div class="acn-empty"><i class="fa-solid fa-inbox"></i><p>No hay alertas para estos filtros.</p></div>';return;}
   const MAX_ACN=200, shown=visible.slice(0,MAX_ACN);
@@ -4911,55 +5079,307 @@ async function renderAlertCenter() {
   }).join('');
 }
 function openAlertCenter(){
-  buildAlertCenterStates();
-  renderAlertCenter();
-  document.body.classList.add('alert-center-open');
-  openModal('alert-center-modal');
-  const shell=document.querySelector('#alert-center-modal .alert-center-shell');
-  if(shell) shell.scrollTop=0;
+  showAhoraView();
+  scheduleNowAlerts(0);
+  const block=document.getElementById('ahora-alerts-block');
+  if(block) setTimeout(() => { try { block.scrollIntoView({behavior:'smooth',block:'start'}); } catch(e) {} }, 90);
 }
-function closeAlertCenter(){
-  closeModal('alert-center-modal');
-  document.body.classList.remove('alert-center-open');
-}
+function closeAlertCenter(){}
 function showCenterAlertOnMap(id){ const a=findAlertById(id); if(!hasAlertPoint(a))return; closeAlertCenter(); showMapView(); showAlertFocus(a); map.setView([a.lat,a.lon],locationTier(a)==='area'?10:Math.max(map.getZoom(),14)); }
 function openModal(id) { const m = document.getElementById(id); if(m) m.classList.add('open'); }
 function closeModal(id) { const m = document.getElementById(id); if(m) m.classList.remove('open'); }
 document.querySelectorAll('.u-modal').forEach(m => m.addEventListener('click', ev => {
   if(ev.target === m) {
     m.classList.remove('open');
-    if(m.id==='alert-center-modal') document.body.classList.remove('alert-center-open');
   }
 }));
 
-// === INGRESAR ALERTA (MANUAL) ===
+// === REPORTAR INCIDENTE (ASISTENTE DE 4 PASOS) ===
+const ENTRY_STEP_NAMES = ['Tipo de incidente', 'Ubicación', 'Gravedad, carril y acción', 'Confirmar'];
+const ENTRY_SUBTYPES = {
+  road: ['Accidente', 'Choque múltiple', 'Vehículo averiado', 'Bloqueo / cierre', 'Obras / mantenimiento', 'Tráfico intenso', 'Bache', 'Clima / vía (niebla, lluvia, derrumbe)', 'Otro'],
+  security: ['Asalto / robo', 'Ataque armado', 'Bloqueo / manifestación', 'Operativo policial', 'Vehículo sospechoso', 'Otro']
+};
+const ENTRY_SEVERITY_LABELS = { info: 'Informativa', precaucion: 'Precaución', importante: 'Importante (alto riesgo)' };
+const ENTRY_TRAFFIC_LABELS = { fluido: 'Flujo normal', moderado: 'Moderado / reducción de carriles', detenido: 'Detenido / bloqueo total' };
+let entryStep = 1;
+let entryTitleAuto = true;
+let entryPublishing = false;
+
+function entryEl(id) { return document.getElementById(id); }
+
 function buildEntryStates() {
-  const sel = document.getElementById('ent-state'); if(!sel) return;
+  const sel = entryEl('ent-state'); if(!sel) return;
   sel.innerHTML = '<option value="">— Sin estado —</option>';
   MEXICO_STATES.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
 }
+
+function fillEntrySubtypes(cat) {
+  const sel = entryEl('fz-g-sub'); if(!sel) return;
+  const list = ENTRY_SUBTYPES[cat] || ENTRY_SUBTYPES.road;
+  sel.innerHTML = '';
+  list.forEach(value => {
+    const o = document.createElement('option');
+    o.value = value; o.textContent = value; sel.appendChild(o);
+  });
+}
+
+function suggestEntryTitle(force) {
+  const title = entryEl('ent-title'); if(!title) return;
+  if(!force && !entryTitleAuto) return;
+  if(force && !entryTitleAuto && title.value.trim()) return;
+  const sub = (entryEl('fz-g-sub') || {}).value || '';
+  const loc = ((entryEl('ent-loc') || {}).value || '').trim();
+  if(!sub) return;
+  title.value = sub + (loc ? ' en ' + loc : '');
+  entryTitleAuto = true;
+}
+
+function setEntryCat(cat) {
+  cat = cat === 'security' ? 'security' : 'road';
+  const select = entryEl('ent-cat');
+  const prevCat = select ? select.value : '';
+  if(select) select.value = cat;
+  document.querySelectorAll('#entry-modal .ent-seg-btn').forEach(btn => {
+    const on = btn.dataset.cat === cat;
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  const modal = entryEl('entry-modal'); if(modal) modal.classList.toggle('ent-security', cat === 'security');
+  if(cat === 'security') {
+    const lane = entryEl('fz-g-lane'); if(lane) lane.value = 'No aplica';
+    const traffic = entryEl('ent-trafico');
+    if(traffic) { traffic.value = ''; delete traffic.dataset.fzAuto; }
+  }
+  const subtype = entryEl('fz-g-sub');
+  if(prevCat !== cat || !subtype || !subtype.options.length) fillEntrySubtypes(cat);
+  suggestEntryTitle();
+}
+
+function setEntrySeverity(value) {
+  if(!ENTRY_SEVERITY_LABELS[value]) value = 'precaucion';
+  const input = entryEl('fz-g-sev'); if(input) input.value = value;
+  document.querySelectorAll('#entry-modal .ent-sev-btn').forEach(btn => {
+    const on = btn.dataset.sev === value;
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  const imp = entryEl('ent-imp'); if(imp) imp.checked = value === 'importante';
+}
+
+function syncEntryDetail() {
+  if(window.Fusion && Fusion.guided && typeof Fusion.guided.composeDetail === 'function') {
+    try { Fusion.guided.composeDetail(); } catch(e) {}
+  }
+}
+
+function clearEntryError() {
+  const box = entryEl('ent-error'); if(!box) return;
+  box.classList.remove('show');
+  const text = box.querySelector('span'); if(text) text.textContent = '';
+}
+
+function showEntryError(message) {
+  const box = entryEl('ent-error'); if(!box) return;
+  const text = box.querySelector('span'); if(text) text.textContent = message;
+  box.classList.add('show');
+  const card = document.querySelector('#entry-modal .u-modal-card');
+  if(card) card.scrollTop = 0;
+}
+
+function entryShowStep(step) {
+  entryStep = Math.max(1, Math.min(4, Number(step) || 1));
+  document.querySelectorAll('#entry-modal .ent-step').forEach(section => {
+    const on = Number(section.dataset.step) === entryStep;
+    section.classList.toggle('active', on);
+    section.setAttribute('aria-hidden', on ? 'false' : 'true');
+  });
+  document.querySelectorAll('#entry-modal .ent-progress-seg').forEach((seg, index) => {
+    seg.classList.toggle('done', index < entryStep - 1);
+    seg.classList.toggle('active', index === entryStep - 1);
+  });
+  const count = entryEl('ent-step-count'); if(count) count.textContent = `Paso ${entryStep} de 4`;
+  const name = entryEl('ent-step-name'); if(name) name.textContent = ENTRY_STEP_NAMES[entryStep - 1];
+  const back = entryEl('ent-back');
+  if(back) {
+    back.disabled = false;
+    back.innerHTML = entryStep === 1 ? 'Cancelar' : '<i class="fa-solid fa-arrow-left"></i> Atrás';
+  }
+  const next = entryEl('ent-next');
+  if(next) {
+    next.disabled = false;
+    next.innerHTML = entryStep === 4 ? '<i class="fa-solid fa-paper-plane"></i> Publicar alerta' : 'Continuar <i class="fa-solid fa-arrow-right"></i>';
+  }
+  clearEntryError();
+  const card = document.querySelector('#entry-modal .u-modal-card');
+  if(card) card.scrollTop = 0;
+}
+
+function focusEntryStep() {
+  const section = document.querySelector('#entry-modal .ent-step.active');
+  if(!section) return;
+  const target = section.querySelector('input:not([type="hidden"]):not(.ent-hidden), select:not(.ent-hidden), textarea');
+  if(target) target.focus();
+}
+
+function entryValidateStep(step) {
+  if(step === 1) {
+    const sub = entryEl('fz-g-sub');
+    if(!sub || !sub.value) { showEntryError('Selecciona el tipo de incidente para continuar.'); return false; }
+    suggestEntryTitle();
+    return true;
+  }
+  if(step === 2) {
+    const loc = ((entryEl('ent-loc') || {}).value || '').trim();
+    if(!loc) { showEntryError('Escribe una ubicación para continuar.'); return false; }
+    suggestEntryTitle();
+    return true;
+  }
+  if(step === 3) {
+    syncEntryDetail();
+    const detail = ((entryEl('ent-detail') || {}).value || '').trim();
+    if(detail.length < 15) { showEntryError('Agrega una descripción breve o selecciona carril/acción para generar el detalle.'); return false; }
+    return true;
+  }
+  return true;
+}
+
+function renderEntrySummary() {
+  const summary = entryEl('ent-summary'); if(!summary) return;
+  syncEntryDetail();
+  if(!((entryEl('ent-title') || {}).value || '').trim()) { entryTitleAuto = true; suggestEntryTitle(true); }
+  const cat = (entryEl('ent-cat') || {}).value || 'road';
+  const sub = (entryEl('fz-g-sub') || {}).value || 'Sin especificar';
+  const title = ((entryEl('ent-title') || {}).value || '').trim() || '—';
+  const loc = ((entryEl('ent-loc') || {}).value || '').trim();
+  const state = (entryEl('ent-state') || {}).value || '';
+  const sev = (entryEl('fz-g-sev') || {}).value || 'precaucion';
+  const lane = (entryEl('fz-g-lane') || {}).value || 'No aplica';
+  const action = (entryEl('fz-g-act') || {}).value || 'No aplica';
+  const traffic = (entryEl('ent-trafico') || {}).value || '';
+  const detail = ((entryEl('ent-detail') || {}).value || '').trim() || '—';
+  const rows = [
+    ['Tipo', `${cat === 'security' ? 'Seguridad' : 'Vial'} · ${sub}`],
+    ['Título', title],
+    ['Ubicación', [loc, state].filter(Boolean).join(' · ') || '—'],
+    ['Gravedad', ENTRY_SEVERITY_LABELS[sev] || sev],
+    ['Carril', cat === 'security' ? 'No aplica' : lane],
+    ['Acción', action],
+    ['Tráfico', cat === 'security' ? 'No aplica' : (ENTRY_TRAFFIC_LABELS[traffic] || 'Sin dato')],
+    ['Detalle', detail]
+  ];
+  summary.innerHTML = rows.map(row => `<div class="ent-summary-row"><span>${escapeHtml(row[0])}</span><b>${escapeHtml(row[1])}</b></div>`).join('');
+}
+
+async function entryPublish() {
+  if(entryPublishing) return;
+  clearEntryError();
+  syncEntryDetail();
+  if(!((entryEl('ent-title') || {}).value || '').trim()) { entryTitleAuto = true; suggestEntryTitle(true); }
+  const title = ((entryEl('ent-title') || {}).value || '').trim();
+  const loc = ((entryEl('ent-loc') || {}).value || '').trim();
+  const detail = ((entryEl('ent-detail') || {}).value || '').trim();
+  if(title.length < 8) { entryShowStep(1); showEntryError('El título debe tener al menos 8 caracteres.'); return; }
+  if(!loc) { entryShowStep(2); showEntryError('Escribe una ubicación para continuar.'); return; }
+  if(detail.length < 15) { entryShowStep(3); showEntryError('Agrega una descripción breve o selecciona carril/acción para generar el detalle.'); return; }
+  const btn = entryEl('ent-next');
+  const back = entryEl('ent-back');
+  entryPublishing = true;
+  if(btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Publicando...'; }
+  if(back) back.disabled = true;
+  try {
+    const ok = await submitEntryAlert();
+    if(ok === false && btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Publicar alerta';
+      if(back) back.disabled = false;
+    }
+  } catch(e) {
+    showEntryError('No se pudo publicar la alerta. Intenta de nuevo.');
+    if(btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Publicar alerta'; }
+    if(back) back.disabled = false;
+  } finally {
+    entryPublishing = false;
+  }
+}
+
+async function entryNext() {
+  if(entryPublishing) return;
+  if(entryStep < 4) {
+    if(!entryValidateStep(entryStep)) return;
+    entryShowStep(entryStep + 1);
+    if(entryStep === 4) renderEntrySummary();
+    else focusEntryStep();
+    return;
+  }
+  await entryPublish();
+}
+
+function entryBack() {
+  if(entryPublishing) return;
+  if(entryStep === 1) { closeEntryModal(); return; }
+  entryShowStep(entryStep - 1);
+  focusEntryStep();
+}
+
+function bindEntryWizard() {
+  const title = entryEl('ent-title');
+  if(title && !title.__entBound) {
+    title.__entBound = true;
+    title.addEventListener('input', () => { entryTitleAuto = false; });
+  }
+  const loc = entryEl('ent-loc');
+  if(loc && !loc.__entBound) {
+    loc.__entBound = true;
+    loc.addEventListener('input', () => { if(entryTitleAuto) suggestEntryTitle(); });
+  }
+  const sub = entryEl('fz-g-sub');
+  if(sub && !sub.__entBound) {
+    sub.__entBound = true;
+    sub.addEventListener('change', () => { if(entryTitleAuto) suggestEntryTitle(); });
+  }
+  const traffic = entryEl('ent-trafico');
+  if(traffic && !traffic.__entBound) {
+    traffic.__entBound = true;
+    traffic.addEventListener('change', () => { traffic.dataset.fzAuto = 'manual'; });
+  }
+}
+
 function openEntryModal() {
   buildEntryStates();
-  const cur = document.getElementById('lp-state').value;
-  const es = document.getElementById('ent-state'); if(cur && es) es.value = cur;
-  ['ent-title', 'ent-loc', 'ent-detail'].forEach(id => { const e = document.getElementById(id); if(e) e.value = ''; });
-  const imp = document.getElementById('ent-imp'); if(imp) imp.checked = false;
+  bindEntryWizard();
+  const cur = (entryEl('lp-state') || {}).value;
+  const es = entryEl('ent-state'); if(cur && es) es.value = cur;
+  ['ent-title', 'ent-loc', 'ent-detail'].forEach(id => { const e = entryEl(id); if(e) e.value = ''; });
+  const imp = entryEl('ent-imp'); if(imp) imp.checked = false;
+  const lane = entryEl('fz-g-lane'); if(lane) lane.value = 'No aplica';
+  const action = entryEl('fz-g-act'); if(action) action.value = 'No aplica';
+  const traffic = entryEl('ent-trafico');
+  if(traffic) { traffic.value = ''; delete traffic.dataset.fzAuto; }
+  entryTitleAuto = true;
+  entryPublishing = false;
+  setEntryCat('road');
+  setEntrySeverity('precaucion');
+  entryShowStep(1);
   openModal('entry-modal');
+  setTimeout(() => { const t = entryEl('ent-title'); if(t) t.focus(); }, 60);
 }
+
 function closeEntryModal() { closeModal('entry-modal'); }
+
 async function submitEntryAlert() {
-  const title = (document.getElementById('ent-title').value || '').trim();
-  const cat = document.getElementById('ent-cat').value;
-  const lugar = (document.getElementById('ent-loc').value || '').trim();
-  if(!title || !lugar) { log('Completa título, categoría y ubicación.', 'warn'); return; }
-  const estado = document.getElementById('ent-state').value;
-  const trafico = document.getElementById('ent-trafico').value || null;
-  const detalle = (document.getElementById('ent-detail').value || '').replace(/\s+/g, ' ').trim().slice(0, 280);
-  if(title.length < 8 || detalle.length < 15) { log('Agrega un título claro y una descripción de al menos 15 caracteres.', 'warn'); return; }
-  const importante = document.getElementById('ent-imp').checked;
+  const title = (entryEl('ent-title').value || '').trim();
+  const cat = entryEl('ent-cat').value;
+  const lugar = (entryEl('ent-loc').value || '').trim();
+  if(!title || !lugar) { showEntryError('Completa título, categoría y ubicación.'); log('Completa título, categoría y ubicación.', 'warn'); return false; }
+  const estado = entryEl('ent-state').value;
+  const trafico = entryEl('ent-trafico').value || null;
+  const detalle = (entryEl('ent-detail').value || '').replace(/\s+/g, ' ').trim().slice(0, 280);
+  if(title.length < 8 || detalle.length < 15) { showEntryError('Agrega un título claro y una descripción de al menos 15 caracteres.'); log('Agrega un título claro y una descripción de al menos 15 caracteres.', 'warn'); return false; }
+  const importante = entryEl('ent-imp').checked;
   const g = await geocodeBest(lugar, { expectedState: estado, snapToRoad: cat === 'road' });
-  if(!g) { log('📍 No se localizó la ubicación.', 'err'); return; }
-  if(!isInMexico(g.lat, g.lon)) { log('🚫 Ubicación fuera de México.', 'warn'); return; }
+  if(!g) { showEntryError('No se localizó la ubicación. Prueba con una ciudad, carretera o punto de referencia.'); log('📍 No se localizó la ubicación.', 'err'); return false; }
+  if(!isInMexico(g.lat, g.lon)) { showEntryError('La ubicación está fuera de México.'); log('🚫 Ubicación fuera de México.', 'warn'); return false; }
   const isOperator = document.body.classList.contains('operator-mode');
   const manualPrecision = g.roadSnapped ? 'carretera' : (g.approximate || g.locationType === 'city_fallback' ? 'zona' : 'punto');
   const obj = { id: Date.now(), lat: g.lat, lon: g.lon, category: cat, title, location: lugar, state: estado, precision: manualPrecision, location_confidence: g.confidence || 0.5, location_provider: g.provider || 'local', road_snapped: !!g.roadSnapped, time: new Date(), trafico: cat === 'road' ? trafico : null, detail: detalle, importante, source_type: isOperator ? 'operator' : 'community', source_name: isOperator ? 'Zero Vial' : 'Comunidad', verification_status: isOperator ? 'verified' : 'unverified', confirmations: 0, liked: false };
@@ -4967,6 +5387,7 @@ async function submitEntryAlert() {
   log(`✅ ALERTA MANUAL [${cat}]: ${title} @ ${g.lat.toFixed(4)}, ${g.lon.toFixed(4)}`, 'success');
   closeEntryModal();
   if(importante) notifyImportant(obj);
+  return true;
 }
 
 // === DIRECTORIO DE EMERGENCIAS ===
@@ -5535,6 +5956,6 @@ setLandingAuthMode('login');
 </script>
 
 <!-- FUSIÓN VíaSegura · motor de features (Modo Viaje, Nocturno, PWA, Peajes, Analítica, PDF, Push) -->
-<script src="/fusion/fusion.js?v=10" defer></script>
+<script src="/fusion/fusion.js?v=20" defer></script>
 </body>
 </html>

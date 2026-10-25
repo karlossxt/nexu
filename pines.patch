@@ -1,0 +1,89 @@
+--- n2/nexu-master1/index.html	2026-10-25 06:54:25.000000000 +0000
++++ work/index.html	2026-10-25 07:42:43.237732134 +0000
+@@ -491,6 +491,16 @@
+ .incident-pin.is-selected{ transform:translateY(-2px) scale(1.07); }
+ .incident-pin.is-selected::before{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+ .incident-pin.is-selected .incident-pin-shape{ filter:drop-shadow(0 8px 10px rgba(15,23,42,.44)); }
++/* PINES · gravedad visible */
++.incident-pin .pin-sev{ position:absolute; top:-3px; right:-3px; z-index:3; width:16px; height:16px; border-radius:50%; border:2px solid #fff; background:#F59E0B; color:#fff; font:800 10px/12px system-ui,sans-serif; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,.35); }
++.incident-pin .pin-sev.critical{ background:#DC2626; }
++.incident-pin.compact .pin-sev{ width:13px; height:13px; font-size:8px; line-height:9px; }
++.incident-cluster .cluster-crit{ position:absolute; top:-5px; right:-5px; min-width:18px; height:18px; padding:0 4px; border-radius:9px; background:#DC2626; color:#fff; border:2px solid #fff; font:800 10px/14px system-ui,sans-serif; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,.35); }
++.pop-head{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:7px; }
++.pop-type{ display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:999px; font-size:10.5px; font-weight:800; color:var(--incident,#F97316); background:color-mix(in srgb,var(--incident,#F97316) 14%,transparent); border:1px solid color-mix(in srgb,var(--incident,#F97316) 40%,transparent); }
++.pop-sev{ padding:3px 8px; border-radius:999px; font-size:10.5px; font-weight:800; color:#fff; background:#F59E0B; }
++.pop-sev.critical{ background:#DC2626; }
++.pop-time{ margin-left:auto; font-size:10.5px; color:#80868b; }
+ .incident-pin.compact{ width:31px; height:38px; }
+ .incident-pin.compact i{ font-size:12px; }
+ .incident-cluster-wrap{ background:transparent; border:0; }
+@@ -2234,6 +2244,8 @@
+   const road = children.filter(m => m.category !== 'security').length;
+   const security = count - road;
+   const allExpired = count > 0 && children.every(m => m.expired);
++  const critical = children.filter(m => m.severity === 'critical' && !m.expired).length;
++  const critBadge = critical ? `<span class="cluster-crit" title="${critical} crítica${critical>1?'s':''}">${critical>99?'99+':critical}</span>` : '';
+   const securityDominant = security > road;
+   const color = allExpired ? '#64748B' : securityDominant ? '#DC2626' : '#F97316';
+   const icon = allExpired ? 'fa-clock-rotate-left' : securityDominant ? 'fa-shield-halved' : 'fa-triangle-exclamation';
+@@ -2242,7 +2254,7 @@
+   const countLabel = count > 999 ? '999+' : String(count);
+   return L.divIcon({
+     className: 'incident-cluster-wrap',
+-    html: `<div class="incident-cluster" style="--cluster:${color};--cluster-soft:${colorWithAlpha(color, .2)};--cluster-size:${size}px" title="${countLabel} ${label.toLowerCase()}"><i class="fa-solid ${icon}"></i><b>${countLabel}</b></div>`,
++    html: `<div class="incident-cluster" style="--cluster:${color};--cluster-soft:${colorWithAlpha(color, .2)};--cluster-size:${size}px" title="${countLabel} ${label.toLowerCase()}"><i class="fa-solid ${icon}"></i><b>${countLabel}</b>${critBadge}</div>`,
+     iconSize: [size, size],
+     iconAnchor: [size / 2, size / 2]
+   });
+@@ -3261,11 +3273,13 @@
+ const INCIDENT_PIN_PATH='M22 52.2c-1.3 0-2.3-.5-3.3-1.6C14.6 46 4 33.9 4 20.9 4 10.9 12.1 2.8 22 2.8s18 8.1 18 18.1c0 13-10.6 25.1-14.7 29.7-1 1.1-2 1.6-3.3 1.6Z';
+ function incidentPinIcon(alert, compact=false) {
+   const visual=incidentVisual(alert), expired=isAlertExpired(alert);
+-  const classes=['incident-pin',compact?'compact':'',alert.importante?'important':'',expired?'expired':''].filter(Boolean).join(' ');
++  const sev=alertSeverity(alert);
++  const classes=['incident-pin',compact?'compact':'',alert.importante?'important':'',expired?'expired':'',(!expired&&sev!=='medium')?'sev-'+sev:''].filter(Boolean).join(' ');
++  const sevBadge=(!expired&&sev!=='medium')?`<span class="pin-sev ${sev}" aria-hidden="true">${sev==='critical'?'!':''}</span>`:'';
+   const width=compact?31:44, height=compact?38:54;
+   return L.divIcon({
+     className:'incident-pin-wrap',
+-    html:`<div class="${classes}" data-alert-id="${alert.id}" style="--pin:${visual.color}" title="${visual.label}"><svg class="incident-pin-shape" viewBox="0 0 44 54" aria-hidden="true" focusable="false"><path d="${INCIDENT_PIN_PATH}"></path><circle class="pin-inner" cx="22" cy="20.9" r="12.7"></circle></svg><i class="fa-solid ${visual.icon}" aria-hidden="true"></i></div>`,
++    html:`<div class="${classes}" data-alert-id="${alert.id}" style="--pin:${visual.color}" title="${visual.label}"><svg class="incident-pin-shape" viewBox="0 0 44 54" aria-hidden="true" focusable="false"><path d="${INCIDENT_PIN_PATH}"></path><circle class="pin-inner" cx="22" cy="20.9" r="12.7"></circle></svg><i class="fa-solid ${visual.icon}" aria-hidden="true"></i>${sevBadge}</div>`,
+     iconSize:[width,height],
+     iconAnchor:[width/2,height-2],
+     popupAnchor:[0,-(height-4)]
+@@ -3295,6 +3309,12 @@
+   event.preventDefault();
+   action();
+ }
++const SEV_LABELS={critical:'Crítica',high:'Alta',medium:'Media'};
++function popupHeadHTML(alert) {
++  const v=incidentVisual(alert), sev=alertSeverity(alert), expired=isAlertExpired(alert);
++  const sevChip=(!expired&&sev!=='medium')?`<span class="pop-sev ${sev}">Gravedad ${SEV_LABELS[sev]}</span>`:'';
++  return `<div class="pop-head"><span class="pop-type" style="--incident:${v.color}"><i class="fa-solid ${v.icon}"></i> ${v.label}</span>${sevChip}<time class="pop-time">${reportedTimeLabel(alert.time)}</time></div>`;
++}
+ function addMarkerToMap(alert) {
+   if(!hasAlertPoint(alert)) return;
+   // La seguridad que solo se ubica por municipio no se pinta como pin: se
+@@ -3314,6 +3334,7 @@
+     });
+     area.bindTooltip(`Zona aproximada · ${precisionLabel(alert)} · ${radiusLabel}`, {direction:'top'});
+     area.bindPopup(`<div style="max-width:240px;">
++      ${popupHeadHTML(alert)}
+       <b>${escapeHtml(alert.title)}</b><br>
+       <span style="color:#5f6368;font-size:12px;">${escapeHtml(alert.location || 'Zona aproximada')}</span>
+       <div class="location-meta"><span class="precision-chip"><i class="fa-solid fa-crosshairs"></i> ${precisionLabel(alert)}</span><span class="distance-chip"><i class="fa-solid fa-circle-dot"></i> Área de referencia: ${radiusLabel}</span>${referenceChipHTML(alert)}</div>
+@@ -3338,12 +3359,13 @@
+   const stale = expired ? `<div style="margin-top:5px;"><span class="traffic-chip" style="background:rgba(154,160,166,.2); color:#80868b;">🕓 Hace más de 6h</span></div>` : '';
+   m.bindPopup(`
+     <div style="max-width:240px;">
++      ${popupHeadHTML(alert)}
+       <b>${escapeHtml(alert.title)}</b><br>
+       <span style="color:#5f6368;font-size:12px;">${escapeHtml(alert.location)}</span>${nota}${chip}${stale}
+       <div class="alert-source"><i class="fa-solid fa-circle-info"></i> ${escapeHtml(alertSourceLabel(alert))}</div>
+       <br><div style="display:flex;gap:6px;"><button onclick="openAlertDetail(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:none;border-radius:6px;background:#1976d2;color:#fff;cursor:pointer;font-size:12px;font-weight:600;">Ver detalle</button>${radius?`<button onclick="navigateToAlert(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:1px solid #2563EB;border-radius:6px;background:transparent;color:#60A5FA;cursor:pointer;font-size:12px;font-weight:600;">Cómo llegar</button>`:''}</div>
+     </div>`);
+-  m.category = alert.category; m.expired = expired; markers.addLayer(m);
++  m.category = alert.category; m.expired = expired; m.severity = alertSeverity(alert); markers.addLayer(m);
+ }
+ function alertCardHTML(a) {
+   const t = trafficStyle(a.trafico || 'moderado');
