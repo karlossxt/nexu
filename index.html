@@ -2176,6 +2176,7 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
   <div class="u-modal-card agenda-card">
     <div class="m-head"><i class="fa-solid fa-calendar-check" style="color:#2563EB;"></i> Importar agenda de movilizaciones<button class="m-x" onclick="closeModal('agenda-modal')" aria-label="Cerrar importación"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
     <div class="m-body">
+      <div id="agenda-account" class="correction-preview" style="display:none;margin-bottom:10px"></div>
       <div id="agenda-step-1">
         <div class="correction-note">Pega el texto de la agenda diaria (SSC CDMX). Se detectan las movilizaciones, se localizan en el mapa y las revisas antes de publicar. Los casos sensibles se publican sin nombres ni detalles de la demanda.</div>
         <label for="agenda-text">Texto de la agenda</label>
@@ -3288,6 +3289,8 @@ function precisionLabel(a) {
   if(!hasAlertPoint(a)) return 'Ubicación pendiente de verificar';
   if(a.location_precision === 'corridor_reference') return 'Punto orientativo de la autopista · km sin verificar';
   if(a.location_precision === 'toll_reference') return 'Referencia de caseta';
+  if(a.location_precision === 'rnc_poste') return 'Poste kilométrico oficial (RNC)';
+  if(a.location_precision === 'kilometer_rnc_network') return 'Kilómetro calculado sobre la red (RNC)';
   if(a.location_precision === 'kilometer_rnc') return 'Poste kilométrico aproximado';
   if(a.location_precision === 'kilometer_rnc_estimated') return 'Kilómetro estimado entre postes RNC';
   if(a.location_precision === 'kilometer_static') return 'Kilómetro estimado en corredor';
@@ -3320,6 +3323,8 @@ function referenceChipHTML(a) {
 function estimatedRadiusMeters(a) {
   if(a.location_precision === 'corridor_reference') return 0;
   if(a.location_precision === 'toll_reference') return 500;
+  if(a.location_precision === 'rnc_poste') return 300;
+  if(a.location_precision === 'kilometer_rnc_network') return 500;
   if(a.location_precision === 'kilometer_rnc') return 1500;
   if(a.location_precision === 'kilometer_rnc_estimated') return 2000;
   if(a.location_precision === 'kilometer_static') return 500;
@@ -3650,10 +3655,24 @@ function agendaMsg(text, kind) {
   box.style.display = text ? 'block' : 'none'; box.textContent = text || '';
   box.style.color = kind === 'err' ? 'var(--danger,#EF4444)' : kind === 'ok' ? '#22C55E' : 'var(--text-muted)';
 }
-function openAgendaImport() {
-  if(!['operator','admin'].includes(zeroVialRole)) return trafficMessage('La importación de agenda requiere una cuenta de operador.');
+async function openAgendaImport() {
   agendaBack(); agendaMsg('');
   openModal('agenda-modal');
+  const box = document.getElementById('agenda-account'), btn = document.getElementById('agenda-parse-btn');
+  const show = (text, ok) => { box.style.display = 'block'; box.textContent = text; box.style.color = ok ? '#22C55E' : 'var(--danger,#EF4444)'; btn.disabled = !ok; };
+  show('Verificando tu cuenta…', false);
+  try {
+    if(!supabaseClient) return show('No hay conexión con el servidor de cuentas. Recarga la página.', false);
+    const sess = (await supabaseClient.auth.getSession()).data.session;
+    if(!sess) return show('No hay una sesión iniciada. Inicia sesión con tu cuenta de operador (el modo invitado no puede importar).', false);
+    const email = sess.user && sess.user.email || 'cuenta sin correo';
+    const { data, error } = await supabaseClient.from('profiles').select('role').eq('id', sess.user.id).maybeSingle();
+    if(error) return show(`Sesión: ${email}. No se pudo leer tu rol: ${error.message}`, false);
+    const role = data && data.role;
+    if(!['operator', 'admin'].includes(role)) return show(`Sesión: ${email} · rol actual: ${role || 'sin perfil'}. Se necesita rol operator o admin; se asigna desde Supabase (tabla profiles).`, false);
+    zeroVialRole = role; applyRoleAccess();
+    show(`Sesión: ${email} · rol: ${role} ✓`, true);
+  } catch(e) { show('No se pudo verificar tu cuenta: ' + (e.message || e), false); }
 }
 function agendaBack() {
   document.getElementById('agenda-step-1').style.display = '';
@@ -3956,7 +3975,7 @@ function centralPrecisionToUi(rawPrecision,status,confidence) {
   if(['corrected','verified'].includes(status)) return 'punto';
   const raw=String(rawPrecision||'').toLowerCase();
   if(['exact','toll_reference'].includes(raw)) return 'punto';
-  if(['kilometer_rnc','kilometer_rnc_estimated','kilometer_static','kilometer'].includes(raw)) return 'kilometro';
+  if(['rnc_poste','kilometer_rnc_network','kilometer_rnc','kilometer_rnc_estimated','kilometer_static','kilometer'].includes(raw)) return 'kilometro';
   if(raw==='corridor_reference') return 'tramo';
   if(raw==='road_approximate') return 'carretera';
   if(['municipality_approximate','area_security'].includes(raw)) return 'municipio';
