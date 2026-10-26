@@ -144,3 +144,29 @@ test('reset limpia la caché sin romper la carga diferida', () => {
   assert.ok(rnc._loadKm('150'), 'los km se leen bajo demanda');
   rnc.reset();
 });
+
+test('las abreviaturas de las fuentes ("Cd.", "Gtz.") se expanden antes de buscar el tramo', () => {
+  assert.equal(rnc._expandRoadAbbreviations('Autopista Acatzingo - Cd. Mendoza'), 'Autopista Acatzingo - Ciudad Mendoza');
+  assert.equal(rnc._expandRoadAbbreviations('Autopista Gtz. Zamora - Tihuatlán'), 'Autopista Gutiérrez Zamora - Tihuatlán');
+  assert.equal(rnc._expandRoadAbbreviations('Autopista Cd Mendoza - Córdoba'), 'Autopista Ciudad Mendoza - Córdoba');
+  // no toca palabras que solo contienen las letras
+  assert.equal(rnc._expandRoadAbbreviations('Autopista Cdmx - Pachuca'), 'Autopista Cdmx - Pachuca');
+});
+
+test('"Cd. Mendoza" resuelve el mismo punto que "Ciudad Mendoza" y cae en la zona correcta', opts, () => {
+  const abbreviated = rnc.resolveNetworkKilometer('Autopista Acatzingo - Cd. Mendoza', 175, new Set());
+  const full = rnc.resolveNetworkKilometer('Autopista Acatzingo - Ciudad Mendoza', 175, new Set());
+  assert.ok(abbreviated, 'con la abreviatura debe resolver');
+  assert.equal(abbreviated.latitude, full.latitude);
+  assert.equal(abbreviated.longitude, full.longitude);
+  // Autopista 150D cerca de Acatzingo, Puebla
+  assert.ok(abbreviated.latitude > 18.7 && abbreviated.latitude < 19.2, `lat ${abbreviated.latitude}`);
+  assert.ok(abbreviated.longitude > -98.0 && abbreviated.longitude < -97.4, `lon ${abbreviated.longitude}`);
+  const cordoba = rnc.resolveNetworkKilometer('Autopista Cd. Mendoza - Córdoba', 287, new Set());
+  assert.ok(cordoba, 'Cd. Mendoza - Córdoba debe resolver');
+  assert.ok(cordoba.latitude > 18.7 && cordoba.latitude < 19.1 && cordoba.longitude > -97.3 && cordoba.longitude < -96.8);
+});
+
+test('expandir abreviaturas no inventa tramos inexistentes', opts, () => {
+  assert.equal(rnc.resolveNetworkKilometer('Autopista Cd. Inexistente - Ningunlugar', 50, new Set()), null);
+});

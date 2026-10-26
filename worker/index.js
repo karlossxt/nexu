@@ -8,6 +8,7 @@ const RED_VIAL = require('./red-vial');
 const CASETAS = require('./casetas');
 const { resolveRncPost, resolveRncEstimatedKm } = require('./rnc-km-anchors');
 const RNC = require('./rnc-loader');
+const { rncNetworkDecision } = require('./rnc-precision');
 const { resolveOfficialTollReference, officialNameExists } = require('./rnc-toll-reference');
 const { kilometersConflict, normalizedKilometer } = require('../lib/alert-km');
 const { orientativeCorridorPoint } = require('../lib/corridor-reference');
@@ -1301,6 +1302,8 @@ function strictLocationDecision(ai, geo, context={}) {
   if (precision==='toll_reference') {
     return confidence>=.88 ? {ok:true,reason:'trusted_toll'} : {ok:false,reason:'low_confidence_toll'};
   }
+  const rncNetwork=rncNetworkDecision(geo,{ state, road });
+  if (rncNetwork) return rncNetwork;
   if (precision==='kilometer_rnc') {
     if(state && !geo.state_verified) return {ok:false,reason:'rnc_state_unverified'};
     return confidence>=.76 ? {ok:true,reason:'trusted_rnc_post'} : {ok:false,reason:'low_confidence_rnc_post'};

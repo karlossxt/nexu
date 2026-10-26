@@ -142,9 +142,27 @@ function hasGeographicToken(raw) {
 // sección solo desempata dentro de él); sin código, el nombre de sección selecciona.
 // Devuelve además nameHits: nº de secciones geográficas de la red cuyo nombre
 // coincide con la consulta (≥82), pista para detectar conflicto de identidad.
-function candidateMetas(road) {
+// CAPUFE y la Guardia Nacional abrevian nombres ("Autopista Acatzingo - Cd. Mendoza")
+// mientras que la RNC los escribe completos ("Ciudad Mendoza"). Sin expandirlos el
+// tramo no se encuentra y la alerta queda sin ubicación aunque traiga carretera y km.
+const ROAD_ABBREVIATIONS = [
+  [/\bcd\.?(?=\s)/gi, 'Ciudad'],
+  [/\bcdad\.?(?=\s)/gi, 'Ciudad'],
+  [/\bgtz\.?(?=\s)/gi, 'Gutiérrez'],
+  [/\bsta\.?(?=\s)/gi, 'Santa'],
+  [/\bsto\.?(?=\s)/gi, 'Santo'],
+  [/\bpto\.?(?=\s)/gi, 'Puerto']
+];
+function expandRoadAbbreviations(road) {
+  let text = String(road || '');
+  for (const [pattern, full] of ROAD_ABBREVIATIONS) text = text.replace(pattern, full);
+  return text.replace(/\s+/g, ' ').trim();
+}
+
+function candidateMetas(roadInput) {
   const index = loadIndex();
   if (!index) return { candidates: [], nameHits: 0 };
+  const road = expandRoadAbbreviations(roadInput);
   const codes = routeCodesOf(road);
   const queryRaw = normText(road);
   const queryKey = normalizeRoad(road);
@@ -365,5 +383,6 @@ module.exports = {
   _loadIndex: loadIndex,
   _loadKm: loadKm,
   _candidateMetas: candidateMetas,
+  _expandRoadAbbreviations: expandRoadAbbreviations,
   _calFor: calFor
 };
