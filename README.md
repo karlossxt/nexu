@@ -287,3 +287,12 @@ Los operadores pueden publicar la **Agenda de movilizaciones** diaria como alert
 5. **Privacidad:** el texto de "Demanda" **no se publica**. Solo se deriva una categoría general. Los casos sensibles (víctimas, violencia, acoso, desapariciones) se publican sin nombre ni detalle, y el servidor los vuelve a anonimizar aunque el cliente intente lo contrario.
 6. **Severidad:** sale del aforo y de si se anuncia afectación vial o hay recorrido (≥200 personas con afectación = alta). El operador puede cambiarla antes de publicar.
 7. **Pruebas:** `lib/agenda-parser.test.js` (lector, con un ejemplo real en `lib/fixtures/`) y `tools/test_agenda_api.js` (autenticación, rol y anonimización con Supabase simulado).
+
+
+## Monitor de ubicaciones (worker)
+
+En cada ciclo el worker revisa las alertas **con kilómetro** creadas en las últimas 6 horas. Si más del **35 %** quedó sin ubicación (con al menos 10 alertas de muestra) registra un error `ALERTA: ubicaciones degradadas` y guarda el resumen en `worker_status.last_stats.location_health`. Si defines `ALERT_WEBHOOK_URL` (Discord o Slack) también manda un mensaje, cada 6 h como máximo mientras siga el problema, y otro cuando se normaliza. Para consultarlo sin esperar el aviso:
+
+```sql
+select updated_at, last_stats->'location_health' as salud_ubicacion from public.worker_status;
+```
