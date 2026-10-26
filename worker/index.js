@@ -9,6 +9,7 @@ const CASETAS = require('./casetas');
 const { resolveRncPost, resolveRncEstimatedKm } = require('./rnc-km-anchors');
 const RNC = require('./rnc-loader');
 const { rncNetworkDecision } = require('./rnc-precision');
+const locationMonitor = require('./location-health').createMonitor();
 const { resolveOfficialTollReference, officialNameExists } = require('./rnc-toll-reference');
 const { kilometersConflict, normalizedKilometer } = require('../lib/alert-km');
 const { orientativeCorridorPoint } = require('../lib/corridor-reference');
@@ -1836,6 +1837,12 @@ async function cycle() {
     stats.road_snap_metrics={...roadSnapMetrics};
     const located=stats.inserted+stats.no_location;
     stats.location_success_rate_pct=located?Math.round(((stats.inserted-(stats.unlocated_inserted||0))/located)*100):0;
+    try {
+      // Avisa si la mayoría de las alertas con kilómetro quedan sin ubicación (ver worker/location-health.js).
+      stats.location_health = await locationMonitor.check({ sb, webhookUrl:process.env.ALERT_WEBHOOK_URL || '', log });
+    } catch (error) {
+      log('warn','No se pudo evaluar la salud de ubicaciones',{ error:error.message });
+    }
     await health({
       status:'healthy',
       last_success_at:new Date().toISOString(),
