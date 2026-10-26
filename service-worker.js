@@ -6,7 +6,7 @@
    - Tiles / fuentes: cache-first.
    - Nunca cachea peticiones de API (POST/GET dinámicos) ni Supabase.
    ============================================================================ */
-const VERSION = 'zv-fusion-v39';
+const VERSION = 'zv-fusion-v41';
 const RUNTIME_MAX_ENTRIES = 400; // tope para tiles/CDN: evita llenar el almacenamiento del móvil
 const SHELL_CACHE = VERSION + '-shell';
 const RUNTIME_CACHE = VERSION + '-runtime';
