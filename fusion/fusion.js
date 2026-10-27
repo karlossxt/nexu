@@ -1887,7 +1887,8 @@
     // UI
     injectTopbar();
     injectTopMenu();
-    injectFab();
+    // injectFab() ya no se usa: las herramientas de fusión quedaron centralizadas
+    // en el botón "Fusión" de la barra superior (injectTopMenu) para no duplicar accesos.
     refreshInstallButtons();
     labelNavigation();
     installPRTabsA11y();
