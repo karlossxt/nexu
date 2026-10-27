@@ -522,16 +522,25 @@
   /* =========================================================================
      5. MODO VIAJE / HUD
      ========================================================================= */
-  var TRIP_CORRIDORS = [
-    { id: 'todas', label: 'Todas las carreteras', re: null },
-    { id: '57', label: 'Autopista 57 / 57D (MX–Qro)', re: /(^|\D)57/ },
-    { id: '95', label: 'Autopista del Sol 95D', re: /95/ },
-    { id: '150', label: 'Autopista 150D (Puebla–Veracruz)', re: /150/ },
-    { id: '85', label: 'Autopista 85D (Monterrey–Laredo)', re: /85/ },
-    { id: '54', label: 'Autopista 54D (GDL–Colima)', re: /54/ },
-    { id: 'm40', label: 'Arco Norte (M40D)', re: /40|arco/i }
-  ];
-  var trip = { corridor: 'todas', radiusKm: 120, sound: true, open: false, timer: null, lastSample: null, speed: 0 };
+  function normTxt(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+  // La lista fija cubría 6 autopistas; la mayoría de los viajes caían siempre en
+  // "Todas". Usamos el mismo catálogo de corredores (window.RED_VIAL, 22 tramos
+  // con nombre + alias) que ya usa el resto de la app para geocodificar, así el
+  // selector de Modo Viaje queda consistente con lo que el sistema reconoce.
+  function tripCorridors() {
+    var list = [{ id: 'todas', label: 'Todas las carreteras' }];
+    (window.RED_VIAL || []).forEach(function (c) {
+      var needles = [normTxt(c.name)].concat((c.aliases || []).map(normTxt));
+      list.push({
+        id: c.badge || c.name,
+        label: c.name,
+        test: function (text) { var n = normTxt(text); return needles.some(function (x) { return x && n.indexOf(x) >= 0; }); }
+      });
+    });
+    return list;
+  }
+  var TRIP_CORRIDORS = tripCorridors();
+  var trip = { corridor: 'todas', radiusKm: 120, sound: true, open: false, timer: null, lastSample: null, speed: 0, speedBuf: [] };
 
   FZ.trip = {
     open: function (corridorId) {
@@ -629,20 +638,27 @@
   }
 
   function computeSpeed() {
-    var p = myPos(); if (!p) { trip.speed = 0; return; }
+    var p = myPos(); if (!p) { trip.speed = 0; trip.speedBuf = []; return; }
     var now = Date.now();
     if (trip.lastSample && trip.lastSample.pos) {
       var d = dist({ lat: p.lat, lon: p.lon }, trip.lastSample.pos);
       var dt = (now - trip.lastSample.t) / 3600000;
-      if (d != null && dt > 0.0002) trip.speed = clamp(d / dt, 0, 220);
+      if (d != null && dt > 0.0002) {
+        var raw = clamp(d / dt, 0, 220);
+        // Dos muestras de GPS solas pueden "brincar" (semáforo, curva, ruido de señal).
+        // Guardamos las últimas 4 lecturas y promediamos para que el número no salte.
+        trip.speedBuf.push(raw);
+        if (trip.speedBuf.length > 4) trip.speedBuf.shift();
+        trip.speed = trip.speedBuf.reduce(function (a, b) { return a + b; }, 0) / trip.speedBuf.length;
+      }
     }
     trip.lastSample = { pos: { lat: p.lat, lon: p.lon }, t: now };
   }
 
   function corridorMatch(a) {
     var c = TRIP_CORRIDORS.find(function (x) { return x.id === trip.corridor; });
-    if (!c || !c.re) return true;
-    return c.re.test((a.title || '') + ' ' + (a.location || '') + ' ' + refLabel(a) + ' ' + (a.corridor || ''));
+    if (!c || !c.test) return true;
+    return c.test((a.title || '') + ' ' + (a.location || '') + ' ' + refLabel(a) + ' ' + (a.corridor || '') + ' ' + (a.road || ''));
   }
 
   function renderTrip() {
@@ -670,7 +686,9 @@
       '<div><b>' + nearby.length + '</b><span>alertas</span></div>' +
       '<div><b>' + (next ? (next.km < 10 ? next.km.toFixed(1) : Math.round(next.km)) : '—') + '</b><span>km próxima</span></div>';
 
-    var res = FZ.safetyScore(nearby.map(function (x) { return x.a; }), /d|cuota|autopista/i.test(trip.corridor) || trip.corridor === 'todas');
+    // Todos los corredores de RED_VIAL son autopistas de cuota; "todas" puede incluir
+    // vías libres, así que solo marcamos onToll cuando hay un corredor específico elegido.
+    var res = FZ.safetyScore(nearby.map(function (x) { return x.a; }), trip.corridor !== 'todas');
     byId('fz-trip-score').innerHTML = ringHTML(res, 168) +
       '<p class="fz-trip-note" style="text-align:center;margin-top:8px">' + esc(res.recommendation) + '</p>';
 
@@ -703,14 +721,27 @@
     var nbtn = byId('fz-trip-night');
     if (nbtn) nbtn.innerHTML = '<i class="fa-solid ' + (FZ._nightOn ? 'fa-moon' : 'fa-sun') + '"></i> Nocturno';
 
-    // Aviso sonoro si entra una alerta crítica nueva
+    // Aviso si entra una alerta crítica nueva: sonido (si está activo), vibración y
+    // destello visual en el HUD — antes solo sonaba, y con el volumen abajo pasaba
+    // desapercibido.
     var critIds = nearby.filter(function (x) { return sev(x.a) === 'critical' && x.km < 60; }).map(function (x) { return x.a.id; });
-    if (trip.sound && critIds.length) {
+    if (critIds.length) {
       var seen = FZ._tripSeen || (FZ._tripSeen = {});
-      var isNew = critIds.some(function (id) { return !seen[id]; });
-      if (isNew) beep();
+      var newOnes = critIds.filter(function (id) { return !seen[id]; });
+      if (newOnes.length) {
+        if (trip.sound) beep();
+        if (navigator.vibrate) { try { navigator.vibrate([250, 120, 250]); } catch (e) {} }
+        flashTripAlert(newOnes.length);
+      }
       critIds.forEach(function (id) { seen[id] = 1; });
     }
+  }
+
+  function flashTripAlert(count) {
+    var el = byId('fz-trip'); if (!el) return;
+    el.classList.remove('fz-trip-flash'); void el.offsetWidth; el.classList.add('fz-trip-flash');
+    setTimeout(function () { el.classList.remove('fz-trip-flash'); }, 2600);
+    toast(count > 1 ? count + ' alertas críticas cerca de ti' : 'Alerta crítica cerca de ti', 'warn');
   }
 
   FZ.trip.openPush = function () { FZ.push.open(); };
