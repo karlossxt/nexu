@@ -298,7 +298,55 @@ function learnedGeocode(text) {
     provider: 'learned_locations', matched_reference: best.label
   };
 }
+// Hash local usado por el frontend (centralNumericId en index.html) para mostrar
+// un id numérico en pantalla. Las correcciones guardadas ANTES de corregir ese
+// bug tienen ese hash en vez del external_id real; lo replicamos aquí para poder
+// seguir encontrando esas filas viejas.
+function legacyNumericId(value) {
+  let h = 2166136261; const text = String(value || '');
+  for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return Math.abs(h >>> 0) || 1;
+}
+async function applyApprovedCorrections() {
+  let rows;
+  try {
+    rows = await sb('location_corrections?select=id,alert_external_id,corrected_latitude,corrected_longitude,corrected_label&status=eq.approved&applied_at=is.null&limit=50');
+  } catch (e) {
+    log('warn', 'No se pudieron leer correcciones aprobadas', { error: String(e && e.message || e) });
+    return;
+  }
+  if (!Array.isArray(rows) || !rows.length) return;
+  let legacyPool = null;
+  for (const c of rows) {
+    try {
+      const direct = await sb('alerts?external_id=eq.' + encodeURIComponent(c.alert_external_id) + '&select=external_id&limit=1');
+      let targetExternalId = Array.isArray(direct) && direct[0] ? direct[0].external_id : null;
+      if (!targetExternalId) {
+        // Corrección guardada antes del fix del id: alert_external_id trae el hash
+        // local, no el external_id real. Buscamos entre alertas recientes cuál
+        // produce ese mismo hash.
+        if (!legacyPool) legacyPool = await sb('alerts?select=external_id&order=created_at.desc&limit=3000').catch(() => []);
+        const hit = (legacyPool || []).find(a => String(legacyNumericId(a.external_id)) === String(c.alert_external_id));
+        targetExternalId = hit ? hit.external_id : null;
+      }
+      if (!targetExternalId) {
+        log('warn', 'Corrección aprobada sin alerta coincidente, se descarta', { id: c.id, alert_external_id: c.alert_external_id });
+        await sb('location_corrections?id=eq.' + c.id, { method: 'PATCH', body: JSON.stringify({ applied_at: new Date().toISOString() }) });
+        continue;
+      }
+      await sb('alerts?external_id=eq.' + encodeURIComponent(targetExternalId), {
+        method: 'PATCH',
+        body: JSON.stringify({ latitude: c.corrected_latitude, longitude: c.corrected_longitude, location_precision: 'learned_reference', location_confidence: .97, location_status: 'verified' })
+      });
+      await sb('location_corrections?id=eq.' + c.id, { method: 'PATCH', body: JSON.stringify({ applied_at: new Date().toISOString() }) });
+      log('info', 'Corrección aprobada aplicada a la alerta real', { id: c.id, external_id: targetExternalId });
+    } catch (e) {
+      log('warn', 'No se pudo aplicar una corrección aprobada', { id: c.id, error: String(e && e.message || e) });
+    }
+  }
+}
 setInterval(loadLearnedLocations, 10 * 60_000).unref();
+setInterval(applyApprovedCorrections, 5 * 60_000).unref();
 
 async function alreadyExists(externalId) {
   const rows = await sb('alerts?external_id=eq.' + encodeURIComponent(externalId) + '&select=id&limit=1');
@@ -1913,6 +1961,7 @@ async function main() {
     log('warn','Índice RNC 2025 ausente — la cascada RNC queda desactivada');
   }
   await loadLearnedLocations();
+  await applyApprovedCorrections();
   await cycle();
   if (env.WORKER_ONCE === '1') return;
   while (!stopping) {
