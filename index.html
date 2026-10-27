@@ -7,7 +7,6 @@
 <meta name="description" content="Consulta un panorama confiable de incidencias viales y de seguridad en las carreteras de México, actualizado periódicamente." />
 <meta name="theme-color" content="#05070a" />
 <link rel="canonical" href="https://www.zero-vial.com.mx/" />
- <meta name="description" content="Consulta en tiempo real el estado de las carreteras, alertas viales y condiciones de seguridad en México con Zero Vial.">
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://www.zero-vial.com.mx/" />
 <meta property="og:title" content="Zero Vial — Panorama vial de México" />
@@ -1500,6 +1499,7 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
   <div class="nav-item" onclick="switchPanel('ris')"><div class="nav-icon" style="color:var(--ris)"><i class="fa-solid fa-chart-pie"></i></div><span class="nav-label" style="color:var(--ris)">Radar Vial</span></div>
   <div class="nav-item" onclick="switchPanel('filters')"><div class="nav-icon"><i class="fa-solid fa-filter"></i></div><span class="nav-label">Segmentación</span></div>
   <div class="nav-item" onclick="switchPanel('directory')"><div class="nav-icon"><i class="fa-solid fa-address-book"></i></div><span class="nav-label">Directorio</span></div>
+  <div class="nav-item" onclick="switchPanel('corrections')"><div class="nav-icon"><i class="fa-solid fa-map-pin"></i></div><span class="nav-label">Correcciones</span><span id="corrections-badge" class="badge" style="display:none;margin-left:auto;background:var(--warn,#F59E0B);color:#fff;">0</span></div>
   <div class="nav-item company-only" onclick="switchPanel('reports')"><div class="nav-icon"><i class="fa-solid fa-file-contract"></i></div><span class="nav-label">Reportes</span></div>
   <div class="nav-item company-only" onclick="switchPanel('analysis')"><div class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div><span class="nav-label">IA Análisis</span></div>
   <div class="nav-item company-only feature-soon" onclick="showComingSoon('Gestión Personal')"><div class="nav-icon"><i class="fa-solid fa-address-card"></i></div><span class="nav-label">Gestión Personal · En desarrollo</span></div>
@@ -1747,6 +1747,15 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
   <div id="panel-directory" class="panel-container">
     <div class="panel-header"><div class="panel-title">Directorio Enlace</div></div>
     <div class="panel-body"><input type="text" id="dirSearch" placeholder="🔍 Buscar..." onkeyup="filterDirectory()"><div id="directory-list"></div></div>
+  </div>
+
+  <!-- PANEL CORRECCIONES DE UBICACIÓN -->
+  <div id="panel-corrections" class="panel-container">
+    <div class="panel-header"><div class="panel-title">Correcciones de ubicación</div><button class="btn-outline" style="padding:4px 9px;font-size:11px;" onclick="loadLocationCorrections()"><i class="fa-solid fa-rotate"></i></button></div>
+    <div class="panel-body">
+      <p style="font-size:11.5px;color:var(--text-muted);margin:0 0 10px;">Correcciones que la gente envía cuando un pin cae mal. Apruébalas para que ese dato se use a futuro; recházalas si no son confiables.</p>
+      <div id="corrections-list">Cargando…</div>
+    </div>
   </div>
 
   <!-- PANEL RIS -->
@@ -2793,6 +2802,7 @@ function switchPanel(id) {
   else if (id === 'security') { map.addLayer(alertAreaLayer); map.addLayer(markers); map.addLayer(staticLayer); filterMapMarkers('security'); }
   else if (id === 'config') { map.addLayer(staticLayer); }
   else { map.addLayer(alertAreaLayer); map.addLayer(markers); map.addLayer(staticLayer); filterMapMarkers('all'); }
+  if (id === 'corrections') loadLocationCorrections();
 }
 
 /* =========================================
@@ -3331,6 +3341,7 @@ function precisionLabel(a) {
   if(a.location_precision === 'state' || a.precision === 'estado') return 'Solo referencia estatal';
   if(!hasAlertPoint(a)) return 'Ubicación pendiente de verificar';
   if(a.location_precision === 'corridor_reference') return 'Punto orientativo de la autopista · km sin verificar';
+  if(a.location_precision === 'learned_reference') return 'Lugar confirmado por un operador';
   if(a.location_precision === 'toll_reference') return 'Referencia de caseta';
   if(a.location_precision === 'rnc_poste') return 'Poste kilométrico oficial (RNC)';
   if(a.location_precision === 'kilometer_rnc_network') return 'Kilómetro calculado sobre la red (RNC)';
@@ -3365,6 +3376,7 @@ function referenceChipHTML(a) {
 }
 function estimatedRadiusMeters(a) {
   if(a.location_precision === 'corridor_reference') return 0;
+  if(a.location_precision === 'learned_reference') return 150;
   if(a.location_precision === 'toll_reference') return 500;
   if(a.location_precision === 'rnc_poste') return 300;
   if(a.location_precision === 'kilometer_rnc_network') return 500;
@@ -3851,6 +3863,58 @@ async function saveLocationCorrection() {
   }
   a.correction_pending=true; persistAlerts(); closeModal('correction-modal');
   trafficMessage(zeroVialUser?'Corrección enviada para validación.':'Corrección guardada. Inicia sesión para sincronizarla.');
+}
+
+// === PANEL DE OPERADOR: revisión de correcciones de ubicación ===
+// Las correcciones que la gente envía se guardaban en Supabase pero nadie
+// las volvía a leer. Este panel (solo visible en Centro de Operaciones,
+// role operator/admin) deja aprobar o rechazar cada una a mano.
+async function loadLocationCorrections() {
+  const box=document.getElementById('corrections-list'); if(!box) return;
+  if(!supabaseClient) { box.innerHTML='<div class="fz-empty" style="padding:16px 0;color:var(--text-muted);font-size:12px;">Sin conexión a Supabase.</div>'; return; }
+  box.innerHTML='Cargando…';
+  const {data,error}=await supabaseClient.from('location_corrections').select('*').eq('status','pending').order('created_at',{ascending:false}).limit(100);
+  const badge=document.getElementById('corrections-badge');
+  if(error) { box.innerHTML='<div class="fz-empty" style="padding:16px 0;color:var(--text-muted);font-size:12px;">No se pudieron cargar las correcciones.</div>'; return; }
+  window._pendingCorrections=Object.fromEntries(data.map(c=>[c.id,c]));
+  if(badge) { badge.style.display=data.length?'inline-block':'none'; badge.textContent=data.length; }
+  if(!data.length) { box.innerHTML='<div class="fz-empty" style="padding:16px 0;color:var(--text-muted);font-size:12px;">No hay correcciones pendientes.</div>'; return; }
+  box.innerHTML=data.map(c=>{
+    const orig=(c.original_latitude!=null&&c.original_longitude!=null)?`${Number(c.original_latitude).toFixed(4)}, ${Number(c.original_longitude).toFixed(4)}`:'sin ubicación previa';
+    return `<div class="unit-card" style="margin-bottom:9px;">
+      <div style="font-size:12.5px;font-weight:700;">${escapeHtml(c.corrected_label||'Sin etiqueta')}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Alerta: ${escapeHtml(c.alert_external_id)}</div>
+      <div style="font-size:11px;color:var(--text-muted);">Antes: ${escapeHtml(orig)} → Corregido: ${Number(c.corrected_latitude).toFixed(4)}, ${Number(c.corrected_longitude).toFixed(4)}</div>
+      <div style="font-size:11.5px;margin-top:5px;"><i class="fa-solid fa-comment" style="color:var(--text-muted)"></i> ${escapeHtml(c.reason||'')}</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:3px;">${new Date(c.created_at).toLocaleString('es-MX')}</div>
+      <div style="display:flex;gap:7px;margin-top:9px;">
+        <button class="btn-outline" style="flex:1;padding:6px;font-size:11px;color:var(--success,#10B981);border-color:var(--success,#10B981);" onclick="reviewLocationCorrection('${c.id}','approved')"><i class="fa-solid fa-check"></i> Aprobar</button>
+        <button class="btn-outline" style="flex:1;padding:6px;font-size:11px;color:var(--danger);border-color:var(--danger);" onclick="reviewLocationCorrection('${c.id}','rejected')"><i class="fa-solid fa-xmark"></i> Rechazar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function learnedLocationKey(label) {
+  return String(label||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()
+    .replace(/\b(plaza|de|cobro|caseta|peaje|km|kilometro)\b/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+}
+async function reviewLocationCorrection(id,status) {
+  if(!supabaseClient||!zeroVialUser) return;
+  const {error}=await supabaseClient.from('location_corrections').update({status,reviewed_by:zeroVialUser.id,reviewed_at:new Date().toISOString()}).eq('id',id);
+  if(error) return trafficMessage('No se pudo actualizar la corrección.',true);
+  if(status==='approved') {
+    const c=(window._pendingCorrections||{})[id];
+    const key=learnedLocationKey(c&&c.corrected_label);
+    if(c && key) {
+      const {error:learnErr}=await supabaseClient.from('learned_locations').upsert({
+        match_key:key, label:c.corrected_label, latitude:c.corrected_latitude, longitude:c.corrected_longitude,
+        source_correction_id:c.id, approved_by:zeroVialUser.id, updated_at:new Date().toISOString()
+      },{onConflict:'match_key'});
+      if(learnErr) trafficMessage('Corrección aprobada, pero no se pudo guardar como referencia aprendida.',true);
+    }
+  }
+  trafficMessage(status==='approved'?'Corrección aprobada. Las alertas futuras en ese lugar usarán esta coordenada.':'Corrección rechazada.');
+  loadLocationCorrections();
 }
 function centerAlert() {
   const a = findAlertById(currentAlertId); if(!hasAlertPoint(a)) return;
@@ -4533,6 +4597,7 @@ function toggleOperator() {
   setAppView(isUser ? 'ahora' : 'map');
   map.invalidateSize();
   if(isUser) { uxResponsive(); rebuildU(); }
+  else { try { loadLocationCorrections(); } catch(e) {} }
 }
 
 // === RELOJ + HOY NO CIRCULA ===
