@@ -477,32 +477,34 @@ body.left-rail #panel-left .u-rail{ display:flex; }
 .future-tool small{ display:block; margin-top:2px; color:var(--text-muted); font-size:9px; font-weight:600; }
 .future-tool .soon-badge{ margin:0; }
 .incident-pin-wrap{ background:transparent; border:0; }
-.incident-pin{ --pin:#F97316; position:relative; width:44px; height:54px; color:#fff; transition:transform .16s ease, filter .16s ease; }
-.incident-pin-shape{ position:absolute; inset:0; z-index:1; width:100%; height:100%; overflow:visible; filter:drop-shadow(0 5px 5px rgba(15,23,42,.34)); }
-.incident-pin-shape path{ fill:var(--pin); stroke:#fff; stroke-width:3; stroke-linejoin:round; }
-.incident-pin-shape .pin-inner{ fill:rgba(255,255,255,.13); }
-.incident-pin i{ position:absolute; left:50%; top:39%; z-index:2; transform:translate(-50%,-50%); font-size:16px; line-height:1; text-shadow:0 1px 2px rgba(0,0,0,.3); }
-.incident-pin::before{ content:''; position:absolute; left:50%; top:39%; width:92%; aspect-ratio:1; border-radius:50%; transform:translate(-50%,-50%) scale(.82); box-shadow:0 0 0 4px rgba(255,255,255,.5); opacity:0; transition:opacity .15s ease, transform .15s ease; z-index:0; }
-.incident-pin::after{ content:''; position:absolute; left:50%; top:39%; width:84%; aspect-ratio:1; border:2px solid var(--pin); border-radius:50%; transform:translate(-50%,-50%); opacity:0; z-index:0; pointer-events:none; }
-.incident-pin:hover{ transform:translateY(-2px) scale(1.04); }
-.incident-pin:hover .incident-pin-shape{ filter:drop-shadow(0 7px 8px rgba(15,23,42,.4)); }
+.incident-pin{ --pin:#F97316; position:relative; width:34px; height:34px; display:grid; place-items:center; border-radius:50%; background:var(--pin); color:#fff; border:3px solid #fff; box-shadow:0 4px 10px rgba(15,23,42,.35), 0 0 0 4px color-mix(in srgb,var(--pin) 24%,transparent); transition:transform .16s ease, box-shadow .16s ease, filter .16s ease; }
+.incident-pin i{ position:relative; z-index:2; font-size:14px; line-height:1; text-shadow:0 1px 2px rgba(0,0,0,.3); }
+.incident-pin::after{ content:''; position:absolute; inset:-6px; border-radius:50%; border:2px solid var(--pin); opacity:0; z-index:0; pointer-events:none; }
+.incident-pin:hover{ transform:scale(1.1); box-shadow:0 6px 14px rgba(15,23,42,.4), 0 0 0 4px color-mix(in srgb,var(--pin) 30%,transparent); }
 .incident-pin.important::after{ animation:incidentPulse 1.7s ease-out infinite; }
 .incident-pin.expired{ filter:grayscale(1); opacity:.74; }
-.incident-pin.is-selected{ transform:translateY(-2px) scale(1.07); }
-.incident-pin.is-selected::before{ opacity:1; transform:translate(-50%,-50%) scale(1); }
-.incident-pin.is-selected .incident-pin-shape{ filter:drop-shadow(0 8px 10px rgba(15,23,42,.44)); }
+.incident-pin.is-selected{ transform:scale(1.18); box-shadow:0 6px 16px rgba(15,23,42,.4), 0 0 0 5px color-mix(in srgb,var(--pin) 38%,transparent); }
 /* PINES · gravedad visible */
-.incident-pin .pin-sev{ position:absolute; top:-3px; right:-3px; z-index:3; width:16px; height:16px; border-radius:50%; border:2px solid #fff; background:#F59E0B; color:#fff; font:800 10px/12px system-ui,sans-serif; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,.35); }
+.incident-pin .pin-sev{ position:absolute; top:-3px; right:-3px; z-index:3; width:14px; height:14px; border-radius:50%; border:2px solid #fff; background:#F59E0B; color:#fff; font:800 9px/10px system-ui,sans-serif; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,.35); }
 .incident-pin .pin-sev.critical{ background:#DC2626; }
-.incident-pin.compact .pin-sev{ width:13px; height:13px; font-size:8px; line-height:9px; }
+.incident-pin.compact .pin-sev{ width:11px; height:11px; font-size:7px; line-height:7px; }
 .incident-cluster .cluster-crit{ position:absolute; top:-5px; right:-5px; min-width:18px; height:18px; padding:0 4px; border-radius:9px; background:#DC2626; color:#fff; border:2px solid #fff; font:800 10px/14px system-ui,sans-serif; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,.35); }
 .pop-head{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:7px; }
 .pop-type{ display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:999px; font-size:10.5px; font-weight:800; color:var(--incident,#F97316); background:color-mix(in srgb,var(--incident,#F97316) 14%,transparent); border:1px solid color-mix(in srgb,var(--incident,#F97316) 40%,transparent); }
 .pop-sev{ padding:3px 8px; border-radius:999px; font-size:10.5px; font-weight:800; color:#fff; background:#F59E0B; }
 .pop-sev.critical{ background:#DC2626; }
 .pop-time{ margin-left:auto; font-size:10.5px; color:#80868b; }
-.incident-pin.compact{ width:31px; height:38px; }
-.incident-pin.compact i{ font-size:12px; }
+.incident-pin.compact{ width:24px; height:24px; border-width:2px; }
+.incident-pin.compact i{ font-size:10px; }
+/* Leyenda de símbolos del mapa */
+.map-legend{ background:rgba(15,23,42,.92); color:#E6EDF5; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.35); font-family:inherit; overflow:hidden; backdrop-filter:blur(6px); }
+.map-legend-toggle{ display:flex; align-items:center; gap:7px; padding:8px 11px; cursor:pointer; font-size:11px; font-weight:800; letter-spacing:.02em; user-select:none; white-space:nowrap; }
+.map-legend-toggle i{ color:#19C7E8; font-size:12px; }
+.map-legend-toggle .mlt-badge{ margin-left:auto; font-size:9px; font-weight:800; color:#34D399; background:rgba(52,211,153,.14); border:1px solid rgba(52,211,153,.3); border-radius:999px; padding:1px 7px; }
+.map-legend-body{ display:none; grid-template-columns:1fr 1fr; gap:4px 12px; padding:0 11px 10px; max-height:260px; overflow-y:auto; }
+.map-legend.open .map-legend-body{ display:grid; }
+.map-legend-row{ display:flex; align-items:center; gap:6px; font-size:10.5px; color:#C7D2E0; padding:2px 0; }
+.map-legend-dot{ width:10px; height:10px; border-radius:50%; flex:none; box-shadow:0 0 0 2px rgba(255,255,255,.18); }
 .incident-cluster-wrap{ background:transparent; border:0; }
 .incident-cluster{ position:relative; width:var(--cluster-size,44px); height:var(--cluster-size,44px); display:grid; place-items:center; border-radius:50%; color:#fff; background:var(--cluster,#1478FF); border:3px solid #fff; box-shadow:0 5px 16px rgba(15,23,42,.34), 0 0 0 5px var(--cluster-soft,rgba(20,120,255,.2)); }
 .incident-cluster i{ font-size:15px; line-height:1; transform:translateY(-2px); text-shadow:0 1px 2px rgba(0,0,0,.24); }
@@ -623,17 +625,16 @@ body.user-mode:not(.dark-mode) .ac-location{ color:#667085; }
 .acn-rank-bar{ grid-column:1/-1; height:5px; margin-top:-5px; overflow:hidden; border-radius:5px; background:#EEF2F6; }
 .acn-rank-bar i{ display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#1570EF,#38BDF8); }
 .acn-list{ max-width:1060px; margin:0 auto; padding:18px 22px 40px; display:flex; flex-direction:column; gap:12px; }
-.acn-card{ --sev:#F59E0B; padding:15px 18px; border:1px solid color-mix(in srgb,var(--sev) 65%,#D8E1EC); border-radius:16px; background:#fff; box-shadow:0 5px 16px rgba(15,23,42,.06); }
+.acn-card{ --sev:#F59E0B; padding:13px 16px; border:1px solid #E7EAEF; border-left:4px solid var(--sev); border-radius:10px; background:#fff; box-shadow:0 2px 8px rgba(15,23,42,.05); }
 .acn-card-top,.acn-card-foot{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.acn-card-top time{ margin-left:auto; color:#667085; font-size:10px; }
-.acn-badge{ padding:4px 8px; border-radius:12px; font-size:9px; font-weight:900; text-transform:uppercase; background:color-mix(in srgb,var(--sev) 13%,#fff); color:var(--sev); }
-.acn-card h3{ margin:9px 0 5px; font-size:15px; }
-.acn-card p{ margin:0 0 11px; color:#475467; font-size:11px; line-height:1.5; }
-.acn-card-foot{ padding-top:10px; border-top:1px solid #EAECF0; color:#475467; font-size:10px; }
-.acn-card-foot .source{ margin-left:auto; color:#1570EF; }
-.acn-map{ width:auto; margin-left:4px; padding:7px 11px; border-radius:9px; font-size:10px; }
-.loc-confidence{ color:#027A48; font-weight:800; }
-.loc-confidence.low{ color:#B54708; }
+.acn-card-top time{ margin-left:auto; color:#98A2B3; font-size:10px; }
+.acn-badge{ padding:3px 7px; border-radius:10px; font-size:9px; font-weight:900; text-transform:uppercase; background:color-mix(in srgb,var(--sev) 13%,#fff); color:var(--sev); }
+.acn-card h3{ margin:7px 0 4px; font-size:14px; }
+.acn-card p{ margin:0 0 9px; color:#475467; font-size:11px; line-height:1.5; }
+.acn-card-foot{ padding-top:8px; border-top:1px solid #F2F4F7; color:#667085; font-size:10.5px; }
+.acn-card-foot .source{ margin-left:auto; color:#98A2B3; }
+.acn-card-foot .source::before{ content:'·'; margin-right:8px; color:#D0D5DD; }
+.acn-map{ width:26px; height:26px; flex:none; display:inline-flex; align-items:center; justify-content:center; margin-left:6px; padding:0; border-radius:50%; font-size:11px; }
 .acn-empty{ padding:50px; text-align:center; color:#667085; }
 body.dark-mode .acn-toolbar,body.dark-mode .diag-card,body.dark-mode .acn-card,body.dark-mode .acn-chart,body.dark-mode .acn-rank-card{ background:#0F151F; border-color:#263244; color:#F8FAFC; }
 body.dark-mode .acn-toolbar select,body.dark-mode .acn-toolbar input{ background:#151E2C; border-color:#344054; color:#F8FAFC; }
@@ -659,13 +660,11 @@ body.dark-mode .acn-rank-bar{ background:#263244; }
   .acn-chart{ height:220px; }
   .acn-chart-body{ height:174px; }
   .acn-list{ padding:12px 10px calc(30px + env(safe-area-inset-bottom)); }
-  .acn-card{ padding:13px; border-radius:13px; }
+  .acn-card{ padding:11px 13px; border-radius:11px; }
   .acn-card-top time{ width:100%; margin-left:0; }
   .acn-card h3{ font-size:14px; line-height:1.35; }
-  .acn-card-foot{ display:grid; grid-template-columns:auto 1fr; align-items:start; }
-  .acn-card-foot .source{ grid-column:1/-1; margin-left:0; padding-top:5px; }
-  .acn-card-foot .loc-confidence,.acn-card-foot b{ grid-column:2; }
-  .acn-map{ grid-column:1/-1; width:100%; min-height:42px; margin:4px 0 0; }
+  .acn-card-foot .source{ margin-left:0; }
+  .acn-card-foot .source::before{ display:none; }
 }
 .m-head{ display:flex; align-items:center; gap:8px; padding:14px 16px; border-bottom:1px solid #1E293B; font-weight:800; font-size:13px; letter-spacing:.03em; text-transform:uppercase; color:#fff; }
 .m-x{ margin-left:auto; width:28px; height:28px; border-radius:50%; background:#131822; border:none; color:#9CA3AF; cursor:pointer; }
@@ -1089,10 +1088,8 @@ body.user-mode .nv-maptools{gap:3px;padding:4px;border-radius:14px;background:rg
 body.user-mode .nv-mtbtn{width:40px;height:40px;border-radius:10px;color:#9CB4CB}
 body.user-mode .nv-mtbtn.active{background:#1478FF;border-color:#3290FF;box-shadow:0 5px 14px rgba(20,120,255,.3)}
 body.user-mode .traffic-legend{bottom:18px;padding:7px 11px;border-radius:18px;background:rgba(3,22,41,.92);border-color:rgba(67,132,194,.4);box-shadow:0 8px 20px rgba(0,10,28,.3)}
-body.user-mode .incident-pin i{font-size:15px}
-body.user-mode .incident-pin.compact i{font-size:11px}
-body.user-mode .incident-pin-shape{filter:drop-shadow(0 6px 6px rgba(0,10,28,.42))}
-body.user-mode .incident-pin:hover .incident-pin-shape,body.user-mode .incident-pin.is-selected .incident-pin-shape{filter:drop-shadow(0 8px 9px rgba(0,10,28,.48))}
+body.user-mode .incident-pin i{font-size:13px}
+body.user-mode .incident-pin.compact i{font-size:10px}
 body.user-mode .incident-cluster{border-width:2.5px;box-shadow:0 6px 18px rgba(0,10,28,.36),0 0 0 4px var(--cluster-soft,rgba(20,120,255,.16))}
 body.user-mode .leaflet-control-zoom{border:1px solid rgba(67,132,194,.38)!important;border-radius:12px!important;overflow:hidden;box-shadow:0 8px 20px rgba(0,10,28,.24)!important}
 body.user-mode .leaflet-control-zoom a{background:rgba(3,22,41,.92);color:#B8CBE0;border-color:rgba(67,132,194,.25);width:38px;height:38px;line-height:38px}
@@ -1322,7 +1319,7 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
 #ahora-view .acn-list{max-width:none;margin:0;padding:0}
 #ahora-view .acn-analytics{max-width:none;margin:14px 0 0;padding:0}
 #ahora-view .diag-grid{max-width:none;margin:0;padding:0}
-#ahora-view .acn-card{background:var(--card-bg);border-color:color-mix(in srgb,var(--sev) 55%,var(--border));box-shadow:none;color:var(--text)}
+#ahora-view .acn-card{background:var(--card-bg);border-color:var(--border);border-left-color:var(--sev);box-shadow:none;color:var(--text)}
 #ahora-view .acn-card h3{color:var(--text)}
 #ahora-view .acn-card p{color:var(--text-muted)}
 #ahora-view .acn-card-top time{color:var(--text-muted)}
@@ -1355,10 +1352,8 @@ body.user-mode:not(.dark-mode) #ahora-view .acn-toolbar select,body.user-mode:no
 /* ===== PINES · icono sobre disco blanco, más legible ===== */
 /* Glifos propios (sprite SVG) */
 .gl{ width:1em; height:1em; fill:currentColor; flex:none; display:inline-block; vertical-align:-.14em; }
-.incident-pin-shape .pin-inner{ fill:rgba(0,0,0,.17); }
-.incident-pin-shape .pin-sheen{ fill:url(#pin-sheen); stroke:none; pointer-events:none; }
-.incident-pin .gl{ position:absolute; left:50%; top:38.8%; z-index:2; width:21px; height:21px; transform:translate(-50%,-50%); color:#fff; vertical-align:baseline; filter:drop-shadow(0 1px 1px rgba(0,0,0,.28)); }
-.incident-pin.compact .gl{ width:15px; height:15px; }
+.incident-pin .gl{ position:relative; z-index:2; width:16px; height:16px; color:#fff; vertical-align:baseline; filter:drop-shadow(0 1px 1px rgba(0,0,0,.28)); }
+.incident-pin.compact .gl{ width:12px; height:12px; }
 .sac-icon .gl{ width:19px; height:19px; }
 .ac-icon .gl{ width:18px; height:18px; }
 .am-icon .gl{ width:26px; height:26px; }
@@ -2491,6 +2486,30 @@ const satelliteLayer = L.tileLayer(LINKS.tilesSatellite, { attribution: 'Imágen
 let baseMapMode = localStorage.getItem('nv_base_map') === 'satellite' ? 'satellite' : 'streets';
 const map = L.map('map', { zoomControl: false }).setView([19.4326, -99.1332], 5);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
+const PIN_LEGEND=[
+  ['#DC2626','Incendio / seguridad grave'],
+  ['#7C3AED','Seguridad'],
+  ['#EA580C','Accidente'],
+  ['#E11D48','Bloqueo / cierre'],
+  ['#CA8A04','Obras'],
+  ['#0284C7','Lluvia / inundación'],
+  ['#0E7490','Visibilidad reducida'],
+  ['#0D9488','Vehículo averiado'],
+  ['#D97706','Tráfico'],
+  ['#2563EB','Movilización programada'],
+  ['#F97316','Incidencia vial'],
+  ['#64748B','Alerta anterior']
+];
+const mapLegendControl=L.control({position:'bottomright'});
+mapLegendControl.onAdd=function(){
+  const div=L.DomUtil.create('div','map-legend');
+  div.innerHTML='<div class="map-legend-toggle"><i class="fa-solid fa-palette"></i><span>Símbolos del mapa</span><span class="mlt-badge">'+PIN_LEGEND.length+'</span></div>'+
+    '<div class="map-legend-body">'+PIN_LEGEND.map(function(p){return '<div class="map-legend-row"><span class="map-legend-dot" style="background:'+p[0]+'"></span>'+p[1]+'</div>';}).join('')+'</div>';
+  L.DomEvent.disableClickPropagation(div);
+  div.querySelector('.map-legend-toggle').addEventListener('click',function(){div.classList.toggle('open');});
+  return div;
+};
+mapLegendControl.addTo(map);
 L.Control.MapTools = L.Control.extend({ options: { position: 'bottomleft' }, onAdd() { const div = L.DomUtil.create('div', 'nv-maptools'); div.setAttribute('role','toolbar'); div.setAttribute('aria-label','Herramientas del mapa'); div.innerHTML = '<button id="gps-toggle" class="nv-mtbtn" onclick="gpsTrack()" title="Mi ubicación" data-label="Mi ubicación" aria-label="Activar mi ubicación" aria-pressed="false"><i class="fa-solid fa-location-crosshairs"></i></button><button class="nv-mtbtn" onclick="map.setView([23.6345,-102.5528],5)" title="Vista nacional" data-label="Vista nacional" aria-label="Centrar mapa en México"><i class="fa-solid fa-map-location-dot"></i></button><button id="satellite-toggle" class="nv-mtbtn" onclick="toggleSatellite()" title="Vista satélite" data-label="Vista satélite" aria-label="Cambiar a vista satélite" aria-pressed="false"><i class="fa-solid fa-satellite"></i></button><button id="traffic-toggle" class="nv-mtbtn" onclick="toggleTraffic()" title="Tráfico en vivo" data-label="Tráfico en vivo" aria-label="Mostrar tráfico en vivo" aria-pressed="false"><i class="fa-solid fa-traffic-light"></i></button><button id="heat-toggle" class="nv-mtbtn" onclick="toggleSecurityHeat()" title="Mapa de calor de seguridad" data-label="Calor de seguridad" aria-label="Mostrar mapa de calor de incidencias de seguridad" aria-pressed="false"><i class="fa-solid fa-fire"></i></button><button id="theme-toggle" class="nv-mtbtn" onclick="toggleTheme()" title="Cambiar tema" data-label="Cambiar tema" aria-label="Cambiar modo claro u oscuro" aria-pressed="false"><i class="fa-solid fa-moon"></i></button>'; L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div); return div; } });
 (baseMapMode === 'satellite' ? satelliteLayer : lightLayer).addTo(map);
 map.addLayer(alertAreaLayer); map.addLayer(markers); map.addLayer(staticLayer);
@@ -3398,7 +3417,7 @@ function clearAlertFocus() {
   document.getElementById('selected-alert-card')?.classList.remove('open');
   map.closePopup();
 }
-function centerFocusedAlert() { const a=alerts.find(x=>x.id===currentAlertId); if(!hasAlertPoint(a)) return; map.setView([a.lat,a.lon],locationTier(a)==='area'?10:15); }
+function centerFocusedAlert() { const a=alerts.find(x=>x.id===currentAlertId); if(!hasAlertPoint(a)) return; map.flyTo([a.lat,a.lon],locationTier(a)==='area'?10:15,{duration:0.9}); }
 function openFocusedDetail() { if(currentAlertId!=null) openAlertDetail(currentAlertId); }
 function navigateFocusedAlert() { if(currentAlertId!=null) navigateToAlert(currentAlertId); }
 function shareFocusedAlert() { if(currentAlertId!=null) shareAlert(currentAlertId); }
@@ -3428,19 +3447,18 @@ function glyphHTML(visualOrIcon) {
   const glyph = GLYPH_BY_ICON[icon];
   return glyph ? `<svg class="gl" aria-hidden="true" focusable="false"><use href="#${glyph}"></use></svg>` : `<i class="fa-solid ${icon || 'fa-triangle-exclamation'}" aria-hidden="true"></i>`;
 }
-const INCIDENT_PIN_PATH='M22 52.2c-1.3 0-2.3-.5-3.3-1.6C14.6 46 4 33.9 4 20.9 4 10.9 12.1 2.8 22 2.8s18 8.1 18 18.1c0 13-10.6 25.1-14.7 29.7-1 1.1-2 1.6-3.3 1.6Z';
 function incidentPinIcon(alert, compact=false) {
   const visual=incidentVisual(alert), expired=isAlertExpired(alert);
   const sev=alertSeverity(alert);
   const classes=['incident-pin',compact?'compact':'',alert.importante?'important':'',expired?'expired':'',(!expired&&sev!=='medium')?'sev-'+sev:''].filter(Boolean).join(' ');
   const sevBadge=(!expired&&sev!=='medium')?`<span class="pin-sev ${sev}" aria-hidden="true">${sev==='critical'?'!':''}</span>`:'';
-  const width=compact?31:44, height=compact?38:54;
+  const size=compact?24:34;
   return L.divIcon({
     className:'incident-pin-wrap',
-    html:`<div class="${classes}" data-alert-id="${alert.id}" style="--pin:${visual.color}" title="${visual.label}"><svg class="incident-pin-shape" viewBox="0 0 44 54" aria-hidden="true" focusable="false"><path d="${INCIDENT_PIN_PATH}"></path><path class="pin-sheen" d="${INCIDENT_PIN_PATH}"></path><circle class="pin-inner" cx="22" cy="20.9" r="13.2"></circle></svg>${glyphHTML(visual)}${sevBadge}</div>`,
-    iconSize:[width,height],
-    iconAnchor:[width/2,height-2],
-    popupAnchor:[0,-(height-4)]
+    html:`<div class="${classes}" data-alert-id="${alert.id}" style="--pin:${visual.color}" title="${visual.label}">${glyphHTML(visual)}${sevBadge}</div>`,
+    iconSize:[size,size],
+    iconAnchor:[size/2,size/2],
+    popupAnchor:[0,-(size/2+6)]
   });
 }
 function selectAlertPin(id) {
@@ -3835,7 +3853,7 @@ async function saveLocationCorrection() {
 }
 function centerAlert() {
   const a = findAlertById(currentAlertId); if(!hasAlertPoint(a)) return;
-  map.setView([a.lat, a.lon], locationTier(a)==='area'?10:15); closeAlertModal();
+  map.flyTo([a.lat, a.lon], locationTier(a)==='area'?10:15, {duration:0.9}); closeAlertModal();
 }
 document.getElementById('alert-modal') && document.getElementById('alert-modal').addEventListener('click', e => { if(e.target === e.currentTarget) closeAlertModal(); });
 
@@ -5365,10 +5383,11 @@ async function renderAlertCenter() {
   const sevMeta={critical:['Prioridad crítica','#EF4444'],high:['Prioridad alta','#F97316'],medium:['Prioridad media','#F59E0B']};
   list.innerHTML=more+shown.map(a=>{
     const level=alertSeverity(a),meta=sevMeta[level],loc=locationQuality(a),distance=alertDistanceKm(a);
-    return `<article class="acn-card" style="--sev:${meta[1]}">
-      <div class="acn-card-top"><span class="acn-badge">${meta[0]}</span><span class="acn-badge" style="--sev:#027A48">Fuente identificada</span>${a.km?`<span class="acn-badge" style="--sev:#1570EF">km ${a.km}</span>`:''}<time><i class="fa-regular fa-clock"></i> ${reportedTimeLabel(a.time)}</time></div>
+    const locTitle=hasAlertPoint(a) ? loc.label+(estimatedRadiusMeters(a)?' ('+Math.round((Number(a.location_confidence)||0)*100)+'%) · radio '+estimatedRadiusLabel(a):'') : loc.label;
+    return `<article class="acn-card" style="--sev:${meta[1]}" aria-label="${meta[0]}: ${escapeHtml(a.title || 'Incidente')}">
+      <div class="acn-card-top">${a.km?`<span class="acn-badge" style="--sev:#1570EF">km ${a.km}</span>`:''}<time><i class="fa-regular fa-clock"></i> ${reportedTimeLabel(a.time)}</time></div>
       <h3>${escapeHtml(a.title || 'Incidente')}</h3><p>${escapeHtml(alertDetailDisplay(a))}</p>
-      <div class="acn-card-foot"><i class="fa-solid fa-location-dot" style="color:#EF4444"></i><span>${escapeHtml(a.location||'Ubicación aproximada')}</span><span class="loc-confidence ${loc.cls}">· ${hasAlertPoint(a) ? loc.label+(estimatedRadiusMeters(a)?' ('+Math.round((Number(a.location_confidence)||0)*100)+'%) · radio '+estimatedRadiusLabel(a):'') : loc.label}</span>${distance==null?'':`<b>· ${distance<10?distance.toFixed(1):Math.round(distance)} km de ti${locationTier(a)==='area'?' aprox.':''}</b>`}<span class="source">${escapeHtml(alertSourceLabel(a))}</span>${hasAlertPoint(a) ? `<button class="acn-map" onclick="showCenterAlertOnMap(${a.id})"><i class="fa-solid fa-location-arrow"></i> ${locationTier(a)==='area'?'Ver zona':'Ver en mapa'}</button>` : ''}</div>
+      <div class="acn-card-foot" title="${escapeHtml(locTitle)}"><i class="fa-solid fa-location-dot" style="color:#EF4444"></i><span>${escapeHtml(a.location||'Ubicación aproximada')}</span>${distance==null?'':`<b>· ${distance<10?distance.toFixed(1):Math.round(distance)} km${locationTier(a)==='area'?' aprox.':''}</b>`}<span class="source">${escapeHtml(alertSourceLabel(a))}</span>${hasAlertPoint(a) ? `<button class="acn-map" onclick="showCenterAlertOnMap(${a.id})" title="${locationTier(a)==='area'?'Ver zona':'Ver en mapa'}" aria-label="${locationTier(a)==='area'?'Ver zona':'Ver en mapa'}"><i class="fa-solid fa-location-arrow"></i></button>` : ''}</div>
     </article>`;
   }).join('');
 }
@@ -5379,7 +5398,18 @@ function openAlertCenter(){
   if(block) setTimeout(() => { try { block.scrollIntoView({behavior:'smooth',block:'start'}); } catch(e) {} }, 90);
 }
 function closeAlertCenter(){}
-function showCenterAlertOnMap(id){ const a=findAlertById(id); if(!hasAlertPoint(a))return; closeAlertCenter(); showMapView(); showAlertFocus(a); map.setView([a.lat,a.lon],locationTier(a)==='area'?10:Math.max(map.getZoom(),14)); }
+function showCenterAlertOnMap(id){
+  const a=findAlertById(id); if(!hasAlertPoint(a))return;
+  closeAlertCenter(); showMapView(); showAlertFocus(a);
+  // El mapa estaba oculto (display:none) en la vista "Ahora", así que Leaflet
+  // todavía tiene el tamaño de contenedor viejo. Si centramos antes de que
+  // invalidateSize() recalcule ese tamaño, el mapa se queda donde estaba.
+  // Esperamos un frame, invalidamos el tamaño y recién entonces volamos al punto.
+  requestAnimationFrame(() => {
+    map.invalidateSize();
+    map.flyTo([a.lat,a.lon], locationTier(a)==='area'?10:Math.max(map.getZoom(),14), { duration:0.9 });
+  });
+}
 function openModal(id) { const m = document.getElementById(id); if(m) m.classList.add('open'); }
 function closeModal(id) { const m = document.getElementById(id); if(m) m.classList.remove('open'); }
 document.querySelectorAll('.u-modal').forEach(m => m.addEventListener('click', ev => {
