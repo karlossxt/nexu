@@ -3855,7 +3855,11 @@ async function saveLocationCorrection() {
   if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<14.3||lat>32.9||lon< -118.6||lon> -86.5) return correctionMessage('Las coordenadas deben corresponder a un punto dentro de México.',true);
   if(label.length<5) return correctionMessage('Agrega el nombre correcto del lugar.',true);
   if(reason.length<5) return correctionMessage('Explica brevemente qué estaba incorrecto.',true);
-  const correction={alert_external_id:String(a.id),original_latitude:hasAlertPoint(a)?a.lat:null,original_longitude:hasAlertPoint(a)?a.lon:null,corrected_latitude:lat,corrected_longitude:lon,corrected_label:label,reason,status:'pending',created_at:new Date().toISOString()};
+  // OJO: a.id es un hash local para mostrar en pantalla, no existe en Supabase.
+  // Hay que guardar el external_id real (o, si la alerta es local/no sincronizada
+  // todavía, el id tal cual) para que luego sí se pueda encontrar la fila real.
+  const realId=a.external_id||a.central_id||String(a.id);
+  const correction={alert_external_id:realId,original_latitude:hasAlertPoint(a)?a.lat:null,original_longitude:hasAlertPoint(a)?a.lon:null,corrected_latitude:lat,corrected_longitude:lon,corrected_label:label,reason,status:'pending',created_at:new Date().toISOString()};
   const local=JSON.parse(localStorage.getItem('zv_location_corrections')||'[]'); local.unshift(correction); localStorage.setItem('zv_location_corrections',JSON.stringify(local.slice(0,100)));
   if(supabaseClient&&zeroVialUser) {
     const {error}=await supabaseClient.from('location_corrections').insert({...correction,user_id:zeroVialUser.id});
