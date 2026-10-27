@@ -542,7 +542,28 @@
       if (window.gpsTrack) { try { window.gpsTrack(); } catch (e) {} }
       renderTrip();
       clearInterval(trip.timer);
-      trip.timer = setInterval(renderTrip, 15000);
+      trip.timer = setInterval(renderTrip, 5000);
+      try { if (!localStorage.getItem('fz_trip_guide_seen')) setTimeout(function () { FZ.trip.help(); }, 350); } catch (e) {}
+    },
+    help: function () {
+      var body = ensureOverlay('fz-trip-guide', { title: 'Cómo funciona el Modo Viaje', icon: 'fa-circle-info', size: 'fz-w-sm' });
+      body.innerHTML =
+        '<div class="fz-trip-guide">' +
+          '<p><b>Modo Viaje</b> es un tablero (HUD) pensado para tenerlo abierto mientras conduces: resume lo que está pasando alrededor de tu ruta sin que tengas que ir alerta por alerta.</p>' +
+          '<ul class="fz-trip-guide-list">' +
+            '<li><b>Velocidad / alertas / próxima:</b> tu velocidad estimada por GPS, cuántas alertas hay en tu radio y a cuántos km está la más cercana.</li>' +
+            '<li><b>Corredor:</b> el selector arriba filtra el tablero a una autopista específica (o "Todas"). Útil si vas, por ejemplo, en la 57D y no quieres ver alertas de otras carreteras.</li>' +
+            '<li><b>Seguridad del tramo:</b> un puntaje (anillo) calculado con las alertas activas en tu radio y corredor — entre más alto, más tranquilo está el tramo ahora mismo.</li>' +
+            '<li><b>Próximas alertas:</b> lista ordenada por cercanía; toca cualquiera para verla directo en el mapa.</li>' +
+            '<li><b>Próxima caseta:</b> la caseta de cobro más cercana a tu posición, con acceso directo a la calculadora de peaje.</li>' +
+            '<li><b>Paradas seguras:</b> lugares recomendados para descansar cerca de tu ruta.</li>' +
+            '<li><b>Aviso sonoro:</b> si se activa, suena un aviso cuando aparece una alerta crítica a menos de 60 km de ti.</li>' +
+          '</ul>' +
+          '<p class="fz-trip-note">El tablero se actualiza solo cada 5 segundos mientras lo tengas abierto. Es informativo — no sustituye tu atención al volante; no manipules el dispositivo mientras conduces.</p>' +
+          '<button class="fz-btn fz-sm fz-mt" data-close="fz-trip-guide"><i class="fa-solid fa-check"></i> Entendido</button>' +
+        '</div>';
+      try { localStorage.setItem('fz_trip_guide_seen', '1'); } catch (e) {}
+      showOverlay('fz-trip-guide');
     },
     close: function () {
       trip.open = false;
@@ -568,6 +589,7 @@
         '<select id="fz-trip-corridor" class="fz-btn fz-sm" style="width:auto" title="Corredor monitoreado"></select>' +
         '<span id="fz-trip-gps" class="fz-badge fz-info"></span>' +
         '<div class="fz-trip-actions">' +
+          '<button class="fz-btn fz-sm" onclick="Fusion.trip.help()" title="Cómo funciona"><i class="fa-solid fa-circle-info"></i> Guía</button>' +
           '<button class="fz-btn fz-sm" id="fz-trip-night" onclick="Fusion.night.toggle();Fusion.tripRefresh()"><i class="fa-solid fa-moon"></i> Nocturno</button>' +
           '<button class="fz-btn fz-sm" id="fz-trip-sound" onclick="Fusion.trip.toggleSound()"><i class="fa-solid fa-volume-high"></i> Aviso</button>' +
           '<button class="fz-btn fz-sm" onclick="Fusion.push.open()"><i class="fa-solid fa-bell"></i> Push</button>' +
