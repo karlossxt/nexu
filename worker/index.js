@@ -261,6 +261,45 @@ async function sb(path, options = {}) {
   return text ? JSON.parse(text) : null;
 }
 
+// Lugares confirmados a mano al aprobar una corrección en el panel de operador
+// (ver supabase/learned-locations.sql). Se cachean en memoria y se refrescan
+// cada 10 min para no pegarle a Supabase en cada alerta.
+let LEARNED_CACHE = [];
+let learnedCacheAt = 0;
+async function loadLearnedLocations() {
+  try {
+    const rows = await sb('learned_locations?select=match_key,label,latitude,longitude');
+    if (Array.isArray(rows)) {
+      LEARNED_CACHE = rows.filter(r => r.match_key && r.match_key.length >= 4 && Number.isFinite(Number(r.latitude)) && Number.isFinite(Number(r.longitude)));
+      learnedCacheAt = Date.now();
+      log('info', 'learned_locations cargadas', { count: LEARNED_CACHE.length });
+    }
+  } catch (e) {
+    // La tabla puede no existir todavía si no se ha corrido la migración; no es fatal.
+    log('warn', 'No se pudo cargar learned_locations', { error: String(e && e.message || e) });
+  }
+}
+function learnedKey(value) {
+  return norm(value).replace(/\b(plaza|de|cobro|caseta|peaje|km|kilometro)\b/g, ' ').replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function learnedGeocode(text) {
+  if (!LEARNED_CACHE.length) return null;
+  const haystack = learnedKey(text);
+  if (!haystack) return null;
+  let best = null;
+  for (const row of LEARNED_CACHE) {
+    if (haystack.includes(row.match_key) && (!best || row.match_key.length > best.match_key.length)) best = row;
+  }
+  if (!best) return null;
+  return {
+    latitude: Number(best.latitude), longitude: Number(best.longitude),
+    label: best.label + ' (confirmado por un operador)',
+    confidence: .97, status: 'verified', precision: 'learned_reference',
+    provider: 'learned_locations', matched_reference: best.label
+  };
+}
+setInterval(loadLearnedLocations, 10 * 60_000).unref();
+
 async function alreadyExists(externalId) {
   const rows = await sb('alerts?external_id=eq.' + encodeURIComponent(externalId) + '&select=id&limit=1');
   return Array.isArray(rows) && rows.length > 0;
@@ -970,7 +1009,9 @@ function extractExplicitTollReference(text) {
   const quoted=source.match(/(?:plaza\s+de\s+cobro|caseta(?:\s+de\s+cobro)?|peaje)\s*['"“”‘’]([^'"“”‘’]{2,80})['"“”‘’]/i);
   if (quoted) return clean(`Plaza de Cobro ${quoted[1]}`);
 
-  const plain=source.match(/(?:plaza\s+de\s+cobro|caseta(?:\s+de\s+cobro)?|peaje)\s+(?:de\s+)?([A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .-]{2,60}?)(?=\s+(?:a\s+la\s+altura|cerca\s+de|ubicad[ao]|sobre|en\s+(?:el\s+km|el\s+municipio|la\s+carretera)|km\b|toluca\b|edo\.?\s*m[eé]x|estado\s+de)|[,.;]|$)/i);
+  // "caseta de cobro de X" / "caseta conocida como X" / "caseta llamada X" / "caseta X"
+  // — distintas formas en que las notas nombran la misma referencia.
+  const plain=source.match(/(?:plaza\s+de\s+cobro|caseta(?:s)?(?:\s+de\s+cobro)?|peaje)\s+(?:conocida?\s+como\s+|llamada?\s+|denominada?\s+|de\s+)?([A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .-]{2,60}?)(?=\s+(?:a\s+la\s+altura|cerca\s+de|ubicad[ao]|sobre|rumbo\s+a|en\s+(?:el\s+km|el\s+municipio|la\s+carretera)|km\b|toluca\b|edo\.?\s*m[eé]x|estado\s+de)|[,.;]|$)/i);
   return plain ? clean(`Plaza de Cobro ${plain[1]}`) : '';
 }
 
@@ -1441,8 +1482,13 @@ async function processItem(item, feed, options={}) {
     { query:municipality ? [municipality, ai.estado].map(clean).filter(Boolean).join(', ') : '', precision:'municipality' },
     { query:clean(ai.estado), precision:'state' }
   ].filter(x => x.query.length >= 4).filter((x,index,list) => list.findIndex(y => y.query === x.query) === index).slice(0, 4);
-  let geo = resolveTollReference(reference,ai.carretera);
-  if (geo) log('info','Caseta resuelta con CASETAS',{
+  // Una corrección aprobada a mano por un operador manda sobre cualquier
+  // catálogo automático: si el texto menciona un lugar ya confirmado, se usa esa
+  // coordenada directo, sin pasar por CASETAS ni por el geocodificador genérico.
+  let geo = learnedGeocode(sourceText);
+  if (geo) log('info','Ubicación resuelta con learned_locations',{ matched:geo.matched_reference });
+  if (!geo) geo = resolveTollReference(reference,ai.carretera);
+  if (geo && geo.provider !== 'learned_locations') log('info','Caseta resuelta con CASETAS',{
     reference,
     extracted_from_text:!!explicitTollReference,
     matched:geo.matched_reference,
@@ -1866,6 +1912,7 @@ async function main() {
   } else {
     log('warn','Índice RNC 2025 ausente — la cascada RNC queda desactivada');
   }
+  await loadLearnedLocations();
   await cycle();
   if (env.WORKER_ONCE === '1') return;
   while (!stopping) {
