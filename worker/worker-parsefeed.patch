@@ -1,0 +1,34 @@
+--- /home/claude/worker-index.orig.js	2026-10-28 05:15:52.437265714 +0000
++++ worker/index.js	2026-10-28 05:15:52.452560874 +0000
+@@ -124,7 +124,7 @@
+ }
+ 
+ function itemDate(item) {
+-  const value = item.published_at || item.pubDate || item.date || item.published || item.updated;
++  const value = item.published_at || item.date_published || item.date_modified || item.pubDate || item.date || item.published || item.updated;
+   const date = value ? new Date(value) : null;
+   return date && Number.isFinite(date.getTime()) ? date.toISOString() : '';
+ }
+@@ -136,9 +136,10 @@
+     try { data = JSON.parse(text); } catch { return []; }
+     const list = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : data.data?.flatMap(x => x.items || []) || [];
+     return list.map(item => ({
+-      title: clean(item.title || item.description_text),
+-      body: clean(item.description_text || item.description_html || item.description || item.content),
+-      source: clean(item.source_name || item.source || item.author),
++      title: clean(item.title || item.description_text || item.content_text || item.summary),
++      // JSON Feed (rss.app .json) usa content_text/content_html/summary; antes quedaba body vacío y el item se descartaba.
++      body: clean(item.description_text || item.content_text || item.description_html || item.content_html || item.description || item.summary || item.content),
++      source: clean(item.source_name || (typeof item.source === 'object' ? item.source?.name : item.source) || item.authors?.[0]?.name || (typeof item.author === 'object' ? item.author?.name : item.author)),
+       url: clean(item.url || item.link),
+       published_at: itemDate(item)
+     }));
+@@ -148,7 +149,7 @@
+     const block = match[0];
+     items.push({
+       title: decode(tag(/<title[^>]*>([\s\S]*?)<\/title>/i, block)),
+-      body: decode(tag(/<description[^>]*>([\s\S]*?)<\/description>/i, block)),
++      body: decode(tag(/<description[^>]*>([\s\S]*?)<\/description>/i, block)) || decode(tag(/<content:encoded[^>]*>([\s\S]*?)<\/content:encoded>/i, block)),
+       source: decode(tag(/<(?:dc:creator|source|author)[^>]*>([\s\S]*?)<\/(?:dc:creator|source|author)>/i, block)),
+       url: decode(tag(/<link[^>]*>([\s\S]*?)<\/link>/i, block)),
+       published_at: itemDate({ pubDate: decode(tag(/<(?:pubDate|dc:date|published|updated)[^>]*>([\s\S]*?)<\/(?:pubDate|dc:date|published|updated)>/i, block)) })
