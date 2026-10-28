@@ -4434,7 +4434,12 @@ async function loadCentralAlerts() {
       alert.verification_status=alert.verification_status||'verified';
     }
   });
-  alerts=[...remainingLocal,...mergedCentral];
+  // Con el worker central sano, una alerta de medios que solo existe en este navegador
+  // y no llegó a la base central en 1 h es un resto local (cada navegador generaba las suyas).
+  // Se descarta para que todos los dispositivos vean lo mismo. Si el worker NO está sano,
+  // se conservan como respaldo.
+  const keepLocal=remainingLocal.filter(a=>!(centralWorkerHealthy&&a.source_type==='media'&&a.sync_pending===false));
+  alerts=[...keepLocal,...mergedCentral];
   persistAlerts(); updateLists(); rebuildU();
 }
 async function initCentralAlerts() {
