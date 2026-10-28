@@ -6,7 +6,7 @@
    - Tiles / fuentes: cache-first.
    - Nunca cachea peticiones de API (POST/GET dinámicos) ni Supabase.
    ============================================================================ */
-const VERSION = 'zv-fusion-v42';
+const VERSION = 'zv-fusion-v43';
 const RUNTIME_MAX_ENTRIES = 400; // tope para tiles/CDN: evita llenar el almacenamiento del móvil
 const SHELL_CACHE = VERSION + '-shell';
 const RUNTIME_CACHE = VERSION + '-runtime';
@@ -172,7 +172,11 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {
-        if ('focus' in client) return client.focus();
+        if ('focus' in client) {
+          const id = event.notification.data && event.notification.data.alertId;
+          if (id != null) client.postMessage({ type: 'open-alert', id });
+          return client.focus();
+        }
       }
       if (self.clients.openWindow) return self.clients.openWindow(target);
     })
