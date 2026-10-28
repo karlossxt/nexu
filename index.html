@@ -3966,9 +3966,55 @@ function openLocationCorrection(id) {
   correctionMessage(hasAlertPoint(a) ? `Punto original: ${Number(a.lat).toFixed(5)}, ${Number(a.lon).toFixed(5)} · ${a.location||'sin etiqueta'}` : 'Alerta sin punto; introduce una ubicación verificada.');
   closeAlertModal(); openModal('correction-modal');
 }
+// Lee coordenadas pegadas tal cual las copia Google Maps ("19.432608, -99.133209"),
+// enlaces de Google Maps (@lat,lon · !3dlat!4dlon · ?q=lat,lon) o decimales con coma.
+function parseCoordinateInput(text) {
+  const s=String(text||'').trim(); if(!s) return null;
+  let m=s.match(/@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/)
+     || s.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/)
+     || s.match(/[?&](?:q|ll|query|destination|center)=(-?\d+(?:\.\d+)?)(?:,|%2C)\s*(-?\d+(?:\.\d+)?)/i);
+  if(m) return {lat:parseFloat(m[1]),lon:parseFloat(m[2])};
+  if(!/^[\s\d.,;°+\-NSEWOnsewo]+$/.test(s)) return null;   // texto con palabras: no son coordenadas
+  const t=/^-?\d+,\d+\s+-?\d+,\d+$/.test(s)?s.replace(/,/g,'.'):s;
+  const nums=t.match(/-?\d+(?:\.\d+)?/g);
+  if(!nums||nums.length<2) return null;
+  return {lat:parseFloat(nums[0]),lon:parseFloat(nums[1])};
+}
+// Arregla errores comunes: lat/lon invertidas o longitud sin el signo menos.
+function normalizeMexicoPair(lat,lon) {
+  const latOk=v=>v>=14.3&&v<=32.9, lonOk=v=>v>=-118.6&&v<=-86.5;
+  if(!latOk(lat)&&latOk(lon)&&(lonOk(lat)||lonOk(-lat))) { const t=lat; lat=lon; lon=t; }
+  if(!lonOk(lon)&&lonOk(-lon)) lon=-lon;
+  return {lat,lon};
+}
+function readCorrectionCoords() {
+  const rawLat=document.getElementById('corr-lat').value, rawLon=document.getElementById('corr-lon').value;
+  let pair=parseCoordinateInput(rawLat);
+  if(!(pair&&/[,;\s]|@|!3d|=/.test(String(rawLat).trim()))) pair=null;
+  if(!pair) { const p2=parseCoordinateInput(rawLon); if(p2&&/[,;\s]|@|!3d|=/.test(String(rawLon).trim())&&!/^-?[\d.,]+$/.test(String(rawLon).trim())) pair=p2; }
+  if(!pair) pair={lat:Number(String(rawLat).trim().replace(',','.')),lon:Number(String(rawLon).trim().replace(',','.'))};
+  return normalizeMexicoPair(pair.lat,pair.lon);
+}
+function normalizeCorrectionCoords() {
+  const {lat,lon}=readCorrectionCoords();
+  if(Number.isFinite(lat)&&Number.isFinite(lon)) {
+    document.getElementById('corr-lat').value=lat.toFixed(6);
+    document.getElementById('corr-lon').value=lon.toFixed(6);
+  }
+}
+['corr-lat','corr-lon'].forEach(id=>document.getElementById(id)?.addEventListener('change',normalizeCorrectionCoords));
 async function searchCorrectionLocation() {
   const a=alerts.find(x=>x.id===correctionAlertId); if(!a) return;
   const query=document.getElementById('corr-query').value.trim();
+  const direct=parseCoordinateInput(query);
+  if(direct) {
+    const fixed=normalizeMexicoPair(direct.lat,direct.lon);
+    if(isInMexico(fixed.lat,fixed.lon)) {
+      document.getElementById('corr-lat').value=fixed.lat.toFixed(6);
+      document.getElementById('corr-lon').value=fixed.lon.toFixed(6);
+      return correctionMessage(`Coordenadas tomadas de lo que pegaste: ${fixed.lat.toFixed(5)}, ${fixed.lon.toFixed(5)}. Falta escribir el nombre del lugar y el motivo.`);
+    }
+  }
   if(query.length<5) return correctionMessage('Escribe una referencia más completa.',true);
   correctionMessage('Buscando el punto más probable…');
   const result=await geocodeBest(query,{expectedState:a.state||'',snapToRoad:true});
@@ -3980,9 +4026,9 @@ async function searchCorrectionLocation() {
 }
 async function saveLocationCorrection() {
   const a=alerts.find(x=>x.id===correctionAlertId); if(!a) return;
-  const lat=Number(document.getElementById('corr-lat').value),lon=Number(document.getElementById('corr-lon').value);
+  const {lat,lon}=readCorrectionCoords();
   const label=document.getElementById('corr-label').value.trim(),reason=document.getElementById('corr-reason').value.trim();
-  if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<14.3||lat>32.9||lon< -118.6||lon> -86.5) return correctionMessage('Las coordenadas deben corresponder a un punto dentro de México.',true);
+  if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<14.3||lat>32.9||lon< -118.6||lon> -86.5) return correctionMessage(Number.isFinite(lat)&&Number.isFinite(lon)?`Esas coordenadas (${lat}, ${lon}) caen fuera de México. Pega el punto como lo copia Google Maps: 19.432608, -99.133209 (latitud, longitud).`:'No pude leer las coordenadas. Pega el punto como lo copia Google Maps: 19.432608, -99.133209 (latitud, longitud).',true);
   if(label.length<5) return correctionMessage('Agrega el nombre correcto del lugar.',true);
   if(reason.length<5) return correctionMessage('Explica brevemente qué estaba incorrecto.',true);
   // OJO: a.id es un hash local para mostrar en pantalla, no existe en Supabase.
