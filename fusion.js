@@ -1812,7 +1812,7 @@
       ['fa-bell', 'Alertas push', 'Avisos por zona de influencia y ruta', 'Fusion.push.open()'],
       ['fa-moon', 'Modo nocturno', 'Alto contraste automático para conducir', 'Fusion.night.open()']
     ];
-    return '<div class="fz-topmenu-head"><i class="fa-solid fa-layer-group"></i> Herramientas Zero Vial</div>' +
+    return '<div class="fz-topmenu-head"><i class="fa-solid fa-toolbox"></i> Herramientas de viaje</div>' +
       '<div class="fz-topmenu-grid">' + items.map(function (it) {
         return '<button type="button" class="fz-topmenu-item" data-fz-open="1" onclick="' + it[3] + '">' +
           '<span class="fz-tmi-icon"><i class="fa-solid ' + it[0] + '"></i></span>' +
@@ -1836,8 +1836,8 @@
     var nav = $('.nt-nav'); if (!nav || byId('fz-topmenu-btn')) return;
     var btn = document.createElement('button');
     btn.id = 'fz-topmenu-btn'; btn.type = 'button'; btn.className = 'nt-btn fz-topmenu-btn';
-    btn.title = 'Herramientas Zero Vial'; btn.setAttribute('aria-haspopup', 'true'); btn.setAttribute('aria-expanded', 'false');
-    btn.innerHTML = '<i class="fa-solid fa-toolbox"></i><span>Herramientas</span>';
+    btn.title = 'Herramientas de viaje'; btn.setAttribute('aria-haspopup', 'true'); btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = '<i class="fa-solid fa-toolbox"></i><span>Herramientas de viaje</span>';
     var grupos = nav.querySelector('.feature-soon');
     if (grupos) nav.insertBefore(btn, grupos); else nav.appendChild(btn);
 
