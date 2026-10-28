@@ -64,6 +64,33 @@ body.user-mode .nv-topbar .nt-actions .nt-sos{ border:0; color:#fff; font-weight
 /* reacomodar paneles y avisos bajo la barra nueva */
 body.user-mode .u-panel,body.user-mode #panel-left,body.user-mode.left-rail #panel-left{ top:calc(var(--tb-h) + 10px); }
 .focus-banner,#guest-banner{ top:calc(var(--tb-h) + 10px); }
-@media (min-width:701px) and (max-width:1280px){
-  .nv-topbar .nt-brand-text small,.nv-topbar .nt-tag{ display:none; }
+/* Evita que la marca se encime con los botones */
+.nv-topbar .nt-brand{ flex:0 0 auto; }
+.nv-topbar .nt-nav{ min-width:0; }
+.nv-topbar .nt-tag{ display:none; }
+@media (min-width:701px) and (max-width:1680px){
+  .nv-topbar .nt-brand-text small{ display:none; }
+  body.user-mode .nv-topbar .nt-btn{ padding:7px 10px; gap:7px; }
+  .nv-topbar .nt-btn span:not(.nt-count){ max-width:70px; }
+  body.user-mode .nv-topbar #circula{ max-width:210px; padding:8px 10px; }
+}
+@media (min-width:701px) and (max-width:1440px){
+  .nv-topbar{ gap:10px; padding:0 12px; }
+}
+
+/* --- Ajuste anti-amontonado --- */
+body.user-mode .nv-topbar{ gap:12px; }
+.nv-topbar .nt-brand{ flex:0 0 auto; }
+.nv-topbar .nt-brand-text{ flex:0 0 auto; }
+.nv-topbar .nt-nav{ min-width:0; flex:0 1 auto; }
+body.user-mode .nv-topbar .nt-nav .nt-btn{ flex:0 0 auto; }
+.nv-topbar #circula{ flex:0 1 auto; min-width:0; }
+@media (max-width:1760px){
+  .nv-topbar .nt-brand-text small{ display:none; }
+}
+@media (max-width:1620px){
+  body.user-mode .nv-topbar .nt-btn{ padding:7px 10px; gap:7px; font-size:12px; }
+  .nv-topbar .nt-btn span:not(.nt-count){ max-width:66px; }
+  body.user-mode .nv-topbar #circula{ max-width:210px; padding:7px 10px; }
+  body.user-mode .nv-topbar{ padding:0 12px; gap:10px; }
 }
