@@ -1439,6 +1439,13 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
 <!-- FUSIÓN VíaSegura · estilos de las features nuevas -->
 <link rel="stylesheet" href="/fusion/fusion.css?v=22" />
 <link rel="stylesheet" href="/fusion/polish.css?v=2" />
+<style id="zv-approx-pins">
+/* Pin de ubicación aproximada alta: anillo punteado + marca "≈" */
+.incident-pin.approx{ border-style:dashed; border-color:rgba(255,255,255,.95); }
+.incident-pin.approx::before{ content:'≈'; position:absolute; right:-6px; bottom:-6px; z-index:3; width:16px; height:16px; border-radius:50%; display:grid; place-items:center; font:800 11px/1 system-ui,sans-serif; color:#0F172A; background:#FDE68A; border:1.5px solid #fff; }
+/* Modo Viaje: la guía debe quedar por encima del tablero, no debajo */
+#fz-trip-guide, #fz-trip-guide.fz-overlay{ z-index:2147483000 !important; }
+</style>
 </head>
 <body>
 <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
@@ -3450,7 +3457,7 @@ function clearAlertFocus() {
   document.getElementById('selected-alert-card')?.classList.remove('open');
   map.closePopup();
 }
-function centerFocusedAlert() { const a=alerts.find(x=>x.id===currentAlertId); if(!hasAlertPoint(a)) return; map.flyTo([a.lat,a.lon],locationTier(a)==='area'?10:15,{duration:0.9}); }
+function centerFocusedAlert() { const a=alerts.find(x=>x.id===currentAlertId); if(!hasAlertPoint(a)) return; flyToAlert(a); }
 function openFocusedDetail() { if(currentAlertId!=null) openAlertDetail(currentAlertId); }
 function navigateFocusedAlert() { if(currentAlertId!=null) navigateToAlert(currentAlertId); }
 function shareFocusedAlert() { if(currentAlertId!=null) shareAlert(currentAlertId); }
@@ -3483,7 +3490,7 @@ function glyphHTML(visualOrIcon) {
 function incidentPinIcon(alert, compact=false) {
   const visual=incidentVisual(alert), expired=isAlertExpired(alert);
   const sev=alertSeverity(alert);
-  const classes=['incident-pin',compact?'compact':'',alert.importante?'important':'',expired?'expired':'',(focusIsolateId!=null&&String(alert.id)===String(focusIsolateId))?'is-selected':'',(!expired&&sev!=='medium')?'sev-'+sev:''].filter(Boolean).join(' ');
+  const classes=['incident-pin',compact?'compact':'',alert.importante?'important':'',expired?'expired':'',(focusIsolateId!=null&&String(alert.id)===String(focusIsolateId))?'is-selected':'',isHighApprox(alert)?'approx':'',(!expired&&sev!=='medium')?'sev-'+sev:''].filter(Boolean).join(' ');
   const sevBadge=(!expired&&sev!=='medium')?`<span class="pin-sev ${sev}" aria-hidden="true">${sev==='critical'?'!':''}</span>`:'';
   const size=compact?24:34;
   return L.divIcon({
@@ -3545,6 +3552,62 @@ function releaseAlertIsolation() {
   rebuildAlertLayers();
   refreshSecurityHeat();
 }
+
+// ---- Aproximación alta: pin sobre la carretera + área; aproximación baja: solo círculo ----
+const HIGH_APPROX_LOCS=['road_approximate','corridor_reference','road','reference'];
+const HIGH_APPROX_PREC=['tramo','carretera'];
+function isHighApprox(a) {
+  if(locationTier(a)!=='area') return false;
+  const lp=String(a.location_precision||'').toLowerCase();
+  if(lp) return HIGH_APPROX_LOCS.includes(lp);
+  return HIGH_APPROX_PREC.includes(String(a.precision||'').toLowerCase());
+}
+function corridorOfAlert(a) {
+  if(typeof matchCorridor!=='function') return null;
+  const byName=a.corridor?matchCorridor(String(a.corridor)):null;
+  return byName||matchCorridor(`${a.location||''} ${a.title||''}`);
+}
+// Punto más cercano de la carretera mencionada (si la red vial está cargada).
+function snapAlertToRoad(a) {
+  if(a.__snapKey===`${a.lat},${a.lon}`) return a.__snap||null;
+  a.__snapKey=`${a.lat},${a.lon}`; a.__snap=null;
+  const c=corridorOfAlert(a); const pts=c&&c.pts;
+  if(!pts||pts.length<2) return null;
+  const lat0=Number(a.lat), lon0=Number(a.lon), kx=Math.cos(lat0*Math.PI/180)*111.32, ky=110.57;
+  let best=null,bestD=Infinity;
+  for(let i=0;i<pts.length-1;i++) {
+    const ax=(pts[i][1]-lon0)*kx, ay=(pts[i][0]-lat0)*ky, bx=(pts[i+1][1]-lon0)*kx, by=(pts[i+1][0]-lat0)*ky;
+    const dx=bx-ax, dy=by-ay, len2=dx*dx+dy*dy;
+    const t=len2?Math.max(0,Math.min(1,-(ax*dx+ay*dy)/len2)):0;
+    const px=ax+dx*t, py=ay+dy*t, d=Math.hypot(px,py);
+    if(d<bestD){ bestD=d; best={lat:lat0+py/ky, lon:lon0+px/kx}; }
+  }
+  if(best&&bestD<=12) a.__snap=best;   // solo si la carretera está a ≤12 km del punto
+  return a.__snap||null;
+}
+function alertLatLon(a) {
+  if(isHighApprox(a)) { const s=snapAlertToRoad(a); if(s) return [s.lat,s.lon]; }
+  return [Number(a.lat),Number(a.lon)];
+}
+function circleBounds(lat,lon,radius) {
+  const dLat=radius/111320, dLon=radius/(111320*Math.max(.2,Math.cos(lat*Math.PI/180)));
+  return L.latLngBounds([[lat-dLat,lon-dLon],[lat+dLat,lon+dLon]]);
+}
+// Acercamiento con transición: encuadra el círculo completo; a un punto lo acerca con zoom fijo.
+function flyToAlert(a, tries=0) {
+  if(!a||!hasAlertPoint(a)) return;
+  // Mapa oculto o sin medir (tamaño 0): recalcular y reintentar, si no el vuelo no llega a ningún lado.
+  const sz=map.getSize();
+  if((!sz.x||!sz.y)&&tries<6) { map.invalidateSize(); setTimeout(()=>flyToAlert(a,tries+1),150); return; }
+  const [lat,lon]=alertLatLon(a);
+  const tier=locationTier(a);
+  if(tier==='area') {
+    const r=estimatedRadiusMeters(a)||(isHighApprox(a)?2500:5000);
+    map.flyToBounds(circleBounds(lat,lon,r),{padding:[70,70],maxZoom:isHighApprox(a)?14:12,duration:1.3,easeLinearity:.2});
+  } else {
+    map.flyTo([lat,lon],Math.max(map.getZoom(),15),{duration:1.0});
+  }
+}
 function addMarkerToMap(alert) {
   if(!hasAlertPoint(alert)) return;
   if(focusIsolateId!=null && String(alert.id)!==String(focusIsolateId)) return;
@@ -3553,7 +3616,7 @@ function addMarkerToMap(alert) {
   if(alert.location_precision === 'area_security') return;
   // Nivel 2: ubicación aproximada. Se dibuja un área, nunca un pin.
   // Esto evita el pin falso en alertas de ciudad o de corredor.
-  if(locationTier(alert) === 'area') {
+  if(locationTier(alert) === 'area' && !isHighApprox(alert)) {
     const visual = incidentVisual(alert);
     const color = visual.color;
     const measuredRadius = estimatedRadiusMeters(alert);
@@ -3572,7 +3635,7 @@ function addMarkerToMap(alert) {
       <div class="alert-source"><i class="fa-solid fa-circle-info"></i> ${escapeHtml(alertSourceLabel(alert))}</div>
       <br><button onclick="openAlertDetail(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:none;border-radius:6px;background:#1976d2;color:#fff;cursor:pointer;font-size:12px;font-weight:600;">Ver detalle</button>
     </div>`);
-    area.on('click', () => showAlertFocus(alert));
+    area.on('click', () => { showAlertFocus(alert); flyToAlert(alert); });
     alertAreaLayer.addLayer(area);
     return;
   }
@@ -3581,10 +3644,17 @@ function addMarkerToMap(alert) {
   const visual = incidentVisual(alert); const color=visual.color;
   const icon = incidentPinIcon(alert);
   const markerLabel = `${visual.label}: ${alert.title || 'Incidente'}; ${alert.location || 'ubicación aproximada'}`;
-  const m = L.marker([alert.lat, alert.lon], {icon, keyboard:true, title:markerLabel, alt:markerLabel});
-  m.on('click',()=>showAlertFocus(alert));
-  const radius=estimatedRadiusMeters(alert);
-  if(radius) L.circle([alert.lat,alert.lon],{radius,color,weight:1.5,opacity:.7,dashArray:alert.precision==='punto'?null:'5 5',fillColor:color,fillOpacity:alert.precision==='punto'?.06:.12,interactive:true}).bindTooltip(`Área estimada · radio ${estimatedRadiusLabel(alert)}`,{direction:'top'}).addTo(alertAreaLayer);
+  const approx=isHighApprox(alert);
+  const [pinLat,pinLon]=alertLatLon(alert);
+  const m = L.marker([pinLat, pinLon], {icon, keyboard:true, title:markerLabel, alt:markerLabel});
+  m.on('click',()=>{ showAlertFocus(alert); if(approx) flyToAlert(alert); });
+  const radius=estimatedRadiusMeters(alert)||(approx?1500:0);
+  // Con la alerta enfocada, se resalta la carretera mencionada.
+  if(approx&&focusIsolateId!=null&&String(alert.id)===String(focusIsolateId)) {
+    const road=corridorOfAlert(alert);
+    if(road&&road.pts&&road.pts.length>1) L.polyline(road.pts,{color,weight:5,opacity:.55,lineCap:'round',interactive:false}).addTo(alertAreaLayer);
+  }
+  if(radius) L.circle([pinLat,pinLon],{radius,color,weight:1.5,opacity:.7,dashArray:alert.precision==='punto'?null:'5 5',fillColor:color,fillOpacity:alert.precision==='punto'?.06:.12,interactive:true}).bindTooltip(`Área estimada · radio ${estimatedRadiusLabel(alert)}`,{direction:'top'}).addTo(alertAreaLayer);
   const nota = `<div class="location-meta"><span class="precision-chip"><i class="fa-solid fa-location-dot"></i> ${precisionLabel(alert)}</span>${radius?`<span class="distance-chip"><i class="fa-solid fa-circle-dot"></i> Área estimada: ${estimatedRadiusLabel(alert)}</span>`:''}${referenceChipHTML(alert)}</div>`;
   const chip = (!isSec && alert.trafico) ? `<div style="margin-top:5px;"><span class="traffic-chip" style="background:${trafficStyle(alert.trafico).bg}; color:${trafficStyle(alert.trafico).color};">${trafficStyle(alert.trafico).label}</span></div>` : '';
   const stale = expired ? `<div style="margin-top:5px;"><span class="traffic-chip" style="background:rgba(154,160,166,.2); color:#80868b;">🕓 Hace más de 6h</span></div>` : '';
@@ -3594,7 +3664,7 @@ function addMarkerToMap(alert) {
       <b>${escapeHtml(alert.title)}</b><br>
       <span style="color:#5f6368;font-size:12px;">${escapeHtml(alert.location)}</span>${nota}${chip}${stale}
       <div class="alert-source"><i class="fa-solid fa-circle-info"></i> ${escapeHtml(alertSourceLabel(alert))}</div>
-      <br><div style="display:flex;gap:6px;"><button onclick="openAlertDetail(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:none;border-radius:6px;background:#1976d2;color:#fff;cursor:pointer;font-size:12px;font-weight:600;">Ver detalle</button>${radius?`<button onclick="navigateToAlert(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:1px solid #2563EB;border-radius:6px;background:transparent;color:#60A5FA;cursor:pointer;font-size:12px;font-weight:600;">Cómo llegar</button>`:''}</div>
+      <br><div style="display:flex;gap:6px;"><button onclick="openAlertDetail(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:none;border-radius:6px;background:#1976d2;color:#fff;cursor:pointer;font-size:12px;font-weight:600;">Ver detalle</button>${(radius&&!approx)?`<button onclick="navigateToAlert(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:1px solid #2563EB;border-radius:6px;background:transparent;color:#60A5FA;cursor:pointer;font-size:12px;font-weight:600;">Cómo llegar</button>`:''}</div>
     </div>`);
   m.category = alert.category; m.expired = expired; m.severity = alertSeverity(alert); markers.addLayer(m);
 }
@@ -3961,8 +4031,11 @@ async function reviewLocationCorrection(id,status) {
   loadLocationCorrections();
 }
 function centerAlert() {
-  const a = findAlertById(currentAlertId); if(!hasAlertPoint(a)) return;
-  map.flyTo([a.lat, a.lon], locationTier(a)==='area'?10:15, {duration:0.9}); closeAlertModal();
+  const a = findAlertById(currentAlertId);
+  closeAlertModal();
+  if(!a || !hasAlertPoint(a)) { trafficMessage('Esta alerta no tiene una ubicación que se pueda mostrar en el mapa.', true); return; }
+  // Si se está en "Ahora" o "Zonas", el mapa está oculto: primero hay que cambiar a la vista Mapa.
+  showCenterAlertOnMap(a.id);
 }
 document.getElementById('alert-modal') && document.getElementById('alert-modal').addEventListener('click', e => { if(e.target === e.currentTarget) closeAlertModal(); });
 
@@ -5529,7 +5602,7 @@ function showCenterAlertOnMap(id){
   // Esperamos un frame, invalidamos el tamaño y recién entonces volamos al punto.
   requestAnimationFrame(() => {
     map.invalidateSize();
-    map.flyTo([a.lat,a.lon], locationTier(a)==='area'?10:Math.max(map.getZoom(),14), { duration:0.9 });
+    setTimeout(() => { map.invalidateSize(); flyToAlert(a); }, 150);
   });
 }
 function openModal(id) { const m = document.getElementById(id); if(m) m.classList.add('open'); }
