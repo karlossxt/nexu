@@ -1446,6 +1446,26 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
 /* Modo Viaje: la guía debe quedar por encima del tablero, no debajo */
 #fz-trip-guide, #fz-trip-guide.fz-overlay{ z-index:2147483000 !important; }
 </style>
+<style id="zv-panel-resize">
+/* Ancho ajustable de los paneles (solo escritorio, modo usuario, panel abierto) */
+@media (min-width:981px){
+  body.user-mode:not(.left-rail) #panel-left{ width:var(--pl-w,296px) !important; }
+  body.user-mode:not(.right-rail) #panel-right{ width:var(--pr-w,316px) !important; }
+  body.user-mode:not(.left-rail) .selected-alert-card{ left:calc(var(--pl-w,296px) + 74px); }
+  body.user-mode:not(.right-rail) .selected-alert-card{ right:calc(var(--pr-w,316px) + 34px); }
+}
+.u-resize{ position:absolute; top:0; bottom:0; width:10px; z-index:8; cursor:col-resize; touch-action:none; display:none; }
+.u-resize::after{ content:''; position:absolute; top:50%; width:4px; height:46px; margin-top:-23px; border-radius:4px; background:rgba(148,163,184,.35); transition:background .15s, height .15s; }
+.u-resize-left{ right:0; } .u-resize-left::after{ right:2px; }
+.u-resize-right{ left:0; } .u-resize-right::after{ left:2px; }
+.u-resize:hover::after, .u-resize:focus-visible::after, body.u-resizing .u-resize::after{ background:#0BB5D6; height:72px; margin-top:-36px; }
+@media (min-width:981px){
+  body.user-mode:not(.left-rail) #panel-left .u-resize-left{ display:block; }
+  body.user-mode:not(.right-rail) #panel-right .u-resize-right{ display:block; }
+}
+body.u-resizing{ user-select:none; cursor:col-resize; }
+body.u-resizing #map{ pointer-events:none; }
+</style>
 </head>
 <body>
 <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
@@ -5042,6 +5062,59 @@ window.addEventListener('resize', () => {
 // El mapa a veces mide mal su contenedor al volver a la pestaña o terminar de cargar.
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) setTimeout(()=>{ try{ map.invalidateSize(); }catch(e){} },150); });
 window.addEventListener('load',()=>{ [200,800,2000].forEach(ms=>setTimeout(()=>{ try{ map.invalidateSize(); }catch(e){} },ms)); });
+
+/* ===== Paneles laterales redimensionables (escritorio) =====
+   Se arrastra el borde interior del panel; doble clic alterna normal/ancho.
+   El ancho se recuerda. Minimizar sigue siendo el botón de riel de cada panel. */
+(function(){
+  const LIMITS={left:{min:240,max:640,def:296,wide:460,key:'zv_pl_w',cssVar:'--pl-w'},right:{min:260,max:680,def:316,wide:480,key:'zv_pr_w',cssVar:'--pr-w'}};
+  function applyWidth(side,px){
+    const L=LIMITS[side]; const maxByScreen=Math.max(L.min,Math.floor(window.innerWidth*0.45));
+    const w=Math.round(Math.max(L.min,Math.min(L.max,maxByScreen,px)));
+    document.documentElement.style.setProperty(L.cssVar,w+'px');
+    return w;
+  }
+  function saved(side){ try{ const v=Number(localStorage.getItem(LIMITS[side].key)); return Number.isFinite(v)&&v>0?v:0; }catch(e){ return 0; } }
+  function persist(side,w){ try{ localStorage.setItem(LIMITS[side].key,String(w)); }catch(e){} }
+  function init(side,panelId){
+    const panel=document.getElementById(panelId); if(!panel||panel.querySelector('.u-resize')) return;
+    const L=LIMITS[side]; const s=saved(side); if(s) applyWidth(side,s);
+    const h=document.createElement('div');
+    h.className='u-resize u-resize-'+side; h.setAttribute('role','separator'); h.setAttribute('aria-orientation','vertical');
+    h.setAttribute('aria-label','Arrastra para cambiar el ancho del panel. Doble clic: alternar tamaño'); h.title='Arrastra para cambiar el ancho · doble clic: normal/ancho';
+    panel.appendChild(h);
+    let startX=0,startW=0;
+    h.addEventListener('pointerdown',e=>{
+      e.preventDefault(); startX=e.clientX; startW=panel.getBoundingClientRect().width;
+      h.setPointerCapture(e.pointerId); document.body.classList.add('u-resizing');
+    });
+    h.addEventListener('pointermove',e=>{
+      if(!h.hasPointerCapture(e.pointerId)) return;
+      const dx=e.clientX-startX; applyWidth(side,side==='left'?startW+dx:startW-dx);
+    });
+    const end=e=>{
+      if(!h.hasPointerCapture(e.pointerId)) return;
+      h.releasePointerCapture(e.pointerId); document.body.classList.remove('u-resizing');
+      persist(side,Math.round(panel.getBoundingClientRect().width)); try{ map.invalidateSize(); }catch(_){}
+    };
+    h.addEventListener('pointerup',end); h.addEventListener('pointercancel',end);
+    h.addEventListener('dblclick',()=>{
+      const cur=Math.round(panel.getBoundingClientRect().width);
+      const next=Math.abs(cur-L.def)<8?L.wide:L.def;
+      const w=applyWidth(side,next); persist(side,w); try{ map.invalidateSize(); }catch(_){}
+    });
+    h.addEventListener('keydown',e=>{
+      if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight') return;
+      e.preventDefault(); const cur=panel.getBoundingClientRect().width;
+      const grow=(side==='left')===(e.key==='ArrowRight');
+      const w=applyWidth(side,cur+(grow?24:-24)); persist(side,w);
+    });
+    h.tabIndex=0;
+  }
+  function boot(){ init('left','panel-left'); init('right','panel-right'); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
+
 
 /* =========================================
    PANORAMA + HONESTIDAD DE UBICACIÓN
