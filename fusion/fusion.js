@@ -1340,7 +1340,7 @@
     var canNotify = ('Notification' in window) && Notification.permission === 'granted';
     if (canNotify && (document.hidden || payload.test)) {
       try {
-        new Notification(payload.title, { body: payload.body, icon: '/favicon-256.png', badge: '/favicon-256.png', tag: payload.alert ? 'zv-' + payload.alert.id : undefined });
+        (window.zvNotify || function (t, op) { new Notification(t, op); })(payload.title, { body: payload.body, tag: payload.alert ? 'zv-' + payload.alert.id : undefined, data: payload.alert ? { alertId: payload.alert.id } : undefined });
       } catch (e) { showPushToast(payload); }
     } else {
       showPushToast(payload);
@@ -1799,6 +1799,9 @@
   // Menú superior: agrupa todas las herramientas de fusión en la barra de navegación.
   function topMenuHTML() {
     var items = [
+      ['fa-route', 'Planificador de rutas', 'Compara trayectos e incidencias cercanas', 'openRouteModal()'],
+      ['fa-cloud-sun', 'Clima Vial', 'Condiciones en tramos carreteros', 'openWeatherModal()'],
+      ['fa-file-contract', 'Reportes y filtros', 'Exporta el periodo y los filtros activos', "showMapView();switchPR('reportes')"],
       ['fa-car-on', 'Modo Viaje (HUD)', 'Tablero de conducción con alertas y puntaje', 'Fusion.trip.open()'],
       ['fa-route', 'Ruta con costos', 'Peajes y combustible por alternativa', 'Fusion.routes.open()'],
       ['fa-money-bill-wave', 'Calculadora de peajes', 'Casetas, combustible y costo total', 'Fusion.tolls.open()'],
@@ -1809,7 +1812,7 @@
       ['fa-bell', 'Alertas push', 'Avisos por zona de influencia y ruta', 'Fusion.push.open()'],
       ['fa-moon', 'Modo nocturno', 'Alto contraste automático para conducir', 'Fusion.night.open()']
     ];
-    return '<div class="fz-topmenu-head"><i class="fa-solid fa-layer-group"></i> Herramientas Zero Vial</div>' +
+    return '<div class="fz-topmenu-head"><i class="fa-solid fa-toolbox"></i> Herramientas de viaje</div>' +
       '<div class="fz-topmenu-grid">' + items.map(function (it) {
         return '<button type="button" class="fz-topmenu-item" data-fz-open="1" onclick="' + it[3] + '">' +
           '<span class="fz-tmi-icon"><i class="fa-solid ' + it[0] + '"></i></span>' +
@@ -1833,8 +1836,8 @@
     var nav = $('.nt-nav'); if (!nav || byId('fz-topmenu-btn')) return;
     var btn = document.createElement('button');
     btn.id = 'fz-topmenu-btn'; btn.type = 'button'; btn.className = 'nt-btn fz-topmenu-btn';
-    btn.title = 'Herramientas Zero Vial'; btn.setAttribute('aria-haspopup', 'true'); btn.setAttribute('aria-expanded', 'false');
-    btn.innerHTML = '<i class="fa-solid fa-layer-group"></i><span>Fusión</span>';
+    btn.title = 'Herramientas de viaje'; btn.setAttribute('aria-haspopup', 'true'); btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = '<i class="fa-solid fa-toolbox"></i><span>Herramientas de viaje</span>';
     var grupos = nav.querySelector('.feature-soon');
     if (grupos) nav.insertBefore(btn, grupos); else nav.appendChild(btn);
 
