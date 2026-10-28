@@ -387,7 +387,11 @@ body.user-mode #circula{ display:flex; }
    ZERO VIAL v23 · UI CYBERPUNK (MODO USUARIO)
    ============================================ */
 .main-content{ display:flex; flex-direction:row; align-items:stretch; position:relative; }
-#map{ position:relative; inset:auto; flex:1; min-width:0; height:100%; background:#05070A; z-index:1; }
+#map{ position:relative; inset:auto; flex:1; min-width:0; height:100%; background:#cfd8e3; z-index:1; }
+body.dark-mode #map{ background:#1a2332; }
+#map.map-sat{ background:#0f2238; }
+.leaflet-tile-container img{ background:transparent; }
+.leaflet-tile{ transition:opacity .2s linear; }
 body.user-mode{ --bg:#05070A; --panel:#0C1017; --border:#1E293B; --text:#ffffff; --text-muted:#9CA3AF; --accent:#2563EB; --danger:#EF4444; --warn:#F97316; --success:#10B981; --critical:#D946EF; --ris:#22d3ee; --glass:rgba(12,16,23,.80); --input-bg:#131822; --card-bg:#131822; --card-hover:#151A22; --log-bg:#0C1017; font-family:'Inter','Segoe UI',sans-serif; }
 body.user-mode #sidebar{ display:none; }
 body.user-mode .panel-container, body.user-mode #panel-launcher{ display:none !important; }
@@ -2492,10 +2496,18 @@ function renderChartsInto(canvasSId, canvasTId, states, types) {
 }
 
 // MAPA
-const lightLayer = L.tileLayer(LINKS.tilesLight, { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', subdomains: 'abc', maxZoom: 19 });
-const darkLayer = L.tileLayer(LINKS.tilesDark, { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', subdomains: 'abc', maxZoom: 19, className:'dark-map-tiles' });
-const satelliteLayer = L.tileLayer(LINKS.tilesSatellite, { attribution: 'Imágenes &copy; Esri', maxZoom: 19 });
+const TILE_OPTS = { keepBuffer:6, updateWhenIdle:false, updateInterval:120 };
+const lightLayer = L.tileLayer(LINKS.tilesLight, { ...TILE_OPTS, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', subdomains: 'abc', maxZoom: 19 });
+const darkLayer = L.tileLayer(LINKS.tilesDark, { ...TILE_OPTS, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', subdomains: 'abc', maxZoom: 19, className:'dark-map-tiles' });
+const satelliteLayer = L.tileLayer(LINKS.tilesSatellite, { ...TILE_OPTS, attribution: 'Imágenes &copy; Esri', maxZoom: 19 });
 let baseMapMode = localStorage.getItem('nv_base_map') === 'satellite' ? 'satellite' : 'streets';
+// Si una tesela falla (red lenta), se reintenta hasta 2 veces en vez de dejar huecos oscuros.
+[lightLayer,darkLayer,satelliteLayer].forEach(layer=>layer.on('tileerror',e=>{
+  const t=e.tile; t.__retry=(t.__retry||0)+1;
+  if(t.__retry>2) return;
+  const base=String(t.src||'').replace(/[?&]r=\d+$/,'');
+  setTimeout(()=>{ t.src=base+(base.includes('?')?'&':'?')+'r='+t.__retry; },700*t.__retry);
+}));
 const map = L.map('map', { zoomControl: false }).setView([19.4326, -99.1332], 5);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 const PIN_LEGEND=[
@@ -2526,6 +2538,7 @@ mapLegendControl.onAdd=function(){
 mapLegendControl.addTo(map);
 L.Control.MapTools = L.Control.extend({ options: { position: 'bottomleft' }, onAdd() { const div = L.DomUtil.create('div', 'nv-maptools'); div.setAttribute('role','toolbar'); div.setAttribute('aria-label','Herramientas del mapa'); div.innerHTML = '<button id="gps-toggle" class="nv-mtbtn" onclick="gpsTrack()" title="Mi ubicación" data-label="Mi ubicación" aria-label="Activar mi ubicación" aria-pressed="false"><i class="fa-solid fa-location-crosshairs"></i></button><button class="nv-mtbtn" onclick="map.setView([23.6345,-102.5528],5)" title="Vista nacional" data-label="Vista nacional" aria-label="Centrar mapa en México"><i class="fa-solid fa-map-location-dot"></i></button><button id="satellite-toggle" class="nv-mtbtn" onclick="toggleSatellite()" title="Vista satélite" data-label="Vista satélite" aria-label="Cambiar a vista satélite" aria-pressed="false"><i class="fa-solid fa-satellite"></i></button><button id="traffic-toggle" class="nv-mtbtn" onclick="toggleTraffic()" title="Tráfico en vivo" data-label="Tráfico en vivo" aria-label="Mostrar tráfico en vivo" aria-pressed="false"><i class="fa-solid fa-traffic-light"></i></button><button id="heat-toggle" class="nv-mtbtn" onclick="toggleSecurityHeat()" title="Mapa de calor de seguridad" data-label="Calor de seguridad" aria-label="Mostrar mapa de calor de incidencias de seguridad" aria-pressed="false"><i class="fa-solid fa-fire"></i></button><button id="theme-toggle" class="nv-mtbtn" onclick="toggleTheme()" title="Cambiar tema" data-label="Cambiar tema" aria-label="Cambiar modo claro u oscuro" aria-pressed="false"><i class="fa-solid fa-moon"></i></button>'; L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div); return div; } });
 (baseMapMode === 'satellite' ? satelliteLayer : lightLayer).addTo(map);
+document.getElementById('map')?.classList.toggle('map-sat',baseMapMode==='satellite');
 map.addLayer(alertAreaLayer); map.addLayer(markers); map.addLayer(staticLayer);
 let routeLineLayer = L.layerGroup(); map.addLayer(routeLineLayer);
 new L.Control.MapTools().addTo(map);
@@ -2638,6 +2651,7 @@ function setBaseMap(mode) {
   if(baseMapMode === 'satellite') satelliteLayer.addTo(map);
   else (document.body.classList.contains('dark-mode') ? darkLayer : lightLayer).addTo(map);
   localStorage.setItem('nv_base_map',baseMapMode);
+  document.getElementById('map')?.classList.toggle('map-sat',baseMapMode==='satellite');
   const btn=document.getElementById('satellite-toggle');
   const satellite=baseMapMode === 'satellite';
   if(btn) {
@@ -3415,6 +3429,7 @@ function navigateToAlert(id) {
 function showAlertFocus(a) {
   if(!a) return;
   currentAlertId=a.id;
+  isolateAlertOnMap(a.id);
   selectAlertPin(a.id);
   const visual=incidentVisual(a);
   const banner=document.getElementById('focus-banner'), card=document.getElementById('selected-alert-card');
@@ -3429,6 +3444,7 @@ function showAlertFocus(a) {
   banner.classList.add('open'); card.classList.add('open');
 }
 function clearAlertFocus() {
+  releaseAlertIsolation();
   selectAlertPin(null);
   document.getElementById('focus-banner')?.classList.remove('open');
   document.getElementById('selected-alert-card')?.classList.remove('open');
@@ -3467,7 +3483,7 @@ function glyphHTML(visualOrIcon) {
 function incidentPinIcon(alert, compact=false) {
   const visual=incidentVisual(alert), expired=isAlertExpired(alert);
   const sev=alertSeverity(alert);
-  const classes=['incident-pin',compact?'compact':'',alert.importante?'important':'',expired?'expired':'',(!expired&&sev!=='medium')?'sev-'+sev:''].filter(Boolean).join(' ');
+  const classes=['incident-pin',compact?'compact':'',alert.importante?'important':'',expired?'expired':'',(focusIsolateId!=null&&String(alert.id)===String(focusIsolateId))?'is-selected':'',(!expired&&sev!=='medium')?'sev-'+sev:''].filter(Boolean).join(' ');
   const sevBadge=(!expired&&sev!=='medium')?`<span class="pin-sev ${sev}" aria-hidden="true">${sev==='critical'?'!':''}</span>`:'';
   const size=compact?24:34;
   return L.divIcon({
@@ -3510,8 +3526,28 @@ function popupHeadHTML(alert) {
     : ((!expired&&sev!=='medium')?`<span class="pop-sev ${sev}">Gravedad ${SEV_LABELS[sev]}</span>`:'');
   return `<div class="pop-head"><span class="pop-type" style="--incident:${v.color}">${glyphHTML(v)} ${v.label}</span>${sevChip}<time class="pop-time">${alertWhenLabel(alert)}</time></div>`;
 }
+// Alerta enfocada: mientras hay una seleccionada solo se dibuja esa (y su círculo
+// de proximidad), para que no se encimen con las demás.
+let focusIsolateId=null;
+function rebuildAlertLayers() {
+  markers.clearLayers(); alertAreaLayer.clearLayers();
+  alerts.forEach(a=>addMarkerToMap(a));
+}
+function isolateAlertOnMap(id) {
+  if(focusIsolateId!=null && String(focusIsolateId)===String(id)) return;
+  focusIsolateId=id;
+  rebuildAlertLayers();
+  if(map.hasLayer(securityHeatLayer)) map.removeLayer(securityHeatLayer);
+}
+function releaseAlertIsolation() {
+  if(focusIsolateId==null) return;
+  focusIsolateId=null;
+  rebuildAlertLayers();
+  refreshSecurityHeat();
+}
 function addMarkerToMap(alert) {
   if(!hasAlertPoint(alert)) return;
+  if(focusIsolateId!=null && String(alert.id)!==String(focusIsolateId)) return;
   // La seguridad que solo se ubica por municipio no se pinta como pin: se
   // representa con el mapa de calor (concentración), no con un punto exacto.
   if(alert.location_precision === 'area_security') return;
@@ -4921,7 +4957,18 @@ function uxResponsive() {
   if(w < 980) document.body.classList.add('left-rail'); else document.body.classList.remove('left-rail');
   map.invalidateSize();
 }
-window.addEventListener('resize', () => { if(document.body.classList.contains('user-mode')) uxResponsive(); });
+// Solo reaccionar a cambios de ANCHO: en el celular la barra del navegador dispara
+// 'resize' al hacer scroll y eso cerraba los paneles que el usuario acababa de abrir.
+let lastViewportW=window.innerWidth;
+window.addEventListener('resize', () => {
+  if(window.innerWidth!==lastViewportW) {
+    lastViewportW=window.innerWidth;
+    if(document.body.classList.contains('user-mode')) uxResponsive();
+  } else { try { map.invalidateSize(); } catch(e) {} }
+});
+// El mapa a veces mide mal su contenedor al volver a la pestaña o terminar de cargar.
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) setTimeout(()=>{ try{ map.invalidateSize(); }catch(e){} },150); });
+window.addEventListener('load',()=>{ [200,800,2000].forEach(ms=>setTimeout(()=>{ try{ map.invalidateSize(); }catch(e){} },ms)); });
 
 /* =========================================
    PANORAMA + HONESTIDAD DE UBICACIÓN
@@ -5030,6 +5077,7 @@ function setAppView(view) {
     // La integración de Radar Vial, zonas y analítica llega en la siguiente fase.
   } else {
     setTimeout(() => { try { map.invalidateSize(); } catch(e) {} }, 60);
+    setTimeout(() => { try { map.invalidateSize(); } catch(e) {} }, 400);
   }
 }
 function showAhoraView() { setAppView('ahora'); }
