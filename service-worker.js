@@ -6,7 +6,7 @@
    - Tiles / fuentes: cache-first.
    - Nunca cachea peticiones de API (POST/GET dinámicos) ni Supabase.
    ============================================================================ */
-const VERSION = 'zv-fusion-v43';
+const VERSION = 'zv-fusion-v45';
 const RUNTIME_MAX_ENTRIES = 400; // tope para tiles/CDN: evita llenar el almacenamiento del móvil
 const SHELL_CACHE = VERSION + '-shell';
 const RUNTIME_CACHE = VERSION + '-runtime';
@@ -164,6 +164,17 @@ self.addEventListener('fetch', (event) => {
       })
     );
   }
+});
+
+// Web Push real: llega aunque la app esté cerrada.
+self.addEventListener('push', (event) => {
+  let d = {};
+  try { d = event.data ? event.data.json() : {}; } catch (e) { d = { body: event.data ? event.data.text() : '' }; }
+  event.waitUntil(self.registration.showNotification(d.title || 'Zero Vial', {
+    body: d.body || 'Hay una alerta nueva en tu zona.',
+    icon: '/favicon-256.png', badge: '/favicon-256.png', tag: d.tag || 'zv-push',
+    vibrate: [200, 100, 200], lang: 'es-MX', data: { url: d.url || '/' }
+  }));
 });
 
 self.addEventListener('notificationclick', (event) => {
