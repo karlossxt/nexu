@@ -1329,6 +1329,11 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
 .risk-up{color:#F87171}.risk-down{color:#34D399}.risk-eq{color:#94A3B8}
 .risk-note{font-size:11px;color:#94A3B8;margin-top:4px}
 @media(max-width:700px){.risk-row{grid-template-columns:110px 1fr auto}}
+#auth-modal.logged .auth-switch,#auth-modal.logged .m-body>label,#auth-modal.logged #auth-email,#auth-modal.logged #auth-password,#auth-modal.logged #auth-forgot,#auth-modal.logged #auth-submit,#auth-modal.logged #auth-social{display:none!important}
+.auth-account{align-items:center;gap:12px;padding:12px 14px;margin-bottom:10px;border:1px solid var(--border,rgba(148,163,184,.25));border-radius:12px}
+.auth-account>i{font-size:30px;color:#38BDF8}
+.auth-account b{display:block;font-size:13px;word-break:break-all}
+.auth-account span{font-size:11px;color:var(--text-muted,#94A3B8)}
 @media(max-width:700px){ .fz-topmenu,.fz-topmenu-btn{display:none!important} }
 #ahora-view .acn-approx{ font-style:normal; font-size:9.5px; font-weight:800; letter-spacing:.02em; color:#FBBF24; background:rgba(251,191,36,.12); border:1px solid rgba(251,191,36,.3); border-radius:999px; padding:1px 7px; white-space:nowrap; }
 #ahora-view .acn-card{background:var(--card-bg);border-color:var(--border);border-left-color:var(--sev);box-shadow:none;color:var(--text)}
@@ -2270,6 +2275,7 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
   <div class="u-modal-card">
     <div class="m-head"><i class="fa-solid fa-circle-user" style="color:#38BDF8"></i> Cuenta Zero Vial<button class="m-x" onclick="closeModal('auth-modal')"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
     <div class="m-body">
+      <div id="auth-account" class="auth-account" style="display:none"><i class="fa-solid fa-circle-user"></i><div><b id="auth-account-email"></b><span id="auth-account-role"></span></div></div>
       <div class="auth-switch"><button id="auth-login-tab" class="active" onclick="setAuthMode('login')">Iniciar sesión</button><button id="auth-register-tab" onclick="setAuthMode('register')">Crear cuenta</button></div>
       <label>Correo electrónico</label><input id="auth-email" type="email" autocomplete="email" placeholder="correo@ejemplo.com">
       <label>Contraseña</label><input id="auth-password" type="password" autocomplete="current-password" minlength="6" placeholder="Mínimo 6 caracteres">
@@ -4401,6 +4407,17 @@ async function requestLandingRecovery() {
 }
 function openAuthModal() {
   openModal('auth-modal');
+  // Con sesión iniciada solo se muestra la cuenta (sin casillas vacías de correo/contraseña).
+  const modal=document.getElementById('auth-modal'); if(modal) modal.classList.toggle('logged',!!zeroVialUser);
+  const accBox=document.getElementById('auth-account');
+  if(accBox) {
+    accBox.style.display=zeroVialUser?'flex':'none';
+    if(zeroVialUser) {
+      document.getElementById('auth-account-email').textContent=zeroVialUser.email||'Cuenta Zero Vial';
+      const roles={admin:'Administrador',operator:'Operador',user:'Usuario'};
+      document.getElementById('auth-account-role').textContent=roles[zeroVialRole]||'Usuario';
+    }
+  }
   document.getElementById('auth-logout').style.display=zeroVialUser?'block':'none';
   document.getElementById('auth-submit').style.display=zeroVialUser?'none':'block';
   document.getElementById('auth-forgot').style.display=!zeroVialUser&&authMode==='login'?'block':'none';
@@ -4939,6 +4956,40 @@ function requestNotifPerm() {
     document.addEventListener('pointerdown', ask, { once:true, capture:true });
   } catch(e) {}
 }
+// === Web Push real (avisos con la app cerrada) ===
+window.zvPush = (function(){
+  const KEY='zv_push_opts';
+  const b64=s=>{ const p='='.repeat((4-s.length%4)%4); const r=atob((s+p).replace(/-/g,'+').replace(/_/g,'/')); return Uint8Array.from(r,c=>c.charCodeAt(0)); };
+  const supported=()=>('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);
+  async function reg(){ return (await navigator.serviceWorker.getRegistration()) || navigator.serviceWorker.ready; }
+  async function current(){ if(!supported()) return null; try{ const r=await reg(); return r ? await r.pushManager.getSubscription() : null; }catch(e){ return null; } }
+  async function subscribe(opts){
+    if(!supported()) throw new Error('Este navegador no admite avisos push (en iPhone hay que instalar la app).');
+    if(!supabaseClient) throw new Error('Sin conexión con el servidor.');
+    const perm=Notification.permission==='granted' ? 'granted' : await Notification.requestPermission();
+    if(perm!=='granted') throw new Error('El permiso de notificaciones está bloqueado.');
+    const {data:key,error}=await supabaseClient.rpc('push_public_key');
+    if(error||!key) throw new Error('Los avisos push aún no están activados en el servidor.');
+    const r=await reg();
+    let sub=await r.pushManager.getSubscription();
+    if(!sub) sub=await r.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:b64(key) });
+    const j=sub.toJSON();
+    const states=(opts&&opts.states||[]).map(s=>String(s).trim()).filter(Boolean);
+    const sev=opts&&opts.minSeverity==='high' ? 'high' : 'critical';
+    const {error:e2}=await supabaseClient.rpc('push_subscribe',{ p_endpoint:j.endpoint, p_p256dh:j.keys.p256dh, p_auth:j.keys.auth, p_states:states, p_min_severity:sev });
+    if(e2) throw new Error('No se pudo guardar la suscripción.');
+    try{ localStorage.setItem(KEY,JSON.stringify({states,minSeverity:sev})); }catch(e){}
+    return true;
+  }
+  async function unsubscribe(){
+    const sub=await current(); if(!sub) return;
+    try{ if(supabaseClient) await supabaseClient.rpc('push_unsubscribe',{ p_endpoint:sub.endpoint }); }catch(e){}
+    await sub.unsubscribe();
+    try{ localStorage.removeItem(KEY); }catch(e){}
+  }
+  function saved(){ try{ return JSON.parse(localStorage.getItem(KEY)||'null'); }catch(e){ return null; } }
+  return { supported, current, subscribe, unsubscribe, saved };
+})();
 if('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', ev => {
   if(ev.data && ev.data.type === 'open-alert' && ev.data.id != null) { try { openAlertDetail(ev.data.id); } catch(e) {} }
 });
@@ -6447,6 +6498,6 @@ setLandingAuthMode('login');
 </script>
 
 <!-- FUSIÓN VíaSegura · motor de features (Modo Viaje, Nocturno, PWA, Peajes, Analítica, PDF, Push) -->
-<script src="/fusion/fusion.js?v=23" defer></script>
+<script src="/fusion/fusion.js?v=24" defer></script>
 </body>
 </html>
