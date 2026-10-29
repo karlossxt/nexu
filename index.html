@@ -256,6 +256,9 @@ body.operator-authorized .operator-access{ display:flex!important; }
 .landing-foot a{ color:var(--brand-cyan)!important; font-weight:700; }
 #guest-banner{ display:none; position:absolute; top:84px; left:50%; transform:translateX(-50%); z-index:3450; align-items:center; gap:9px; max-width:min(590px,calc(100% - 32px)); padding:8px 11px; border:1px solid rgba(255,176,0,.48); border-radius:11px; color:#5C3A00; background:rgba(255,248,226,.94); box-shadow:0 8px 24px rgba(15,23,42,.14); backdrop-filter:blur(12px); font-size:10px; font-weight:700; }
 body.guest-mode #guest-banner{ display:flex; }
+body.guest-banner-dismissed #guest-banner{ display:none !important; }
+#guest-banner .gb-close{ background:transparent; color:#5C3A00; font-size:15px; line-height:1; padding:4px 7px; min-width:30px; border-radius:7px; }
+#guest-banner .gb-close:hover{ background:rgba(92,58,0,.12); }
 #guest-banner button{ width:auto; padding:6px 9px; border-radius:7px; color:#111318; background:#FFB000; font-size:9px; white-space:nowrap; }
 
 /* ALERTAS CERCANAS A LA RUTA */
@@ -396,6 +399,21 @@ body.operator-mode .u-panel, body.operator-mode .u-modal{ display:none !importan
 /* === PANEL LATERAL (IZQUIERDA) === */
 .u-panel{ width:340px; position:absolute; top:14px; bottom:14px; z-index:2000; display:flex; flex-direction:column; overflow:hidden; color:#fff; background:linear-gradient(180deg,rgba(12,16,23,.80) 0%,rgba(8,10,15,.76) 100%); border:1px solid rgba(71,85,105,.62); border-radius:16px; box-shadow:0 12px 36px rgba(15,23,42,.28); backdrop-filter:blur(20px) saturate(130%); -webkit-backdrop-filter:blur(20px) saturate(130%); }
 #panel-left{ left:14px; }
+.u-resizer{ display:none; position:absolute; top:0; bottom:0; width:10px; z-index:6; cursor:col-resize; touch-action:none; }
+#panel-left .u-resizer{ right:0; }
+#panel-right .u-resizer{ left:0; }
+.u-resizer::after{ content:""; position:absolute; top:50%; left:50%; width:3px; height:46px; margin:-23px 0 0 -1.5px; border-radius:2px; background:rgba(148,163,184,.55); opacity:0; transition:opacity .15s; }
+.u-panel:hover .u-resizer::after,.u-resizer:hover::after,.u-resizer:focus-visible::after,.u-resizer.is-dragging::after{ opacity:1; }
+.u-resizer:focus-visible{ outline:2px solid #22d3ee; outline-offset:-2px; }
+body.is-resizing-panel{ user-select:none; cursor:col-resize; }
+@media(min-width:1101px){
+ body:not(.left-rail) #panel-left .u-resizer,body:not(.right-rail) #panel-right .u-resizer{display:block}
+ html.pw-l body:not(.left-rail) #panel-left{width:var(--pl-w)}
+ html.pw-r body:not(.right-rail) #panel-right{width:var(--pr-w)}
+ html.pw-l #guest-banner,html.pw-r #guest-banner{max-width:min(590px,calc(100% - (var(--pl-w,296px) + var(--pr-w,316px) + 60px)))}
+}
+body.is-resizing-panel .u-panel,html.pw-l #panel-left,html.pw-r #panel-right{transition:none!important}
+@media(prefers-reduced-motion:reduce){.u-resizer::after{transition:none}}
 #panel-right{ width:360px; right:14px; border:1px solid rgba(71,85,105,.62); background:rgba(5,7,10,.78); }
 .pl-topbar{ display:flex; justify-content:flex-end; padding:6px 10px; }
 .pc-btn{ width:auto; background:transparent; border:none; color:#6B7280; cursor:pointer; font-size:12px; padding:4px 8px; }
@@ -528,7 +546,7 @@ body.user-mode.left-rail #panel-left{ top:84px; }
 .nt-count{ min-width:19px; height:19px; padding:0 5px; box-sizing:border-box; display:grid; place-items:center; border-radius:10px; color:#fff; background:#EF4444; font-size:9px; }
 .nt-actions{ display:flex; align-items:center; gap:6px; }
 .nt-login{ border-color:var(--border); background:var(--card-bg); color:var(--text); }
-.focus-banner{ display:none; position:absolute; top:84px; left:50%; transform:translateX(-50%); z-index:3400; width:min(560px,calc(100% - 760px)); min-width:390px; align-items:center; gap:11px; padding:10px 12px; box-sizing:border-box; color:var(--text); background:var(--glass); border:1px solid #38BDF8; border-radius:14px; box-shadow:0 9px 26px rgba(15,23,42,.18); backdrop-filter:blur(14px); }
+.focus-banner{ display:none; position:absolute; top:84px; left:50%; transform:translateX(-50%); z-index:3400; width:min(560px,calc(100% - (var(--pl-w,340px) + var(--pr-w,360px) + 60px))); min-width:390px; align-items:center; gap:11px; padding:10px 12px; box-sizing:border-box; color:var(--text); background:var(--glass); border:1px solid #38BDF8; border-radius:14px; box-shadow:0 9px 26px rgba(15,23,42,.18); backdrop-filter:blur(14px); }
 .focus-banner.open{ display:flex; }
 .fb-icon{ width:34px; height:34px; flex:0 0 34px; display:grid; place-items:center; border-radius:50%; color:#0369A1; background:#CFFAFE; }
 .fb-copy{ flex:1; min-width:0; }
@@ -636,6 +654,20 @@ body.user-mode:not(.dark-mode) .ac-location{ color:#667085; }
 .acn-card-foot .source::before{ content:'·'; margin-right:8px; color:#D0D5DD; }
 .acn-map{ width:26px; height:26px; flex:none; display:inline-flex; align-items:center; justify-content:center; margin-left:6px; padding:0; border-radius:50%; font-size:11px; }
 .acn-empty{ padding:50px; text-align:center; color:#667085; }
+.acn-state{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:36px 24px; border:1px dashed #D8E1EC; border-radius:12px; background:#fff; text-align:center; color:#667085; }
+.acn-state>i{ font-size:22px; color:#98A2B3; }
+.acn-state p{ margin:0; font-size:13px; font-weight:800; color:#344054; }
+.acn-state span{ max-width:430px; font-size:11px; line-height:1.55; }
+.acn-state-btn{ display:inline-flex; align-items:center; gap:6px; margin-top:6px; padding:8px 14px; border:1px solid #D8E1EC; border-radius:8px; background:#fff; color:#1570EF; font:inherit; font-size:11px; font-weight:800; cursor:pointer; }
+.acn-state-btn:hover{ background:#F5F8FF; }
+.acn-state-btn:disabled{ opacity:.55; cursor:default; }
+.acn-state-note{ display:flex; align-items:flex-start; gap:8px; padding:10px 12px; border:1px solid rgba(245,158,11,.35); border-radius:9px; background:rgba(245,158,11,.1); color:#B45309; font-size:10.5px; line-height:1.45; font-weight:700; }
+.acn-state-note i{ margin-top:2px; }
+body.dark-mode .acn-state{ background:#0F151F; border-color:#263244; color:#94A3B8; }
+body.dark-mode .acn-state p{ color:#F8FAFC; }
+body.dark-mode .acn-state-btn{ background:#151E2C; border-color:#344054; color:#60A5FA; }
+body.dark-mode .acn-state-note{ background:rgba(245,158,11,.14); border-color:rgba(245,158,11,.4); color:#FBBF24; }
+@media(max-width:700px){ .acn-state{ padding:28px 16px; } }
 body.dark-mode .acn-toolbar,body.dark-mode .diag-card,body.dark-mode .acn-card,body.dark-mode .acn-chart,body.dark-mode .acn-rank-card{ background:#0F151F; border-color:#263244; color:#F8FAFC; }
 body.dark-mode .acn-toolbar select,body.dark-mode .acn-toolbar input{ background:#151E2C; border-color:#344054; color:#F8FAFC; }
 body.dark-mode .acn-chart h4,body.dark-mode .acn-rank-card h4,body.dark-mode .acn-analytics-head span,body.dark-mode .acn-rank-row{ color:#98A2B3; }
@@ -1210,6 +1242,7 @@ body.operator-mode #ahora-view,body.operator-mode #zonas-view{display:none!impor
 .pano-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 .pano-btn.primary:hover{filter:brightness(1.1)}
 .pano-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+@media(max-width:760px){ .pano-kpis .pano-kpi:last-child:nth-child(odd){ grid-column:1/-1; } }
 .pano-kpi{position:relative;overflow:hidden;padding:12px 13px;border:1px solid var(--border);border-radius:12px;background:var(--card-bg);--k:#38BDF8}
 .pano-kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--k)}
 .pano-kpi b{display:block;font-size:26px;line-height:1;font-weight:900;letter-spacing:-.03em;color:var(--k)}
@@ -1656,7 +1689,7 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
             <div id="risk-result" class="risk-result" aria-live="polite"></div>
           </section>
           <section class="pano-block">
-            <div class="pano-block-head"><h2>Herramientas disponibles</h2><span>Acceso temporal</span></div>
+            <div class="pano-block-head"><h2>Herramientas disponibles</h2></div>
             <div class="pano-highlights">
               <article class="pano-card">
                 <h3><i class="fa-solid fa-chart-line"></i> Radar Vial</h3>
@@ -1717,7 +1750,7 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
   <button type="button" onclick="window.Fusion && Fusion.fusion.open()" aria-label="Fusión" aria-haspopup="dialog" aria-controls="fz-fusion-sheet" aria-expanded="false"><i class="fa-solid fa-bolt"></i><span>Viaje</span></button>
   <button type="button" onclick="openAuthModal()" aria-label="Perfil"><i class="fa-solid fa-circle-user"></i><span>Perfil</span></button>
 </nav>
-  <div id="guest-banner"><i class="fa-solid fa-circle-info"></i><span>Modo invitado: tus preferencias sólo se guardan en este dispositivo.</span><button onclick="openAuthModal()"><i class="fa-solid fa-user-plus"></i> Crear cuenta</button></div>
+  <div id="guest-banner"><i class="fa-solid fa-circle-info"></i><span>Modo invitado: tus preferencias sólo se guardan en este dispositivo.</span><button onclick="openAuthModal()"><i class="fa-solid fa-user-plus"></i> Crear cuenta</button><button type="button" class="gb-close" aria-label="Cerrar aviso"><i class="fa-solid fa-xmark"></i></button></div>
   <section id="focus-banner" class="focus-banner" aria-live="polite">
     <span class="fb-icon"><i class="fa-solid fa-location-crosshairs"></i></span>
     <span class="fb-copy"><small>INCIDENTE ENFOCADO EN EL MAPA</small><b id="focus-title">—</b></span>
@@ -2487,6 +2520,7 @@ let centralWorkerStats = {};
 const MAX_NOTIFICATION_AGE_MS = 15 * 60 * 1000;
 let centralAlertsTimer = null;
 let centralAlertsChannel = null;
+let centralAlertsReady = false;
 const HISTORY_DAYS = 90;
 const HISTORY_MAX_ROWS = 6000;
 let historicalAlerts = [];
@@ -3457,7 +3491,39 @@ function clearAlertFocus() {
   document.getElementById('selected-alert-card')?.classList.remove('open');
   map.closePopup();
 }
-function centerFocusedAlert() { const a=alerts.find(x=>x.id===currentAlertId); if(!hasAlertPoint(a)) return; map.flyTo([a.lat,a.lon],locationTier(a)==='area'?10:15,{duration:0.9}); }
+function mapFocusPaddingSides() {
+  if(window.matchMedia('(max-width:700px)').matches) return [48,48];
+  const side = id => {
+    const el=document.getElementById(id);
+    if(!el || getComputedStyle(el).display==='none') return 48;
+    return Math.max(48,Math.round(el.getBoundingClientRect().width)+14+24);
+  };
+  let left=side('panel-left'),right=side('panel-right');
+  const mapWidth=map&&map.getSize?map.getSize().x:window.innerWidth;
+  const available=Math.max(0,mapWidth-280);
+  if(left+right>available && left+right>0) {
+    const factor=available/(left+right);
+    left=Math.max(48,Math.round(left*factor));
+    right=Math.max(48,Math.round(right*factor));
+  }
+  return [left,right];
+}
+function centerFocusedAlert() {
+  const a=alerts.find(x=>x.id===currentAlertId);
+  if(!hasAlertPoint(a)||!map) return;
+  const [left,right]=mapFocusPaddingSides();
+  const vertical=window.matchMedia('(max-width:900px)').matches?76:96;
+  const bottom=window.matchMedia('(max-width:900px)').matches?300:90;
+  map.flyTo([Number(a.lat),Number(a.lon)],locationTier(a)==='area'?10:15,{duration:0.9});
+  // Leaflet centers the coordinate in the full map viewport. Shift the final
+  // view so the selected alert is centered in the space between visible panels.
+  map.once('moveend',()=>{
+    if(!map||!map.getCenter) return;
+    const dx=(left-right)/2;
+    const dy=(vertical-bottom)/2;
+    if(Number.isFinite(dx)&&Number.isFinite(dy)&&(dx||dy)) map.panBy([dx,dy],{animate:true,duration:0.25});
+  });
+}
 function openFocusedDetail() { if(currentAlertId!=null) openAlertDetail(currentAlertId); }
 function navigateFocusedAlert() { if(currentAlertId!=null) navigateToAlert(currentAlertId); }
 function shareFocusedAlert() { if(currentAlertId!=null) shareAlert(currentAlertId); }
@@ -4078,7 +4144,9 @@ async function applyServerConfig() {
       if(cfg.rss[1]) { const i2 = document.getElementById('rssInputSecondary'); if(!localStorage.getItem('steele_rss2')) i2.value = cfg.rss[1]; }
     }
     await initSupabase(cfg.supabase||{});
-  } catch(e) {}
+  } catch(e) {} finally {
+    if(!centralAlertsReady) { centralAlertsReady=true; renderPanorama(); scheduleNowAlerts(0); }
+  }
 }
 async function initSupabase(config) {
   if(!config.url||!config.anonKey||!window.supabase?.createClient) return;
@@ -4286,7 +4354,8 @@ async function loadCentralAlerts() {
   persistAlerts(); updateLists(); rebuildU();
 }
 async function initCentralAlerts() {
-  await Promise.all([refreshCentralWorkerHealth(),loadCentralAlerts()]);
+  try { await Promise.all([refreshCentralWorkerHealth(),loadCentralAlerts()]); }
+  finally { centralAlertsReady=true; scheduleNowAlerts(0); }
   // El histórico de 90 días se carga aparte para no descargarlo cada minuto.
   // Se usa en reportes, Centro de Alertas y Radar Vial.
   setTimeout(()=>{ ensureHistoricalAlerts().catch(()=>{}); },1200);
@@ -5093,6 +5162,9 @@ function scheduleNowAlerts(delay = 0) {
     }
   }, delay);
 }
+function refreshConnectivityState() { renderPanorama(); if(appView === 'ahora') scheduleNowAlerts(0); }
+window.addEventListener('online', refreshConnectivityState);
+window.addEventListener('offline', refreshConnectivityState);
 function setAppView(view) {
   appView = view === 'map' ? 'map' : (view === 'zonas' ? 'zonas' : 'ahora');
   const isAhora = appView === 'ahora';
@@ -5206,13 +5278,16 @@ function renderPanorama() {
     { value: lastHour, label: 'Última hora', color: '#10B981', icon: 'fa-bolt' }
   ];
   const kpiBox = document.getElementById('pano-kpis');
-  if(kpiBox) kpiBox.innerHTML = kpis.map(k => `<div class="pano-kpi" style="--k:${k.color}"><i class="fa-solid ${k.icon}"></i><b>${k.value}</b><span>${k.label}</span></div>`).join('');
+  if(kpiBox) kpiBox.innerHTML = kpis.map(k => `<div class="pano-kpi" style="--k:${k.color}"><i class="fa-solid ${k.icon}"></i><b>${centralAlertsReady ? k.value : '—'}</b><span>${k.label}</span></div>`).join('');
 
   const sub = document.getElementById('pano-sub');
   if(sub) {
+    if(!centralAlertsReady && !allAlerts.length) { sub.textContent='Cargando el pulso del país…'; }
+    else {
+    const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
     const syncDate = centralWorkerLastSuccess ? new Date(centralWorkerLastSuccess) : null;
     const syncAge = syncDate && Number.isFinite(syncDate.getTime()) ? Math.max(0, Math.round((Date.now() - syncDate.getTime()) / 60000)) : null;
-    const syncTxt = syncAge === null ? 'Datos de las fuentes conectadas.' : `Última sincronización ${syncAge < 1 ? 'hace menos de un minuto' : `hace ${syncAge} min`}.`;
+    const syncTxt = offline ? (allAlerts.length ? 'Sin conexión: mostrando las alertas guardadas.' : 'Sin conexión.') : (syncAge === null ? 'Datos de las fuentes conectadas.' : `Última sincronización ${syncAge < 1 ? 'hace menos de un minuto' : `hace ${syncAge} min`}.`);
     const hiddenTxt = unlocatedCount
       ? (panoShowUnlocated
           ? ` · Incluye <b>${unlocatedCount}</b> alerta${unlocatedCount === 1 ? '' : 's'} sin ubicación.`
@@ -5221,6 +5296,7 @@ function renderPanorama() {
     sub.innerHTML = total
       ? `<b>${total}</b> alertas activas · <b>${exact}</b> con pin exacto y <b>${area}</b> en zona aproximada. ${syncTxt}${hiddenTxt}`
       : `Todavía no hay alertas cargadas. ${syncTxt}`;
+    }
   }
   const mostRecent = [...list].sort((a,b) => (new Date(b.time).getTime() || 0) - (new Date(a.time).getTime() || 0))[0];
   const highlights = ordered.slice(0,4);
@@ -5505,6 +5581,35 @@ function alertDetailDisplay(a) {
 }
 
 let acnRenderSeq=0;
+document.addEventListener('click', event => {
+  const target=event.target instanceof Element ? event.target : null;
+  if(!target) return;
+  const retry=target.closest('[data-acn-retry]');
+  if(retry) { if(!retry.disabled) refreshPanorama(retry); return; }
+  if(target.closest('[data-acn-reset]')) { resetAlertFilters(); return; }
+  const widen=target.closest('[data-acn-widen]');
+  if(widen) { const time=document.getElementById('acn-time'); if(time) time.value=widen.dataset.acnWiden; renderAlertCenter(); }
+});
+function alertWindowLabel(hours) {
+  if(hours<=1) return 'la última hora';
+  if(hours<24) return `las últimas ${hours} horas`;
+  const days=Math.round(hours/24);
+  return days===1?'el último día':`los últimos ${days} días`;
+}
+function resetAlertFilters() {
+  const set=(id,value)=>{ const el=document.getElementById(id); if(el) el.value=value; };
+  set('acn-category','all'); set('acn-severity','all'); set('acn-time','3'); set('acn-state',''); set('acn-search','');
+  if(typeof acnOnlyImportant!=='undefined') acnOnlyImportant=false;
+  document.getElementById('acn-important')?.setAttribute('aria-pressed','false');
+  if(typeof panoType!=='undefined') panoType='all';
+  renderPanorama(); renderAlertCenter();
+}
+async function refreshPanorama(button) {
+  if(button) { button.disabled=true; button.innerHTML='<i class="fa-solid fa-rotate fa-spin" aria-hidden="true"></i> Consultando…'; }
+  try { await Promise.all([refreshCentralWorkerHealth(),loadCentralAlerts()]); }
+  catch (_) {}
+  finally { centralAlertsReady=true; renderPanorama(); await renderAlertCenter(); }
+}
 async function renderAlertCenter() {
   const list=document.getElementById('acn-list'); if(!list) return;
   const seq=++acnRenderSeq;
@@ -5513,6 +5618,9 @@ async function renderAlertCenter() {
   const hours=Number(document.getElementById('acn-time')?.value||3);
   const state=document.getElementById('acn-state')?.value||'';
   const q=(document.getElementById('acn-search')?.value||'').toLowerCase();
+  const offline=typeof navigator!=='undefined'&&navigator.onLine===false;
+  const nowMeta=document.getElementById('ahora-alerts-meta');
+  if(!centralAlertsReady) { if(nowMeta) nowMeta.textContent='Cargando…'; list.innerHTML='<div class="acn-state acn-loading" role="status"><i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i><p>Cargando alertas…</p><span>Consultando las fuentes conectadas.</span></div>'; return; }
   let source=alerts;
   if(hours>24){ try { source=await ensureHistoricalAlerts(); } catch(e) { source=alerts; } }
   if(seq !== acnRenderSeq) return;
@@ -5527,13 +5635,29 @@ async function renderAlertCenter() {
     return true;
   }).sort((a,b)=>new Date(b.time)-new Date(a.time));
   const nowMeta=document.getElementById('ahora-alerts-meta');
-  if(nowMeta) nowMeta.textContent = visible.length ? `${visible.length} alerta${visible.length===1?'':'s'} para estos filtros` : '0 resultados';
+  if(nowMeta) nowMeta.textContent = visible.length ? `${visible.length} alerta${visible.length===1?'':'s'}${offline?' · sin conexión':' para estos filtros'}` : (offline?'Sin conexión':'0 resultados');
   renderAlertCenterAnalytics(visible,hours);
-  if(!visible.length){list.innerHTML='<div class="acn-empty"><i class="fa-solid fa-inbox"></i><p>No hay alertas para estos filtros.</p></div>';return;}
+  const offlineNote = offline && visible.length ? '<div class="acn-state-note" role="status"><i class="fa-solid fa-wifi" aria-hidden="true"></i><span>Sin conexión. Mostrando las alertas guardadas en este dispositivo.</span></div>' : '';
+  if(!visible.length){
+    const hasFilters = cat!=='all'||sev!=='all'||!!state||!!q||(typeof acnOnlyImportant!=='undefined'&&acnOnlyImportant)||(typeof panoType!=='undefined'&&panoType!=='all');
+    let empty;
+    if(!source.length) {
+      empty = offline
+        ? '<div class="acn-state"><i class="fa-solid fa-plug-circle-xmark" aria-hidden="true"></i><p>Sin conexión y sin alertas guardadas.</p><span>Recupera la conexión para volver a consultar las fuentes.</span><button type="button" class="acn-state-btn" data-acn-retry disabled><i class="fa-solid fa-rotate" aria-hidden="true"></i> Reintentar</button></div>'
+        : '<div class="acn-state"><i class="fa-solid fa-inbox" aria-hidden="true"></i><p>Aún no hay alertas disponibles.</p><span>Actualiza para consultar las fuentes conectadas.</span><button type="button" class="acn-state-btn" data-acn-retry><i class="fa-solid fa-rotate" aria-hidden="true"></i> Reintentar</button></div>';
+    } else if(hasFilters) {
+      empty = '<div class="acn-state"><i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i><p>Ninguna alerta coincide con los filtros.</p><span>Prueba con otro tipo, prioridad o búsqueda.</span><button type="button" class="acn-state-btn" data-acn-reset><i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i> Limpiar filtros</button></div>';
+    } else {
+      const next = hours<24?24:hours<168?168:hours<720?720:hours<2160?2160:0;
+      const nextLabel = next<24?`${next} horas`:next?`${next/24} días`:'';
+      empty = `<div class="acn-state"><i class="fa-regular fa-clock" aria-hidden="true"></i><p>No hay alertas en ${alertWindowLabel(hours)}.</p><span>El periodo seleccionado no tiene incidentes activos.</span>${next?`<button type="button" class="acn-state-btn" data-acn-widen="${next}"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Ampliar a ${nextLabel}</button>`:''}</div>`;
+    }
+    list.innerHTML=offlineNote+empty; return;
+  }
   const MAX_ACN=200, shown=visible.slice(0,MAX_ACN);
   const more=visible.length>MAX_ACN?`<div class="acn-empty" style="padding:12px">Mostrando las ${MAX_ACN} más recientes de ${visible.length}. Acota el periodo o los filtros para ver el resto.</div>`:'';
   const sevMeta={critical:['Prioridad crítica','#EF4444'],high:['Prioridad alta','#F97316'],medium:['Prioridad media','#F59E0B']};
-  list.innerHTML=more+shown.map(a=>{
+  list.innerHTML=offlineNote+more+shown.map(a=>{
     const level=alertSeverity(a),meta=sevMeta[level],loc=locationQuality(a),distance=alertDistanceKm(a);
     const locTitle=hasAlertPoint(a) ? loc.label+(estimatedRadiusMeters(a)?' ('+Math.round((Number(a.location_confidence)||0)*100)+'%) · radio '+estimatedRadiusLabel(a):'') : loc.label;
     return `<article class="acn-card" style="--sev:${meta[1]}" aria-label="${meta[0]}: ${escapeHtml(a.title || 'Incidente')}">
@@ -6429,6 +6553,40 @@ function enhanceAccessibility() {
 }
 enhanceAccessibility();
 setLandingAuthMode('login');
+/* Paneles laterales redimensionables (escritorio >=1101px). */
+(function initPanelResizers(){
+ const KEY='zero_vial_panel_widths',mq=window.matchMedia('(min-width:1101px)'),MIN={left:280,right:300};
+ const cfg={left:{el:document.getElementById('panel-left'),cssVar:'--pl-w',cls:'pw-l',label:'Cambiar ancho del panel izquierdo'},right:{el:document.getElementById('panel-right'),cssVar:'--pr-w',cls:'pw-r',label:'Cambiar ancho del panel derecho'}};
+ if(!cfg.left.el||!cfg.right.el)return;
+ const root=document.documentElement,custom={left:null,right:null};
+ try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved)['left','right'].forEach(k=>{if(Number.isFinite(saved[k]))custom[k]=saved[k]})}catch(_){}
+ const other=side=>side==='left'?'right':'left';
+ const cur=side=>custom[side]!=null?custom[side]:(parseFloat(getComputedStyle(cfg[side].el).width)||MIN[side]);
+ const border=side=>cfg[side].el.offsetWidth-cfg[side].el.clientWidth;
+ const maxFor=side=>Math.max(MIN[side],Math.min(600,window.innerWidth-(cur(other(side))+border(other(side)))-28-440));
+ const clamp=(side,w)=>Math.round(Math.min(maxFor(side),Math.max(MIN[side],w)));
+ const save=()=>{try{const out={};['left','right'].forEach(k=>{if(custom[k]!=null)out[k]=custom[k]});if(Object.keys(out).length)localStorage.setItem(KEY,JSON.stringify(out));else localStorage.removeItem(KEY)}catch(_){}};
+ function apply(side){const {el,cssVar,cls}=cfg[side];if(custom[side]!=null&&mq.matches){custom[side]=clamp(side,custom[side]);root.style.setProperty(cssVar,custom[side]+'px');root.classList.add(cls)}else{root.style.removeProperty(cssVar);root.classList.remove(cls)}const h=el.querySelector('.u-resizer');if(h){h.setAttribute('aria-valuenow',String(Math.round(cur(side))));h.setAttribute('aria-valuemin',String(MIN[side]));h.setAttribute('aria-valuemax',String(Math.round(maxFor(side))))}}
+ ['left','right'].forEach(side=>{const {el,label}=cfg[side],h=document.createElement('div');h.className='u-resizer';h.tabIndex=0;h.setAttribute('role','separator');h.setAttribute('aria-orientation','vertical');h.setAttribute('aria-label',label);h.setAttribute('aria-valuenow',String(MIN[side]));h.setAttribute('aria-valuemin',String(MIN[side]));h.setAttribute('aria-valuemax','600');h.title='Arrastra para cambiar el ancho · doble clic para restablecer';el.appendChild(h);
+ h.addEventListener('pointerdown',e=>{if(!mq.matches||e.button!==0)return;e.preventDefault();h.setPointerCapture(e.pointerId);h.classList.add('is-dragging');document.body.classList.add('is-resizing-panel')});
+ h.addEventListener('pointermove',e=>{if(!h.hasPointerCapture(e.pointerId))return;const r=el.getBoundingClientRect();custom[side]=clamp(side,(side==='left'?e.clientX-r.left:r.right-e.clientX)-border(side));apply(side)});
+ const end=e=>{if(h.hasPointerCapture&&h.hasPointerCapture(e.pointerId))h.releasePointerCapture(e.pointerId);h.classList.remove('is-dragging');document.body.classList.remove('is-resizing-panel');save()};
+ h.addEventListener('pointerup',end);h.addEventListener('pointercancel',end);h.addEventListener('dblclick',()=>{custom[side]=null;apply(side);save()});
+ h.addEventListener('keydown',e=>{const step=e.shiftKey?48:16,grow=side==='left'?'ArrowRight':'ArrowLeft',shrink=side==='left'?'ArrowLeft':'ArrowRight';if(e.key===grow)custom[side]=cur(side)+step;else if(e.key===shrink)custom[side]=cur(side)-step;else if(e.key==='Home')custom[side]=MIN[side];else if(e.key==='End')custom[side]=maxFor(side);else if(e.key==='Enter')custom[side]=null;else return;e.preventDefault();apply(side);save()});
+ });
+ const applyAll=()=>{apply('left');apply('right')};mq.addEventListener?mq.addEventListener('change',applyAll):mq.addListener(applyAll);window.addEventListener('resize',applyAll);applyAll();
+})();
+/* Banner de invitado: se puede cerrar y no reaparece durante 7 días en este dispositivo. */
+const GUEST_BANNER_KEY = 'zero_vial_guest_banner_dismissed_at';
+function guestBannerDismissed() {
+  try { const t=Number(localStorage.getItem(GUEST_BANNER_KEY)||0); return t>0 && Date.now()-t<7*24*3600*1000; } catch (_) { return false; }
+}
+function dismissGuestBanner() {
+  document.body.classList.add('guest-banner-dismissed');
+  try { localStorage.setItem(GUEST_BANNER_KEY,String(Date.now())); } catch (_) {}
+}
+if(guestBannerDismissed()) document.body.classList.add('guest-banner-dismissed');
+document.querySelector('#guest-banner .gb-close')?.addEventListener('click',dismissGuestBanner);
 </script>
 
 <!-- FUSIÓN VíaSegura · motor de features (Modo Viaje, Nocturno, PWA, Peajes, Analítica, PDF, Push) -->
