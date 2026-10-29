@@ -4112,7 +4112,9 @@ async function applyServerConfig() {
       if(cfg.rss[1]) { const i2 = document.getElementById('rssInputSecondary'); if(!localStorage.getItem('steele_rss2')) i2.value = cfg.rss[1]; }
     }
     await initSupabase(cfg.supabase||{});
-  } catch(e) {}
+  } catch(e) {} finally {
+    if(!centralAlertsReady) { centralAlertsReady=true; renderPanorama(); scheduleNowAlerts(0); }
+  }
 }
 async function initSupabase(config) {
   if(!config.url||!config.anonKey||!window.supabase?.createClient) return;
