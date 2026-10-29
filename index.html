@@ -3491,7 +3491,39 @@ function clearAlertFocus() {
   document.getElementById('selected-alert-card')?.classList.remove('open');
   map.closePopup();
 }
-function centerFocusedAlert() { const a=alerts.find(x=>x.id===currentAlertId); if(!hasAlertPoint(a)) return; map.flyTo([a.lat,a.lon],locationTier(a)==='area'?10:15,{duration:0.9}); }
+function mapFocusPaddingSides() {
+  if(window.matchMedia('(max-width:700px)').matches) return [48,48];
+  const side = id => {
+    const el=document.getElementById(id);
+    if(!el || getComputedStyle(el).display==='none') return 48;
+    return Math.max(48,Math.round(el.getBoundingClientRect().width)+14+24);
+  };
+  let left=side('panel-left'),right=side('panel-right');
+  const mapWidth=map&&map.getSize?map.getSize().x:window.innerWidth;
+  const available=Math.max(0,mapWidth-280);
+  if(left+right>available && left+right>0) {
+    const factor=available/(left+right);
+    left=Math.max(48,Math.round(left*factor));
+    right=Math.max(48,Math.round(right*factor));
+  }
+  return [left,right];
+}
+function centerFocusedAlert() {
+  const a=alerts.find(x=>x.id===currentAlertId);
+  if(!hasAlertPoint(a)||!map) return;
+  const [left,right]=mapFocusPaddingSides();
+  const vertical=window.matchMedia('(max-width:900px)').matches?76:96;
+  const bottom=window.matchMedia('(max-width:900px)').matches?300:90;
+  map.flyTo([Number(a.lat),Number(a.lon)],locationTier(a)==='area'?10:15,{duration:0.9});
+  // Leaflet centers the coordinate in the full map viewport. Shift the final
+  // view so the selected alert is centered in the space between visible panels.
+  map.once('moveend',()=>{
+    if(!map||!map.getCenter) return;
+    const dx=(left-right)/2;
+    const dy=(vertical-bottom)/2;
+    if(Number.isFinite(dx)&&Number.isFinite(dy)&&(dx||dy)) map.panBy([dx,dy],{animate:true,duration:0.25});
+  });
+}
 function openFocusedDetail() { if(currentAlertId!=null) openAlertDetail(currentAlertId); }
 function navigateFocusedAlert() { if(currentAlertId!=null) navigateToAlert(currentAlertId); }
 function shareFocusedAlert() { if(currentAlertId!=null) shareAlert(currentAlertId); }
