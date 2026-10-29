@@ -1483,6 +1483,57 @@ function approximateLocationFallback(ai, geo) {
   return { precision:'road_approximate', confidenceCap:.6 };
 }
 
+
+// === Web Push real: avisa a los dispositivos suscritos cuando entra una alerta crítica/alta con ubicación ===
+let WEBPUSH = null;
+async function setupWebPush() {
+  try {
+    WEBPUSH = require('web-push');
+  } catch (e) { log('warn','web-push no instalado; avisos push desactivados',{ error:e.message }); return; }
+  try {
+    let rows = await sb('push_config?select=public_key,private_key&id=eq.1');
+    if (!rows || !rows[0]) {
+      const k = WEBPUSH.generateVAPIDKeys();
+      await sb('push_config?on_conflict=id', { method:'POST', headers:{ Prefer:'resolution=ignore-duplicates,return=minimal' }, body:JSON.stringify({ id:1, public_key:k.publicKey, private_key:k.privateKey }) });
+      rows = await sb('push_config?select=public_key,private_key&id=eq.1');
+    }
+    if (!rows || !rows[0]) throw new Error('sin claves VAPID');
+    WEBPUSH.setVapidDetails(env.VAPID_SUBJECT || 'https://nexu-lilac.vercel.app', rows[0].public_key, rows[0].private_key);
+    log('info','Web Push listo');
+  } catch (e) { WEBPUSH = null; log('warn','No se pudo iniciar Web Push (¿se corrió supabase/push.sql?)',{ error:e.message }); }
+}
+async function sendPushForAlert(row) {
+  if (!WEBPUSH || !row || !['critical','high'].includes(row.severity)) return;
+  if (!Number.isFinite(row.latitude) || !Number.isFinite(row.longitude)) return;
+  if (Date.now() - new Date(row.event_at).getTime() > 3 * 3600_000) return;
+  const subs = await sb('push_subscriptions?select=endpoint,p256dh,auth,states,min_severity&fail_count=lt.5&limit=2000') || [];
+  const state = norm(row.state || '');
+  const targets = subs.filter(s => (row.severity === 'critical' || s.min_severity === 'high')
+    && (!s.states || !s.states.length || (state && s.states.some(x => norm(x) === state))));
+  if (!targets.length) return;
+  const payload = JSON.stringify({
+    title: (row.severity === 'critical' ? '🚨 ' : '⚠️ ') + (row.category === 'security' ? 'Seguridad' : 'Alerta vial') + (row.state ? ' · ' + row.state : ''),
+    body: String(row.title || '').slice(0, 140),
+    tag: 'zv-' + row.external_id, url: '/'
+  });
+  let sent = 0;
+  for (let i = 0; i < targets.length; i += 20) {
+    await Promise.all(targets.slice(i, i + 20).map(async s => {
+      try {
+        await WEBPUSH.sendNotification({ endpoint:s.endpoint, keys:{ p256dh:s.p256dh, auth:s.auth } }, payload, { TTL:3600, urgency:'high' });
+        sent++;
+      } catch (e) {
+        if (e.statusCode === 404 || e.statusCode === 410) {
+          await sb('push_subscriptions?endpoint=eq.' + encodeURIComponent(s.endpoint), { method:'DELETE', headers:{ Prefer:'return=minimal' } }).catch(() => {});
+        } else {
+          await sb('push_subscriptions?endpoint=eq.' + encodeURIComponent(s.endpoint), { method:'PATCH', headers:{ Prefer:'return=minimal' }, body:JSON.stringify({ fail_count:(s.fail_count || 0) + 1 }) }).catch(() => {});
+        }
+      }
+    }));
+  }
+  log('info','Push enviado',{ external_id:row.external_id, targets:targets.length, sent });
+}
+
 async function processItem(item, feed, options={}) {
   const externalId = hash(item.url || item.title + '|' + item.published_at);
   if (await alreadyExists(externalId)) return 'duplicate';
@@ -1759,6 +1810,7 @@ async function processItem(item, feed, options={}) {
     return 'duplicate';
   }
   await sb('alerts?on_conflict=external_id', { method:'POST', headers:{ Prefer:'resolution=ignore-duplicates,return=minimal' }, body:JSON.stringify(row) });
+  sendPushForAlert(row).catch(e => log('warn','Fallo al enviar push',{ error:e.message }));
   return 'inserted';
 }
 
@@ -1971,6 +2023,7 @@ async function main() {
     log('warn','Índice RNC 2025 ausente — la cascada RNC queda desactivada');
   }
   await loadLearnedLocations();
+  await setupWebPush();
   await applyApprovedCorrections();
   await cycle();
   if (env.WORKER_ONCE === '1') return;
