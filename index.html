@@ -1329,6 +1329,7 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
 .risk-up{color:#F87171}.risk-down{color:#34D399}.risk-eq{color:#94A3B8}
 .risk-note{font-size:11px;color:#94A3B8;margin-top:4px}
 @media(max-width:700px){.risk-row{grid-template-columns:110px 1fr auto}}
+@media(max-width:700px){ .fz-topmenu,.fz-topmenu-btn{display:none!important} }
 #ahora-view .acn-approx{ font-style:normal; font-size:9.5px; font-weight:800; letter-spacing:.02em; color:#FBBF24; background:rgba(251,191,36,.12); border:1px solid rgba(251,191,36,.3); border-radius:999px; padding:1px 7px; white-space:nowrap; }
 #ahora-view .acn-card{background:var(--card-bg);border-color:var(--border);border-left-color:var(--sev);box-shadow:none;color:var(--text)}
 #ahora-view .acn-card h3{color:var(--text)}
@@ -1568,14 +1569,9 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
 
       <div class="pano-grid">
         <div class="pano-main">
-          <section class="pano-block">
-            <div class="pano-block-head"><h2>Lo más importante</h2><span id="pano-updated"></span></div>
-            <div id="pano-highlights" class="pano-highlights"></div>
-          </section>
           <section class="pano-block" id="ahora-alerts-block">
             <div class="pano-block-head"><h2>Alertas en vivo</h2><span id="ahora-alerts-meta">Cargando…</span></div>
             <div class="acn-toolbar ahora-filters" aria-label="Filtros de alertas">
-              <select id="acn-category" onchange="renderAlertCenter()"><option value="all">Todas las categorías</option><option value="road">Viales</option><option value="security">Seguridad</option><option value="blockage">Solo bloqueos</option></select>
               <select id="acn-severity" onchange="renderAlertCenter()"><option value="all">Toda prioridad</option><option value="critical">Crítica</option><option value="high">Alta</option><option value="medium">Media</option></select>
               <select id="acn-time" onchange="renderAlertCenter()"><option value="1">Última hora</option><option value="3" selected>Últimas 3 horas</option><option value="24">Últimas 24 horas</option><option value="168">Últimos 7 días</option><option value="720">Últimos 30 días</option><option value="2160">Últimos 90 días</option></select>
               <select id="acn-state" onchange="renderAlertCenter()"><option value="">Todo México</option></select>
@@ -1714,7 +1710,7 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
   <button type="button" data-app-view="zonas" onclick="showZonasView()" aria-label="Zonas y análisis"><i class="fa-solid fa-layer-group"></i><span>Zonas</span></button>
   <button type="button" onclick="openRouteModal()" aria-label="Ruta"><i class="fa-solid fa-route"></i><span>Ruta</span></button>
   <button type="button" data-app-view="map" onclick="showMapView()" aria-label="Mapa"><i class="fa-solid fa-map-location-dot"></i><span>Mapa</span></button>
-  <button type="button" onclick="window.Fusion && Fusion.fusion.open()" aria-label="Fusión" aria-haspopup="dialog" aria-controls="fz-fusion-sheet" aria-expanded="false"><i class="fa-solid fa-bolt"></i><span>Viaje</span></button>
+  <button type="button" onclick="window.Fusion && Fusion.trip.open()" aria-label="Modo Viaje"><i class="fa-solid fa-car-on"></i><span>Viaje</span></button>
   <button type="button" onclick="openAuthModal()" aria-label="Perfil"><i class="fa-solid fa-circle-user"></i><span>Perfil</span></button>
 </nav>
   <div id="guest-banner"><i class="fa-solid fa-circle-info"></i><span>Modo invitado: tus preferencias sólo se guardan en este dispositivo.</span><button onclick="openAuthModal()"><i class="fa-solid fa-user-plus"></i> Crear cuenta</button></div>
@@ -3457,7 +3453,19 @@ function clearAlertFocus() {
   document.getElementById('selected-alert-card')?.classList.remove('open');
   map.closePopup();
 }
-function centerFocusedAlert() { const a=alerts.find(x=>x.id===currentAlertId); if(!hasAlertPoint(a)) return; map.flyTo([a.lat,a.lon],locationTier(a)==='area'?10:15,{duration:0.9}); }
+// Vuelo animado a una alerta: con pin exacto acerca a calle; con zona aproximada encuadra el círculo
+// de incertidumbre (antes se quedaba en zoom 10 y se veía lejísimos).
+function flyToAlert(a, minExactZoom) {
+  if(!a || !hasAlertPoint(a)) return;
+  const ll=L.latLng(a.lat,a.lon);
+  if(locationTier(a)==='area') {
+    const r=Math.max(1500, Math.min(30000, estimatedRadiusMeters(a)||5000));
+    map.flyToBounds(ll.toBounds(r*2.6), { maxZoom:14, padding:[24,24], duration:1.1 });
+  } else {
+    map.flyTo(ll, Math.max(map.getZoom(), minExactZoom||15), { duration:0.9 });
+  }
+}
+function centerFocusedAlert() { const a=alerts.find(x=>x.id===currentAlertId); if(!hasAlertPoint(a)) return; flyToAlert(a,15); }
 function openFocusedDetail() { if(currentAlertId!=null) openAlertDetail(currentAlertId); }
 function navigateFocusedAlert() { if(currentAlertId!=null) navigateToAlert(currentAlertId); }
 function shareFocusedAlert() { if(currentAlertId!=null) shareAlert(currentAlertId); }
@@ -3949,7 +3957,7 @@ async function reviewLocationCorrection(id,status) {
 }
 function centerAlert() {
   const a = findAlertById(currentAlertId); if(!hasAlertPoint(a)) return;
-  map.flyTo([a.lat, a.lon], locationTier(a)==='area'?10:15, {duration:0.9}); closeAlertModal();
+  flyToAlert(a,15); closeAlertModal();
 }
 document.getElementById('alert-modal') && document.getElementById('alert-modal').addEventListener('click', e => { if(e.target === e.currentTarget) closeAlertModal(); });
 
@@ -5073,10 +5081,12 @@ function panoTypeCounts(list) {
 function setPanoType(type) {
   panoType = PANO_TYPES.some(t => t.key === type) ? type : 'all';
   renderPanorama();
+  try { renderAlertCenter(); } catch(e) {}
 }
 function setPanoSort(value) {
   panoSort = value === 'recent' ? 'recent' : 'relevance';
   renderPanorama();
+  try { renderAlertCenter(); } catch(e) {}
 }
 function togglePanoUnlocated() {
   panoShowUnlocated = !panoShowUnlocated;
@@ -5518,6 +5528,7 @@ async function renderAlertCenter() {
   if(seq !== acnRenderSeq) return;
   buildAlertCenterStates(source); renderDiagnostics();
   const visible=source.filter(a=>{
+    if(!panoMatchesType(a)) return false;
     if(cat==='blockage'&&!isBlockageAlert(a)) return false;
     if(['road','security'].includes(cat)&&a.category!==cat) return false;
     if(sev!=='all'&&alertSeverity(a)!==sev) return false;
@@ -5525,7 +5536,11 @@ async function renderAlertCenter() {
     if(state&&a.state!==state) return false;
     if(q&&!((a.title||'').toLowerCase().includes(q)||(a.location||'').toLowerCase().includes(q)||(a.detail||'').toLowerCase().includes(q))) return false;
     return true;
-  }).sort((a,b)=>new Date(b.time)-new Date(a.time));
+  }).sort((a,b)=>{
+    const tb=new Date(b.time).getTime()||0, ta=new Date(a.time).getTime()||0;
+    if(panoSort==='recent') return tb-ta;
+    return (panoRiskScore(b)-panoRiskScore(a)) || (tb-ta);
+  });
   const nowMeta=document.getElementById('ahora-alerts-meta');
   if(nowMeta) nowMeta.textContent = visible.length ? `${visible.length} alerta${visible.length===1?'':'s'} para estos filtros` : '0 resultados';
   renderAlertCenterAnalytics(visible,hours);
@@ -5559,7 +5574,7 @@ function showCenterAlertOnMap(id){
   // Esperamos un frame, invalidamos el tamaño y recién entonces volamos al punto.
   requestAnimationFrame(() => {
     map.invalidateSize();
-    map.flyTo([a.lat,a.lon], locationTier(a)==='area'?10:Math.max(map.getZoom(),14), { duration:0.9 });
+    flyToAlert(a,14);
   });
 }
 function openModal(id) { const m = document.getElementById(id); if(m) m.classList.add('open'); }
@@ -6432,6 +6447,6 @@ setLandingAuthMode('login');
 </script>
 
 <!-- FUSIÓN VíaSegura · motor de features (Modo Viaje, Nocturno, PWA, Peajes, Analítica, PDF, Push) -->
-<script src="/fusion/fusion.js?v=22" defer></script>
+<script src="/fusion/fusion.js?v=23" defer></script>
 </body>
 </html>
