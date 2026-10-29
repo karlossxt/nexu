@@ -1225,6 +1225,19 @@
     test: function () { dispatchPush({ title: 'Zero Vial', body: 'Las notificaciones funcionan correctamente.', test: true }); },
     clearLog: function () { pushLog = []; save(CFG.pushLogKey, pushLog); push.notified = {}; save(CFG.pushSeenKey, {}); openPushPanel(); },
     scan: function () { scanPush(true); },
+    subscribe: function () {
+      if (!window.zvPush) return;
+      var st = byId('fz-push-states'), sv = byId('fz-push-sev');
+      var states = st ? st.value.split(',').map(function (x) { return x.trim(); }).filter(Boolean) : [];
+      var sev = sv && sv.value === 'critical' ? 'critical' : 'high';
+      window.zvPush.subscribe({ states: states, minSeverity: sev }).then(function () {
+        toast('Avisos activados en este dispositivo', 'ok'); openPushPanel();
+      }).catch(function (e) { toast(e && e.message ? e.message : 'No se pudieron activar los avisos', 'warn'); });
+    },
+    unsubscribe: function () {
+      if (!window.zvPush) return;
+      window.zvPush.unsubscribe().then(function () { toast('Avisos desactivados en este dispositivo', 'ok'); openPushPanel(); });
+    },
     dismissToast: function () { var t = byId('fz-push-toast'); if (t) t.classList.remove('fz-open'); }
   };
 
@@ -1255,6 +1268,12 @@
         '<button class="fz-btn fz-sm" onclick="Fusion.push.test()"><i class="fa-solid fa-vial"></i> Notificación de prueba</button>' +
         '<button class="fz-btn fz-sm" onclick="Fusion.push.scan()"><i class="fa-solid fa-magnifying-glass"></i> Escanear ahora</button>' +
       '</div>' +
+      '<div class="fz-field" id="fz-push-real"><label><i class="fa-solid fa-satellite-dish"></i> Avisos con la app cerrada</label>' +
+        '<div class="fz-muted" style="font-size:11px;margin:3px 0 7px">Recibe notificaciones del teléfono cuando entre una alerta crítica (o alta, según la severidad de abajo). En iPhone primero instala la app en tu pantalla de inicio.</div>' +
+        '<input id="fz-push-states" placeholder="Estados (separados por coma; vacío = todo México)" value="' + esc(((window.zvPush && window.zvPush.saved() || {}).states || []).join(', ')) + '">' +
+        '<div class="fz-flex fz-mt"><button class="fz-btn fz-sm fz-primary" onclick="Fusion.push.subscribe()"><i class="fa-solid fa-bell"></i> Activar en este dispositivo</button>' +
+        '<button class="fz-btn fz-sm" onclick="Fusion.push.unsubscribe()"><i class="fa-solid fa-bell-slash"></i> Desactivar</button>' +
+        '<span id="fz-push-real-st" class="fz-badge fz-info">Revisando…</span></div></div>' +
       '<label class="fz-switch"><span><i class="fa-solid fa-power-off"></i> Motor de alertas activado</span><input id="fz-push-on" type="checkbox" ' + (push.enabled ? 'checked' : '') + '></label>' +
       '<div class="fz-grid2 fz-mt">' +
         '<div class="fz-field"><label>Severidad mínima</label><select id="fz-push-sev">' +
@@ -1293,6 +1312,11 @@
       closeM('fz-push-ov');
     };
     showOverlay('fz-push-ov');
+    if (window.zvPush) window.zvPush.current().then(function (s) {
+      var b = byId('fz-push-real-st'); if (!b) return;
+      b.className = 'fz-badge ' + (s ? 'fz-ok' : 'fz-medium');
+      b.textContent = !window.zvPush.supported() ? 'No soportado' : (s ? 'Activo en este dispositivo' : 'Inactivo');
+    });
   }
 
   function routeAlerts() {
