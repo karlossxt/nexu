@@ -1,6 +1,7 @@
 // Geocodificacion segura para Zero Vial.
 // Las llaves viven unicamente en Vercel y nunca llegan al navegador.
 
+const { sharedRateLimited } = require('../lib/shared-rate-limit');
 const { geoDistanceKm, normalizeRoad, roadMatches, reverseGoogleRoad } = require('../lib/road-match');
 const { normalizeStateKey, stateMatches } = require('../lib/state-match');
 
@@ -223,7 +224,8 @@ async function snapGoogleRoad(result, key, options={}) {
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   if (req.method !== 'GET') return res.status(405).json({ error: 'metodo_no_permitido' });
-  if (rateLimited(remoteIp(req))) {
+  const clientIp = remoteIp(req);
+  if (rateLimited(clientIp) || await sharedRateLimited('geocode', clientIp, MAX_PER_MIN)) {
     res.setHeader('Retry-After','60');
     res.setHeader('Cache-Control','no-store');
     return res.status(429).json({ error:'demasiadas_peticiones' });
