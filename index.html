@@ -484,6 +484,9 @@ body.left-rail #panel-left .u-rail{ display:flex; }
 .incident-pin:hover{ transform:scale(1.1); box-shadow:0 6px 14px rgba(15,23,42,.4), 0 0 0 4px color-mix(in srgb,var(--pin) 30%,transparent); }
 .incident-pin.important::after{ animation:incidentPulse 1.7s ease-out infinite; }
 .incident-pin.expired{ filter:grayscale(1); opacity:.74; }
+.incident-pin.approx{ opacity:.6; border-style:dashed; border-color:rgba(255,255,255,.85); box-shadow:0 2px 6px rgba(15,23,42,.25); }
+.incident-pin.approx:hover{ opacity:.95; }
+.incident-pin .pin-q{ position:absolute; right:-5px; bottom:-5px; width:15px; height:15px; border-radius:50%; background:#0F172A; color:#FDE68A; font:900 10px/15px system-ui,sans-serif; text-align:center; border:1.5px solid #fff; }
 .incident-pin.is-selected{ transform:scale(1.18); box-shadow:0 6px 16px rgba(15,23,42,.4), 0 0 0 5px color-mix(in srgb,var(--pin) 38%,transparent); }
 /* PINES · gravedad visible */
 .incident-pin .pin-sev{ position:absolute; top:-3px; right:-3px; z-index:3; width:14px; height:14px; border-radius:50%; border:2px solid #fff; background:#F59E0B; color:#fff; font:800 9px/10px system-ui,sans-serif; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,.35); }
@@ -1608,10 +1611,10 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
           <section class="pano-block" id="ahora-alerts-block">
             <div class="pano-block-head"><h2>Alertas en vivo</h2><span id="ahora-alerts-meta">Cargando…</span></div>
             <div class="acn-toolbar ahora-filters" aria-label="Filtros de alertas">
-              <select id="acn-severity" onchange="renderAlertCenter()"><option value="all">Toda prioridad</option><option value="critical">Crítica</option><option value="high">Alta</option><option value="medium">Media</option></select>
-              <select id="acn-time" onchange="renderAlertCenter()"><option value="1">Última hora</option><option value="3" selected>Últimas 3 horas</option><option value="24">Últimas 24 horas</option><option value="168">Últimos 7 días</option><option value="720">Últimos 30 días</option><option value="2160">Últimos 90 días</option></select>
-              <select id="acn-state" onchange="renderAlertCenter()"><option value="">Todo México</option></select>
-              <input id="acn-search" oninput="renderAlertCenter()" placeholder="Buscar carretera, kilómetro, estado o incidente…" aria-label="Buscar alertas">
+              <select id="acn-severity" onchange="ahoraFilterChanged()"><option value="all">Toda prioridad</option><option value="critical">Crítica</option><option value="high">Alta</option><option value="medium">Media</option></select>
+              <select id="acn-time" onchange="ahoraFilterChanged()"><option value="1">Última hora</option><option value="3" selected>Últimas 3 horas</option><option value="24">Últimas 24 horas</option><option value="168">Últimos 7 días</option><option value="720">Últimos 30 días</option><option value="2160">Últimos 90 días</option></select>
+              <select id="acn-state" onchange="ahoraFilterChanged()"><option value="">Todo México</option></select>
+              <input id="acn-search" oninput="ahoraFilterChanged()" placeholder="Buscar carretera, kilómetro, estado o incidente…" aria-label="Buscar alertas">
             </div>
             <div id="acn-list" class="acn-list ahora-list" aria-live="polite"></div>
             <section class="acn-analytics" aria-label="Análisis de alertas filtradas">
@@ -1926,7 +1929,7 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
     </div>
     <div class="pr-body">
       <div class="pr-sec active" data-sec="feed">
-        <div class="feed-tools"><div class="pr-search"><i class="fa-solid fa-magnifying-glass"></i><input id="feed-search" placeholder="Buscar alertas, lugar, estado..." oninput="rebuildU()"></div><select id="feed-sort" class="feed-sort" onchange="setFeedSort(this.value)" title="Ordenar alertas"><option value="recent">Más recientes</option><option value="near">Más cercanas</option><option value="risk">Mayor riesgo</option><option value="precision">Mayor precisión</option></select></div>
+        <div class="feed-tools"><div class="pr-search"><i class="fa-solid fa-magnifying-glass"></i><input id="feed-search" placeholder="Buscar alertas, lugar, estado..." oninput="mapSearchChanged()"></div><select id="feed-sort" class="feed-sort" onchange="setFeedSort(this.value)" title="Ordenar alertas"><option value="recent">Más recientes</option><option value="near">Más cercanas</option><option value="risk">Mayor riesgo</option><option value="precision">Mayor precisión</option></select></div>
         <div id="feed-list"></div>
         <div id="feed-empty"><i class="fa-solid fa-shield-halved"></i><div id="feed-empty-msg">Sin alertas coincidentes con los filtros activos</div><button class="empty-reset" onclick="resetUserFilters()"><i class="fa-solid fa-rotate-left"></i> Restablecer filtros</button><button class="empty-reset" id="feed-retry" onclick="retryFeed(this)" style="display:none"><i class="fa-solid fa-arrows-rotate"></i> Reintentar sincronización</button></div>
       </div>
@@ -2555,6 +2558,7 @@ let baseMapMode = localStorage.getItem('nv_base_map') === 'satellite' ? 'satelli
 const map = L.map('map', { zoomControl: false }).setView([19.4326, -99.1332], 5);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 const PIN_LEGEND=[
+  ['#94A3B8','Pin translúcido con ? · ubicación aproximada'],
   ['#DC2626','Incendio / seguridad grave'],
   ['#7C3AED','Seguridad'],
   ['#EA580C','Accidente'],
@@ -3532,15 +3536,15 @@ function glyphHTML(visualOrIcon) {
   const glyph = GLYPH_BY_ICON[icon];
   return glyph ? `<svg class="gl" aria-hidden="true" focusable="false"><use href="#${glyph}"></use></svg>` : `<i class="fa-solid ${icon || 'fa-triangle-exclamation'}" aria-hidden="true"></i>`;
 }
-function incidentPinIcon(alert, compact=false) {
+function incidentPinIcon(alert, compact=false, approx=false) {
   const visual=incidentVisual(alert), expired=isAlertExpired(alert);
   const sev=alertSeverity(alert);
-  const classes=['incident-pin',compact?'compact':'',alert.importante?'important':'',expired?'expired':'',(!expired&&sev!=='medium')?'sev-'+sev:''].filter(Boolean).join(' ');
+  const classes=['incident-pin',compact?'compact':'',approx?'approx':'',alert.importante?'important':'',expired?'expired':'',(!expired&&sev!=='medium')?'sev-'+sev:''].filter(Boolean).join(' ');
   const sevBadge=(!expired&&sev!=='medium')?`<span class="pin-sev ${sev}" aria-hidden="true">${sev==='critical'?'!':''}</span>`:'';
   const size=compact?24:34;
   return L.divIcon({
     className:'incident-pin-wrap',
-    html:`<div class="${classes}" data-alert-id="${alert.id}" style="--pin:${visual.color}" title="${visual.label}">${glyphHTML(visual)}${sevBadge}</div>`,
+    html:`<div class="${classes}" data-alert-id="${alert.id}" style="--pin:${visual.color}" title="${visual.label}${approx?' · ubicación aproximada':''}">${glyphHTML(visual)}${sevBadge}${approx?'<span class="pin-q" aria-hidden="true">?</span>':''}</div>`,
     iconSize:[size,size],
     iconAnchor:[size/2,size/2],
     popupAnchor:[0,-(size/2+6)]
@@ -3580,6 +3584,7 @@ function popupHeadHTML(alert) {
 }
 function addMarkerToMap(alert) {
   if(!hasAlertPoint(alert)) return;
+  let approxPin = false;
   // La seguridad que solo se ubica por municipio no se pinta como pin: se
   // representa con el mapa de calor (concentración), no con un punto exacto.
   if(alert.location_precision === 'area_security') return;
@@ -3606,16 +3611,20 @@ function addMarkerToMap(alert) {
     </div>`);
     area.on('click', () => showAlertFocus(alert));
     alertAreaLayer.addLayer(area);
-    return;
+    // Con un radio acotado (≤ 6 km) también se pone un pin translúcido con "?": se encuentra y se toca
+    // fácil, pero no pretende ser el punto exacto. Si es ambiguo (radio grande o desconocido)
+    // queda solo la zona/mapa de calor.
+    if(!(measuredRadius && measuredRadius <= 6000)) return;
+    approxPin = true;
   }
   const isSec = alert.category === 'security';
   const expired = isAlertExpired(alert);
   const visual = incidentVisual(alert); const color=visual.color;
-  const icon = incidentPinIcon(alert);
+  const icon = incidentPinIcon(alert, false, approxPin);
   const markerLabel = `${visual.label}: ${alert.title || 'Incidente'}; ${alert.location || 'ubicación aproximada'}`;
   const m = L.marker([alert.lat, alert.lon], {icon, keyboard:true, title:markerLabel, alt:markerLabel});
   m.on('click',()=>showAlertFocus(alert));
-  const radius=estimatedRadiusMeters(alert);
+  const radius=approxPin ? 0 : estimatedRadiusMeters(alert);
   if(radius) L.circle([alert.lat,alert.lon],{radius,color,weight:1.5,opacity:.7,dashArray:alert.precision==='punto'?null:'5 5',fillColor:color,fillOpacity:alert.precision==='punto'?.06:.12,interactive:true}).bindTooltip(`Área estimada · radio ${estimatedRadiusLabel(alert)}`,{direction:'top'}).addTo(alertAreaLayer);
   const nota = `<div class="location-meta"><span class="precision-chip"><i class="fa-solid fa-location-dot"></i> ${precisionLabel(alert)}</span>${radius?`<span class="distance-chip"><i class="fa-solid fa-circle-dot"></i> Área estimada: ${estimatedRadiusLabel(alert)}</span>`:''}${referenceChipHTML(alert)}</div>`;
   const chip = (!isSec && alert.trafico) ? `<div style="margin-top:5px;"><span class="traffic-chip" style="background:${trafficStyle(alert.trafico).bg}; color:${trafficStyle(alert.trafico).color};">${trafficStyle(alert.trafico).label}</span></div>` : '';
@@ -4557,6 +4566,7 @@ function applyUserPreferences() {
   const blockage=document.getElementById('nf-blockages'); if(blockage) blockage.checked=nfState.blockagesOnly;
   const state=document.getElementById('lp-state'); if(state) state.value=uState;
   const range=document.getElementById('lp-range'); if(range) range.value=String(uRange);
+  mirrorFiltersToControls();
   rebuildU();
 }
 async function loadUserPreferences() {
@@ -5390,8 +5400,34 @@ async function refreshPanorama(btn) {
 }
 
 const nfState = { road:true, security:true, blockagesOnly:false, redZone:false, roadRisk:false };
-let uType = 'all'; let uState = ''; let uRange = 3; let uSort = 'recent';
-function setNF(kind, on) { nfState[kind] = !!on; rebuildU(); }
+let uType = 'all'; let uState = ''; let uRange = 3; let uSort = 'recent'; let uSeverity = 'all';
+// Un solo conjunto de filtros para "Ahora" y el panel del mapa: ambos usan matchesFilters()
+// y estos controles se reflejan entre sí, así que con los mismos filtros muestran las mismas alertas.
+function setSel(id, v, label) {
+  const el = document.getElementById(id); if(!el) return;
+  v = String(v ?? '');
+  if(![...el.options].some(o => o.value === v)) { if(v === '') return; el.add(new Option(label || v, v)); }
+  el.value = v;
+}
+function mirrorFiltersToControls() {
+  const rl = n => n === 0 ? 'Toda la jornada' : n >= 48 ? `Últimos ${Math.round(n/24)} días` : `Últimas ${n} horas`;
+  setSel('lp-state', uState); setSel('acn-state', uState);
+  setSel('lp-range', uRange, rl(uRange)); setSel('acn-time', uRange, rl(uRange));
+  setSel('acn-severity', uSeverity);
+  const q = (document.getElementById('feed-search') || document.getElementById('acn-search') || {}).value || '';
+  const a = document.getElementById('acn-search'), f = document.getElementById('feed-search');
+  if(a && a.value !== q) a.value = q; if(f && f.value !== q) f.value = q;
+}
+function ahoraFilterChanged() {
+  uSeverity = document.getElementById('acn-severity')?.value || 'all';
+  uState = document.getElementById('acn-state')?.value || '';
+  uRange = Number(document.getElementById('acn-time')?.value) || 0;
+  const f = document.getElementById('feed-search'); if(f) f.value = document.getElementById('acn-search')?.value || '';
+  mirrorFiltersToControls(); rebuildU();
+}
+function mapSearchChanged() { mirrorFiltersToControls(); rebuildU(); }
+function clearAhoraExtras() { panoType = 'all'; uSeverity = 'all'; mirrorFiltersToControls(); rebuildU(); }
+function setNF(kind, on) { nfState[kind] = !!on; panoType = 'all'; rebuildU(); }
 function isBlockageAlert(a) {
   const status=String(a?.traffic_status||'').toLowerCase();
   if(['blocked','closed'].includes(status)) return true;
@@ -5401,12 +5437,12 @@ function isBlockageAlert(a) {
   return /bloqueo|cierre|cerrad[ao]|sin paso|manifestantes|manifestaci[oó]n|protesta|toma de caseta|interrupci[oó]n/.test(text);
 }
 function setBlockagesOnly(on) {
-  nfState.blockagesOnly=!!on;
+  nfState.blockagesOnly=!!on; panoType = 'all';
   rebuildU();
   trafficMessage(on ? 'Mostrando únicamente bloqueos y cierres.' : 'Filtro exclusivo de bloqueos desactivado.');
 }
-function setState(v) { uState = v; rebuildU(); }
-function setRange(v) { uRange = +v || 0; rebuildU(); }
+function setState(v) { uState = v; mirrorFiltersToControls(); rebuildU(); }
+function setRange(v) { uRange = +v || 0; mirrorFiltersToControls(); rebuildU(); }
 function setFeedSort(v) {
   uSort = v || 'recent';
   if(uSort === 'near' && !myPosition) trafficMessage('Activa el GPS para ordenar las alertas por cercanía.');
@@ -5423,17 +5459,19 @@ function sortVisibleAlerts(list) {
   });
 }
 function resetUserFilters() {
-  uType='all'; uState=''; uRange=3; uSort='recent';
+  uType='all'; uState=''; uRange=3; uSort='recent'; uSeverity='all'; panoType='all';
   nfState.road=true; nfState.security=true; nfState.blockagesOnly=false; nfState.redZone=false; nfState.roadRisk=false;
   document.querySelectorAll('.pl-filters input[type="checkbox"]:not(:disabled)').forEach(el => { el.checked=true; });
   const blockages=document.getElementById('nf-blockages'); if(blockages) blockages.checked=false;
   const values={ 'lp-state':'', 'lp-range':'3', 'feed-search':'', 'feed-sort':'recent' };
   Object.entries(values).forEach(([id,value]) => { const el=document.getElementById(id); if(el) el.value=value; });
-  rebuildU();
+  mirrorFiltersToControls(); rebuildU();
   trafficMessage('Filtros restablecidos.');
 }
 function matchesFilters(a) {
   if(uType !== 'all' && a.category !== uType) return false;
+  if(!panoMatchesType(a)) return false;
+  if(uSeverity !== 'all' && alertSeverity(a) !== uSeverity) return false;
   if(a.category === 'security' && !nfState.security) return false;
   if(a.category === 'road' && !nfState.road) return false;
   if(nfState.blockagesOnly && !isBlockageAlert(a)) return false;
@@ -5483,6 +5521,15 @@ function rebuildU() {
   renderRiskPoints(uState);
   if(nfState.redZone || nfState.roadRisk) { if(!map.hasLayer(staticLayer)) map.addLayer(staticLayer); }
   else if(map.hasLayer(staticLayer)) map.removeLayer(staticLayer);
+  if(fl) {
+    let note = document.getElementById('feed-active-filter');
+    if(!note) { note = document.createElement('div'); note.id = 'feed-active-filter'; note.style.cssText = 'display:none;margin:0 0 8px;padding:6px 9px;border-radius:9px;font-size:11px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);color:#FBBF24'; fl.parentNode.insertBefore(note, fl); }
+    const bits = [];
+    if(panoType !== 'all') bits.push((PANO_TYPES.find(t => t.key === panoType) || {}).label || panoType);
+    if(uSeverity !== 'all') bits.push('prioridad ' + ({critical:'crítica',high:'alta',medium:'media'}[uSeverity] || uSeverity));
+    note.style.display = bits.length ? 'block' : 'none';
+    note.innerHTML = bits.length ? 'Filtro de Ahora activo: <b>' + bits.join(' · ') + '</b> · <a href="#" onclick="clearAhoraExtras();return false" style="color:inherit;text-decoration:underline">quitar</a>' : '';
+  }
   if(fl) { fl.innerHTML = ''; sortVisibleAlerts(vis).forEach(a => fl.appendChild(makeAlertCard(a))); }
   if(fe) fe.style.display = vis.length ? 'none' : 'block';
   {
@@ -5527,10 +5574,9 @@ function locationQuality(a) {
 }
 function buildAlertCenterStates(source=alerts) {
   const sel=document.getElementById('acn-state'); if(!sel) return;
-  const current=sel.value;
   const states=[...new Set(source.map(a=>a.state).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
   sel.innerHTML='<option value="">Todo México</option>'+states.map(s=>`<option value="${s}">${s}</option>`).join('');
-  if(states.includes(current)) sel.value=current;
+  setSel('acn-state',uState);
 }
 function renderDiagnostics() {
   const box=document.getElementById('diag-grid'); if(!box) return;
@@ -5600,25 +5646,12 @@ let acnRenderSeq=0;
 async function renderAlertCenter() {
   const list=document.getElementById('acn-list'); if(!list) return;
   const seq=++acnRenderSeq;
-  const cat=document.getElementById('acn-category')?.value||'all';
-  const sev=document.getElementById('acn-severity')?.value||'all';
-  const hours=Number(document.getElementById('acn-time')?.value||3);
-  const state=document.getElementById('acn-state')?.value||'';
-  const q=(document.getElementById('acn-search')?.value||'').toLowerCase();
+  const hours=uRange;
   let source=alerts;
   if(hours>24){ try { source=await ensureHistoricalAlerts(); } catch(e) { source=alerts; } }
   if(seq !== acnRenderSeq) return;
   buildAlertCenterStates(source); renderDiagnostics();
-  const visible=source.filter(a=>{
-    if(!panoMatchesType(a)) return false;
-    if(cat==='blockage'&&!isBlockageAlert(a)) return false;
-    if(['road','security'].includes(cat)&&a.category!==cat) return false;
-    if(sev!=='all'&&alertSeverity(a)!==sev) return false;
-    if(hours&&!isScheduledActive(a)&&(Date.now()-new Date(a.time).getTime())>hours*3600*1000) return false;
-    if(state&&a.state!==state) return false;
-    if(q&&!((a.title||'').toLowerCase().includes(q)||(a.location||'').toLowerCase().includes(q)||(a.detail||'').toLowerCase().includes(q))) return false;
-    return true;
-  }).sort((a,b)=>{
+  const visible=source.filter(matchesFilters  ).sort((a,b)=>{
     const tb=new Date(b.time).getTime()||0, ta=new Date(a.time).getTime()||0;
     if(panoSort==='recent') return tb-ta;
     return (panoRiskScore(b)-panoRiskScore(a)) || (tb-ta);
