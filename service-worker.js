@@ -6,7 +6,7 @@
    - Tiles / fuentes: cache-first.
    - Nunca cachea peticiones de API (POST/GET dinámicos) ni Supabase.
    ============================================================================ */
-const VERSION = 'zv-fusion-v45';
+const VERSION = 'zv-fusion-v46';
 const RUNTIME_MAX_ENTRIES = 400; // tope para tiles/CDN: evita llenar el almacenamiento del móvil
 const SHELL_CACHE = VERSION + '-shell';
 const RUNTIME_CACHE = VERSION + '-runtime';
@@ -22,7 +22,7 @@ const SHELL = [
   '/fusion/tolls-data.js',
   '/manifest.webmanifest',
   '/landing-city-v1.webp',
-  '/zero-mark-v2.svg',
+  '/zero-mark.png',
   '/favicon-256.png',
   '/apple-touch-icon.png',
   '/favicon.png'
