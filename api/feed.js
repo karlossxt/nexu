@@ -4,6 +4,7 @@
 
 const MAX_OUT = 30;
 const MAX_PER_MIN = 60;
+const { sharedRateLimited } = require('../lib/shared-rate-limit');
 const rate = new Map();
 const ALLOWED_FEED_HOSTS = ['rss.app', 'news.google.com'];
 
@@ -39,7 +40,7 @@ function mexVialScore(text) {
 }
 
 function remoteIp(req) {
-  const fwd = (req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  const fwd = String(req.headers['x-vercel-forwarded-for'] || req.headers['x-forwarded-for'] || '').split(',')[0].trim();
   return fwd || (req.socket && req.socket.remoteAddress) || 'anon';
 }
 
@@ -140,7 +141,8 @@ function parseRssItems(raw) {
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') return res.status(405).json({ error: 'método no permitido' });
-  if (rateLimited(remoteIp(req))) return res.status(429).json({ error: 'demasiadas peticiones, espera un minuto' });
+  const clientIp = remoteIp(req);
+  if (rateLimited(clientIp) || await sharedRateLimited('feed', clientIp, MAX_PER_MIN)) return res.status(429).json({ error: 'demasiadas peticiones, espera un minuto' });
 
   const url = String((req.query && req.query.url) || '').trim();
   if (!allowedFeedUrl(url)) return res.status(400).json({ error: 'fuente RSS no autorizada' });

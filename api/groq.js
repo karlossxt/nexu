@@ -12,10 +12,11 @@ const MODELS_ALLOWED = [
 ];
 const MAX_BODY = 64 * 1024;
 const MAX_PER_MIN = 40;
+const { sharedRateLimited } = require('../lib/shared-rate-limit');
 const rate = new Map();
 
 function remoteIp(req) {
-  const fwd = (req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  const fwd = String(req.headers['x-vercel-forwarded-for'] || req.headers['x-forwarded-for'] || '').split(',')[0].trim();
   return fwd || (req.socket && req.socket.remoteAddress) || 'anon';
 }
 
@@ -60,7 +61,8 @@ module.exports = async (req, res) => {
   const appToken = process.env.APP_TOKEN || '';
   if (!key) return res.status(500).json({ error: 'GROQ_API_KEY no configurada en Vercel' });
   if (appToken && req.headers['x-app-token'] !== appToken) return res.status(403).json({ error: 'token de acceso requerido' });
-  if (rateLimited(remoteIp(req))) return res.status(429).json({ error: 'demasiadas peticiones, espera un minuto' });
+  const clientIp = remoteIp(req);
+  if (rateLimited(clientIp) || await sharedRateLimited('groq', clientIp, MAX_PER_MIN)) return res.status(429).json({ error: 'demasiadas peticiones, espera un minuto' });
 
   try {
     // GET /api/groq?action=models
