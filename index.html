@@ -1355,6 +1355,15 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
 @keyframes zsLoad{0%{transform:translateX(-110%)}100%{transform:translateX(280%)}}
 @media (prefers-reduced-motion:reduce){#zv-splash .zs-logo img,#zv-splash .zs-logo::after,#zv-splash .zs-bar i{animation:none}#zv-splash .zs-name,#zv-splash .zs-bar{animation:none;opacity:1}}
 @media(max-width:700px){ .fz-topmenu,.fz-topmenu-btn{display:none!important} }
+#ahora-view .pano-hero h1{font-size:clamp(20px,2.6vw,27px)}
+#ahora-view .ahora-filterbar{position:sticky;top:0;z-index:6;margin:0 -14px 12px;padding:10px 14px 2px;background:color-mix(in srgb,var(--card-bg) 94%,#000);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+#ahora-view .ahora-filterbar .pano-chips{margin-bottom:9px}
+#ahora-view .ahora-filterbar .acn-toolbar{margin:0 0 9px}
+#ahora-view .ahora-filterbar .pano-sort{margin:0;padding:0;border:0;background:transparent;box-shadow:none;display:block}
+#ahora-view .ahora-filterbar .pano-sort>i{display:none}
+#ahora-view .ahora-filterbar .pano-sort select{font-weight:inherit;border-radius:inherit;width:100%}
+#ahora-view .ahora-filterbar select,#ahora-view .ahora-filterbar input{min-height:36px;font-size:13px}
+@media(max-width:700px){#ahora-view .ahora-filterbar{margin:0 -12px 10px;padding:8px 12px 2px;top:0}}
 #ahora-view .acn-approx{ font-style:normal; font-size:9.5px; font-weight:800; letter-spacing:.02em; color:#FBBF24; background:rgba(251,191,36,.12); border:1px solid rgba(251,191,36,.3); border-radius:999px; padding:1px 7px; white-space:nowrap; }
 #ahora-view .acn-card{background:var(--card-bg);border-color:var(--border);border-left-color:var(--sev);box-shadow:none;color:var(--text)}
 #ahora-view .acn-card h3{color:var(--text)}
@@ -1590,31 +1599,19 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
         </div>
       </header>
 
-      <div id="pano-kpis" class="pano-kpis" aria-label="Resumen de alertas"></div>
-
-      <div class="pano-toolbar" aria-label="Filtros y orden del panorama">
-        <div class="pano-chips" id="pano-type-filters" role="group" aria-label="Filtrar por tipo de incidencia"></div>
-        <div class="pano-tools">
-          <button class="pano-unlocated-btn" type="button" id="pano-unlocated-btn" onclick="togglePanoUnlocated()" hidden></button>
-          <label class="pano-sort">
-            <i class="fa-solid fa-arrow-down-wide-short" aria-hidden="true"></i>
-            <select id="pano-sort" onchange="setPanoSort(this.value)" aria-label="Ordenar alertas">
-              <option value="relevance">Relevancia</option>
-              <option value="recent">Más recientes</option>
-            </select>
-          </label>
-        </div>
-      </div>
-
       <div class="pano-grid">
         <div class="pano-main">
           <section class="pano-block" id="ahora-alerts-block">
             <div class="pano-block-head"><h2>Alertas en vivo</h2><span id="ahora-alerts-meta">Cargando…</span></div>
+            <div class="ahora-filterbar">
+            <div class="pano-chips" id="pano-type-filters" role="group" aria-label="Filtrar por tipo de incidencia"></div>
             <div class="acn-toolbar ahora-filters" aria-label="Filtros de alertas">
               <select id="acn-severity" onchange="ahoraFilterChanged()"><option value="all">Toda prioridad</option><option value="critical">Crítica</option><option value="high">Alta</option><option value="medium">Media</option></select>
               <select id="acn-time" onchange="ahoraFilterChanged()"><option value="1">Última hora</option><option value="3" selected>Últimas 3 horas</option><option value="24">Últimas 24 horas</option><option value="168">Últimos 7 días</option><option value="720">Últimos 30 días</option><option value="2160">Últimos 90 días</option></select>
               <select id="acn-state" onchange="ahoraFilterChanged()"><option value="">Todo México</option></select>
+              <label class="pano-sort"><i class="fa-solid fa-arrow-down-wide-short" aria-hidden="true"></i><select id="pano-sort" onchange="setPanoSort(this.value)" aria-label="Ordenar alertas"><option value="relevance">Relevancia</option><option value="recent">Más recientes</option></select></label>
               <input id="acn-search" oninput="ahoraFilterChanged()" placeholder="Buscar carretera, kilómetro, estado o incidente…" aria-label="Buscar alertas">
+            </div>
             </div>
             <div id="acn-list" class="acn-list ahora-list" aria-live="polite"></div>
             <section class="acn-analytics" aria-label="Análisis de alertas filtradas">
@@ -5122,7 +5119,7 @@ function isNavigableAlert(a) { return locationTier(a) === 'exact'; }
    aportan al viajero: se ocultan por defecto y nunca se dibujan en el mapa. */
 let panoType = 'all';
 let panoSort = 'relevance';
-let panoShowUnlocated = false;
+let panoShowUnlocated = true;
 const PANO_TYPES = [
   { key:'all', label:'Todas', icon:'fa-layer-group' },
   { key:'road', label:'Viales', icon:'fa-road' },
@@ -5158,6 +5155,10 @@ function panoMatchesType(a) {
   if(panoType === 'blockage') return isBlockageAlert(a);
   if(panoType === 'weather') return roadIncidentType(a) === 'Clima / Vía';
   return true;
+}
+function matchesFiltersExceptType(a) {
+  const t = panoType; panoType = 'all';
+  try { return matchesFilters(a); } finally { panoType = t; }
 }
 function panoTypeCounts(list) {
   const counts = { all:list.length, road:0, security:0, accident:0, blockage:0, weather:0 };
@@ -5285,7 +5286,7 @@ function renderPanorama() {
   const heatOnly = area - areaOnMap;
   const none = list.filter(a => locationTier(a) === 'none').length;
 
-  const counts = panoTypeCounts(list);
+  const counts = panoTypeCounts((alerts || []).filter(a => a && a.title && !a.ignored && matchesFiltersExceptType(a)));
   const chipsBox = document.getElementById('pano-type-filters');
   if(chipsBox) chipsBox.innerHTML = PANO_TYPES.map(t => `<button type="button" class="pano-chip${panoType === t.key ? ' active' : ''}" data-pano-type="${t.key}" aria-pressed="${panoType === t.key}" onclick="setPanoType('${t.key}')">${glyphHTML(t.icon)}${t.label} <b>${counts[t.key] || 0}</b></button>`).join('');
   const unlocatedBtn = document.getElementById('pano-unlocated-btn');
