@@ -194,7 +194,7 @@ body.user-mode:not(.dark-mode) .pref-check{ background:#fff; border-color:#D8E1E
 .landing-kicker i{ color:var(--brand-cyan); }
 .landing-logo{ display:block; width:136px; height:136px; aspect-ratio:1/1; margin:12px auto 8px; object-fit:contain; object-position:center; background:transparent; border-radius:0; box-shadow:none; }
 .landing-brand{ color:#fff; font-size:34px; letter-spacing:2px; margin:4px 0 10px; text-align:center; font-weight:900; }
-.landing-brand span{ color:#19C7E8; }
+.landing-brand span{ color:#FFD400; }
 .sr-only{ position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important; }
 button:focus-visible, [role="button"]:focus-visible, .alert-card:focus-visible, .rm-card:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{ outline:3px solid #38BDF8!important; outline-offset:3px!important; }
 .landing-sub{ color:#AEB9C5; margin:3px auto 20px; max-width:600px; font-size:15px; line-height:1.55; }
@@ -344,7 +344,7 @@ body.user-mode #circula{ display:flex; }
 #landing .landing-identity{display:flex;justify-content:center;align-items:center;gap:12px;}
 #landing .landing-logo{width:70px;height:70px;margin:0;object-fit:contain;border-radius:0;background:transparent;box-shadow:none;}
 #landing .landing-brand{font-size:30px;letter-spacing:2px;margin:0;font-weight:800;color:#fff;}
-#landing .landing-brand span{color:#55ddf1;}
+#landing .landing-brand span{color:#FFD400;}
 #landing .landing-sub{margin:9px 0 24px;max-width:none;font-size:14px;color:#edf3fa;}
 #landing .landing-access{max-width:none;padding:0;border:0;background:transparent;border-radius:0;}
 #landing .landing-tabs{border:0;background:rgba(0,0,0,.22);padding:4px;margin-bottom:14px;border-radius:8px;}
@@ -522,7 +522,7 @@ body.user-mode.left-rail #panel-left{ top:84px; }
 .nt-brand{ display:flex; align-items:center; gap:9px; min-width:175px; font-weight:900; color:var(--text); }
 .nt-brand i{ width:36px; height:36px; display:grid; place-items:center; border-radius:11px; color:#fff; background:linear-gradient(145deg,#0EA5E9,#2563EB); box-shadow:0 5px 14px rgba(37,99,235,.28); }
 .nt-logo{ width:42px; height:42px; aspect-ratio:1/1; object-fit:contain; border:0; border-radius:0; background:transparent; box-shadow:none; }
-.nt-brand span{ color:var(--accent); }
+.nt-brand span{ color:#FFD400; }
 .pl-logo-img{ width:34px; height:34px; object-fit:cover; border-radius:8px; background:#fff; }
 .nt-nav{ display:flex; align-items:center; gap:5px; flex:1; }
 .nt-sep{ width:1px; height:24px; flex:0 0 auto; margin:0 2px; background:var(--border); }
@@ -1343,13 +1343,13 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
 #zv-splash.hide{opacity:0;visibility:hidden;pointer-events:none}
 #zv-splash .zs-logo{position:relative;width:132px;height:132px}
 #zv-splash .zs-logo img{width:100%;height:100%;object-fit:contain;display:block;animation:zsPop .8s cubic-bezier(.2,.9,.25,1.15) both,zsGlow 1.8s ease-in-out .8s infinite}
-#zv-splash .zs-logo::after{content:"";position:absolute;inset:-6px;border-radius:30px;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);background-size:250% 100%;background-position:150% 0;mix-blend-mode:overlay;animation:zsSweep 1.1s ease .55s 1 both;pointer-events:none}
+#zv-splash .zs-logo::after{content:"";position:absolute;inset:0;border-radius:50%;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);background-size:250% 100%;background-position:150% 0;mix-blend-mode:overlay;animation:zsSweep 1.1s ease .55s 1 both;pointer-events:none}
 #zv-splash .zs-name{font-weight:900;font-size:26px;letter-spacing:6px;color:#fff;opacity:0;animation:zsRise .6s ease .5s forwards}
-#zv-splash .zs-name span{color:#19C7E8}
+#zv-splash .zs-name span{color:#FFD400}
 #zv-splash .zs-bar{width:120px;height:3px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden;opacity:0;animation:zsRise .4s ease .7s forwards}
-#zv-splash .zs-bar i{display:block;height:100%;width:40%;border-radius:99px;background:linear-gradient(90deg,#16E7F3,#1458FF);animation:zsLoad 1.1s ease-in-out infinite}
+#zv-splash .zs-bar i{display:block;height:100%;width:40%;border-radius:99px;background:linear-gradient(90deg,#FFE55C,#FFD400);animation:zsLoad 1.1s ease-in-out infinite}
 @keyframes zsPop{0%{opacity:0;transform:scale(.55) rotate(-6deg)}100%{opacity:1;transform:none}}
-@keyframes zsGlow{0%,100%{filter:drop-shadow(0 0 0 rgba(25,199,232,0))}50%{filter:drop-shadow(0 0 18px rgba(25,199,232,.55))}}
+@keyframes zsGlow{0%,100%{filter:drop-shadow(0 0 0 rgba(25,199,232,0))}50%{filter:drop-shadow(0 0 18px rgba(255,212,0,.5))}}
 @keyframes zsSweep{to{background-position:-50% 0}}
 @keyframes zsRise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes zsLoad{0%{transform:translateX(-110%)}100%{transform:translateX(280%)}}
