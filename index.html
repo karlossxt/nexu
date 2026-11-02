@@ -1694,11 +1694,11 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
   </section>
 
   <!-- ZONAS Y ANÁLISIS · contenedor de la siguiente fase -->
-  <section id="zonas-view" aria-label="Zonas y análisis">
+  <section id="zonas-view" aria-label="Riesgo por zona">
     <div class="pano-wrap">
       <header class="pano-hero">
         <div>
-          <div class="pano-kicker"><i class="fa-solid fa-layer-group"></i> Zonas y análisis</div>
+          <div class="pano-kicker"><i class="fa-solid fa-layer-group"></i> Riesgo por zona</div>
           <h1>Riesgo por zona y series históricas</h1>
           <p class="pano-sub">Esta vista reunirá Radar Vial, Zonas de seguridad y Análisis histórico. Mientras terminamos la integración, cada herramienta sigue disponible desde aquí.</p>
         </div>
@@ -1764,7 +1764,7 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
     <nav class="nt-nav">
       <button class="nt-btn active" data-app-view="ahora" onclick="showAhoraView()" title="Ahora" aria-label="Ahora"><i class="fa-solid fa-house"></i><span>Ahora</span></button>
       <button class="nt-btn" data-app-view="map" onclick="showMapView();clearAlertFocus()" title="Mapa de alertas" aria-label="Mapa de alertas"><i class="fa-solid fa-map-location-dot"></i><span>Mapa</span></button>
-      <button class="nt-btn" data-app-view="zonas" onclick="showZonasView()" title="Zonas y análisis" aria-label="Zonas y análisis"><i class="fa-solid fa-layer-group"></i><span>Zonas y análisis</span></button>
+      <button class="nt-btn" data-app-view="zonas" onclick="showZonasView()" title="Riesgo por zona" aria-label="Riesgo por zona"><i class="fa-solid fa-layer-group"></i><span>Riesgo por zona</span></button>
       <span class="nt-sep" aria-hidden="true"></span>
       <button class="nt-btn" onclick="openDirModal()" title="Directorio de emergencias" aria-label="Directorio de emergencias"><i class="fa-solid fa-phone-volume"></i><span>Directorio</span></button>
       <button class="nt-btn feature-soon" onclick="showComingSoon('Grupos de operación')" title="Grupos de operación" aria-label="Grupos de operación"><i class="fa-solid fa-comments"></i><span>Grupos</span></button>
@@ -1784,7 +1784,7 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
   </header>
   <nav class="mobile-app-nav" aria-label="Navegación móvil">
   <button type="button" class="active" data-app-view="ahora" onclick="showAhoraView()" aria-label="Ahora"><i class="fa-solid fa-house"></i><span>Ahora</span></button>
-  <button type="button" data-app-view="zonas" onclick="showZonasView()" aria-label="Zonas y análisis"><i class="fa-solid fa-layer-group"></i><span>Zonas</span></button>
+  <button type="button" data-app-view="zonas" onclick="showZonasView()" aria-label="Riesgo por zona"><i class="fa-solid fa-layer-group"></i><span>Zonas</span></button>
   <button type="button" onclick="openRouteModal()" aria-label="Ruta"><i class="fa-solid fa-route"></i><span>Ruta</span></button>
   <button type="button" data-app-view="map" onclick="showMapView()" aria-label="Mapa"><i class="fa-solid fa-map-location-dot"></i><span>Mapa</span></button>
   <button type="button" onclick="window.Fusion && Fusion.trip.open()" aria-label="Modo Viaje"><i class="fa-solid fa-car-on"></i><span>Viaje</span></button>
@@ -5007,7 +5007,7 @@ async function runRiskCard(){
   const trend=(r,p)=>{ r=Number(r); p=Number(p); return r>p?`<span class="risk-up">▲ ${p?'+'+Math.round((r-p)/p*100)+'%':'nuevo'}</span>`:r<p?`<span class="risk-down">▼ ${Math.round((p-r)/p*100)}%</span>`:'<span class="risk-eq">＝</span>'; };
   box.innerHTML=`<div class="risk-row"><b>${escapeHtml(muni)}, ${escapeHtml(state)}</b><span></span><span class="risk-n">${total} reportes ${trend(total,prevTotal)}</span></div>`+
     rows.filter(r=>Number(r.recent)>0).map(r=>`<div class="risk-row"><span>${escapeHtml(CRIME_LABELS[r.crime_type]||'Otros')}</span><div class="risk-bar"><i style="width:${Math.max(6,Number(r.recent)/max*100)}%"></i></div><span class="risk-n">${r.recent} ${trend(r.recent,r.previous)}</span></div>`).join('')+
-    `<div class="risk-note">Últimos ${days} días frente a los ${days} anteriores. Basado en noticias publicadas; no sustituye estadísticas oficiales.</div>`;
+    `<div class="risk-note">${hasPrev?`Últimos ${days} días frente a los ${days} anteriores.`:`Aún no hay historial previo para comparar tendencias: se mostrarán cuando se acumulen más datos.`} Basado en noticias publicadas; no sustituye estadísticas oficiales.</div>`;
 }
 
 
@@ -5037,13 +5037,16 @@ async function ctxLoad(){
   if(!total){ box.innerHTML=`<div class="risk-note">Sin reportes en ${escapeHtml(ctxTitle(state))} en los últimos ${days} días. Eso no garantiza que no haya incidentes.</div>`; wrap.style.display='none'; return; }
   const types={}; rows.forEach(r=>Object.entries(r.tipos||{}).forEach(([k,v])=>types[k]=(types[k]||0)+Number(v)));
   const topType=Object.entries(types).sort((a,b)=>b[1]-a[1])[0];
-  const known=rows.filter(r=>r.municipio&&r.municipio!=='DESCONOCIDO');
+  const norm=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  const sname=norm(state);
+  const known=rows.filter(r=>r.municipio&&r.municipio!=='DESCONOCIDO'&&norm(r.municipio)!==sname&&norm(r.municipio)!=='estado de mexico');
   const noMuni=total-known.reduce((s,r)=>s+Number(r.total),0);
-  const trend=(r,p)=>{ r=Number(r); p=Number(p); return r>p?`<span class="risk-up">▲ ${p?'+'+Math.round((r-p)/p*100)+'%':'nuevo'}</span>`:r<p?`<span class="risk-down">▼ ${Math.round((p-r)/p*100)}%</span>`:'<span class="risk-eq">＝</span>'; };
+  const hasPrev=prev>0;
+  const trend=(r,p)=>{ if(!hasPrev) return ''; r=Number(r); p=Number(p); return r>p?`<span class="risk-up">▲ ${p?'+'+Math.round((r-p)/p*100)+'%':'nuevo'}</span>`:r<p?`<span class="risk-down">▼ ${Math.round((p-r)/p*100)}%</span>`:'<span class="risk-eq">＝</span>'; };
   const topM=known.filter(r=>Number(r.total)>0).slice(0,12), max=Math.max(...topM.map(r=>Number(r.total)),1);
   const typeRows=Object.entries(types).sort((a,b)=>b[1]-a[1]), tmax=typeRows[0]?typeRows[0][1]:1;
   box.innerHTML=
-   `<div class="ctx-kpis"><div class="ctx-kpi"><b>${total}</b><span>reportes ${trend(total,prev)}</span></div>`+
+   `<div class="ctx-kpis"><div class="ctx-kpi"><b>${total}</b><span>reportes ${trend(total,prev)||''}</span></div>`+
    `<div class="ctx-kpi"><b>${known.length}</b><span>municipios con reportes</span></div>`+
    `<div class="ctx-kpi"><b>${topType?escapeHtml(CTX_LABELS[topType[0]]||'Otros'):'—'}</b><span>tipo más frecuente</span></div></div>`+
    `<div class="ctx-sub">Municipios con más reportes</div>`+
@@ -5053,7 +5056,7 @@ async function ctxLoad(){
    (noMuni>0?`<div class="risk-note">${noMuni} reportes no precisan municipio.</div>`:'')+
    `<div class="ctx-sub">Por tipo</div>`+
    typeRows.map(([k,v])=>`<div class="risk-row"><span>${escapeHtml(CTX_LABELS[k]||'Otros')}</span><div class="risk-bar"><i style="width:${Math.max(6,v/tmax*100)}%"></i></div><span class="risk-n">${v}</span></div>`).join('')+
-   `<div class="risk-note">Últimos ${days} días frente a los ${days} anteriores. Un municipio con pocos reportes no es necesariamente más seguro: puede tener menos cobertura de prensa. Reportes en medios, no estadística oficial.</div>`;
+   `<div class="risk-note">${hasPrev?`Últimos ${days} días frente a los ${days} anteriores.`:`Aún no hay historial previo para comparar tendencias: se mostrarán cuando se acumulen más datos.`} Un municipio con pocos reportes no es necesariamente más seguro: puede tener menos cobertura de prensa. Reportes en medios, no estadística oficial.</div>`;
   ctxChart(mo.data||[]);
 }
 function ctxChart(data){
