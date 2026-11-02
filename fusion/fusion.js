@@ -468,6 +468,8 @@
       '</p><div class="fz-sep"></div><button type="button" class="fz-btn fz-primary" data-close="fz-install-ov"><i class="fa-solid fa-check"></i> Entendido</button>';
     showOverlay('fz-install-ov');
   }
+  FZ.installApp = installApp;
+  FZ.isStandalone = isStandalone;
   function refreshInstallButtons() {
     var show = !isStandalone() && !!deferredPrompt;
     $$('.fz-install-btn').forEach(function (b) { b.classList.toggle('fz-hidden', !show); });
