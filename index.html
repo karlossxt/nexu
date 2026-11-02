@@ -1332,6 +1332,15 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
 #ahora-view .acn-list{max-width:none;margin:0;padding:0}
 #ahora-view .acn-analytics{max-width:none;margin:14px 0 0;padding:0}
 #ahora-view .diag-grid{max-width:none;margin:0;padding:0}
+.beta-tag{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.06em;padding:2px 7px;border-radius:99px;background:var(--warn);color:#202124;vertical-align:middle;margin-left:6px}
+.beta-note{font-size:12px;padding:8px 11px;border-radius:10px;border:1px dashed var(--warn);background:rgba(249,171,0,.1);color:var(--text);margin:8px 0}
+.beta-note i{color:var(--warn);margin-right:6px}
+.ctx-kpis{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:4px}
+.ctx-kpi{flex:1 1 120px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--card-bg)}
+.ctx-kpi b{display:block;font-size:20px;line-height:1.1}.ctx-kpi span{font-size:11.5px;color:var(--text-muted)}
+.ctx-sub{font-size:12px;font-weight:700;color:var(--text-muted);margin:10px 0 2px;text-transform:uppercase;letter-spacing:.04em}
+.ctx-tags{font-size:11px;color:var(--text-muted)}
+.risk-bar i.hot{background:var(--danger)}.risk-bar i.warm{background:var(--warn)}
 .risk-form{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
 .risk-form input,.risk-form select{flex:1 1 150px;min-width:0;padding:9px 11px;border-radius:10px;border:1px solid rgba(148,163,184,.3);background:rgba(15,23,42,.6);color:inherit;font:inherit;font-size:13px}
 .risk-result{display:grid;gap:7px}
@@ -1684,6 +1693,17 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
       </header>
       <div class="pano-grid">
         <div class="pano-main">
+          <section class="pano-block" id="ctx-card">
+            <div class="pano-block-head"><h2>Panorama por estado <em class="beta-tag">BETA</em></h2><span>Reportes en medios</span></div>
+            <div class="beta-note"><i class="fa-solid fa-flask"></i> Versión beta en mejoras: estamos reuniendo datos y afinando esta vista. Por ahora cubre pocos estados y las cifras pueden cambiar.</div>
+            <p class="pano-sub">Cómo se comportan los reportes de seguridad en un estado: qué municipios concentran más y de qué tipo. Son noticias publicadas, no cifras oficiales, y no aparecen como alertas en el mapa.</p>
+            <div class="risk-form">
+              <select id="ctx-state" onchange="ctxLoad()"><option value="">Cargando estados…</option></select>
+              <select id="ctx-days" onchange="ctxLoad()"><option value="30">Últimos 30 días</option><option value="90" selected>Últimos 90 días</option><option value="180">Últimos 180 días</option></select>
+            </div>
+            <div id="ctx-result" class="risk-result" aria-live="polite"></div>
+            <div id="ctx-chart-wrap" style="display:none;height:210px;margin-top:12px"><canvas id="ctx-chart"></canvas></div>
+          </section>
           <section class="pano-block" id="risk-card">
             <div class="pano-block-head"><h2>Reportes de seguridad por municipio</h2><span>Antes de viajar</span></div>
             <p class="pano-sub">Elige un municipio para ver qué tipos de incidente se han reportado en medios. No son estadísticas oficiales: un municipio sin reportes no significa que sea seguro.</p>
@@ -4978,6 +4998,63 @@ async function runRiskCard(){
     `<div class="risk-note">Últimos ${days} días frente a los ${days} anteriores. Basado en noticias publicadas; no sustituye estadísticas oficiales.</div>`;
 }
 
+
+// === Panorama por estado (security_context: noticias de medios, NO alertas) ===
+const CTX_LABELS=Object.assign({},CRIME_LABELS,{accion_policiaca:'Acción policiaca',narcotrafico:'Narcotráfico',lesiones:'Lesiones'});
+let ctxStatesLoaded=false;
+const ctxTitle=t=>String(t||'').toLowerCase().replace(/(^|\s)(\S)/g,(m,a,b)=>a+b.toUpperCase()).replace(/\b(De|Del|La|Las|Los)\b/g,x=>x.toLowerCase());
+async function ctxInit(){
+  const sel=document.getElementById('ctx-state'); if(!sel||ctxStatesLoaded||!supabaseClient) return;
+  const {data,error}=await supabaseClient.rpc('context_states');
+  if(error||!data||!data.length){ sel.innerHTML='<option value="">Sin datos todavía</option>'; return; }
+  ctxStatesLoaded=true;
+  sel.innerHTML='<option value="">Elige un estado…</option>'+data.slice().sort((a,b)=>b.total-a.total).map(r=>`<option value="${escapeHtml(r.estado)}">${escapeHtml(ctxTitle(r.estado))} (${r.total})</option>`).join('');
+}
+async function ctxLoad(){
+  const box=document.getElementById('ctx-result'), wrap=document.getElementById('ctx-chart-wrap');
+  const state=document.getElementById('ctx-state').value, days=Number(document.getElementById('ctx-days').value)||90;
+  if(!state){ box.innerHTML=''; wrap.style.display='none'; return; }
+  box.innerHTML='<div class="risk-note">Consultando…</div>';
+  const [ov,mo]=await Promise.all([
+    supabaseClient.rpc('context_state_overview',{p_state:state,p_days:days}),
+    supabaseClient.rpc('context_monthly',{p_state:state,p_months:12})
+  ]);
+  if(ov.error){ box.innerHTML='<div class="risk-note">No se pudo consultar. ¿Ya se ejecutó security-context.sql?</div>'; return; }
+  const rows=(ov.data||[]).filter(r=>Number(r.total)>0||Number(r.previos)>0);
+  const total=rows.reduce((s,r)=>s+Number(r.total),0), prev=rows.reduce((s,r)=>s+Number(r.previos),0);
+  if(!total){ box.innerHTML=`<div class="risk-note">Sin reportes en ${escapeHtml(ctxTitle(state))} en los últimos ${days} días. Eso no garantiza que no haya incidentes.</div>`; wrap.style.display='none'; return; }
+  const types={}; rows.forEach(r=>Object.entries(r.tipos||{}).forEach(([k,v])=>types[k]=(types[k]||0)+Number(v)));
+  const topType=Object.entries(types).sort((a,b)=>b[1]-a[1])[0];
+  const known=rows.filter(r=>r.municipio&&r.municipio!=='DESCONOCIDO');
+  const noMuni=total-known.reduce((s,r)=>s+Number(r.total),0);
+  const trend=(r,p)=>{ r=Number(r); p=Number(p); return r>p?`<span class="risk-up">▲ ${p?'+'+Math.round((r-p)/p*100)+'%':'nuevo'}</span>`:r<p?`<span class="risk-down">▼ ${Math.round((p-r)/p*100)}%</span>`:'<span class="risk-eq">＝</span>'; };
+  const topM=known.filter(r=>Number(r.total)>0).slice(0,12), max=Math.max(...topM.map(r=>Number(r.total)),1);
+  const typeRows=Object.entries(types).sort((a,b)=>b[1]-a[1]), tmax=typeRows[0]?typeRows[0][1]:1;
+  box.innerHTML=
+   `<div class="ctx-kpis"><div class="ctx-kpi"><b>${total}</b><span>reportes ${trend(total,prev)}</span></div>`+
+   `<div class="ctx-kpi"><b>${known.length}</b><span>municipios con reportes</span></div>`+
+   `<div class="ctx-kpi"><b>${topType?escapeHtml(CTX_LABELS[topType[0]]||'Otros'):'—'}</b><span>tipo más frecuente</span></div></div>`+
+   `<div class="ctx-sub">Municipios con más reportes</div>`+
+   topM.map(r=>{ const n=Number(r.total), cls=n>=max*0.75?'hot':n>=max*0.4?'warm':'';
+     const tags=Object.entries(r.tipos||{}).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k,v])=>`${CTX_LABELS[k]||'Otros'} ${v}`).join(' · ');
+     return `<div class="risk-row"><span title="${escapeHtml(tags)}">${escapeHtml(ctxTitle(r.municipio))}<div class="ctx-tags">${escapeHtml(tags)}</div></span><div class="risk-bar"><i class="${cls}" style="width:${Math.max(6,n/max*100)}%"></i></div><span class="risk-n">${n} ${trend(r.total,r.previos)}</span></div>`; }).join('')+
+   (noMuni>0?`<div class="risk-note">${noMuni} reportes no precisan municipio.</div>`:'')+
+   `<div class="ctx-sub">Por tipo</div>`+
+   typeRows.map(([k,v])=>`<div class="risk-row"><span>${escapeHtml(CTX_LABELS[k]||'Otros')}</span><div class="risk-bar"><i style="width:${Math.max(6,v/tmax*100)}%"></i></div><span class="risk-n">${v}</span></div>`).join('')+
+   `<div class="risk-note">Últimos ${days} días frente a los ${days} anteriores. Un municipio con pocos reportes no es necesariamente más seguro: puede tener menos cobertura de prensa. Reportes en medios, no estadística oficial.</div>`;
+  ctxChart(mo.data||[]);
+}
+function ctxChart(data){
+  const wrap=document.getElementById('ctx-chart-wrap'), cv=document.getElementById('ctx-chart');
+  if(!window.Chart||!cv||!data.length){ wrap.style.display='none'; return; }
+  const months=[...new Set(data.map(r=>r.mes))].sort();
+  const per=months.map(m=>data.filter(r=>r.mes===m).reduce((s,r)=>s+Number(r.total),0));
+  wrap.style.display='block';
+  const dark=document.body.classList.contains('dark-mode'), tc=dark?'#a0a0a0':'#5f6368';
+  if(chartInstances['ctx-chart']) chartInstances['ctx-chart'].destroy();
+  chartInstances['ctx-chart']=new Chart(cv,{type:'bar',data:{labels:months.map(m=>{const d=new Date(m+'T12:00:00');return d.toLocaleDateString('es-MX',{month:'short',year:'2-digit'});}),datasets:[{label:'Reportes por mes',data:per,backgroundColor:'rgba(244,67,54,.55)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},title:{display:true,text:'Reportes por mes (últimos 12 meses)',color:tc,font:{size:11}}},scales:{y:{beginAtZero:true,ticks:{precision:0,color:tc}},x:{ticks:{color:tc,font:{size:10}},grid:{display:false}}}}});
+}
+
 // === NOTIFICACIÓN DE ALERTAS IMPORTANTES ===
 function saveSound() { localStorage.setItem('nv_sound', document.getElementById('soundToggle').checked ? 'on' : 'off'); }
 // Android/Chrome exige que la notificación la muestre el service worker (new Notification falla en móvil)
@@ -5217,7 +5294,7 @@ function setAppView(view) {
     renderPanorama();
     scheduleNowAlerts(0);
   } else if(isZonas) {
-    // La integración de Radar Vial, zonas y analítica llega en la siguiente fase.
+    ctxInit();
   } else {
     setTimeout(() => { try { map.invalidateSize(); } catch(e) {} }, 60);
   }
