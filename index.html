@@ -1332,6 +1332,12 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
 #ahora-view .acn-list{max-width:none;margin:0;padding:0}
 #ahora-view .acn-analytics{max-width:none;margin:14px 0 0;padding:0}
 #ahora-view .diag-grid{max-width:none;margin:0;padding:0}
+.app-banner{display:flex;align-items:center;gap:12px;padding:10px 14px;margin-bottom:12px;border-radius:12px;border:1px solid rgba(255,212,0,.5);background:rgba(255,212,0,.12);font-size:13px}
+.app-banner[hidden]{display:none}
+.app-banner>i{font-size:20px;color:var(--warn)}.app-banner>div{flex:1;min-width:0}
+.app-banner .pano-btn{width:auto;white-space:nowrap}
+.app-banner-x{width:auto;padding:4px 8px;background:none;color:var(--text-muted);font-size:15px}
+@media(max-width:700px){.app-banner{flex-wrap:wrap}.app-banner>div{flex-basis:calc(100% - 80px)}}
 .beta-tag{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.06em;padding:2px 7px;border-radius:99px;background:var(--warn);color:#202124;vertical-align:middle;margin-left:6px}
 .beta-note{font-size:12px;padding:8px 11px;border-radius:10px;border:1px dashed var(--warn);background:rgba(249,171,0,.1);color:var(--text);margin:8px 0}
 .beta-note i{color:var(--warn);margin-right:6px}
@@ -1605,6 +1611,12 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
   <!-- AHORA · VISTA PRINCIPAL (el mapa queda como pestaña) -->
   <section id="ahora-view" aria-label="Ahora">
     <div class="pano-wrap">
+      <div class="app-banner" id="app-banner" hidden>
+        <i class="fa-solid fa-mobile-screen-button"></i>
+        <div><b>Zero Vial está en versión beta y seguimos mejorándola.</b> Descarga la app en tu celular para usarla a pantalla completa y recibir avisos.</div>
+        <button type="button" class="pano-btn primary" onclick="appBannerInstall()"><i class="fa-solid fa-download"></i> Instalar</button>
+        <button type="button" class="app-banner-x" onclick="appBannerClose()" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
       <header class="pano-hero">
         <div>
           <div class="pano-kicker"><i class="fa-solid fa-satellite-dish"></i> Ahora en las carreteras</div>
@@ -5055,6 +5067,17 @@ function ctxChart(data){
   chartInstances['ctx-chart']=new Chart(cv,{type:'bar',data:{labels:months.map(m=>{const d=new Date(m+'T12:00:00');return d.toLocaleDateString('es-MX',{month:'short',year:'2-digit'});}),datasets:[{label:'Reportes por mes',data:per,backgroundColor:'rgba(244,67,54,.55)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},title:{display:true,text:'Reportes por mes (últimos 12 meses)',color:tc,font:{size:11}}},scales:{y:{beginAtZero:true,ticks:{precision:0,color:tc}},x:{ticks:{color:tc,font:{size:10}},grid:{display:false}}}}});
 }
 
+
+// Aviso beta + invitación a instalar la app (se oculta si ya está instalada o si se cierra; reaparece en 7 días)
+(function(){
+  const KEY='zv_app_banner_until';
+  const standalone=()=>{ try{ return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone===true; }catch(e){ return false; } };
+  function snoozed(){ try{ return Number(localStorage.getItem(KEY)||0)>Date.now(); }catch(e){ return false; } }
+  window.appBannerClose=function(){ try{ localStorage.setItem(KEY,String(Date.now()+7*864e5)); }catch(e){} const b=document.getElementById('app-banner'); if(b) b.hidden=true; };
+  window.appBannerInstall=function(){ if(window.Fusion&&Fusion.installApp) Fusion.installApp(); };
+  document.addEventListener('DOMContentLoaded',()=>{ const b=document.getElementById('app-banner'); if(b&&!standalone()&&!snoozed()) b.hidden=false; });
+})();
+
 // === NOTIFICACIÓN DE ALERTAS IMPORTANTES ===
 function saveSound() { localStorage.setItem('nv_sound', document.getElementById('soundToggle').checked ? 'on' : 'off'); }
 // Android/Chrome exige que la notificación la muestre el service worker (new Notification falla en móvil)
@@ -6649,6 +6672,6 @@ setLandingAuthMode('login');
 </script>
 
 <!-- FUSIÓN VíaSegura · motor de features (Modo Viaje, Nocturno, PWA, Peajes, Analítica, PDF, Push) -->
-<script src="/fusion/fusion.js?v=24" defer></script>
+<script src="/fusion/fusion.js?v=25" defer></script>
 </body>
 </html>
