@@ -12,6 +12,7 @@ const { rncNetworkDecision } = require('./rnc-precision');
 const locationMonitor = require('./location-health').createMonitor();
 const { resolveOfficialTollReference, officialNameExists } = require('./rnc-toll-reference');
 const { kilometersConflict, normalizedKilometer } = require('../lib/alert-km');
+const { isOngoingRepeat } = require('../lib/alert-dedupe');
 const { orientativeCorridorPoint } = require('../lib/corridor-reference');
 const TOMTOM_TRAFFIC = require('./tomtom-traffic');
 
@@ -422,8 +423,13 @@ function roadSimilarity(a,b) {
 
 async function findSpatialDuplicate(row) {
   const eventTime=new Date(row.event_at || Date.now()).getTime();
-  const since=new Date(eventTime - 2*3600_000).toISOString();
+  // Ventana ampliada (48 h) para detectar eventos que siguen vigentes; se acota por
+  // cuadro geográfico (~3 km) para no traer alertas lejanas.
+  const since=new Date(eventTime - 48*3600_000).toISOString();
   const until=new Date(eventTime + 30*60_000).toISOString();
+  const rLat=Number(row.latitude), rLon=Number(row.longitude);
+  if (!Number.isFinite(rLat) || !Number.isFinite(rLon)) return null;
+  const BOX=0.03;
   // En puntos gruesos (centroide municipal) la distancia deja de discriminar:
   // exigimos similitud textual fuerte para no colapsar incidencias distintas
   // que solo comparten el centro del municipio (mapa de calor).
@@ -433,7 +439,9 @@ async function findSpatialDuplicate(row) {
     +'&category=eq.'+encodeURIComponent(row.category)
     +'&event_at=gte.'+encodeURIComponent(since)
     +'&event_at=lte.'+encodeURIComponent(until)
-    +'&order=event_at.desc&limit=80';
+    +'&latitude=gte.'+(rLat-BOX)+'&latitude=lte.'+(rLat+BOX)
+    +'&longitude=gte.'+(rLon-BOX)+'&longitude=lte.'+(rLon+BOX)
+    +'&order=event_at.desc&limit=200';
   const recent=await sb(path) || [];
   for (const existing of recent) {
     if (kilometersConflict(row.kilometer,existing.kilometer)) continue;
@@ -451,8 +459,13 @@ async function findSpatialDuplicate(row) {
       [existing.title,existing.detail,existing.location_label].filter(Boolean).join(' ')
     );
 
+    const hoursApart=Math.abs(eventTime-new Date(existing.event_at||0).getTime())/3600_000;
+    const inShortWindow=hoursApart<=2.5;
     let duplicate=false;
-    if (coarse) {
+    if (!inShortWindow) {
+      // Fuera de la ventana corta solo se fusiona un evento vigente claramente repetido.
+      duplicate = !coarse && isOngoingRepeat(row, existing, { hoursApart, distanceKm, similarity, sameRoad, sameKm });
+    } else if (coarse) {
       // Punto grueso (centroide municipal): solo se fusiona si el texto es muy
       // parecido (misma noticia replicada), para no perder incidencias distintas.
       duplicate = sameEvent && similarity>=0.55;
@@ -460,6 +473,7 @@ async function findSpatialDuplicate(row) {
     else if (sameEvent && sameRoad && distanceKm<=1.0 && similarity>=0.30) duplicate=true;
     else if (sameEvent && sameRoad && sameKm && distanceKm<=1.5 && similarity>=0.15) duplicate=true;
     else if (!existing.event_type && sameRoad && distanceKm<=0.5 && similarity>=0.48) duplicate=true;
+    if (!duplicate && inShortWindow && !coarse) duplicate = isOngoingRepeat(row, existing, { hoursApart, distanceKm, similarity, sameRoad, sameKm });
 
     if (duplicate) {
       return {
