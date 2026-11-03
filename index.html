@@ -1332,6 +1332,7 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
 #ahora-view .acn-list{max-width:none;margin:0;padding:0}
 #ahora-view .acn-analytics{max-width:none;margin:14px 0 0;padding:0}
 #ahora-view .diag-grid{max-width:none;margin:0;padding:0}
+.zv-ig{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.zv-ig[hidden],[data-ig][hidden],[data-ig-card][hidden]{display:none!important}.zv-ig i{font-size:17px}
 .app-banner{display:flex;align-items:center;gap:12px;padding:10px 14px;margin-bottom:12px;border-radius:12px;border:1px solid rgba(255,212,0,.5);background:rgba(255,212,0,.12);font-size:13px}
 .app-banner[hidden]{display:none}
 .app-banner>i{font-size:20px;color:var(--warn)}.app-banner>div{flex:1;min-width:0}
@@ -1564,7 +1565,7 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
       <button class="landing-guest" type="button" onclick="enterAsGuest()"><i class="fa-solid fa-compass"></i> Entrar como invitado</button>
       <div id="landing-message" class="landing-message" role="status" aria-live="polite"></div>
     </div>
-    <div class="landing-foot"><a href="/acerca.html">Conoce Zero Vial</a> · <a href="/ayuda.html">Ayuda</a> · <a href="/servicios.html">Servicios</a> · <a href="/terminos.html">Términos</a> · <a href="/privacidad.html">Privacidad</a></div>
+    <div class="landing-foot"><a href="/acerca.html">Conoce Zero Vial</a> · <a href="/ayuda.html">Ayuda</a> · <a href="/servicios.html">Servicios</a> · <a href="/terminos.html">Términos</a> · <a href="/privacidad.html">Privacidad</a> · <a data-ig hidden target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i> Instagram</a></div>
   </div>
 </div>
 
@@ -1750,6 +1751,11 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
           </section>
         </div>
         <aside class="pano-side" aria-label="Sobre esta vista">
+          <section class="pano-card" data-ig-card hidden>
+            <h3><i class="fa-brands fa-instagram"></i> Síguenos</h3>
+            <p class="pano-sub">Resúmenes semanales y avisos importantes en nuestro Instagram.</p>
+            <a class="pano-btn" data-ig target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i> Abrir Instagram</a>
+          </section>
           <section class="pano-card">
             <h3><i class="fa-solid fa-circle-info"></i> Siguiente paso</h3>
             <p class="pano-sub">Estamos unificando filtros, mapas y análisis en una sola vista. Hasta entonces, estos accesos conservan el comportamiento actual.</p>
@@ -1776,6 +1782,7 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
       <i class="fa-solid fa-chevron-right hnc-more"></i>
     </div>
     <div class="nt-actions">
+      <a class="nt-btn zv-ig" data-ig hidden target="_blank" rel="noopener" title="Síguenos en Instagram" aria-label="Instagram de Zero Vial"><i class="fa-brands fa-instagram"></i></a>
       <button class="nt-btn" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar modo claro u oscuro"><i class="fa-solid fa-circle-half-stroke"></i></button>
       <button id="account-button" class="nt-btn nt-login" onclick="openAuthModal()" aria-label="Iniciar sesión"><i class="fa-solid fa-circle-user"></i><span>Iniciar sesión</span></button>
       <button id="agenda-import-btn" class="nt-btn agenda-import-btn" onclick="openAgendaImport()" title="Importar agenda de movilizaciones (operadores)" aria-label="Importar agenda de movilizaciones"><i class="fa-solid fa-calendar-check"></i><span>Agenda</span></button>
@@ -5079,6 +5086,18 @@ function ctxChart(data){
   window.appBannerClose=function(){ try{ localStorage.setItem(KEY,String(Date.now()+7*864e5)); }catch(e){} const b=document.getElementById('app-banner'); if(b) b.hidden=true; };
   window.appBannerInstall=function(){ if(window.Fusion&&Fusion.installApp) Fusion.installApp(); };
   document.addEventListener('DOMContentLoaded',()=>{ const b=document.getElementById('app-banner'); if(b&&!standalone()&&!snoozed()) b.hidden=false; });
+})();
+
+
+// Instagram de Zero Vial: pon aquí la dirección completa de la cuenta (vacío = oculta todos los enlaces).
+const ZV_INSTAGRAM_URL = '';
+(function(){
+  function apply(){
+    if(!/^https:\/\/(www\.)?instagram\.com\//.test(ZV_INSTAGRAM_URL)) return;
+    document.querySelectorAll('[data-ig]').forEach(a=>{ a.href=ZV_INSTAGRAM_URL; a.hidden=false; });
+    document.querySelectorAll('[data-ig-card]').forEach(c=>c.hidden=false);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',apply); else apply();
 })();
 
 // === NOTIFICACIÓN DE ALERTAS IMPORTANTES ===
