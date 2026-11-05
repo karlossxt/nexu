@@ -1333,6 +1333,11 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
 #ahora-view .acn-analytics{max-width:none;margin:14px 0 0;padding:0}
 #ahora-view .diag-grid{max-width:none;margin:0;padding:0}
 .zv-ig{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.zv-ig[hidden],[data-ig][hidden],[data-ig-card][hidden]{display:none!important}.zv-ig i{font-size:17px}
+.ahora-hidden-note{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px;padding:9px 12px;border-radius:10px;border:1px solid rgba(255,212,0,.45);background:rgba(255,212,0,.1);font-size:12.5px}.ahora-hidden-note[hidden]{display:none}.ahora-hidden-note button{width:auto;padding:5px 11px;font-size:12px;border-radius:8px}
+/* Modo claro en Ahora: la tarjeta siempre blanca con texto oscuro (evita texto oscuro sobre fondo negro) */
+body:not(.dark-mode) #ahora-view .alert-card{background:#fff!important;border-color:#D8E1EC!important;color:#172033!important}
+body:not(.dark-mode) #ahora-view .alert-card .ac-title{color:#172033!important}
+body:not(.dark-mode) #ahora-view .alert-card p,body:not(.dark-mode) #ahora-view .alert-card .ac-detail,body:not(.dark-mode) #ahora-view .alert-card .ac-location,body:not(.dark-mode) #ahora-view .alert-card .ac-source{color:#475467!important}
 .app-banner{display:flex;align-items:center;gap:12px;padding:10px 14px;margin-bottom:12px;border-radius:12px;border:1px solid rgba(255,212,0,.5);background:rgba(255,212,0,.12);font-size:13px}
 .app-banner[hidden]{display:none}
 .app-banner>i{font-size:20px;color:var(--warn)}.app-banner>div{flex:1;min-width:0}
@@ -1634,6 +1639,7 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
         <div class="pano-main">
           <section class="pano-block" id="ahora-alerts-block">
             <div class="pano-block-head"><h2>Alertas en vivo</h2><span id="ahora-alerts-meta">Cargando…</span></div>
+            <div id="ahora-hidden-note" class="ahora-hidden-note" hidden></div>
             <div class="ahora-filterbar">
             <div class="pano-chips" id="pano-type-filters" role="group" aria-label="Filtrar por tipo de incidencia"></div>
             <div class="acn-toolbar ahora-filters" aria-label="Filtros de alertas">
@@ -5336,6 +5342,7 @@ function setAppView(view) {
   document.body.classList.toggle('view-map', appView === 'map');
   document.querySelectorAll('[data-app-view]').forEach(el => el.classList.toggle('active', el.dataset.appView === appView));
   if(isAhora) {
+    try { updateAhoraHiddenNote(); } catch(e) {}
     renderPanorama();
     scheduleNowAlerts(0);
   } else if(isZonas) {
@@ -5531,6 +5538,7 @@ async function refreshPanorama(btn) {
   }
 }
 
+let radiusOff = false; // el usuario pidió ver todo el país en esta sesión
 const nfState = { road:true, security:true, blockagesOnly:false, redZone:false, roadRisk:false };
 let uType = 'all'; let uState = ''; let uRange = 3; let uSort = 'recent'; let uSeverity = 'all';
 // Un solo conjunto de filtros para "Ahora" y el panel del mapa: ambos usan matchesFilters()
@@ -5567,6 +5575,28 @@ function isBlockageAlert(a) {
   const text = `${a?.title || ''} ${a?.detail || ''}`.toLowerCase();
   if(/tr[aá]nsito fluido|tr[aá]fico fluido|circulaci[oó]n normal|v[ií]a libre|se restablec|reabiert/.test(text)) return false;
   return /bloqueo|cierre|cerrad[ao]|sin paso|manifestantes|manifestaci[oó]n|protesta|toma de caseta|interrupci[oó]n/.test(text);
+}
+
+// Avisa cuando una preferencia de la cuenta esconde alertas sin que se note en los selectores.
+function updateAhoraHiddenNote(){
+  const box=document.getElementById('ahora-hidden-note'); if(!box) return;
+  const bits=[];
+  if(nfState.blockagesOnly) bits.push('«Solo bloqueos»');
+  if(!nfState.road) bits.push('sin alertas viales');
+  if(!nfState.security) bits.push('sin alertas de seguridad');
+  if(myPosition && !radiusOff && userPreferences?.radius_km>0) bits.push('radio de '+userPreferences.radius_km+' km desde tu ubicación');
+  if(!bits.length){ box.hidden=true; box.innerHTML=''; return; }
+  box.hidden=false;
+  box.innerHTML='<span><i class="fa-solid fa-filter"></i> Tienes activo: <b>'+bits.join(', ')+'</b>. Por eso ves menos alertas.</span><button type="button" class="pano-btn primary" onclick="clearHiddenAccountFilters()">Mostrar todo</button>';
+}
+function clearHiddenAccountFilters(){
+  radiusOff=true; nfState.blockagesOnly=false; nfState.road=true; nfState.security=true;
+  userPreferences={...userPreferences,blockages_only:false,categories:['road','security']};
+  try{ localStorage.setItem('zero_vial_preferences',JSON.stringify(userPreferences)); }catch(e){}
+  const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.checked=v; };
+  set('pref-blockages',false); set('pref-road',true); set('pref-security',true); set('nf-blockages',false);
+  if(supabaseClient&&zeroVialUser){ supabaseClient.from('alert_preferences').update({blockages_only:false,categories:['road','security']}).eq('user_id',zeroVialUser.id).then(()=>{},()=>{}); }
+  rebuildU();
 }
 function setBlockagesOnly(on) {
   nfState.blockagesOnly=!!on; panoType = 'all';
@@ -5610,7 +5640,7 @@ function matchesFilters(a) {
   if(userPreferences?.severities?.length && !userPreferences.severities.includes(alertSeverity(a))) return false;
   if(uState && !((a.state || '').toLowerCase().includes(uState.toLowerCase()) || (a.location || '').toLowerCase().includes(uState.toLowerCase()))) return false;
   if(uRange > 0 && !isScheduledActive(a) && (Date.now() - new Date(a.time).getTime()) > uRange * 3600 * 1000) return false;
-  if(myPosition && userPreferences?.radius_km > 0) {
+  if(myPosition && !radiusOff && userPreferences?.radius_km > 0) {
     const distance=alertDistanceKm(a);
     if(distance!==null && distance>Number(userPreferences.radius_km)) return false;
   }
@@ -5641,6 +5671,7 @@ function refreshCounters() {
   set('nc-road', road); set('nc-sec', sec); set('nc-blockages', blockages); set('nc-imp', redZones); set('nc-risk', roadRisks);
 }
 function rebuildU() {
+  try { updateAhoraHiddenNote(); } catch(e) {}
   const fl = document.getElementById('feed-list');
   const fe = document.getElementById('feed-empty');
   const em = document.getElementById('feed-empty-msg');
