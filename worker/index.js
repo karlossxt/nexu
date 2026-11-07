@@ -43,6 +43,8 @@ const GOOGLE_KEY = env.GOOGLE_MAPS_API_KEY || '';
 // La política de Nominatim exige un User-Agent identificable con contacto real.
 const NOMINATIM_UA = env.NOMINATIM_USER_AGENT || 'ZeroVial/1.0 (configura NOMINATIM_USER_AGENT con un contacto real)';
 const STRICT_LOCATION_MODE = String(env.STRICT_LOCATION_MODE || 'true').toLowerCase() !== 'false';
+// Prioridad mínima para encolar a la IA. Las de prioridad 3 solo mencionan una carretera, sin palabra de incidente ni fuente oficial, y saturaban la cola.
+const MIN_QUEUE_PRIORITY = num(env.MIN_QUEUE_PRIORITY, 4);
 const POLL_MS = Math.max(60_000, num(env.WORKER_INTERVAL_MS, 60_000));
 const MAX_AGE_MS = Math.max(1, num(env.ALERT_MAX_AGE_HOURS, 24)) * 3600_000;
 const MAX_AI_PER_CYCLE = Math.max(1, num(env.MAX_AI_PER_CYCLE, 6));
@@ -1982,14 +1984,22 @@ async function cycle() {
     }
     const unique = new Map(candidates.map(x => [x.item.url || x.item.title, x]));
     const prioritized = [...unique.values()].map(x => ({ ...x, priority:incidentPriority(x.item) })).sort((a,b) => b.priority - a.priority);
+    const lowPriority = [];
     for (const { item, feed, priority } of prioritized) {
       const externalId = hash(item.url || item.title + '|' + item.published_at);
       if (seenRecently(externalId)) { stats.duplicates++; continue; }
+      if (priority < MIN_QUEUE_PRIORITY) {
+        markProcessed(externalId);
+        stats.low_priority_skipped = (stats.low_priority_skipped || 0) + 1;
+        lowPriority.push({ item, stage:'queue', reason:'baja_prioridad' });
+        continue;
+      }
       if (await alreadyExists(externalId)) { stats.duplicates++; continue; }
       await enqueueCandidate(item, feed, priority);
       markProcessed(externalId);
       stats.queued_new++;
     }
+    if (lowPriority.length) await recordRejections(lowPriority);
     await recoverStaleQueue();
     const pending = await queuedItems(MAX_AI_PER_CYCLE);
     for (const queued of pending) {
