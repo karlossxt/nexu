@@ -3742,9 +3742,18 @@ function renderDrawer() {
 function filterMapMarkers(context) { markers.clearLayers(); alertAreaLayer.clearLayers(); alerts.forEach(a => { if(context === 'all' || a.category === context) addMarkerToMap(a); }); refreshSecurityHeat(); }
 function shareAlert(id) {
     const alert = findAlertById(id); if(!alert) return;
-    const mapLink = isNavigableAlert(alert) ? LINKS.gmapsLink.replace('{lat}', alert.lat).replace('{lon}', alert.lon) : (alert.source_url || location.href);
+    // WhatsApp lleva la ubicación (enlace de mapa), no el enlace de la fuente.
+    const lp = String(alert.location_precision || '').toLowerCase();
+    const tier = locationTier(alert);
+    const hasPoint = tier !== 'none' && Number.isFinite(Number(alert.lat)) && Number.isFinite(Number(alert.lon));
+    const pointIsUseful = tier === 'exact' || !['state','area_security','unlocated'].includes(lp);
+    const mapUrl = (hasPoint && pointIsUseful) ? LINKS.gmapsLink.replace('{lat}', alert.lat).replace('{lon}', alert.lon) : '';
+    const approx = tier !== 'exact';
+    const placeLabel = approx ? 'Ubicación aproximada' : 'Ubicación';
     const trafico = alert.category === 'road' && alert.trafico ? `\n🚦 *Tráfico:* ${trafficStyle(alert.trafico).label}` : '';
-    const text = `🚨 *ZERO VIAL - ALERTA* 🚨\n\n📌 *Evento:* ${alert.title}\n📍 *Ubicación:* ${alert.location}${trafico}\n📰 *${alertSourceLabel(alert)}*\n🔗 *Ver:* ${mapLink}`;
+    const locLine = `📍 *${placeLabel}:* ${alert.location}${mapUrl || !approx ? '' : ' (sin ubicación exacta)'}`;
+    const linkLine = mapUrl ? `\n🗺️ *Ver en el mapa:* ${mapUrl}` : `\n🌐 *Más alertas:* https://www.zero-vial.com.mx`;
+    const text = `🚨 *ZERO VIAL - ALERTA* 🚨\n\n📌 *Evento:* ${alert.title}\n${locLine}${trafico}\n📰 *${alertSourceLabel(alert)}*${linkLine}`;
     window.open(LINKS.waShare.replace('{t}', encodeURIComponent(text)), '_blank');
 }
 
