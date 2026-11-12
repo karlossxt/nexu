@@ -177,6 +177,8 @@ const INCIDENT_N = INCIDENT.map(norm), LOCATION_N = LOCATION_SIGNAL.map(norm), I
 const PROMOTIONAL_N = PROMOTIONAL.map(norm), LOW_VALUE_N = LOW_VALUE.map(norm);
 
 function relevanceScore(item) {
+  // Algunos reels/publicaciones llegan con el texto solo en el título y el cuerpo vacío: no son «sin texto».
+  if (String(item.body || '').length < 15 && String(item.title || '').length >= 25) item = { ...item, body:item.title };
   const text = norm(item.title + ' ' + item.body);
   if (item.title.length < 8 || item.body.length < 15) return { score:-99, incident:0, location:0, impact:0, mx:false, foreign:false, promotional:false };
   const incident = INCIDENT_N.filter(x => text.includes(x)).length;
@@ -234,6 +236,7 @@ function relevant(item) { return prefilterReason(item) === null; }
 
 // Registro de descartes (tabla ingest_rejections). Si la tabla no existe se desactiva sola.
 let rejectionLogOk = true;
+let lastRejectionWarnAt = 0;
 async function recordRejections(entries) {
   if (!rejectionLogOk || !entries.length) return;
   const rows = entries.map(e => ({
@@ -244,8 +247,16 @@ async function recordRejections(entries) {
   try {
     await sb('ingest_rejections?on_conflict=external_id', { method:'POST', headers:{ Prefer:'resolution=ignore-duplicates,return=minimal' }, body:JSON.stringify(rows) });
   } catch (e) {
-    rejectionLogOk = false;
-    log('warn','Registro de descartes desactivado (¿se corrió supabase/ingest-rejections.sql?)',{ error:e.message.slice(0, 120) });
+    const msg = String(e.message || '');
+    if (/\b404\b|42P01|PGRST205|does not exist|schema cache/i.test(msg)) {
+      // La tabla no existe: no tiene caso seguir intentando.
+      rejectionLogOk = false;
+      log('warn','Registro de descartes desactivado (¿se corrió supabase/ingest-rejections.sql?)',{ error:msg.slice(0, 120) });
+    } else if (Date.now() - lastRejectionWarnAt > 10 * 60_000) {
+      // Error pasajero (red, tiempo de espera, 5xx): se reintenta en el siguiente ciclo.
+      lastRejectionWarnAt = Date.now();
+      log('warn','No se pudo registrar descartes; se reintentará',{ error:msg.slice(0, 120) });
+    }
   }
 }
 
@@ -484,7 +495,8 @@ async function findSpatialDuplicate(row) {
         similarity:Number(similarity.toFixed(2)),
         same_road:sameRoad,
         same_km:sameKm,
-        source:existing.source_name || null
+        source:existing.source_name || null,
+        event_at:existing.event_at || null
       };
     }
   }
@@ -1879,6 +1891,13 @@ async function processItem(item, feed, options={}) {
       existing_source:spatialDuplicate.source,
       new_source:row.source_name
     });
+    // Si el reporte nuevo es más reciente, el evento sigue vigente: se renueva la hora de la alerta existente.
+    try {
+      const prev=new Date(spatialDuplicate.event_at||0).getTime(), next=new Date(row.event_at||0).getTime();
+      if (Number.isFinite(next) && next>prev && next<=Date.now()+10*60_000) {
+        await sb('alerts?id=eq.'+encodeURIComponent(spatialDuplicate.id), { method:'PATCH', headers:{ Prefer:'return=minimal' }, body:JSON.stringify({ event_at:row.event_at }) });
+      }
+    } catch (e) { log('warn','No se pudo renovar la hora de la alerta existente',{ error:e.message }); }
     return 'duplicate';
   }
   await sb('alerts?on_conflict=external_id', { method:'POST', headers:{ Prefer:'resolution=ignore-duplicates,return=minimal' }, body:JSON.stringify(row) });
