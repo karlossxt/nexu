@@ -1338,6 +1338,7 @@ body.user-mode:not(.dark-mode) .pano-note{color:#0369A1;background:#E0F2FE;borde
 body:not(.dark-mode) #ahora-view .alert-card{background:#fff!important;border-color:#D8E1EC!important;color:#172033!important}
 body:not(.dark-mode) #ahora-view .alert-card .ac-title{color:#172033!important}
 body:not(.dark-mode) #ahora-view .alert-card p,body:not(.dark-mode) #ahora-view .alert-card .ac-detail,body:not(.dark-mode) #ahora-view .alert-card .ac-location,body:not(.dark-mode) #ahora-view .alert-card .ac-source{color:#475467!important}
+.acn-badge.acn-imp{--sev:#EF4444;background:rgba(239,68,68,.14);color:#F87171;border-color:rgba(239,68,68,.4)}
 .app-banner{display:flex;align-items:center;gap:12px;padding:10px 14px;margin-bottom:12px;border-radius:12px;border:1px solid rgba(255,212,0,.5);background:rgba(255,212,0,.12);font-size:13px}
 .app-banner[hidden]{display:none}
 .app-banner>i{font-size:20px;color:var(--warn)}.app-banner>div{flex:1;min-width:0}
@@ -5270,6 +5271,7 @@ const PANO_TYPES = [
   { key:'all', label:'Todas', icon:'fa-layer-group' },
   { key:'road', label:'Viales', icon:'fa-road' },
   { key:'security', label:'Seguridad', icon:'fa-shield-halved' },
+  { key:'important', label:'Importantes', icon:'fa-triangle-exclamation' },
   { key:'accident', label:'Accidentes', icon:'fa-car-burst' },
   { key:'blockage', label:'Bloqueos', icon:'fa-road-barrier' },
   { key:'weather', label:'Clima', icon:'fa-cloud-showers-heavy' }
@@ -5293,8 +5295,11 @@ function panoUsefulLocation(a) {
   if(nState && (nLoc === nState || nLoc === normAcc(state + ' mexico') || nLoc === normAcc('mexico ' + state))) return false;
   return true;
 }
+// Seguridad importante: hechos graves de fuente oficial o medio reconocido (el worker les asigna prioridad alta o crítica).
+function isImportantSecurity(a) { return !!a && a.category === 'security' && ['high','critical'].includes(alertSeverity(a)); }
 function panoMatchesType(a) {
   if(panoType === 'all') return true;
+  if(panoType === 'important') return isImportantSecurity(a);
   if(panoType === 'road') return a.category === 'road';
   if(panoType === 'security') return a.category === 'security';
   if(panoType === 'accident') return roadIncidentType(a) === 'Accidente';
@@ -5307,10 +5312,11 @@ function matchesFiltersExceptType(a) {
   try { return matchesFilters(a); } finally { panoType = t; }
 }
 function panoTypeCounts(list) {
-  const counts = { all:list.length, road:0, security:0, accident:0, blockage:0, weather:0 };
+  const counts = { all:list.length, road:0, security:0, important:0, accident:0, blockage:0, weather:0 };
   list.forEach(a => {
     if(a.category === 'road') counts.road++;
     if(a.category === 'security') counts.security++;
+    if(isImportantSecurity(a)) counts.important++;
     if(roadIncidentType(a) === 'Accidente') counts.accident++;
     if(isBlockageAlert(a)) counts.blockage++;
     if(roadIncidentType(a) === 'Clima / Vía') counts.weather++;
@@ -5839,7 +5845,7 @@ async function renderAlertCenter() {
     const level=alertSeverity(a),meta=sevMeta[level],loc=locationQuality(a),distance=alertDistanceKm(a);
     const locTitle=hasAlertPoint(a) ? loc.label+(estimatedRadiusMeters(a)?' ('+Math.round((Number(a.location_confidence)||0)*100)+'%) · radio '+estimatedRadiusLabel(a):'') : loc.label;
     return `<article class="acn-card" style="--sev:${meta[1]}" aria-label="${meta[0]}: ${escapeHtml(a.title || 'Incidente')}">
-      <div class="acn-card-top">${a.km?`<span class="acn-badge" style="--sev:#1570EF">km ${a.km}</span>`:''}<time><i class="fa-regular fa-clock"></i> ${reportedTimeLabel(a.time)}</time></div>
+      <div class="acn-card-top">${isImportantSecurity(a)?'<span class="acn-badge acn-imp"><i class="fa-solid fa-triangle-exclamation"></i> Importante</span>':''}${a.km?`<span class="acn-badge" style="--sev:#1570EF">km ${a.km}</span>`:''}<time><i class="fa-regular fa-clock"></i> ${reportedTimeLabel(a.time)}</time></div>
       <h3>${escapeHtml(a.title || 'Incidente')}</h3><p>${escapeHtml(alertDetailDisplay(a))}</p>
       <div class="acn-card-foot" title="${escapeHtml(locTitle)}"><i class="fa-solid fa-location-dot" style="color:#EF4444"></i><span>${escapeHtml(a.location||'Ubicación aproximada')}</span>${locationTier(a)==='exact'?'':`<em class="acn-approx" title="${escapeHtml(precisionLabel(a))}">${locationTier(a)==='area'?'Ubicación aproximada':'Sin ubicación exacta'}</em>`}${distance==null?'':`<b>· ${distance<10?distance.toFixed(1):Math.round(distance)} km${locationTier(a)==='area'?' aprox.':''}</b>`}<span class="source">${escapeHtml(alertSourceLabel(a))}</span>${hasAlertPoint(a) ? `<button class="acn-map" onclick="showCenterAlertOnMap(${a.id})" title="${locationTier(a)==='area'?'Ver zona':'Ver en mapa'}" aria-label="${locationTier(a)==='area'?'Ver zona':'Ver en mapa'}"><i class="fa-solid fa-location-arrow"></i></button>` : ''}</div>
     </article>`;
