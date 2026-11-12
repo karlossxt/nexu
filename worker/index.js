@@ -57,6 +57,16 @@ const QUEUE_MAX_ATTEMPTS = Math.max(1, num(env.QUEUE_MAX_ATTEMPTS, 5));
 const FEEDS = [env.RSS_PRI, env.RSS_SEC].map(x => String(x || '').trim()).filter(Boolean);
 const DEFAULT_FEED = 'https://news.google.com/rss/search?q=accidente+OR+bloqueo+OR+asalto+carretera+mexico&hl=es-419&gl=MX&ceid=MX:es-419';
 if (!FEEDS.length) FEEDS.push(DEFAULT_FEED);
+// Noticias de seguridad por estado vía Google News (RSS gratuito). Se consultan cada NEWS_POLL_MS (10 min por defecto).
+// NEWS_STATES: lista separada por comas; vacío con NEWS_FEEDS_ENABLED=false las desactiva.
+const NEWS_ENABLED = String(env.NEWS_FEEDS_ENABLED || 'true').toLowerCase() !== 'false';
+const NEWS_STATES = String(env.NEWS_STATES || 'Michoacán,Sinaloa,Guanajuato,Guerrero,Zacatecas,Jalisco,Chihuahua,Tamaulipas,Estado de México,Morelos')
+  .split(',').map(x => x.trim()).filter(Boolean);
+const NEWS_POLL_MS = Math.max(300_000, num(env.NEWS_POLL_MS, 600_000));
+const NEWS_FEED_URLS = NEWS_ENABLED ? NEWS_STATES.map(state => 'https://news.google.com/rss/search?q=' +
+  encodeURIComponent('(ataque OR atacaron OR "ataque armado" OR balacera OR enfrentamiento OR emboscada OR narcobloqueo OR bloqueos) "' + state + '" when:1d') +
+  '&hl=es-419&gl=MX&ceid=MX:es-419') : [];
+let lastNewsFetchAt = 0;
 const processedIds = new Map();
 // processedIds nunca se limpiaba: se purga periódicamente para que no crezca sin límite.
 setInterval(() => {
@@ -163,6 +173,8 @@ function parseFeed(raw) {
 const MX = ['mexico','cdmx','ciudad de mexico','estado de mexico','edomex','aguascalientes','baja california','campeche','chiapas','chihuahua','coahuila','colima','durango','guanajuato','guerrero','hidalgo','jalisco','michoacan','morelos','nayarit','nuevo leon','oaxaca','puebla','queretaro','quintana roo','san luis potosi','sinaloa','sonora','tabasco','tamaulipas','tlaxcala','veracruz','yucatan','zacatecas','guadalajara','monterrey','leon','toluca','pachuca','morelia'];
 const INCIDENT = ['carretera','autopista','choque','accidente','volcadura','derrapado','atropellado','carambola','incendio','derrumbe','deslave','bloqueo','cierre','caseta','puente','inundacion','encharcamiento','socavon','carril','trafico','trailer','asalto','balacera','disparos','ataque armado','manifestacion','operativo','robo de vehiculo','km ',
   // Lenguaje coloquial de reportes ciudadanos (grupos de Facebook, X)
+  // Seguridad: ataques y hechos violentos (verbos en pasado y sustantivos habituales de notas de última hora)
+  'atacaron','atacan','atacado','atacada','ataque armado','muere','mueren','matan','mataron','asesinan','balean','baleado','baleados','abaten','abatidos','sin vida','ataque a ','emboscada','crimen organizado','hombres armados','civiles armados','grupo armado','asesinaron','asesinado','ejecutado','ejecutados','heridos','lesionados','disparos','narcobloqueo','quema de vehiculos','secuestro','privado de la libertad','suspension de labores','suspension de clases',
   'gondola','camion','tapon','congestion','atorado','atascado','estancado','varado','parado','detenido','descompuesto','motociclista','volco','se cayo','fila de','filas','trafico pesado','trafico lento','mucho trafico'];
 const FOREIGN = ['venezuela','ecuador','espana','chile','argentina','colombia','peru','bolivia','honduras','guatemala','estados unidos','ucrania','israel','palestina'];
 const PROMOTIONAL = ['vacante','bolsa de trabajo','oportunidad laboral','postulate','postúlate','envia tu cv','envía tu cv','contratacion','contratación','patrocinadores','siguiente paso en tu carrera','inscripciones abiertas','promocion','promoción','descuento','venta de boletos','siguenos','síguenos','unete a nuestro canal','únete a nuestro canal','canal de whatsapp','pacto contra la extorsion','pacto contra la extorsión'];
@@ -233,6 +245,21 @@ function prefilterReason(item) {
 }
 
 function relevant(item) { return prefilterReason(item) === null; }
+
+// Seguridad importante: hechos graves (muertos, ataques a autoridades, narcobloqueos, suspensión de clases...)
+// reportados por una fuente oficial o un medio reconocido suben a gravedad alta. Una fuente desconocida no puede
+// marcar algo como importante por sí sola (evita rumores).
+const IMPORTANT_SECURITY_RE = /\b(murio|murieron|muere|mueren|muerto|muertos|matan|mataron|abatidos|sin vida|asesin\w+|ejecutad\w+|masacre|atacaron|atacan|ataque armado|emboscada|narcobloqueo\w*|quema de vehiculos|suspension de (?:clases|labores)|toque de queda|evacuacion|evacuan)\b/;
+const TRUSTED_SOURCE_RE = /milenio|el universal|proceso|infobae|animal politico|la jornada|excelsior|reforma|el financiero|quadratin|aristegui|televisa|n\+|tv azteca|el sol de|fiscalia|secretaria de seguridad|\bssc\b|\bc5\b|guardia nacional|sedena|defensa|gobierno de|proteccion civil|capufe|ovial|alertaqro|pcguanajuato|red113|redviacorta/;
+const SEVERITY_ORDER = ['low','medium','high','critical'];
+function boostSecuritySeverity(severity, category, item) {
+  if (category !== 'security') return severity;
+  const text = norm(`${item?.title || ''} ${item?.body || ''}`);
+  if (!IMPORTANT_SECURITY_RE.test(text)) return severity;
+  if (!TRUSTED_SOURCE_RE.test(norm(`${item?.source || ''} ${item?.title || ''}`))) return severity;
+  return SEVERITY_ORDER.indexOf(severity) >= SEVERITY_ORDER.indexOf('high') ? severity : 'high';
+}
+
 
 // Registro de descartes (tabla ingest_rejections). Si la tabla no existe se desactiva sola.
 let rejectionLogOk = true;
@@ -1651,7 +1678,7 @@ async function processItem(item, feed, options={}) {
     const eventAt = item.published_at && Date.now() - new Date(item.published_at).getTime() <= MAX_AGE_MS ? item.published_at : new Date().toISOString();
     const row = {
       external_id:externalId, title, detail, category:ai.categoria,
-      severity:['critical','high','medium','low'].includes(ai.severidad) ? ai.severidad : 'medium',
+      severity:boostSecuritySeverity(['critical','high','medium','low'].includes(ai.severidad) ? ai.severidad : 'medium', ai.categoria, item),
       crime_type:ai.categoria==='security' && ai.crime_type && ai.crime_type!=='ninguno' ? ai.crime_type : null,
       event_type:eventType, traffic_status:ai.categoria==='road' ? trafficStatus : 'unknown',
       state:clean(ai.estado)||null, municipality:municipality||null, road:clean(ai.carretera)||null,
@@ -1859,7 +1886,7 @@ async function processItem(item, feed, options={}) {
     title,
     detail,
     category: ai.categoria,
-    severity: ['critical','high','medium','low'].includes(ai.severidad) ? ai.severidad : 'medium',
+    severity: boostSecuritySeverity(['critical','high','medium','low'].includes(ai.severidad) ? ai.severidad : 'medium', ai.categoria, item),
     event_type: eventType,
     crime_type: ai.categoria==='security' && ai.crime_type && ai.crime_type!=='ninguno' ? ai.crime_type : null,
     traffic_status: ai.categoria === 'road' ? trafficStatus : 'unknown',
@@ -1972,7 +1999,9 @@ async function cycle() {
     if (rejectionLogOk) sb('ingest_rejections?created_at=lt.' + encodeURIComponent(new Date(Date.now() - 14 * 86400_000).toISOString()), { method:'DELETE', headers:{ Prefer:'return=minimal' } }).catch(() => {});
 
     const candidates = [];
-    for (const feed of FEEDS) {
+    const newsDue = NEWS_FEED_URLS.length > 0 && Date.now() - lastNewsFetchAt >= NEWS_POLL_MS;
+    if (newsDue) lastNewsFetchAt = Date.now();
+    for (const feed of [...FEEDS, ...(newsDue ? NEWS_FEED_URLS : [])]) {
       let items;
       try {
         const response = await fetchT(feed, { headers:{ 'User-Agent':'Mozilla/5.0 (Zero Vial worker)' } });
