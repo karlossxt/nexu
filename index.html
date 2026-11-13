@@ -391,6 +391,14 @@ body.user-mode #circula{ display:flex; }
 @media(max-height:700px){#landing{align-items:flex-start;}#landing-card{margin:auto;}}
 @media(prefers-reduced-transparency:reduce){#landing-card{background:rgba(9,23,42,.94);backdrop-filter:none;}}
 
+
+.zv-ticker{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:8px 12px;border-radius:12px;background:rgba(225,29,72,.12);border:1px solid rgba(225,29,72,.35);font-size:13px;overflow:hidden}
+.zv-tk-tag{flex:none;font-weight:700;color:#E11D48;white-space:nowrap}
+.zv-tk-text{flex:1;min-width:0;text-align:left;background:none;border:0;color:inherit;font:inherit;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:zvtk .4s ease}
+.zv-tk-count{flex:none;opacity:.6;font-size:12px}
+@keyframes zvtk{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.zv-tk-text{animation:none}}
+@media (max-width:520px){.zv-tk-tag{font-size:0}.zv-tk-tag i{font-size:14px}}
 </style>
 <style>
 /* ============================================
@@ -1618,6 +1626,11 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
   <!-- AHORA · VISTA PRINCIPAL (el mapa queda como pestaña) -->
   <section id="ahora-view" aria-label="Ahora">
     <div class="pano-wrap">
+      <div id="zv-ticker" class="zv-ticker" hidden role="status" aria-live="off">
+        <span class="zv-tk-tag"><i class="fa-solid fa-road-barrier"></i> Bloqueos y marchas</span>
+        <button type="button" id="zv-ticker-text" class="zv-tk-text" onclick="tickerOpen()"></button>
+        <span id="zv-ticker-count" class="zv-tk-count"></span>
+      </div>
       <div class="app-banner" id="app-banner" hidden>
         <i class="fa-solid fa-mobile-screen-button"></i>
         <div><b>Zero Vial está en versión beta y seguimos mejorándola.</b> Descarga la app en tu celular para usarla a pantalla completa y recibir avisos.</div>
@@ -5296,7 +5309,44 @@ function panoUsefulLocation(a) {
   return true;
 }
 // Seguridad importante: hechos graves de fuente oficial o medio reconocido (el worker les asigna prioridad alta o crítica).
-function isImportantSecurity(a) { return !!a && a.category === 'security' && ['high','critical'].includes(alertSeverity(a)); }
+const GRAVE_SEC_RE=/ataque|balacera|asesin|muert|muere|mueren|mataron|matan|emboscada|secuestr|ejecut|enfrentamiento|armados|disparos|balean|baleado|abatid|explosi|narcobloqueo|quema de veh|sin vida|privados de la libertad|levant(ó|o|aron)/i;
+function isImportantSecurity(a) {
+  if(!a || a.category !== 'security' || !['high','critical'].includes(alertSeverity(a))) return false;
+  return GRAVE_SEC_RE.test(`${a.title||''} ${a.detail||''}`);
+}
+/* Ticker: bloqueos y marchas vigentes (últimas 4 h) o anunciadas */
+const ZV_TICKER_MS=90*60*1000; // sin actualización en 90 min = probablemente terminado
+let zvTickerItems=[], zvTickerIdx=0, zvTickerTimer=null;
+function isMarchAlert(a){ return /marcha|manifestantes|manifestaci[oó]n|concentraci[oó]n de|movilizaci[oó]n/i.test(`${a?.title||''} ${a?.detail||''}`); }
+function updateTicker(){
+  const box=document.getElementById('zv-ticker'); if(!box) return;
+  const now=Date.now();
+  zvTickerItems=(alerts||[]).filter(a=>{
+    if(!a||!a.title||a.ignored) return false;
+    const t=new Date(a.time).getTime(); if(!Number.isFinite(t)||now-t>ZV_TICKER_MS||t-now>12*3600*1000) return false;
+    if(['restored','flowing'].includes(String(a.traffic_status||'').toLowerCase())) return false;
+    if(!(isBlockageAlert(a)||isMarchAlert(a))) return false;
+    if(uState&&!((a.state||'').toLowerCase().includes(uState.toLowerCase()))) return false;
+    return true;
+  }).sort((x,y)=>new Date(y.time)-new Date(x.time)).slice(0,12);
+  box.hidden=!zvTickerItems.length;
+  if(!zvTickerItems.length){ clearInterval(zvTickerTimer); zvTickerTimer=null; return; }
+  zvTickerIdx=zvTickerIdx%zvTickerItems.length; drawTicker();
+  if(!zvTickerTimer) zvTickerTimer=setInterval(()=>{ if(box.matches(':hover')||document.hidden) return; zvTickerIdx=(zvTickerIdx+1)%zvTickerItems.length; drawTicker(); },5000);
+}
+function drawTicker(){
+  const a=zvTickerItems[zvTickerIdx]; const txt=document.getElementById('zv-ticker-text'); if(!a||!txt) return;
+  const fmt=m=>m<1?'ahora':m<60?`${m} min`:`${Math.floor(m/60)} h${m%60?` ${m%60} min`:''}`;
+  const now=Date.now(), last=new Date(a.time).getTime();
+  const first=Math.min(last, new Date(a.detected_at||a.time).getTime()||last);
+  const sinceUpd=Math.max(0,Math.round((now-last)/60000)), active=Math.max(0,Math.round((now-first)/60000));
+  const note=active-sinceUpd>=10 ? `activo desde hace ${fmt(active)} · actualizado hace ${fmt(sinceUpd)}` : (sinceUpd<1?'ahora':`hace ${fmt(sinceUpd)}`);
+  txt.textContent=`${a.title} · ${note}`;
+  txt.dataset.id=a.id;
+  const c=document.getElementById('zv-ticker-count'); if(c) c.textContent=`${zvTickerIdx+1}/${zvTickerItems.length}`;
+}
+setInterval(()=>{ try{ updateTicker(); }catch(e){} },60000);
+function tickerOpen(){ const id=document.getElementById('zv-ticker-text')?.dataset.id; if(id) openAlertDetail(id); }
 function panoMatchesType(a) {
   if(panoType === 'all') return true;
   if(panoType === 'important') return isImportantSecurity(a);
@@ -5412,6 +5462,7 @@ function panoFillList(id, items, emptyText) {
 }
 function renderPanorama() {
   const host = document.getElementById('ahora-view'); if(!host) return;
+  try{ updateTicker(); }catch(e){}
   const allAlerts = (alerts || []).filter(a => a && a.title && !a.ignored);
   const locatedAlerts = allAlerts.filter(panoUsefulLocation);
   const unlocatedCount = allAlerts.length - locatedAlerts.length;
