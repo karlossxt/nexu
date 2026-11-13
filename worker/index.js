@@ -171,7 +171,7 @@ function parseFeed(raw) {
 }
 
 const MX = ['mexico','cdmx','ciudad de mexico','estado de mexico','edomex','aguascalientes','baja california','campeche','chiapas','chihuahua','coahuila','colima','durango','guanajuato','guerrero','hidalgo','jalisco','michoacan','morelos','nayarit','nuevo leon','oaxaca','puebla','queretaro','quintana roo','san luis potosi','sinaloa','sonora','tabasco','tamaulipas','tlaxcala','veracruz','yucatan','zacatecas','guadalajara','monterrey','leon','toluca','pachuca','morelia'];
-const INCIDENT = ['carretera','autopista','choque','accidente','volcadura','derrapado','atropellado','carambola','incendio','derrumbe','deslave','bloqueo','cierre','caseta','puente','inundacion','encharcamiento','socavon','carril','trafico','trailer','asalto','balacera','disparos','ataque armado','manifestacion','operativo','robo de vehiculo','km ',
+const INCIDENT = ['carretera','autopista','choque','accidente','volcadura','derrapado','atropellado','carambola','incendio','derrumbe','deslave','bloqueo','cierre','caseta','puente','inundacion','encharcamiento','socavon','carril','trafico','trailer','asalto','balacera','disparos','ataque armado','manifestacion','manifestantes','marcha','movilizacion','concentracion de','afectacion vehicular','afectacion por','operativo','robo de vehiculo','km ',
   // Lenguaje coloquial de reportes ciudadanos (grupos de Facebook, X)
   // Seguridad: ataques y hechos violentos (verbos en pasado y sustantivos habituales de notas de última hora)
   'atacaron','atacan','atacado','atacada','ataque armado','muere','mueren','matan','mataron','asesinan','balean','baleado','baleados','abaten','abatidos','sin vida','ataque a ','emboscada','crimen organizado','hombres armados','civiles armados','grupo armado','asesinaron','asesinado','ejecutado','ejecutados','heridos','lesionados','disparos','narcobloqueo','quema de vehiculos','secuestro','privado de la libertad','suspension de labores','suspension de clases',
@@ -459,6 +459,39 @@ function textSimilarity(a,b) {
 function roadSimilarity(a,b) {
   if(!a || !b) return false;
   return roadMatches(a,b);
+}
+
+
+// Aviso de que la vialidad se liberó: cierra los bloqueos vigentes cercanos en la misma vía.
+const RESTORE_TEXT_RE=/se restablec|restablecid|restablece|via libre|vialidad libre|reabiert|reabre|circulacion normal|circulacion fluida|retiran|retiraron|se retiro|liberan|liberaron|liberada|liberado|sin afectacion|concluy/;
+function isRestoreNotice(row){
+  if (row.traffic_status==='restored') return true;
+  return RESTORE_TEXT_RE.test(norm(String(row.title||'')+' '+String(row.detail||'')));
+}
+async function closeRestoredBlockages(row){
+  const rLat=Number(row.latitude), rLon=Number(row.longitude);
+  if (!Number.isFinite(rLat) || !Number.isFinite(rLon)) return 0;
+  if (String(row.location_precision||'')==='area_security' || String(row.location_precision||'')==='municipality_approximate') return 0;
+  const eventTime=new Date(row.event_at || Date.now()).getTime();
+  const since=new Date(eventTime - 12*3600_000).toISOString(), BOX=0.03;
+  const open=await sb('alerts?select=id,title,detail,road,latitude,longitude,traffic_status,event_at'
+    +'&event_at=gte.'+encodeURIComponent(since)+'&event_at=lte.'+encodeURIComponent(new Date(eventTime+30*60_000).toISOString())
+    +'&latitude=gte.'+(rLat-BOX)+'&latitude=lte.'+(rLat+BOX)+'&longitude=gte.'+(rLon-BOX)+'&longitude=lte.'+(rLon+BOX)
+    +'&traffic_status=not.in.(restored,flowing)&order=event_at.desc&limit=100') || [];
+  let closed=0;
+  for (const ex of open) {
+    const text=norm(String(ex.title||'')+' '+String(ex.detail||''));
+    if (!/bloqueo|bloquean|cierre|cierran|cerrad|manifest|marcha|protesta|sin paso|interrup/.test(text) || RESTORE_TEXT_RE.test(text)) continue;
+    const km=geoDistanceKm(rLat,rLon,Number(ex.latitude),Number(ex.longitude));
+    if (!Number.isFinite(km) || km>1.2) continue;
+    const road=roadSimilarity(row.road,ex.road);
+    const sim=textSimilarity([row.title,row.detail].filter(Boolean).join(' '),[ex.title,ex.detail].filter(Boolean).join(' '));
+    if (!(road || sim>=0.2 || km<=0.3)) continue;
+    try { await sb('alerts?id=eq.'+encodeURIComponent(ex.id),{ method:'PATCH', headers:{ Prefer:'return=minimal' }, body:JSON.stringify({ traffic_status:'restored' }) }); closed++; }
+    catch (e) { log('warn','No se pudo cerrar bloqueo restablecido',{ error:e.message }); }
+  }
+  if (closed) log('info','Bloqueos cerrados por aviso de restablecimiento',{ closed, title:String(row.title||'').slice(0,80) });
+  return closed;
 }
 
 async function findSpatialDuplicate(row) {
@@ -1906,6 +1939,8 @@ async function processItem(item, feed, options={}) {
     source_url: safeUrl(item.url),
     event_at: eventAt
   };
+  const restoreNotice=isRestoreNotice(row);
+  if (restoreNotice) { try { await closeRestoredBlockages(row); } catch (e) { log('warn','closeRestoredBlockages falló',{ error:e.message }); } }
   const spatialDuplicate=await findSpatialDuplicate(row);
   if (spatialDuplicate) {
     log('info','Alerta duplicada por proximidad y similitud',{
@@ -1922,7 +1957,7 @@ async function processItem(item, feed, options={}) {
     try {
       const prev=new Date(spatialDuplicate.event_at||0).getTime(), next=new Date(row.event_at||0).getTime();
       if (Number.isFinite(next) && next>prev && next<=Date.now()+10*60_000) {
-        await sb('alerts?id=eq.'+encodeURIComponent(spatialDuplicate.id), { method:'PATCH', headers:{ Prefer:'return=minimal' }, body:JSON.stringify({ event_at:row.event_at }) });
+        await sb('alerts?id=eq.'+encodeURIComponent(spatialDuplicate.id), { method:'PATCH', headers:{ Prefer:'return=minimal' }, body:JSON.stringify(restoreNotice ? { event_at:row.event_at, traffic_status:'restored' } : { event_at:row.event_at }) });
       }
     } catch (e) { log('warn','No se pudo renovar la hora de la alerta existente',{ error:e.message }); }
     return 'duplicate';
