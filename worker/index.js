@@ -108,7 +108,7 @@ class GroqRateLimitError extends Error {
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const log = (level, message, data) => console.log(JSON.stringify({ time: new Date().toISOString(), level, message, ...(data || {}) }));
 const clean = value => String(value || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-const norm = value => clean(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const norm = value => clean(value).normalize('NFKC').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 const hash = value => createHash('sha256').update(String(value)).digest('hex');
 const seenRecently = id => (processedIds.get(id) || 0) > Date.now();
 const markProcessed = (id, ttl = MAX_AGE_MS) => processedIds.set(id, Date.now() + ttl);
@@ -171,7 +171,7 @@ function parseFeed(raw) {
 }
 
 const MX = ['mexico','cdmx','ciudad de mexico','estado de mexico','edomex','aguascalientes','baja california','campeche','chiapas','chihuahua','coahuila','colima','durango','guanajuato','guerrero','hidalgo','jalisco','michoacan','morelos','nayarit','nuevo leon','oaxaca','puebla','queretaro','quintana roo','san luis potosi','sinaloa','sonora','tabasco','tamaulipas','tlaxcala','veracruz','yucatan','zacatecas','guadalajara','monterrey','leon','toluca','pachuca','morelia'];
-const INCIDENT = ['carretera','autopista','choque','accidente','volcadura','derrapado','atropellado','carambola','incendio','derrumbe','deslave','bloqueo','cierre','caseta','puente','inundacion','encharcamiento','socavon','carril','trafico','trailer','asalto','balacera','disparos','ataque armado','manifestacion','manifestantes','marcha','movilizacion','concentracion de','afectacion vehicular','afectacion por','operativo','robo de vehiculo','km ',
+const INCIDENT = ['carretera','autopista','choque','accidente','volcadura','derrapado','atropellado','carambola','incendio','derrumbe','deslave','bloqueo','cierre','caseta','puente','inundacion','encharcamiento','socavon','carril','trafico','trailer','asalto','balacera','disparos','ataque armado','alto total','10-42','10 42 ','acosto','acostar','reduccion de carriles','poncha llantas','carga vehicular','sin paso','tomeprecauciones','tome precauciones','explosion','explotaron','inundad','bajo el agua','corriente de agua','privada de la vida','privado de la vida','restos humanos','cuerpos','desmembrad','hallazgo de','tragedia','ferroviario','descarril','homicidio','manifestacion','manifestantes','marcha','movilizacion','concentracion de','afectacion vehicular','afectacion por','operativo','robo de vehiculo','km ',
   // Lenguaje coloquial de reportes ciudadanos (grupos de Facebook, X)
   // Seguridad: ataques y hechos violentos (verbos en pasado y sustantivos habituales de notas de última hora)
   'atacaron','atacan','atacado','atacada','ataque armado','muere','mueren','matan','mataron','asesinan','balean','baleado','baleados','abaten','abatidos','sin vida','ataque a ','emboscada','crimen organizado','hombres armados','civiles armados','grupo armado','asesinaron','asesinado','ejecutado','ejecutados','heridos','lesionados','disparos','narcobloqueo','quema de vehiculos','secuestro','privado de la libertad','suspension de labores','suspension de clases',
@@ -1494,6 +1494,20 @@ async function resolveUrbanIntersection(ai) {
   return null;
 }
 
+// RSS.app suele omitir el autor: se recupera del prefijo "@usuario:" del título o de la URL de la publicación.
+function inferSourceFromItem(item) {
+  const fromTitle = String(item.title || '').match(/^\s*(@[A-Za-z0-9_]{2,30})\s*:/);
+  if (fromTitle) return fromTitle[1];
+  try {
+    const u = new URL(String(item.url || ''));
+    const host = u.hostname.replace(/^www\./, '').replace(/^m\./, '');
+    const seg = u.pathname.split('/').filter(Boolean)[0] || '';
+    if (/^(x|twitter)\.com$/.test(host) && /^[A-Za-z0-9_]{2,30}$/.test(seg) && !/^(i|intent|search|hashtag|home)$/i.test(seg)) return '@' + seg;
+    if (/^facebook\.com$/.test(host) && /^[A-Za-z0-9.\-]{3,60}$/.test(seg) && !/^\d+$/.test(seg) && !/^(permalink\.php|groups|photo|photos|reel|watch|story\.php|share|sharer|profile\.php|people|events|pages)$/i.test(seg)) return seg.replace(/[.\-]+/g, ' ').trim();
+  } catch {}
+  return '';
+}
+
 function sourceName(item, feed) {
   const raw = clean(item.source);
   const key = norm(raw);
@@ -1501,6 +1515,8 @@ function sourceName(item, feed) {
   if (key.includes('guardia nacional')) return 'Guardia Nacional Carreteras';
   if (raw && !/rss\.app/i.test(raw)) return raw.slice(0, 80);
   if (norm(item.title).includes('capufe')) return 'CAPUFE';
+  const inferred = inferSourceFromItem(item);
+  if (inferred) return inferred;
   try { return new URL(feed).hostname.replace(/^www\./, ''); } catch { return 'Fuente RSS'; }
 }
 
