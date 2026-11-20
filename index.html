@@ -3464,8 +3464,12 @@ function alertSourceLabel(a) {
   }
   if(a.source_type === 'operator') return 'Operador Zero Vial';
   if(looksLikePersonalReporter(a.source_name)) return 'Reportado por usuario';
-  return 'Fuente: ' + (a.source_name || 'Zero Vial');
+  if(isGenericSourceName(a.source_name)) return '';
+  return 'Fuente: ' + a.source_name;
 }
+// Fuentes que no dicen nada al usuario (agregador RSS o nombre genérico): no se muestran.
+function isGenericSourceName(n){ return /^\s*(www\.)?(rss\.app|fuente rss|fuente verificada|zero vial)?\s*$/i.test(String(n||'')); }
+function alertSourceWith(a, rest){ const l=alertSourceLabel(a); return [l, rest].filter(Boolean).join(' · '); }
 function precisionLabel(a) {
   if(a.location_precision === 'state' || a.precision === 'estado') return 'Solo referencia estatal';
   if(!hasAlertPoint(a)) return 'Sin ubicación exacta · la fuente no la precisa';
@@ -3547,7 +3551,7 @@ function showAlertFocus(a) {
   document.getElementById('sac-title').textContent=a.title || 'Incidente vial';
   document.getElementById('sac-location').textContent=a.location || 'Ubicación aproximada';
   const knownRef=alertKnownReference(a);
-  document.getElementById('sac-meta').textContent=`${alertSourceLabel(a)} · ${precisionLabel(a)}${knownRef?' · Referencia: '+knownRef:''} · ${alertWhenLabel(a)}`;
+  document.getElementById('sac-meta').textContent=alertSourceWith(a, `${precisionLabel(a)}${knownRef?' · Referencia: '+knownRef:''} · ${alertWhenLabel(a)}`);
   document.querySelector('#selected-alert-card .sac-actions .btn-outline')?.toggleAttribute('hidden', !isNavigableAlert(a));
   card.style.setProperty('--sac-color', visual.color);
   const icon=document.getElementById('sac-icon'); icon.style.background=visual.color; icon.innerHTML=glyphHTML(visual);
@@ -3671,7 +3675,7 @@ function addMarkerToMap(alert) {
       <b>${escapeHtml(alert.title)}</b><br>
       <span style="color:#5f6368;font-size:12px;">${escapeHtml(alert.location || 'Zona aproximada')}</span>
       <div class="location-meta"><span class="precision-chip"><i class="fa-solid fa-crosshairs"></i> ${precisionLabel(alert)}</span><span class="distance-chip"><i class="fa-solid fa-circle-dot"></i> Área de referencia: ${radiusLabel}</span>${referenceChipHTML(alert)}</div>
-      <div class="alert-source"><i class="fa-solid fa-circle-info"></i> ${escapeHtml(alertSourceLabel(alert))}</div>
+      ${alertSourceLabel(alert)?`<div class="alert-source"><i class="fa-solid fa-circle-info"></i> ${escapeHtml(alertSourceLabel(alert))}</div>`:''}
       <br><button onclick="openAlertDetail(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:none;border-radius:6px;background:#1976d2;color:#fff;cursor:pointer;font-size:12px;font-weight:600;">Ver detalle</button>
     </div>`);
     area.on('click', () => showAlertFocus(alert));
@@ -3699,7 +3703,7 @@ function addMarkerToMap(alert) {
       ${popupHeadHTML(alert)}
       <b>${escapeHtml(alert.title)}</b><br>
       <span style="color:#5f6368;font-size:12px;">${escapeHtml(alert.location)}</span>${nota}${chip}${stale}
-      <div class="alert-source"><i class="fa-solid fa-circle-info"></i> ${escapeHtml(alertSourceLabel(alert))}</div>
+      ${alertSourceLabel(alert)?`<div class="alert-source"><i class="fa-solid fa-circle-info"></i> ${escapeHtml(alertSourceLabel(alert))}</div>`:''}
       <br><div style="display:flex;gap:6px;"><button onclick="openAlertDetail(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:none;border-radius:6px;background:#1976d2;color:#fff;cursor:pointer;font-size:12px;font-weight:600;">Ver detalle</button>${radius?`<button onclick="navigateToAlert(${alert.id})" style="margin-top:8px;width:100%;padding:7px;border:1px solid #2563EB;border-radius:6px;background:transparent;color:#60A5FA;cursor:pointer;font-size:12px;font-weight:600;">Cómo llegar</button>`:''}</div>
     </div>`);
   m.category = alert.category; m.expired = expired; m.severity = alertSeverity(alert); markers.addLayer(m);
@@ -3722,7 +3726,7 @@ function alertCardHTML(a) {
     <b class="ac-title">${escapeHtml(a.title)}</b>
     <div class="ac-location"><i class="fa-solid fa-location-dot"></i><span>${escapeHtml(a.location || 'Ubicación aproximada')}</span></div>
     <div class="ac-tags"><span class="precision-chip"><i class="fa-solid fa-crosshairs"></i> ${precisionLabel(a)}${hasAlertPoint(a) && estimatedRadiusMeters(a) ? ' · radio '+estimatedRadiusLabel(a) : ''}</span>${referenceChipHTML(a)}${distanceChip}${trafficChip}${syncChip}${stale}${isNavigableAlert(a) ? `<button class="card-nav" onclick="event.stopPropagation(); navigateToAlert(${a.id})"><i class="fa-solid fa-diamond-turn-right"></i> Ir</button>` : ''}</div>
-    <div class="ac-source"><i class="fa-solid fa-circle-info"></i><span>${alertSourceLabel(a)} · ${alertTimingLabel(a)}</span><span class="ac-actions"><button onclick="event.stopPropagation(); toggleLike(${a.id})" id="btn-heart-${a.id}" class="ac-action${a.liked ? ' liked' : ''}" title="Guardar alerta" aria-label="Guardar alerta"><i class="fa-solid fa-heart"></i></button><button onclick="event.stopPropagation(); shareAlert(${a.id})" class="ac-action share" title="Compartir" aria-label="Compartir alerta"><i class="fa-brands fa-whatsapp"></i></button><button onclick="event.stopPropagation(); removeAlert(${a.id})" class="ac-action delete" title="Eliminar" aria-label="Eliminar alerta"><i class="fa-solid fa-xmark"></i></button></span></div>
+    <div class="ac-source"><i class="fa-solid fa-circle-info"></i><span>${escapeHtml(alertSourceWith(a, alertTimingLabel(a)))}</span><span class="ac-actions"><button onclick="event.stopPropagation(); toggleLike(${a.id})" id="btn-heart-${a.id}" class="ac-action${a.liked ? ' liked' : ''}" title="Guardar alerta" aria-label="Guardar alerta"><i class="fa-solid fa-heart"></i></button><button onclick="event.stopPropagation(); shareAlert(${a.id})" class="ac-action share" title="Compartir" aria-label="Compartir alerta"><i class="fa-brands fa-whatsapp"></i></button><button onclick="event.stopPropagation(); removeAlert(${a.id})" class="ac-action delete" title="Eliminar" aria-label="Eliminar alerta"><i class="fa-solid fa-xmark"></i></button></span></div>
   `;
 }
 function makeAlertCard(a) {
@@ -3767,7 +3771,7 @@ function shareAlert(id) {
     const trafico = alert.category === 'road' && alert.trafico ? `\n🚦 *Tráfico:* ${trafficStyle(alert.trafico).label}` : '';
     const locLine = `📍 *${placeLabel}:* ${alert.location}${mapUrl || !approx ? '' : ' (sin ubicación exacta)'}`;
     const linkLine = mapUrl ? `\n🗺️ *Ver en el mapa:* ${mapUrl}` : `\n🌐 *Más alertas:* https://www.zero-vial.com.mx`;
-    const text = `🚨 *ZERO VIAL - ALERTA* 🚨\n\n📌 *Evento:* ${alert.title}\n${locLine}${trafico}\n📰 *${alertSourceLabel(alert)}*${linkLine}`;
+    const text = `🚨 *ZERO VIAL - ALERTA* 🚨\n\n📌 *Evento:* ${alert.title}\n${locLine}${trafico}${alertSourceLabel(alert)?`\n📰 *${alertSourceLabel(alert)}*`:''}${linkLine}`;
     window.open(LINKS.waShare.replace('{t}', encodeURIComponent(text)), '_blank');
 }
 
@@ -4286,7 +4290,7 @@ function centralAlertToUi(row,receivedAt=0) {
     trafico:row.category==='road'&&!scheduled
       ? ({flowing:'fluido',restored:'fluido',slow:'moderado',partial:'moderado',blocked:'detenido',closed:'detenido'}[row.traffic_status] || (severity==='critical'?'detenido':severity==='high'?'moderado':'fluido'))
       : null,
-    importante:!scheduled&&['critical','high'].includes(severity), source_type:'media', source_name:row.source_name||'Fuente verificada',
+    importante:!scheduled&&['critical','high'].includes(severity), source_type:'media', source_name:row.source_name||'',
     source_url:row.source_url||'', verification_status:row.location_status==='verified'?'verified':'automatic', liked:false
   };
 }
