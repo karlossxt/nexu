@@ -1529,7 +1529,7 @@ body.operator-authorized .agenda-import-btn{ display:inline-flex; }
   var seen=false; try{ seen=sessionStorage.getItem('zv_splash')==='1'; sessionStorage.setItem('zv_splash','1'); }catch(e){}
   function hide(){ s.classList.add('hide'); setTimeout(function(){ if(s.parentNode) s.parentNode.removeChild(s); },600); }
   if(seen){ if(s.parentNode) s.parentNode.removeChild(s); return; }
-  var t0=Date.now(), min=1400, done=false;
+  var t0=Date.now(), min=500, done=false;
   function finish(){ if(done) return; done=true; setTimeout(hide,Math.max(0,min-(Date.now()-t0))); }
   if(document.readyState==='complete') finish(); else window.addEventListener('load',finish);
   setTimeout(finish,3200); s.addEventListener('click',hide);
@@ -4061,22 +4061,49 @@ function learnedLocationKey(label) {
   return String(label||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()
     .replace(/\b(plaza|de|cobro|caseta|peaje|km|kilometro)\b/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
 }
+// Etiqueta corta y limpia: sin código postal, país ni "C.P." (las direcciones largas casi nunca vuelven a coincidir).
+function cleanLearnedLabel(label) {
+  const parts=String(label||'').split(',').map(x=>x.trim()).filter(Boolean)
+    .filter(x=>!/^(m[eé]xico|mexico|mx)$/i.test(x))
+    .map(x=>x.replace(/\b(c\.?\s?p\.?\s*)?\d{5}\b/ig,'').trim()).filter(Boolean);
+  return parts.slice(0,3).join(', ').slice(0,120);
+}
+// ¿Es un lugar concreto (km, caseta, cruce…)? Una autopista completa no se guarda porque empataría con todo.
+function isSpecificLearnedPlace(label,km) {
+  if(km!=null&&km!==''&&Number.isFinite(Number(km))) return true;
+  const t=String(label||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  return /(caseta|plaza de cobro|entronque|cruce|crucero|puente|glorieta|esquina|libramiento|distribuidor|acceso|salida|incorporacion|\d)/.test(t);
+}
 async function reviewLocationCorrection(id,status) {
   if(!supabaseClient||!zeroVialUser) return;
   const {error}=await supabaseClient.from('location_corrections').update({status,reviewed_by:zeroVialUser.id,reviewed_at:new Date().toISOString()}).eq('id',id);
   if(error) return trafficMessage('No se pudo actualizar la corrección.',true);
+  let note='';
   if(status==='approved') {
     const c=(window._pendingCorrections||{})[id];
-    const key=learnedLocationKey(c&&c.corrected_label);
-    if(c && key) {
-      const {error:learnErr}=await supabaseClient.from('learned_locations').upsert({
-        match_key:key, label:c.corrected_label, latitude:c.corrected_latitude, longitude:c.corrected_longitude,
-        source_correction_id:c.id, approved_by:zeroVialUser.id, updated_at:new Date().toISOString()
-      },{onConflict:'match_key'});
-      if(learnErr) trafficMessage('Corrección aprobada, pero no se pudo guardar como referencia aprendida.',true);
+    const a=c?(alerts||[]).find(x=>x.external_id===c.alert_external_id||x.central_id===c.alert_external_id):null;
+    const label=cleanLearnedLabel(c&&c.corrected_label);
+    const key=learnedLocationKey(label);
+    const km=a&&a.kilometer!=null&&a.kilometer!==''?Number(a.kilometer):null;
+    if(c&&key&&!isSpecificLearnedPlace(label,km)) {
+      note=' No se guardó como lugar aprendido porque es una vía completa; indica un km, caseta o cruce.';
+    } else if(c&&key) {
+      // Alias: la frase original con la que la alerta mencionaba el lugar (la que falló al geocodificar).
+      const aliases=[...new Set([a&&a.location_label,a&&a.location,a&&a.reference].map(v=>cleanLearnedLabel(v)).filter(v=>v&&learnedLocationKey(v)&&learnedLocationKey(v)!==key))].slice(0,5);
+      const payload={
+        match_key:key, label, latitude:c.corrected_latitude, longitude:c.corrected_longitude,
+        source_correction_id:c.id, approved_by:zeroVialUser.id, updated_at:new Date().toISOString(),
+        state:(a&&a.state)||null, kilometer:Number.isFinite(km)?km:null, aliases, road_norm:learnedLocationKey(a&&a.road)||null
+      };
+      let {error:learnErr}=await supabaseClient.from('learned_locations').upsert(payload,{onConflict:'match_key'});
+      if(learnErr) { // la migración v2 puede no estar corrida: reintenta con las columnas originales
+        const {state,kilometer,aliases:al,road_norm,...basic}=payload;
+        ({error:learnErr}=await supabaseClient.from('learned_locations').upsert(basic,{onConflict:'match_key'}));
+      }
+      if(learnErr) note=' Pero no se pudo guardar como referencia aprendida.';
     }
   }
-  trafficMessage(status==='approved'?'Corrección aprobada. Las alertas futuras en ese lugar usarán esta coordenada.':'Corrección rechazada.');
+  trafficMessage(status==='approved'?('Corrección aprobada.'+(note||' Las alertas futuras en ese lugar usarán esta coordenada.')):'Corrección rechazada.',!!note);
   loadLocationCorrections();
 }
 function centerAlert() {
@@ -5044,6 +5071,7 @@ async function runRiskCard(){
   if(!rows.length){ box.innerHTML=`<div class="risk-note">Sin reportes de seguridad en medios para ${escapeHtml(muni)} en los últimos ${days} días. Eso no garantiza que no haya incidentes.</div>`; return; }
   const max=Math.max(...rows.map(r=>Number(r.recent)),1);
   const total=rows.reduce((s,r)=>s+Number(r.recent),0), prevTotal=rows.reduce((s,r)=>s+Number(r.previous),0);
+  const hasPrev=prevTotal>0;
   const trend=(r,p)=>{ r=Number(r); p=Number(p); return r>p?`<span class="risk-up">▲ ${p?'+'+Math.round((r-p)/p*100)+'%':'nuevo'}</span>`:r<p?`<span class="risk-down">▼ ${Math.round((p-r)/p*100)}%</span>`:'<span class="risk-eq">＝</span>'; };
   box.innerHTML=`<div class="risk-row"><b>${escapeHtml(muni)}, ${escapeHtml(state)}</b><span></span><span class="risk-n">${total} reportes ${trend(total,prevTotal)}</span></div>`+
     rows.filter(r=>Number(r.recent)>0).map(r=>`<div class="risk-row"><span>${escapeHtml(CRIME_LABELS[r.crime_type]||'Otros')}</span><div class="risk-bar"><i style="width:${Math.max(6,Number(r.recent)/max*100)}%"></i></div><span class="risk-n">${r.recent} ${trend(r.recent,r.previous)}</span></div>`).join('')+
@@ -5808,7 +5836,7 @@ function locationQuality(a) {
 function buildAlertCenterStates(source=alerts) {
   const sel=document.getElementById('acn-state'); if(!sel) return;
   const states=[...new Set(source.map(a=>a.state).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
-  sel.innerHTML='<option value="">Todo México</option>'+states.map(s=>`<option value="${s}">${s}</option>`).join('');
+  sel.innerHTML='<option value="">Todo México</option>'+states.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
   setSel('acn-state',uState);
 }
 function renderDiagnostics() {
