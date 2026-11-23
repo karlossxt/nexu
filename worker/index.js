@@ -13,6 +13,7 @@ const locationMonitor = require('./location-health').createMonitor();
 const { resolveOfficialTollReference, officialNameExists } = require('./rnc-toll-reference');
 const { kilometersConflict, normalizedKilometer } = require('../lib/alert-km');
 const { isOngoingRepeat } = require('../lib/alert-dedupe');
+const { matchLearned, selectHints } = require('../lib/learned-match');
 const { orientativeCorridorPoint } = require('../lib/corridor-reference');
 const TOMTOM_TRAFFIC = require('./tomtom-traffic');
 
@@ -358,7 +359,9 @@ let LEARNED_CACHE = [];
 let learnedCacheAt = 0;
 async function loadLearnedLocations() {
   try {
-    const rows = await sb('learned_locations?select=match_key,label,latitude,longitude');
+    let rows;
+    try { rows = await sb('learned_locations?select=match_key,label,latitude,longitude,state,kilometer,aliases'); }
+    catch (e) { rows = await sb('learned_locations?select=match_key,label,latitude,longitude'); } // migración v2 aún sin correr
     if (Array.isArray(rows)) {
       LEARNED_CACHE = rows.filter(r => r.match_key && r.match_key.length >= 4 && Number.isFinite(Number(r.latitude)) && Number.isFinite(Number(r.longitude)));
       learnedCacheAt = Date.now();
@@ -372,14 +375,9 @@ async function loadLearnedLocations() {
 function learnedKey(value) {
   return norm(value).replace(/\b(plaza|de|cobro|caseta|peaje|km|kilometro)\b/g, ' ').replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
-function learnedGeocode(text) {
+function learnedGeocode(text, ctx = {}) {
   if (!LEARNED_CACHE.length) return null;
-  const haystack = learnedKey(text);
-  if (!haystack) return null;
-  let best = null;
-  for (const row of LEARNED_CACHE) {
-    if (haystack.includes(row.match_key) && (!best || row.match_key.length > best.match_key.length)) best = row;
-  }
+  const best = matchLearned(LEARNED_CACHE, text, ctx);
   if (!best) return null;
   return {
     latitude: Number(best.latitude), longitude: Number(best.longitude),
@@ -651,13 +649,13 @@ const CLASSIFY_INSTRUCTIONS = `Clasifica esta noticia. Rechaza si no es un incid
 
 // Lo que los operadores ya corrigieron y aprobó se le da a la IA como contexto: si el texto
 // menciona uno de esos lugares, que lo extraiga con ese mismo nombre (así también lo reconoce learnedGeocode).
-function learnedHints() {
-  const labels = [...new Set((LEARNED_CACHE || []).map(x => clean(x.label)).filter(Boolean))].slice(-25);
+function learnedHints(text) {
+  const labels = selectHints(LEARNED_CACHE || [], text, null, 10).map(clean).filter(Boolean);
   return labels.length ? 'LUGARES CONFIRMADOS POR OPERADORES (si el texto menciona uno, úsalo tal cual como referencia): ' + labels.join('; ') + '.\n' : '';
 }
 
 function classificationPrompt(text) {
-  return `${learnedHints()}TEXTO: ${String(text).slice(0, 1400)}`;
+  return `${learnedHints(text)}TEXTO: ${String(text).slice(0, 1400)}`;
 }
 
 async function classifyWithGroq(prompt) {
@@ -1753,7 +1751,7 @@ async function processItem(item, feed, options={}) {
   // Una corrección aprobada a mano por un operador manda sobre cualquier
   // catálogo automático: si el texto menciona un lugar ya confirmado, se usa esa
   // coordenada directo, sin pasar por CASETAS ni por el geocodificador genérico.
-  let geo = learnedGeocode(sourceText);
+  let geo = learnedGeocode(sourceText, { state: ai.estado });
   if (geo) log('info','Ubicación resuelta con learned_locations',{ matched:geo.matched_reference });
   if (!geo) geo = resolveTollReference(reference,ai.carretera);
   if (geo && geo.provider !== 'learned_locations') log('info','Caseta resuelta con CASETAS',{
