@@ -76,7 +76,7 @@ grant update (status, reviewed_by, reviewed_at) on table public.location_correct
 do $$
 declare t text;
 begin
-  foreach t in array array['push_config','webpush_devices'] loop
+  foreach t in array array['push_config','webpush_devices','push_subscriptions'] loop
     if to_regclass('public.' || t) is not null then
       execute format('alter table public.%I enable row level security', t);
       execute format('revoke all on table public.%I from anon, authenticated', t);
@@ -88,12 +88,12 @@ end $$;
 -- RLS activo (rowsecurity debe ser true en las cinco):
 --   select tablename, rowsecurity from pg_tables
 --   where schemaname = 'public'
---     and tablename in ('push_config','webpush_devices','ingest_queue','learned_locations','location_corrections');
+--     and tablename in ('push_config','webpush_devices','push_subscriptions','ingest_queue','learned_locations','location_corrections');
 --
 -- Permisos directos. Para push_config, webpush_devices e ingest_queue NO debe aparecer anon ni authenticated:
 --   select table_name, grantee, privilege_type from information_schema.role_table_grants
 --   where table_schema = 'public'
---     and table_name in ('push_config','webpush_devices','ingest_queue','learned_locations','location_corrections')
+--     and table_name in ('push_config','webpush_devices','push_subscriptions','ingest_queue','learned_locations','location_corrections')
 --     and grantee in ('anon','authenticated')
 --   order by table_name, grantee, privilege_type;
 --
