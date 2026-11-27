@@ -1,6 +1,6 @@
 'use strict';
 // Servidor sin dependencias: sirve el frontend y expone /api/groq (proxy), /api/config,
-// /api/feed y /api/geocode.
+// /api/feed, /api/geocode, /api/agenda y /api/traffic.
 // Uso: node server.js  =>  http://localhost:3000
 const http = require('http');
 const fs = require('fs');
@@ -273,7 +273,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (url.pathname === '/api/groq') return await handleGroq(req, res, url);
     if (url.pathname === '/api/config') return handleConfig(res);
-    if (url.pathname === '/api/feed' || url.pathname === '/api/geocode' || url.pathname === '/api/agenda') {
+    if (url.pathname === '/api/feed' || url.pathname === '/api/geocode' || url.pathname === '/api/agenda' || url.pathname === '/api/traffic') {
       try {
         return await runVercelStyle('./' + url.pathname.slice(1) + '.js', req, res, url);
       } catch (e) {

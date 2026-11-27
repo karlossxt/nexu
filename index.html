@@ -2781,13 +2781,13 @@ function trafficMessage(message, error=false) {
   const old = document.getElementById('traffic-message'); if(old) old.remove();
   const box = document.createElement('div'); box.id = 'traffic-message'; box.className = 'toast-important';
   box.style.borderLeftColor = error ? '#EF4444' : '#2563EB';
-  box.innerHTML = `<b><i class="fa-solid fa-traffic-light"></i> Tráfico</b><div>${message}</div>`;
+  box.innerHTML = `<b><i class="fa-solid fa-traffic-light"></i> Tráfico</b><div>${escapeHtml(message)}</div>`;
   document.body.appendChild(box); setTimeout(() => box.remove(), 5000);
 }
 function showComingSoon(feature) {
   const old=document.getElementById('coming-soon-message'); if(old) old.remove();
   const box=document.createElement('div'); box.id='coming-soon-message'; box.className='toast-important'; box.style.borderLeftColor='#F59E0B';
-  box.innerHTML=`<b style="color:#D97706"><i class="fa-solid fa-hourglass-half"></i> Próximamente</b><div><b>${feature}</b> está en revisión para ofrecer una experiencia confiable.</div>`;
+  box.innerHTML=`<b style="color:#D97706"><i class="fa-solid fa-hourglass-half"></i> Próximamente</b><div><b>${escapeHtml(feature)}</b> está en revisión para ofrecer una experiencia confiable.</div>`;
   document.body.appendChild(box); setTimeout(()=>box.remove(),4500);
 }
 async function toggleTraffic() {
@@ -4081,15 +4081,18 @@ async function reviewLocationCorrection(id,status) {
   let note='';
   if(status==='approved') {
     const c=(window._pendingCorrections||{})[id];
-    const a=c?(alerts||[]).find(x=>x.external_id===c.alert_external_id||x.central_id===c.alert_external_id):null;
+    const ref=c?c.alert_external_id:null;
+    const a=c?[...(alerts||[]),...(historicalAlerts||[])].find(x=>x&&(x.external_id===ref||x.central_id===ref||String(x.id)===String(ref))):null;
     const label=cleanLearnedLabel(c&&c.corrected_label);
     const key=learnedLocationKey(label);
-    const km=a&&a.kilometer!=null&&a.kilometer!==''?Number(a.kilometer):null;
+    const kmRaw=a?(a.km ?? a.kilometer):null;
+    const km=kmRaw!=null&&kmRaw!==''&&Number.isFinite(Number(kmRaw))?Number(kmRaw):null;
     if(c&&key&&!isSpecificLearnedPlace(label,km)) {
       note=' No se guardó como lugar aprendido porque es una vía completa; indica un km, caseta o cruce.';
     } else if(c&&key) {
       // Alias: la frase original con la que la alerta mencionaba el lugar (la que falló al geocodificar).
-      const aliases=[...new Set([a&&a.location_label,a&&a.location,a&&a.reference].map(v=>cleanLearnedLabel(v)).filter(v=>v&&learnedLocationKey(v)&&learnedLocationKey(v)!==key))].slice(0,5);
+      const roadAlias=a&&a.road&&km!=null?`${a.road} km ${km}`:'';
+      const aliases=[...new Set([roadAlias,...[a&&a.location_label,a&&a.location,a&&a.reference].map(v=>cleanLearnedLabel(v))].filter(v=>v&&learnedLocationKey(v)&&learnedLocationKey(v)!==key))].slice(0,6);
       const payload={
         match_key:key, label, latitude:c.corrected_latitude, longitude:c.corrected_longitude,
         source_correction_id:c.id, approved_by:zeroVialUser.id, updated_at:new Date().toISOString(),
@@ -4310,7 +4313,7 @@ function centralAlertToUi(row,receivedAt=0) {
     id:centralNumericId(row.id||row.external_id), central_id:row.id, external_id:row.external_id,
     lat:row.latitude == null ? null : Number(row.latitude), lon:row.longitude == null ? null : Number(row.longitude), category:row.category,
     title:row.title, detail:row.detail||row.title, location:row.location_label||[row.road,row.municipality,row.state].filter(Boolean).join(', '),
-    state:row.state||'', municipality:row.municipality||'', precision, km:row.kilometer ?? null, location_precision:locationPrecision||null,
+    state:row.state||'', municipality:row.municipality||'', road:row.road||'', precision, km:row.kilometer ?? null, location_precision:locationPrecision||null,
     location_confidence:confidence, location_provider:'central', road_snapped:false,
     time:new Date(row.event_at), published_at:row.event_at, detected_at:row.created_at||null, received_at:receivedAt,
     event_type:row.event_type||null, traffic_status:row.traffic_status||null,
@@ -5221,7 +5224,15 @@ window.zvPush = (function(){
   return { supported, current, subscribe, unsubscribe, saved };
 })();
 if('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', ev => {
-  if(ev.data && ev.data.type === 'open-alert' && ev.data.id != null) { try { openAlertDetail(ev.data.id); } catch(e) {} }
+  if(!ev.data || ev.data.type !== 'open-alert') return;
+  try {
+    let id=ev.data.id;
+    if(ev.data.externalId) {
+      const found=[...(alerts||[]),...(historicalAlerts||[])].find(x=>x&&(x.external_id===ev.data.externalId||x.central_id===ev.data.externalId));
+      if(found) id=found.id;
+    }
+    if(id!=null) openAlertDetail(id);
+  } catch(e) {}
 });
 function playAlertTone() {
   if(localStorage.getItem('nv_sound') === 'off') return;
@@ -5854,9 +5865,9 @@ function renderDiagnostics() {
 function alertCenterRanking(targetId, entries, emptyLabel) {
   const box=document.getElementById(targetId); if(!box) return;
   const rows=entries.sort((a,b)=>b[1]-a[1]).slice(0,5);
-  if(!rows.length){ box.innerHTML=`<div class="acn-empty" style="padding:16px">${emptyLabel}</div>`; return; }
+  if(!rows.length){ box.innerHTML=`<div class="acn-empty" style="padding:16px">${escapeHtml(emptyLabel)}</div>`; return; }
   const max=Math.max(...rows.map(x=>x[1]),1);
-  box.innerHTML=rows.map(([label,value])=>`<div class="acn-rank-row"><span class="acn-rank-label" title="${label}">${label}</span><b>${value}</b><span class="acn-rank-bar"><i style="width:${Math.max(6,value/max*100)}%"></i></span></div>`).join('');
+  box.innerHTML=rows.map(([label,value])=>`<div class="acn-rank-row"><span class="acn-rank-label" title="${escapeHtml(label)}">${escapeHtml(label)}</span><b>${value}</b><span class="acn-rank-bar"><i style="width:${Math.max(6,value/max*100)}%"></i></span></div>`).join('');
 }
 function renderAlertCenterAnalytics(visible,hours) {
   const caption=document.getElementById('acn-analysis-caption');
@@ -6823,6 +6834,6 @@ setLandingAuthMode('login');
 </script>
 
 <!-- FUSIÓN VíaSegura · motor de features (Modo Viaje, Nocturno, PWA, Peajes, Analítica, PDF, Push) -->
-<script src="/fusion/fusion.js?v=25" defer></script>
+<script src="/fusion/fusion.js?v=26" defer></script>
 </body>
 </html>

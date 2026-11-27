@@ -129,7 +129,8 @@ function parseRssItems(raw) {
     const title = stripHtml(tag(/<title[^>]*>([\s\S]*?)<\/title>/i, block));
     if (title) items.push({
       title,
-      content_text: stripHtml(tag(/<description[^>]*>([\s\S]*?)<\/description>/i, block)),
+      // Algunos feeds (WordPress, RSS.app) traen el texto completo solo en <content:encoded>.
+      content_text: stripHtml(tag(/<description[^>]*>([\s\S]*?)<\/description>/i, block)) || stripHtml(tag(/<content:encoded[^>]*>([\s\S]*?)<\/content:encoded>/i, block)),
       source_name: cleanSourceName(tag(/<(?:dc:creator|source|author)[^>]*>([\s\S]*?)<\/(?:dc:creator|source|author)>/i, block)),
       published_at: itemDate({
         pubDate: stripHtml(tag(/<(?:pubDate|dc:date|published|updated)[^>]*>([\s\S]*?)<\/(?:pubDate|dc:date|published|updated)>/i, block))
@@ -149,7 +150,7 @@ module.exports = async (req, res) => {
   if (url.length > 800) return res.status(400).json({ error: 'url demasiado larga' });
 
   try {
-    const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (ZERO VIAL; monitoreo vial)' } });
+    const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (ZERO VIAL; monitoreo vial)' }, signal: AbortSignal.timeout(10000) });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const items = parseRssItems(await r.text());
     const kept = items
@@ -158,6 +159,7 @@ module.exports = async (req, res) => {
       .map(it => ({ ...it, source_name: (!it.source_name || it.source_name === 'Fuente RSS') ? sourceName(it, url) : it.source_name }));
     return res.status(200).json({ items: kept, total: items.length, kept: kept.length });
   } catch (e) {
+    if (e && e.name === 'TimeoutError') return res.status(504).json({ error: 'la fuente tardó demasiado' });
     const msg = String((e && e.message) || e);
     return res.status(502).json({ error: msg });
   }

@@ -39,6 +39,10 @@ const GROQ_KEY = env.GROQ_API_KEY;
 const GROQ_MODEL = env.GROQ_MODEL || 'openai/gpt-oss-20b';
 const GEMINI_KEY = env.GEMINI_API_KEY || '';
 const GEMINI_MODEL = env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
+// Modelos de respaldo: cada modelo tiene su propio límite gratuito. 'none' los desactiva.
+const fbModel = (value, fallback) => { const v = String(value ?? fallback).trim(); return !v || /^(none|off|no)$/i.test(v) ? '' : v; };
+const GROQ_FALLBACK_MODEL = fbModel(env.GROQ_FALLBACK_MODEL, 'llama-3.1-8b-instant');
+const GEMINI_FALLBACK_MODEL = fbModel(env.GEMINI_FALLBACK_MODEL, 'gemini-2.5-flash-lite');
 const GEOAPIFY_KEY = env.GEOAPIFY_API_KEY || '';
 const GOOGLE_KEY = env.GOOGLE_MAPS_API_KEY || '';
 // La política de Nominatim exige un User-Agent identificable con contacto real.
@@ -50,12 +54,24 @@ const POLL_MS = Math.max(60_000, num(env.WORKER_INTERVAL_MS, 60_000));
 const MAX_AGE_MS = Math.max(1, num(env.ALERT_MAX_AGE_HOURS, 24)) * 3600_000;
 const MAX_AI_PER_CYCLE = Math.max(1, num(env.MAX_AI_PER_CYCLE, 6));
 const AI_DELAY_MS = Math.max(5_000, num(env.AI_DELAY_MS, 10_000));
-const AI_MAX_PER_HOUR = Math.max(1, Math.min(60, num(env.AI_MAX_PER_HOUR, 16)));
+const AI_MAX_PER_HOUR = Math.max(1, Math.min(240, num(env.AI_MAX_PER_HOUR, 16))); // con plan de pago de Groq se puede subir hasta 240
 const FAST_LANE_MAX_PER_HOUR = Math.max(0, Math.min(20, num(env.FAST_LANE_MAX_PER_HOUR, 6)));
 const FAST_LANE_MIN_INTERVAL_MS = Math.max(60_000, num(env.FAST_LANE_MIN_INTERVAL_MS, 120_000));
 const AI_MIN_INTERVAL_MS = Math.ceil(3600_000 / AI_MAX_PER_HOUR);
 const QUEUE_MAX_ATTEMPTS = Math.max(1, num(env.QUEUE_MAX_ATTEMPTS, 5));
-const FEEDS = [env.RSS_PRI, env.RSS_SEC].map(x => String(x || '').trim()).filter(Boolean);
+// RSS_PRI y RSS_SEC, más RSS_EXTRA (varias direcciones separadas por coma, espacio o salto de línea).
+// Se descartan repetidas: el mismo feed de RSS.app en .xml y .json cuenta una sola vez.
+const FEEDS = (() => {
+  const raw = [env.RSS_PRI, env.RSS_SEC, ...String(env.RSS_EXTRA || '').split(/[\s,]+/)].map(x => String(x || '').trim()).filter(Boolean);
+  const seen = new Set(), out = [];
+  for (const url of raw) {
+    const id = (url.match(/rss\.app\/feeds\/(?:v1\.1\/)?_?([A-Za-z0-9]{8,})\.(?:xml|json)/i) || [])[1];
+    const key = id ? 'rssapp:' + id : url;
+    if (seen.has(key)) { console.warn('[warn] Feed repetido ignorado: ' + url); continue; }
+    seen.add(key); out.push(url);
+  }
+  return out;
+})();
 const DEFAULT_FEED = 'https://news.google.com/rss/search?q=accidente+OR+bloqueo+OR+asalto+carretera+mexico&hl=es-419&gl=MX&ceid=MX:es-419';
 if (!FEEDS.length) FEEDS.push(DEFAULT_FEED);
 // Noticias de seguridad por estado vía Google News (RSS gratuito). Se consultan cada NEWS_POLL_MS (10 min por defecto).
@@ -658,14 +674,14 @@ function classificationPrompt(text) {
   return `${learnedHints(text)}TEXTO: ${String(text).slice(0, 1400)}`;
 }
 
-async function classifyWithGroq(prompt) {
+async function classifyWithGroq(prompt, model = GROQ_MODEL) {
   const response = await fetchT('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + GROQ_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: GROQ_MODEL,
+      model,
       temperature: 0.1,
-      reasoning_effort: 'low',
+      ...(/gpt-oss|qwen/i.test(model) ? { reasoning_effort: 'low' } : {}),
       max_completion_tokens: 700,
       response_format: { type: 'json_object' },
       messages: [
@@ -699,8 +715,8 @@ async function classifyWithGroq(prompt) {
   }
 }
 
-async function classifyWithGemini(prompt) {
-  const url = new URL(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`);
+async function classifyWithGemini(prompt, model = GEMINI_MODEL) {
+  const url = new URL(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`);
   const response = await fetchT(url, {
     method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':GEMINI_KEY}, signal:AbortSignal.timeout(35_000),
     body:JSON.stringify({
@@ -710,7 +726,7 @@ async function classifyWithGemini(prompt) {
     })
   });
   const rawBody=await response.text();
-  if(!response.ok) throw new Error('Gemini '+response.status+': '+rawBody.slice(0,250));
+  if(!response.ok) { const err=new Error('Gemini '+response.status+': '+rawBody.slice(0,250)); err.status=response.status; throw err; }
   let body;
   try { body=JSON.parse(rawBody); } catch { throw new Error('Gemini devolvió una respuesta no JSON'); }
   const raw=String(body.candidates?.[0]?.content?.parts?.map(part=>part.text||'').join('')||'').trim();
@@ -731,8 +747,18 @@ async function classify(text, options={}) {
   }
   if(Date.now()>=groqCooldownUntil) {
     try {
-      const result=await classifyWithGroq(prompt);
-      lastAiProvider='groq';
+      let result;
+      try { result=await classifyWithGroq(prompt); lastAiProvider='groq'; }
+      catch(primaryError) {
+        // Límite del modelo principal: el de respaldo tiene su propio cupo.
+        if(!(primaryError instanceof GroqRateLimitError) || !GROQ_FALLBACK_MODEL || GROQ_FALLBACK_MODEL===GROQ_MODEL) throw primaryError;
+        try { result=await classifyWithGroq(prompt, GROQ_FALLBACK_MODEL); lastAiProvider='groq'; log('info','Groq: modelo de respaldo usado',{model:GROQ_FALLBACK_MODEL}); }
+        catch(fallbackError) {
+          if(fallbackError instanceof GroqRateLimitError) throw fallbackError;
+          log('warn','Groq: el modelo de respaldo falló',{model:GROQ_FALLBACK_MODEL,reason:String(fallbackError.message).slice(0,120)});
+          throw primaryError;
+        }
+      }
       return result;
     } catch(error) {
       if(error instanceof GroqRateLimitError) groqCooldownUntil=Date.now()+Math.max(60_000,error.retryAfterMs)+15_000;
@@ -742,7 +768,14 @@ async function classify(text, options={}) {
   } else if(!GEMINI_KEY) {
     throw new GroqRateLimitError('Groq continúa en pausa',groqCooldownUntil-Date.now());
   }
-  const result=await classifyWithGemini(prompt);
+  let result;
+  try { result=await classifyWithGemini(prompt); }
+  catch(error) {
+    // 503 (alta demanda) o 429: se prueba el modelo de respaldo de Gemini.
+    if(![429,500,503].includes(error.status) || !GEMINI_FALLBACK_MODEL || GEMINI_FALLBACK_MODEL===GEMINI_MODEL) throw error;
+    log('warn','Gemini saturado; usando modelo de respaldo',{model:GEMINI_FALLBACK_MODEL,reason:String(error.message).slice(0,80)});
+    result=await classifyWithGemini(prompt, GEMINI_FALLBACK_MODEL);
+  }
   lastAiProvider='gemini';
   return result;
 }
@@ -1119,7 +1152,7 @@ function pointAtRoadKilometer(corridor, kilometer) {
   return null;
 }
 
-async function resolvedStateAtPoint(lat, lon) {
+async function resolvedStateAtPointUncached(lat, lon) {
   if (GEOAPIFY_KEY) {
     try {
       const url=new URL('https://api.geoapify.com/v1/geocode/reverse');
@@ -1171,6 +1204,25 @@ async function resolvedStateAtPoint(lat, lon) {
   } catch {}
 
   return { state:'', municipality:'', provider:'' };
+}
+
+// Caché en memoria de reverse geocoding (casetas y postes RNC se consultan una y otra vez):
+// 24 h si hubo resultado, 10 min si falló, máximo 3000 puntos (se descarta el más viejo).
+const REVERSE_CACHE = new Map();
+const REVERSE_HIT_TTL_MS = 24 * 3600_000, REVERSE_MISS_TTL_MS = 10 * 60_000, REVERSE_CACHE_MAX = 3000;
+async function resolvedStateAtPoint(lat, lon) {
+  const la = Number(lat), lo = Number(lon);
+  if (!Number.isFinite(la) || !Number.isFinite(lo)) return resolvedStateAtPointUncached(lat, lon);
+  const key = `${la.toFixed(3)},${lo.toFixed(3)}`;
+  const cached = REVERSE_CACHE.get(key);
+  if (cached && cached.expires > Date.now()) return { ...cached.value };
+  if (cached) REVERSE_CACHE.delete(key);
+  const value = await resolvedStateAtPointUncached(lat, lon);
+  const found = !!(value && (value.state || value.municipality));
+  REVERSE_CACHE.delete(key);
+  REVERSE_CACHE.set(key, { value, expires: Date.now() + (found ? REVERSE_HIT_TTL_MS : REVERSE_MISS_TTL_MS) });
+  while (REVERSE_CACHE.size > REVERSE_CACHE_MAX) REVERSE_CACHE.delete(REVERSE_CACHE.keys().next().value);
+  return { ...value };
 }
 
 function resolveStaticRoadKilometer(road, kilometer) {
@@ -1672,7 +1724,7 @@ async function sendPushForAlert(row) {
   const payload = JSON.stringify({
     title: (row.severity === 'critical' ? '🚨 ' : '⚠️ ') + (row.category === 'security' ? 'Seguridad' : 'Alerta vial') + (row.state ? ' · ' + row.state : ''),
     body: String(row.title || '').slice(0, 140),
-    tag: 'zv-' + row.external_id, url: '/'
+    tag: 'zv-' + row.external_id, url: '/', externalId: row.external_id
   });
   let sent = 0;
   for (let i = 0; i < targets.length; i += 20) {
