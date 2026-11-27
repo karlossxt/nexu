@@ -1716,7 +1716,7 @@ async function sendPushForAlert(row) {
   if (!WEBPUSH || !row || !['critical','high'].includes(row.severity)) return;
   if (!Number.isFinite(row.latitude) || !Number.isFinite(row.longitude)) return;
   if (Date.now() - new Date(row.event_at).getTime() > 3 * 3600_000) return;
-  const subs = await sb('webpush_devices?select=endpoint,p256dh,auth,states,min_severity&fail_count=lt.5&limit=2000') || [];
+  const subs = await sb('push_subscriptions?select=endpoint,p256dh,auth,states,min_severity,fail_count&fail_count=lt.5&limit=2000') || [];
   const state = norm(row.state || '');
   const targets = subs.filter(s => (row.severity === 'critical' || s.min_severity === 'high')
     && (!s.states || !s.states.length || (state && s.states.some(x => norm(x) === state))));
@@ -1734,9 +1734,9 @@ async function sendPushForAlert(row) {
         sent++;
       } catch (e) {
         if (e.statusCode === 404 || e.statusCode === 410) {
-          await sb('webpush_devices?endpoint=eq.' + encodeURIComponent(s.endpoint), { method:'DELETE', headers:{ Prefer:'return=minimal' } }).catch(() => {});
+          await sb('push_subscriptions?endpoint=eq.' + encodeURIComponent(s.endpoint), { method:'DELETE', headers:{ Prefer:'return=minimal' } }).catch(() => {});
         } else {
-          await sb('webpush_devices?endpoint=eq.' + encodeURIComponent(s.endpoint), { method:'PATCH', headers:{ Prefer:'return=minimal' }, body:JSON.stringify({ fail_count:(s.fail_count || 0) + 1 }) }).catch(() => {});
+          await sb('push_subscriptions?endpoint=eq.' + encodeURIComponent(s.endpoint), { method:'PATCH', headers:{ Prefer:'return=minimal' }, body:JSON.stringify({ fail_count:(s.fail_count || 0) + 1 }) }).catch(() => {});
         }
       }
     }));
