@@ -168,6 +168,50 @@ async function requestNominatim(query) {
   };
 }
 
+// Reverse geocoding de respaldo cuando Geoapify falla o no está configurado.
+async function requestGoogleReverse(lat, lon, key) {
+  const url = new URL('https://maps.googleapis.com/maps/api/geocode/json');
+  url.searchParams.set('latlng', `${lat},${lon}`);
+  url.searchParams.set('language', 'es');
+  url.searchParams.set('region', 'mx');
+  url.searchParams.set('key', key);
+  const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(8000) });
+  const body = await response.json().catch(() => ({}));
+  const status = String(body.status || '');
+  if (!response.ok || (status && !['OK', 'ZERO_RESULTS'].includes(status))) throw new Error(`google_${status || response.status}`);
+  const result = body.results && body.results[0];
+  if (!result) return null;
+  const comp = type => (result.address_components || []).find(c => (c.types || []).includes(type));
+  return {
+    lat, lon, provider: 'google', formatted_address: result.formatted_address || '',
+    resolved_state: (comp('administrative_area_level_1') || {}).long_name || '',
+    resolved_road: (comp('route') || {}).long_name || '',
+    confidence: .7, location_type: (result.geometry && result.geometry.location_type) || 'APPROXIMATE', road_snapped: false
+  };
+}
+async function requestNominatimReverse(lat, lon) {
+  const url = new URL('https://nominatim.openstreetmap.org/reverse');
+  url.searchParams.set('format', 'jsonv2');
+  url.searchParams.set('addressdetails', '1');
+  url.searchParams.set('zoom', '16');
+  url.searchParams.set('lat', String(lat));
+  url.searchParams.set('lon', String(lon));
+  const response = await fetch(url, {
+    headers: { 'User-Agent': 'ZeroVial/1.0 contacto@zerovial.mx', 'Accept-Language': 'es', Accept: 'application/json' },
+    signal: AbortSignal.timeout(8000)
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(`nominatim_${response.status}`);
+  if (!body || !body.address || String(body.address.country_code || '').toLowerCase() !== 'mx') return null;
+  const addr = body.address;
+  return {
+    lat, lon, provider: 'nominatim', formatted_address: body.display_name || '',
+    resolved_state: addr.state || '',
+    resolved_road: addr.road || addr.pedestrian || addr.motorway || addr.path || '',
+    confidence: .6, location_type: body.type || 'APPROXIMATE', road_snapped: false
+  };
+}
+
 async function snapGoogleRoad(result, key, options={}) {
   if (!result) return result;
   const expectedRoad=clean(options.expectedRoad,120);
@@ -311,6 +355,22 @@ module.exports = async (req, res) => {
       } catch(error) {
         geoapifyError=String(error?.message || 'geoapify_error').slice(0,80);
       }
+    }
+
+    if (mode === 'reverse') {
+      // Geoapify falló o no está configurado: Google (si hay llave) y luego Nominatim.
+      const stateOk = item => !expectedState || (!!item.resolved_state && stateMatches(expectedState, item.resolved_state));
+      const finish = item => sendCached(res, cacheKey, {
+        ...item, state_filter_applied: !!expectedState,
+        state_verified: !!expectedState && !!item.resolved_state && stateMatches(expectedState, item.resolved_state),
+        route_verified: !!expectedRoad && !!item.resolved_road && roadMatches(expectedRoad, item.resolved_road)
+      });
+      if (googleKey) {
+        try { const g = await requestGoogleReverse(lat, lon, googleKey); if (g && stateOk(g)) return finish(g); }
+        catch (error) { /* se intenta Nominatim */ }
+      }
+      try { const n = await requestNominatimReverse(lat, lon); if (n && stateOk(n)) return finish(n); }
+      catch (error) { /* se responde el error de abajo */ }
     }
 
     if (mode !== 'search') {

@@ -44,7 +44,24 @@
     (type === 'error' ? console.error : console.log)('[Fusion]', msg);
   }
 
-  function allAlerts() { try { return Array.isArray(alerts) ? alerts : []; } catch (e) { return []; } }
+  // Alertas del momento (las últimas horas que la app tiene cargadas): viaje y avisos push.
+  function liveAlerts() { try { return Array.isArray(alerts) ? alerts : []; } catch (e) { return []; } }
+  // Alertas para análisis y reportes: hasta 90 días cuando index.html expone reportSourceAlerts().
+  function allAlerts() {
+    try {
+      if (typeof window.reportSourceAlerts === 'function') { var src = window.reportSourceAlerts(); if (Array.isArray(src)) return src; }
+    } catch (e) {}
+    return liveAlerts();
+  }
+  function stateList() {
+    return Array.from(new Set(allAlerts().map(function (a) { return a.state; }).filter(Boolean))).sort(function (a, b) { return a.localeCompare(b, 'es'); });
+  }
+  function fillStateSelect(sel) {
+    if (!sel) return;
+    var cur = sel.value;
+    sel.innerHTML = '<option value="">Todo México</option>' + stateList().map(function (s) { return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join('');
+    if (cur) sel.value = cur;
+  }
   function myPos() { try { return myPosition || null; } catch (e) { return null; } }
   function hasPoint(a) {
     if (window.hasAlertPoint) { try { return !!window.hasAlertPoint(a); } catch (e) {} }
@@ -670,7 +687,7 @@
     var effective = pos || { lat: 19.4326, lon: -99.1332 };
     var usingFallback = !pos;
 
-    var nearby = allAlerts().filter(function (a) {
+    var nearby = liveAlerts().filter(function (a) {
       if (!hasPoint(a)) return false;
       if (!corridorMatch(a)) return false;
       if (isExpired(a)) return false;
@@ -920,8 +937,7 @@
       '<div id="fz-sec-content"></div>';
 
     var ss = byId('fz-sec-state');
-    var states = Array.from(new Set(allAlerts().map(function (a) { return a.state; }).filter(Boolean))).sort(function (a, b) { return a.localeCompare(b, 'es'); });
-    ss.innerHTML = '<option value="">Todo México</option>' + states.map(function (s) { return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join('');
+    fillStateSelect(ss);
 
     $$('#fz-sec-win .fz-chip').forEach(function (b) {
       b.classList.toggle('fz-on', b.dataset.win === secState.win);
@@ -936,6 +952,15 @@
 
     showOverlay('fz-sec-ov');
     renderSecurity();
+    // Trae el historial (hasta 90 días); al terminar refresca estados y vista si el panel sigue abierto.
+    if (typeof window.ensureHistoricalAlerts === 'function') {
+      Promise.resolve(window.ensureHistoricalAlerts()).then(function () {
+        var ov = byId('fz-sec-ov');
+        if (!ov || !ov.classList.contains('fz-open')) return;
+        fillStateSelect(byId('fz-sec-state'));
+        renderSecurity();
+      }).catch(function () {});
+    }
   }
 
   function renderSecurity() {
@@ -1067,14 +1092,21 @@
       '<button class="fz-btn" onclick="Fusion.report.openPrint()"><i class="fa-solid fa-print"></i> Imprimir</button>' +
       '<span id="fz-rep-note" class="fz-muted" style="font-size:11px"></span></div>';
 
-    var zs = Array.from(new Set(allAlerts().map(function (a) { return a.state; }).filter(Boolean))).sort(function (a, b) { return a.localeCompare(b, 'es'); });
-    byId('fz-rep-z').innerHTML = '<option value="">Todo México</option>' + zs.map(function (s) { return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join('');
+    fillStateSelect(byId('fz-rep-z'));
     byId('fz-rep-go').onclick = generateReport;
     showOverlay('fz-rep-ov');
     updateRepNote();
     byId('fz-rep-t').onchange = updateRepNote;
     byId('fz-rep-m').onchange = updateRepNote;
     byId('fz-rep-y').onchange = updateRepNote;
+    if (typeof window.ensureHistoricalAlerts === 'function') {
+      Promise.resolve(window.ensureHistoricalAlerts()).then(function () {
+        var ov = byId('fz-rep-ov');
+        if (!ov || !ov.classList.contains('fz-open')) return;
+        fillStateSelect(byId('fz-rep-z'));
+        updateRepNote();
+      }).catch(function () {});
+    }
   }
   function reportRange() {
     var m = +byId('fz-rep-m').value, y = +byId('fz-rep-y').value, t = +byId('fz-rep-t').value;
@@ -1096,9 +1128,12 @@
     byId('fz-rep-note').textContent = reportAlerts().length + ' alertas · ' + r.start.toLocaleDateString('es-MX') + ' – ' + r.end.toLocaleDateString('es-MX');
   }
 
-  function loadScript(src) {
+  // `integrity` es opcional: solo se pasa un hash SRI calculado y verificado contra la URL real, nunca estimado.
+  function loadScript(src, integrity) {
     return new Promise(function (res, rej) {
-      var s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s);
+      var s = document.createElement('script'); s.src = src; s.crossOrigin = 'anonymous';
+      if (integrity) s.integrity = integrity;
+      s.onload = res; s.onerror = rej; document.head.appendChild(s);
     });
   }
   function ensurePdfLib() {
@@ -1332,7 +1367,7 @@
     var routeIds = {};
     routeAlerts().forEach(function (a) { routeIds[a.id] = 1; });
 
-    var candidates = allAlerts().filter(function (a) {
+    var candidates = liveAlerts().filter(function (a) {
       if (!hasPoint(a) || isExpired(a)) return false;
       if (push.notified[a.id]) return false;
       var cat = a.category === 'security' ? 'security' : 'road';

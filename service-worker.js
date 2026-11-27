@@ -6,7 +6,7 @@
    - Tiles / fuentes: cache-first.
    - Nunca cachea peticiones de API (POST/GET dinámicos) ni Supabase.
    ============================================================================ */
-const VERSION = 'zv-fusion-v55';
+const VERSION = 'zv-fusion-v56';
 const RUNTIME_MAX_ENTRIES = 400; // tope para tiles/CDN: evita llenar el almacenamiento del móvil
 const SHELL_CACHE = VERSION + '-shell';
 const RUNTIME_CACHE = VERSION + '-runtime';
@@ -173,7 +173,8 @@ self.addEventListener('push', (event) => {
   event.waitUntil(self.registration.showNotification(d.title || 'Zero Vial', {
     body: d.body || 'Hay una alerta nueva en tu zona.',
     icon: '/favicon-256.png', badge: '/favicon-256.png', tag: d.tag || 'zv-push',
-    vibrate: [200, 100, 200], lang: 'es-MX', data: { url: d.url || '/' }
+    vibrate: [200, 100, 200], lang: 'es-MX',
+    data: { url: d.url || '/', alertId: d.alertId ?? null, externalId: d.externalId || null }
   }));
 });
 
@@ -184,8 +185,9 @@ self.addEventListener('notificationclick', (event) => {
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {
         if ('focus' in client) {
-          const id = event.notification.data && event.notification.data.alertId;
-          if (id != null) client.postMessage({ type: 'open-alert', id });
+          const nd = event.notification.data || {};
+          const id = nd.alertId ?? null, externalId = nd.externalId || null;
+          if (id != null || externalId) client.postMessage({ type: 'open-alert', id, externalId });
           return client.focus();
         }
       }
